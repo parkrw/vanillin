@@ -1,0 +1,60 @@
+.btn-group {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Horizontal: trim inner radii and collapse borders */
+.btn-group:not(.btn-group--vertical) > *:not(:last-child) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.btn-group:not(.btn-group--vertical) > *:not(:first-child) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -1px;
+}
+
+/* Vertical */
+
+.btn-group--vertical {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.btn-group--vertical > *:not(:last-child) {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.btn-group--vertical > *:not(:first-child) {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  margin-top: -1px;
+}
+
+/* Separator */
+
+.btn-group-separator {
+  width: 1px;
+  align-self: stretch;
+  background-color: var(--border);
+  flex-shrink: 0;
+}
+
+.btn-group-separator--horizontal {
+  width: auto;
+  height: 1px;
+  align-self: auto;
+}
+
+/* Text */
+
+.btn-group-text {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+}

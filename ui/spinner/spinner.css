@@ -1,0 +1,12 @@
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  animation: spin 1s linear infinite;
+  color: var(--muted-foreground);
+}

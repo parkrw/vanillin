@@ -1,0 +1,10 @@
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.skeleton {
+  border-radius: var(--radius-md);
+  background-color: var(--muted);
+  animation: skeleton-pulse 2s ease-in-out infinite;
+}

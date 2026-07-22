@@ -1,0 +1,60 @@
+.table-container {
+  position: relative;
+  width: 100%;
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  text-align: left;
+  caption-side: bottom;
+}
+
+.table-row {
+  border-bottom: 1px solid var(--border);
+  transition: background-color 150ms;
+}
+
+.table-body .table-row:last-child {
+  border-bottom: 0;
+}
+
+.table-body .table-row:hover {
+  background-color: color-mix(in oklab, var(--muted) 50%, transparent);
+}
+
+.table-row[data-selected="true"] {
+  background-color: var(--accent);
+}
+
+.table-footer {
+  border-top: 1px solid var(--border);
+  background-color: color-mix(in oklab, var(--muted) 50%, transparent);
+  font-weight: 500;
+}
+
+.table-footer .table-row:last-child {
+  border-bottom: 0;
+}
+
+.table-head {
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-align: inherit;
+  vertical-align: middle;
+}
+
+.table-cell {
+  padding: 0.75rem;
+  vertical-align: middle;
+}
+
+.table-caption {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}

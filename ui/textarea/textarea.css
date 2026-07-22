@@ -1,0 +1,38 @@
+.textarea {
+  display: flex;
+  width: 100%;
+  min-height: 5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--input);
+  background-color: transparent;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--foreground);
+  resize: vertical;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+
+.textarea::placeholder {
+  color: var(--muted-foreground);
+}
+
+.textarea:focus-visible {
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+.textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  resize: none;
+}
+
+.textarea[aria-invalid="true"] {
+  border-color: var(--destructive);
+}
+
+.textarea[aria-invalid="true"]:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--destructive) 40%, transparent);
+}

@@ -1,0 +1,89 @@
+.pg {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 100vh;
+}
+
+.pg-nav {
+  border-right: 1px solid var(--border);
+  padding: 1rem 0.75rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.pg-nav h1 {
+  font-size: 1rem;
+  margin: 0 0.5rem 0.75rem;
+}
+
+.pg-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.pg-nav-link {
+  display: block;
+  padding: 0.3rem 0.5rem;
+  border-radius: var(--radius-sm);
+  color: var(--muted-foreground);
+  text-decoration: none;
+  font-size: 0.8125rem;
+}
+
+.pg-nav-link:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.pg-nav-link[data-active="true"] {
+  background: var(--accent);
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.pg-nav-link[data-todo="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.pg-main {
+  padding: 2rem 2.5rem;
+  max-width: 56rem;
+}
+
+.pg-main h2 {
+  margin-top: 0;
+}
+
+.pg-section {
+  margin-block: 2rem;
+}
+
+.pg-section h3 {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  margin-bottom: 0.75rem;
+}
+
+.pg-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pg-theme-toggle {
+  margin: 0 0.5rem 1rem;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  cursor: pointer;
+}

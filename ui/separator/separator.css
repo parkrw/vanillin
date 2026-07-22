@@ -1,0 +1,12 @@
+.separator {
+  flex-shrink: 0;
+  background-color: var(--border);
+  height: 1px;
+  width: 100%;
+}
+
+.separator--vertical {
+  height: auto;
+  width: 1px;
+  align-self: stretch;
+}

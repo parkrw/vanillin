@@ -1,0 +1,49 @@
+.alert {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  display: grid;
+  grid-template-columns: 0 1fr;
+  row-gap: 0.125rem;
+  align-items: start;
+  background-color: var(--card);
+  color: var(--card-foreground);
+}
+
+.alert:has(> svg) {
+  grid-template-columns: 1rem 1fr;
+  column-gap: 0.75rem;
+}
+
+.alert > svg {
+  width: 1rem;
+  height: 1rem;
+  transform: translateY(0.125rem);
+  color: currentColor;
+}
+
+.alert-title {
+  grid-column-start: 2;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.025em;
+}
+
+.alert-description {
+  grid-column-start: 2;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Variants */
+
+.alert--destructive {
+  color: var(--destructive);
+}
+
+.alert--destructive .alert-description {
+  color: color-mix(in oklab, var(--destructive) 90%, transparent);
+}

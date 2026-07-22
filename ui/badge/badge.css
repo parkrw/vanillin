@@ -1,0 +1,45 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: var(--radius-xl);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  padding: 0.25rem 0.625rem;
+  white-space: nowrap;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border: 1px solid transparent;
+  transition: background-color 150ms, color 150ms, border-color 150ms;
+}
+
+.badge:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+.badge svg {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* Variants */
+
+.badge--secondary {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.badge--destructive {
+  background-color: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+.badge--outline {
+  background-color: transparent;
+  color: var(--foreground);
+  border-color: var(--border);
+}
