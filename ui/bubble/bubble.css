@@ -1,0 +1,145 @@
+.bubble {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-self: flex-start;
+  width: fit-content;
+  max-inline-size: 80%;
+}
+
+.bubble--end {
+  align-self: flex-end;
+}
+
+.bubble-content {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  overflow-wrap: anywhere;
+}
+
+/* Variants (on root, style the content surface) */
+
+.bubble--secondary > .bubble-content {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.bubble--muted > .bubble-content {
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.bubble--tinted > .bubble-content {
+  background-color: color-mix(in oklab, var(--primary) 10%, var(--background));
+  color: var(--foreground);
+}
+
+.bubble--outline > .bubble-content {
+  background-color: transparent;
+  border: 1px solid var(--border);
+  color: var(--foreground);
+}
+
+.bubble--ghost {
+  max-inline-size: 100%;
+  width: 100%;
+}
+
+.bubble--ghost > .bubble-content {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  color: var(--foreground);
+}
+
+.bubble--destructive > .bubble-content {
+  background-color: color-mix(in oklab, var(--destructive) 10%, var(--background));
+  color: var(--destructive);
+}
+
+/* Interactive content (as="a" / as="button") */
+
+a.bubble-content,
+button.bubble-content {
+  cursor: pointer;
+  text-decoration: none;
+  transition: filter var(--motion-fast) var(--motion-ease);
+}
+
+a.bubble-content:hover,
+button.bubble-content:hover {
+  filter: brightness(0.95);
+}
+
+/* Reactions — overlap the bubble edge.
+   translate has no logical variant: --bubble-rx carries the inline sign,
+   flipped by --start and again under [dir="rtl"]. */
+
+.bubble-reactions {
+  --bubble-rx: 25%;
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  translate: var(--bubble-rx) 50%;
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background-color: var(--background);
+  box-shadow: var(--shadow-sm);
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.bubble-reactions--top {
+  inset-block-end: auto;
+  inset-block-start: 0;
+  translate: var(--bubble-rx) -50%;
+}
+
+.bubble-reactions--start {
+  --bubble-rx: -25%;
+  inset-inline-end: auto;
+  inset-inline-start: 0;
+}
+
+[dir="rtl"] .bubble-reactions {
+  --bubble-rx: -25%;
+}
+
+[dir="rtl"] .bubble-reactions--start {
+  --bubble-rx: 25%;
+}
+
+/* Group — consecutive bubbles from one sender */
+
+.bubble-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  width: 100%;
+}
+
+.bubble-group > .bubble:not(:first-child) > .bubble-content {
+  border-start-start-radius: var(--radius-sm);
+}
+
+.bubble-group > .bubble:not(:last-child) > .bubble-content {
+  border-end-start-radius: var(--radius-sm);
+}
+
+.bubble-group > .bubble--end:not(:first-child) > .bubble-content {
+  border-start-start-radius: var(--radius-lg);
+  border-start-end-radius: var(--radius-sm);
+}
+
+.bubble-group > .bubble--end:not(:last-child) > .bubble-content {
+  border-end-start-radius: var(--radius-lg);
+  border-end-end-radius: var(--radius-sm);
+}
