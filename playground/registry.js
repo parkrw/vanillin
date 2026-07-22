@@ -28,7 +28,7 @@ export const registry = {
   "data-table": { title: "Data Table" },
   "date-picker": { title: "Date Picker" },
   dialog: { title: "Dialog" },
-  direction: { title: "Direction" },
+  direction: { title: "Direction", page: lazy(() => import("./pages/direction.jsx")) },
   drawer: { title: "Drawer" },
   "dropdown-menu": { title: "Dropdown Menu" },
   empty: { title: "Empty", page: lazy(() => import("./pages/empty.jsx")) },
