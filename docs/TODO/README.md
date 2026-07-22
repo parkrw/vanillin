@@ -8,7 +8,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 01  | toggle-group             | ~S  | [x]    | roving tabindex; reuses ui/toggle css                                       |
 | 02  | pagination               | ~S  | [x]    | reuses .btn classes                                                         |
 | 03  | field-direction          | ~M  | [x]    | Field family + RTL demo/test + logical-CSS sweep                            |
-| 04  | chat-message-bubble      | ~M  | [ ]    | chat set part 1                                                             |
+| 04  | chat-message-bubble      | ~M  | [x]    | ui/bubble + ui/message, CSS-only                                            |
 | 05  | chat-attachment-scroller | ~M  | [ ]    | deps: 04                                                                    |
 | 06  | dialog                   | ~L  | [ ]    | pattern-setter: `<dialog>` + focus-scope + scroll-lock + presence           |
 | 07  | alert-dialog-sheet       | ~M  | [ ]    | deps: 06                                                                    |
@@ -64,3 +64,9 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   page + RTL test + physical→logical CSS sweep (button-group, typography).
   Slider already handled RTL fully. New components: use logical properties
   (`inline-start`/`margin-inline`/`text-align: start`) from the start.
+- 2026-07-22 — task 04 done on `feat/chat-message-bubble` (~490 net lines):
+  shadcn anatomy verified against live docs — Bubble/BubbleContent/
+  BubbleReactions/BubbleGroup, Message/MessageGroup/MessageAvatar/MessageContent/
+  MessageHeader/MessageFooter. Both CSS-only, no tests. shadcn's `render` prop →
+  our `as`. Task 05 (attachment + message-scroller) will need scroll/state logic
+  — verify its live anatomy the same way.
