@@ -1,4 +1,4 @@
-import { createContext, useContext, useId, useRef } from "react"
+import { createContext, useContext, useId, useLayoutEffect, useRef } from "react"
 import { cn } from "../../lib/cn.js"
 import { useControllableState } from "../../lib/use-controllable-state.js"
 import { usePresence } from "../../lib/use-presence.js"
@@ -56,6 +56,14 @@ export function CollapsibleContent({ className, ...props }) {
   const { open, contentId } = useContext(CollapsibleContext)
   const ref = useRef(null)
   const present = usePresence(open, ref)
+
+  // The open/close keyframes animate to/from the measured content height;
+  // scrollHeight is stable even while the element's own height is animating.
+  useLayoutEffect(() => {
+    const node = ref.current
+    if (node) node.style.setProperty("--collapsible-content-height", `${node.scrollHeight}px`)
+  }, [present])
+
   if (!present) return null
   return (
     <div

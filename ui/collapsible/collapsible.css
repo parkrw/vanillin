@@ -1,1 +1,39 @@
-/* Collapsible ships unstyled in shadcn; classes exist as styling hooks. */
+/* Collapsible ships visually unstyled in shadcn; classes exist as styling
+   hooks. Open/close motion follows the global motion tokens. */
+
+.collapsible-content {
+  overflow: hidden;
+}
+
+.collapsible-content[data-state="open"] {
+  animation: collapsible-down var(--motion-medium) var(--motion-ease);
+}
+
+.collapsible-content[data-state="closed"] {
+  animation: collapsible-up var(--motion-medium) var(--motion-ease);
+}
+
+@keyframes collapsible-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--collapsible-content-height);
+  }
+}
+
+@keyframes collapsible-up {
+  from {
+    height: var(--collapsible-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collapsible-content[data-state="open"],
+  .collapsible-content[data-state="closed"] {
+    animation: none;
+  }
+}

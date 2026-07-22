@@ -17,7 +17,8 @@
 ## Conventions (must match)
 - `ui/<slug>/<slug>.jsx` + `.css`; block class = component name, variants `block--modifier`, subparts `.block-part`. Tokens only (`var(--…)` from globals.css), `color-mix(in oklab, …)` for opacity, no hex. No `--shadow-xs` — use `--shadow-sm`.
 - `cn()` from `lib/cn.js`; `as` prop instead of asChild; shadcn's exact export names.
-- Stateful: `useControllableState` + `data-state` (see `ui/toggle/`, `ui/tabs/`). Disclosure: `usePresence` + measured-height keyframes (see `ui/accordion/`).
+- Stateful: `useControllableState` + `data-state` (see `ui/toggle/`, `ui/tabs/`). Disclosure: `usePresence` + measured-height keyframes (see `ui/accordion/`, `ui/collapsible/`).
+- Motion: never hard-code durations/easings — `var(--motion-fast)`/`var(--motion-medium)` + `var(--motion-ease)` (globals.css). Applies to all future open/close components (dialog, menus, popover, toast…). Indeterminate loops (spinner, skeleton) stay fixed.
 - Tests: `tests/<slug>.test.mjs` per interactive component; `node tests/run.mjs` self-hosts vite on :5199 (no dev server needed). Playwright-core, `channel: "chrome"`.
 - Demo page `playground/pages/<slug>.jsx` + `page: lazy(...)` entry in `playground/registry.js`.
 
