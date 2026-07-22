@@ -1,34 +1,28 @@
 # HANDOFF
 
-## What landed (this session, 2026-07-22)
-Plan: `~/.claude/plans/vanillin-zero-dep-shadcn-ui-recreation.md`.
-
-- **Progress + slider** (`7cafa23a`) on branch `feat/progress-slider`, merged locally earlier.
-- **Playwright smoke tests moved into repo** (`2fff9a1e`): `tests/run.mjs` runner + `tests/progress.test.mjs`, `tests/slider.test.mjs` (playwright-core, `channel: "chrome"`, no browser download).
-- **README expansion** (`59ac40ab`) on `docs/readme` — usage conventions, repo layout, test guide. Merged as **PR #1** (`26beb694` on main).
+## What landed (session of 2026-07-22)
+- **task02 pagination** (`71a3b464`) — merged to main by user. `ui/pagination/`, demo page, `tests/pagination.test.mjs`. TODO index marked `[x]`.
+- **Playground dark-mode fix** on `fix/playground-dark-mode` (`eb264d5a`, `bd744837`) — **unmerged, unpushed**. Sidebar contrast (foreground vs muted for built/todo, no opacity hack), playground-scoped `--pg-accent` neon teal token (h1, active/hover nav pill, section-h3 left bars, toggle hover). No dots — minimal look. User merges locally themselves.
 
 ## Repo state
-- Switch to `main` (has PR #1 merge commit; `docs/readme` is behind it and can be deleted). Working tree clean, no stash. Remote now exists: `github.com/parkrw/vanillin`.
-- **Git gates (hooks):** commits on main blocked — `<type>/<kebab-name>` branch first; PR-size cap 500 net lines vs main.
+- On `fix/playground-dark-mode`; main has task02. Merge the fix branch to main before starting task 03.
+- Git gates (hooks): no commits on main — `<type>/<kebab>` branch first; PR cap 500 net lines vs main.
 
-## Conventions (must match for new components)
-- `ui/<slug>/<slug>.jsx` + `.css`; block class = component name, variants `block--modifier` (default variant on base class), subparts `.block-part`.
-- Tokens only (`var(--…)` from globals.css), opacity via `color-mix(in oklab, …)`, no hex. No `--shadow-xs` token — use `--shadow-sm`.
-- `cn()` from `lib/cn.js`; `as` prop instead of Radix asChild; shadcn's exact subcomponent export names.
-- Stateful pattern (see `ui/toggle/`, `ui/tabs/`): `useControllableState` + `data-state` attrs; compound components share a `createContext` defined in the component file.
-- Disclosure pattern (see `ui/accordion/`): `usePresence` + measured-height keyframes for exit animation.
-- Tests: one `tests/<slug>.test.mjs` per interactive component, run via `node tests/run.mjs` (needs `npm run dev` on :5173) — see README test guide.
-- Demo page per component: `playground/pages/<slug>.jsx` (default export, imports its css, pg-section/pg-row layout), then set `page: lazy(...)` in `playground/registry.js`.
+## Next step
+`/cycle 03` — field-direction (~M): detail `TODO/task03-field-direction.md` (doesn't exist yet), then TDD. Plan + index: `TODO/README.md`.
 
-## Gotchas / decisions
-- Component inventory verified against live docs 2026-07-22: 64 items incl. chat set; **chart excluded**. Toast and Sonner are one component (`toast` slug). 31 done in `ui/`.
-- Positioning: always-JS (`lib/use-anchor-position.js`) — intentional deviation from CSS-anchor-first.
-- Playground styles must use child combinators (`.pg-section > h3`) — descendant selectors leak into demo markup.
-- Roving tabindex (0/-1) is for tabs/radio/toolbars only; accordion triggers all keep tabIndex 0.
-- Visual QA: `npm run dev`, then headless Chrome one-shot screenshots (`--headless=new --virtual-time-budget=6000 --screenshot=out.png "http://localhost:5173/#<slug>"`).
+## Session preferences (user-stated)
+- **Do not invoke any skills** (incl. /implementer — irrelevant to this repo). Exception: `handoff` at ~15% context, then prompt user to start a new session.
 
-## Next step — use /cycle from here on
-No `TODO/` exists yet. Run `/cycle` and let it seed the TODO/ index from the plan file above, then continue the rolling loop:
-1. Phase 2 remainder, one small branch per batch (≤500 lines): pagination, toggle-group (roving focus), field, direction, chat set (attachment, bubble, message, message-scroller). Start with pagination + toggle-group.
-2. Then phases 3–7 (#4–#8 in the plan).
-3. Dark mode visual pass still pending for everything.
+## Conventions (must match)
+- `ui/<slug>/<slug>.jsx` + `.css`; block class = component name, variants `block--modifier`, subparts `.block-part`. Tokens only (`var(--…)` from globals.css), `color-mix(in oklab, …)` for opacity, no hex. No `--shadow-xs` — use `--shadow-sm`.
+- `cn()` from `lib/cn.js`; `as` prop instead of asChild; shadcn's exact export names.
+- Stateful: `useControllableState` + `data-state` (see `ui/toggle/`, `ui/tabs/`). Disclosure: `usePresence` + measured-height keyframes (see `ui/accordion/`).
+- Tests: `tests/<slug>.test.mjs` per interactive component; `node tests/run.mjs` self-hosts vite on :5199 (no dev server needed). Playwright-core, `channel: "chrome"`.
+- Demo page `playground/pages/<slug>.jsx` + `page: lazy(...)` entry in `playground/registry.js`.
+
+## Gotchas
+- Playground styles: child combinators only (`.pg-section > h3`) — descendant selectors leak into demos. Playground accent token `--pg-accent` lives in playground.css, not globals.css.
+- Roving tabindex only for tabs/radio/toolbars; positioning is always-JS (`lib/use-anchor-position.js`).
+- Visual QA: `npm run dev` (:5173) + headless Chrome one-shot screenshot; for dark mode use a playwright script that clicks `.pg-theme-toggle` first.
+- Dark-mode component QA is still task 27 — only playground chrome was fixed this session.
