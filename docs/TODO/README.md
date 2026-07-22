@@ -9,7 +9,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 02  | pagination               | ~S  | [x]    | reuses .btn classes                                                         |
 | 03  | field-direction          | ~M  | [x]    | Field family + RTL demo/test + logical-CSS sweep                            |
 | 04  | chat-message-bubble      | ~M  | [x]    | ui/bubble + ui/message, CSS-only                                            |
-| 05  | attachment               | ~M  | [ ]    | deps: 04; CSS-only incl. AttachmentGroup scroll-snap row                    |
+| 05  | attachment               | ~M  | [x]    | deps: 04; CSS-only incl. AttachmentGroup scroll-snap row                    |
 | 06  | message-scroller         | ~M  | [ ]    | deps: 04; stateful stick-to-bottom autoscroll + hooks; needs test           |
 | 07  | dialog                   | ~L  | [ ]    | pattern-setter: `<dialog>` + focus-scope + scroll-lock + presence           |
 | 08  | alert-dialog-sheet       | ~M  | [ ]    | deps: 07                                                                    |
@@ -76,3 +76,9 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   released on user scroll, 3 hooks — verified against live shadcn docs); both in
   one PR would blow the 500-line cap given task 04 landed ~490 for two CSS-only
   components. Renumbered 06→29 to 07→30, dep refs shifted.
+- 2026-07-22 — task 05 done on `feat/attachment` (~446 net lines). Gotcha:
+  `mask-image` directly on a scrolling element makes Chrome paint the whole
+  pane white in dark mode (invisible in light!) — mask a static wrapper,
+  scroll an inner viewport. Applies to any future edge-fade scroller
+  (scroll-area 20, carousel 24, sidebar 27). QA dark mode via clip screenshots
+  or after the fix, not just light.
