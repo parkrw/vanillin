@@ -10,7 +10,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 03  | field-direction          | ~M  | [x]    | Field family + RTL demo/test + logical-CSS sweep                            |
 | 04  | chat-message-bubble      | ~M  | [x]    | ui/bubble + ui/message, CSS-only                                            |
 | 05  | attachment               | ~M  | [x]    | deps: 04; CSS-only incl. AttachmentGroup scroll-snap row                    |
-| 06  | message-scroller         | ~M  | [ ]    | deps: 04; stateful stick-to-bottom autoscroll + hooks; needs test           |
+| 06  | message-scroller         | ~M  | [x]    | two stacked PRs: core + button/hooks                                        |
 | 07  | dialog                   | ~L  | [ ]    | pattern-setter: `<dialog>` + focus-scope + scroll-lock + presence           |
 | 08  | alert-dialog-sheet       | ~M  | [ ]    | deps: 07                                                                    |
 | 09  | drawer                   | ~M  | [ ]    | deps: 07; swipe-to-dismiss                                                  |
@@ -82,3 +82,9 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   scroll an inner viewport. Applies to any future edge-fade scroller
   (scroll-area 20, carousel 24, sidebar 27). QA dark mode via clip screenshots
   or after the fix, not just light.
+- 2026-07-22 — task 06 done as two stacked branches (`feat/message-scroller`
+  383 + `feat/message-scroller-hooks` 223 net lines; together over the 500
+  cap). Gotchas: Chrome native scroll anchoring doubles manual prepend
+  preservation — set `overflow-anchor: none` on any self-managed scroller
+  (scroll-area 20, carousel 23); release-on-intent = wheel/touch/keys/
+  scrollbar-pointerdown listeners, re-engage when scroll reaches the end.
