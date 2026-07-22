@@ -34,6 +34,19 @@ Your bundler (Vite, Next, etc.) compiles the JSX. Nothing to install, and the co
 
 All components consume only CSS custom properties defined in `styles/globals.css`, with the same names shadcn uses (`--background`, `--primary`, `--radius`, …). Any shadcn theme generator output in oklch/hsl drops in.
 
+### Motion
+
+Every animation and transition is driven by motion tokens. `--motion-scale` multiplies all durations (`1` = snappy default), `--motion-ease` sets the curve. For smoother open/close everywhere:
+
+```css
+:root {
+  --motion-scale: 1.75;
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+```
+
+`--motion-fast` (micro-interactions) and `--motion-medium` (accordion & co. open/close) derive from the scale and can also be overridden directly, including per subtree. Indeterminate loops (spinner, skeleton) are intentionally unaffected.
+
 ## Developing vanillin itself
 
 ```sh

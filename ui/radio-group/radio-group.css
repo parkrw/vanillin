@@ -17,7 +17,7 @@
   padding: 0;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
-  transition: border-color 150ms, box-shadow 150ms;
+  transition: border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease);
 }
 
 .radio-group-item[data-state="checked"] {

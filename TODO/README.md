@@ -32,6 +32,8 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 25  | data-table               | ~L  | [ ]    | pattern page over ui/table                                        |
 | 26  | sidebar                  | ~L  | [ ]    | deps: 07 (mobile = sheet); Cmd+B                                  |
 | 27  | dark-mode-pass           | ~M  | [ ]    | deps: all; visual QA every component in `.dark`                   |
+| 28  | docs-shell               | ~M  | [ ]    | deps: 27; playground → docs app: nav, getting-started, theming/motion pages |
+| 29  | docs-content             | ~L  | [ ]    | deps: 28; per-component usage/props/data-state prose on demo pages |
 
 ## Refs
 
@@ -51,6 +53,8 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 ## Adjustments log
 
 - 2026-07-22 — seeded from plan file + HANDOFF.md inventory (31/64 done).
+- 2026-07-22 — added 28 docs-shell + 29 docs-content: evolve playground into a
+  docs app (install/usage/config incl. motion knobs) after the component cycle.
 - 2026-07-22 — split task 01 (pagination-toggle-group) into 01 toggle-group + 02
   pagination; TODO seed + toggle-group hit ~350 net lines on one branch (cap
   500). Renumbered 02→03 … 26→27. Runner note: tests self-host on :5199, no dev

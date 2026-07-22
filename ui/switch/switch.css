@@ -10,7 +10,7 @@
   padding: 0;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
-  transition: background-color 150ms;
+  transition: background-color var(--motion-fast) var(--motion-ease);
 }
 
 .switch[data-state="checked"] {
@@ -35,7 +35,7 @@
   background-color: var(--background);
   pointer-events: none;
   transform: translateX(0);
-  transition: transform 150ms;
+  transition: transform var(--motion-fast) var(--motion-ease);
 }
 
 .switch[data-state="checked"] .switch-thumb {

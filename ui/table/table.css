@@ -14,7 +14,7 @@
 
 .table-row {
   border-bottom: 1px solid var(--border);
-  transition: background-color 150ms;
+  transition: background-color var(--motion-fast) var(--motion-ease);
 }
 
 .table-body .table-row:last-child {

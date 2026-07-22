@@ -1,6 +1,10 @@
 /* Playground-only accent — neon green/teal, darker in light mode for contrast. */
 :root {
   --pg-accent: oklch(0.52 0.13 175);
+
+  /* Smoother motion for the playground (see Motion in styles/globals.css). */
+  --motion-scale: 1.75;
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .dark {

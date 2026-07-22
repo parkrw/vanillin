@@ -18,7 +18,7 @@
 .breadcrumb-link {
   color: var(--muted-foreground);
   text-decoration: none;
-  transition: color 150ms;
+  transition: color var(--motion-fast) var(--motion-ease);
 }
 
 .breadcrumb-link:hover {

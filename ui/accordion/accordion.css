@@ -32,7 +32,7 @@
   font-weight: 500;
   line-height: 1.5;
   cursor: pointer;
-  transition: color 150ms;
+  transition: color var(--motion-fast) var(--motion-ease);
 }
 
 .accordion-trigger:hover {
@@ -55,7 +55,7 @@
   flex-shrink: 0;
   color: var(--muted-foreground);
   transform: translateY(2px);
-  transition: transform 200ms;
+  transition: transform var(--motion-medium) var(--motion-ease);
   pointer-events: none;
 }
 
@@ -69,11 +69,11 @@
 }
 
 .accordion-content[data-state="open"] {
-  animation: accordion-down 200ms ease-out;
+  animation: accordion-down var(--motion-medium) var(--motion-ease);
 }
 
 .accordion-content[data-state="closed"] {
-  animation: accordion-up 200ms ease-out;
+  animation: accordion-up var(--motion-medium) var(--motion-ease);
 }
 
 .accordion-content-inner {

@@ -5,6 +5,8 @@
  */
 
 :root {
+  color-scheme: light;
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -54,9 +56,25 @@
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /*
+   * Motion. --motion-scale is the smoothness knob: it multiplies every
+   * component duration (1 = snappy default; 1.5–2 = slower, smoother).
+   * --motion-ease sets the curve for all transitions and open/close
+   * animations; try cubic-bezier(0.22, 1, 0.36, 1) for a softer landing.
+   * Override --motion-scale at :root — the duration tokens derive from it
+   * there. For a subtree-local tweak, override --motion-fast/--motion-medium
+   * directly instead.
+   */
+  --motion-scale: 1;
+  --motion-ease: ease-out;
+  --motion-fast: calc(150ms * var(--motion-scale));
+  --motion-medium: calc(200ms * var(--motion-scale));
 }
 
 .dark {
+  color-scheme: dark;
+
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);

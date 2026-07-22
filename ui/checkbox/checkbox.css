@@ -12,7 +12,7 @@
   padding: 0;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
-  transition: background-color 150ms, border-color 150ms, box-shadow 150ms;
+  transition: background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease);
 }
 
 .checkbox[data-state="checked"] {

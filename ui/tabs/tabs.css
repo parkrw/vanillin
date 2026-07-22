@@ -33,7 +33,7 @@
   background-color: transparent;
   cursor: pointer;
   user-select: none;
-  transition: background-color 150ms, color 150ms, box-shadow 150ms;
+  transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease);
 }
 
 .tabs-trigger[data-state="active"] {

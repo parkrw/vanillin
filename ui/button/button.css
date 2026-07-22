@@ -16,7 +16,7 @@
   cursor: pointer;
   user-select: none;
   text-decoration: none;
-  transition: background-color 150ms, color 150ms, border-color 150ms, box-shadow 150ms;
+  transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease);
 }
 
 .btn:hover {

@@ -60,7 +60,7 @@
   border: 1px solid var(--primary);
   background-color: var(--background);
   box-shadow: var(--shadow-sm);
-  transition: box-shadow 150ms;
+  transition: box-shadow var(--motion-fast) var(--motion-ease);
 }
 
 .slider-thumb[data-orientation="horizontal"] {

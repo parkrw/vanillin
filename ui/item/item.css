@@ -6,7 +6,7 @@
   border-radius: var(--radius-md);
   text-decoration: none;
   color: inherit;
-  transition: background-color 150ms;
+  transition: background-color var(--motion-fast) var(--motion-ease);
 }
 
 a.item:hover,

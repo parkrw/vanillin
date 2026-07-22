@@ -4,7 +4,7 @@
   border: 1px solid var(--input);
   border-radius: var(--radius-md);
   background-color: transparent;
-  transition: border-color 150ms, box-shadow 150ms;
+  transition: border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease);
 }
 
 .input-group:focus-within {
@@ -125,7 +125,7 @@
   height: 1.5rem;
   padding: 0 0.5rem;
   flex-shrink: 0;
-  transition: background-color 150ms, color 150ms;
+  transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
 }
 
 .input-group-btn:hover {

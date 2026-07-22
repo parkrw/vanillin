@@ -10,7 +10,7 @@
   line-height: 1.5;
   color: var(--foreground);
   resize: vertical;
-  transition: border-color 150ms, box-shadow 150ms;
+  transition: border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease);
 }
 
 .textarea::placeholder {
