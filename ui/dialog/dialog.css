@@ -1,5 +1,5 @@
 /* Native <dialog> shown with showModal(); the overlay is ::backdrop.
-   Open/close motion lands in task 07.3. */
+   Open/close motion follows the global motion tokens. */
 
 .dialog {
   position: relative;
@@ -96,4 +96,57 @@
   /* shadcn dims with black in both themes (not --foreground, which would
      flip to near-white in dark mode) */
   background-color: color-mix(in oklab, black 50%, transparent);
+}
+
+.dialog[data-state="open"] {
+  animation: dialog-in var(--motion-fast) var(--motion-ease);
+}
+
+.dialog[data-state="closed"] {
+  /* forwards holds the exit frame between animationend and React's unmount,
+     otherwise the dialog flashes fully visible for a frame */
+  animation: dialog-out var(--motion-fast) var(--motion-ease) forwards;
+}
+
+.dialog[data-state="open"]::backdrop {
+  animation: dialog-backdrop-in var(--motion-fast) var(--motion-ease);
+}
+
+.dialog[data-state="closed"]::backdrop {
+  animation: dialog-backdrop-out var(--motion-fast) var(--motion-ease) forwards;
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes dialog-out {
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes dialog-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes dialog-backdrop-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog[data-state="open"],
+  .dialog[data-state="closed"],
+  .dialog[data-state="open"]::backdrop,
+  .dialog[data-state="closed"]::backdrop {
+    animation: none;
+  }
 }

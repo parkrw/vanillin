@@ -37,7 +37,7 @@
   closes, controlled mode (`open`/`onOpenChange`) works; files:
   `ui/dialog/dialog.jsx`, `tests/dialog.test.mjs`, demo page (controlled +
   form examples).
-- [ ] 3. Motion + visual polish — zoom/fade keyframes on content and
+- [x] 3. Motion + visual polish — zoom/fade keyframes on content and
   `::backdrop` via `--motion-fast`/`--motion-ease`, `fill-mode: forwards` on
   close, reduced-motion guard; visual QA light + dark; files:
   `ui/dialog/dialog.css`.
