@@ -1,0 +1,52 @@
+.radio-group {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.radio-group-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  border: 1px solid var(--input);
+  background-color: transparent;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 150ms, box-shadow 150ms;
+}
+
+.radio-group-item[data-state="checked"] {
+  border-color: var(--primary);
+}
+
+.radio-group-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+.radio-group-item[aria-invalid="true"] {
+  border-color: var(--destructive);
+}
+
+.radio-group-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.radio-group-indicator {
+  display: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--primary);
+  pointer-events: none;
+}
+
+.radio-group-item[data-state="checked"] .radio-group-indicator {
+  display: block;
+}

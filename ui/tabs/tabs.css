@@ -1,0 +1,70 @@
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tabs-list {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  width: fit-content;
+  border-radius: var(--radius-lg);
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  padding: 3px;
+}
+
+.tabs-trigger {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  height: calc(100% - 1px);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  color: inherit;
+  background-color: transparent;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 150ms, color 150ms, box-shadow 150ms;
+}
+
+.tabs-trigger[data-state="active"] {
+  background-color: var(--background);
+  color: var(--foreground);
+  box-shadow: var(--shadow-sm);
+}
+
+.tabs-trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+.tabs-trigger:disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.tabs-trigger svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.tabs-content {
+  flex: 1;
+}
+
+.tabs-content:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+  border-radius: var(--radius-sm);
+}
