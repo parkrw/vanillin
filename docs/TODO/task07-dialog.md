@@ -32,7 +32,7 @@
   `ui/dialog/dialog.jsx`, `ui/dialog/dialog.css` (skeleton),
   `tests/dialog.test.mjs`, `playground/pages/dialog.jsx`,
   `playground/registry.js` (add `page:`).
-- [ ] 2. Anatomy + aria — test: `aria-labelledby` → DialogTitle id,
+- [x] 2. Anatomy + aria — test: `aria-labelledby` → DialogTitle id,
   `aria-describedby` → DialogDescription id, X button closes, DialogClose
   closes, controlled mode (`open`/`onOpenChange`) works; files:
   `ui/dialog/dialog.jsx`, `tests/dialog.test.mjs`, demo page (controlled +

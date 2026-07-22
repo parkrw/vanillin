@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef } from "react"
+import { createContext, useContext, useEffect, useId, useRef } from "react"
 import { cn } from "../../lib/cn.js"
 import { useControllableState } from "../../lib/use-controllable-state.js"
 import { usePresence } from "../../lib/use-presence.js"
@@ -6,6 +6,7 @@ import { useReturnFocus } from "../../lib/use-return-focus.js"
 import { useScrollLock } from "../../lib/scroll-lock.js"
 
 const DialogContext = createContext(null)
+const DialogContentContext = createContext(null)
 
 /**
  * Controlled via `open` + `onOpenChange`, uncontrolled via `defaultOpen`.
@@ -50,8 +51,11 @@ export function DialogOverlay() {
   return null
 }
 
-export function DialogContent({ className, children, ...props }) {
+export function DialogContent({ showCloseButton = true, className, children, ...props }) {
   const { open, setOpen } = useContext(DialogContext)
+  const baseId = useId()
+  const titleId = `${baseId}-title`
+  const descriptionId = `${baseId}-description`
   const ref = useRef(null)
   const present = usePresence(open, ref)
   useScrollLock(present)
@@ -68,6 +72,8 @@ export function DialogContent({ className, children, ...props }) {
   return (
     <dialog
       ref={ref}
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
       data-state={open ? "open" : "closed"}
       className={cn("dialog", className)}
       onCancel={(event) => {
@@ -88,7 +94,62 @@ export function DialogContent({ className, children, ...props }) {
       }}
       {...props}
     >
-      {children}
+      <DialogContentContext.Provider value={{ titleId, descriptionId }}>
+        {children}
+        {showCloseButton && (
+          <button
+            type="button"
+            aria-label="Close"
+            className="dialog-close"
+            onClick={() => setOpen(false)}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+        )}
+      </DialogContentContext.Provider>
     </dialog>
+  )
+}
+
+export function DialogHeader({ className, ...props }) {
+  return <div className={cn("dialog-header", className)} {...props} />
+}
+
+export function DialogFooter({ className, ...props }) {
+  return <div className={cn("dialog-footer", className)} {...props} />
+}
+
+export function DialogTitle({ className, ...props }) {
+  const { titleId } = useContext(DialogContentContext)
+  return <h2 id={titleId} className={cn("dialog-title", className)} {...props} />
+}
+
+export function DialogDescription({ className, ...props }) {
+  const { descriptionId } = useContext(DialogContentContext)
+  return <p id={descriptionId} className={cn("dialog-description", className)} {...props} />
+}
+
+export function DialogClose({ as: Comp = "button", onClick, ...props }) {
+  const { setOpen } = useContext(DialogContext)
+  return (
+    <Comp
+      type={Comp === "button" ? "button" : undefined}
+      onClick={(event) => {
+        onClick?.(event)
+        if (!event.defaultPrevented) setOpen(false)
+      }}
+      {...props}
+    />
   )
 }
