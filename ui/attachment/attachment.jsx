@@ -78,6 +78,15 @@ export function AttachmentTrigger({ as: Comp = "button", className, ...props }) 
   return <Comp className={cn("attachment-trigger", className)} {...props} />
 }
 
-export function AttachmentGroup({ className, ...props }) {
-  return <div className={cn("attachment-group", className)} {...props} />
+/*
+ * Mask lives on the static outer div, scrolling on the inner viewport:
+ * mask-image directly on a scrolling element makes Chrome composite the
+ * whole pane as a white layer in dark mode.
+ */
+export function AttachmentGroup({ className, children, ...props }) {
+  return (
+    <div className={cn("attachment-group", className)} {...props}>
+      <div className="attachment-group-viewport">{children}</div>
+    </div>
+  )
 }

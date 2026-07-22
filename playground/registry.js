@@ -10,7 +10,7 @@ export const registry = {
   alert: { title: "Alert", page: lazy(() => import("./pages/alert.jsx")) },
   "alert-dialog": { title: "Alert Dialog" },
   "aspect-ratio": { title: "Aspect Ratio", page: lazy(() => import("./pages/aspect-ratio.jsx")) },
-  attachment: { title: "Attachment" },
+  attachment: { title: "Attachment", page: lazy(() => import("./pages/attachment.jsx")) },
   avatar: { title: "Avatar", page: lazy(() => import("./pages/avatar.jsx")) },
   badge: { title: "Badge", page: lazy(() => import("./pages/badge.jsx")) },
   breadcrumb: { title: "Breadcrumb", page: lazy(() => import("./pages/breadcrumb.jsx")) },

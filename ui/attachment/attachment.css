@@ -192,15 +192,12 @@
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
 }
 
-/* Group — horizontally scrollable, snapping row with edge fade */
+/* Group — horizontally scrollable, snapping row with edge fade.
+   Mask on the static outer div, scroll on the inner viewport: masking the
+   scroller itself hits a Chrome compositing bug (pane paints white). */
 
 .attachment-group {
-  display: flex;
-  gap: 0.5rem;
   max-inline-size: 100%;
-  overflow-x: auto;
-  scroll-snap-type: inline mandatory;
-  padding-block: 0.25rem;
   /* symmetric fade, direction-safe */
   mask-image: linear-gradient(
     to right,
@@ -211,7 +208,15 @@
   );
 }
 
-.attachment-group > .attachment {
+.attachment-group-viewport {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scroll-snap-type: inline mandatory;
+  padding-block: 0.25rem;
+}
+
+.attachment-group-viewport > .attachment {
   flex-shrink: 0;
   scroll-snap-align: start;
 }
