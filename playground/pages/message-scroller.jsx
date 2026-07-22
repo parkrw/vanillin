@@ -1,10 +1,13 @@
 import { useRef, useState } from "react"
 import {
   MessageScroller,
+  MessageScrollerButton,
   MessageScrollerContent,
   MessageScrollerItem,
   MessageScrollerProvider,
   MessageScrollerViewport,
+  useMessageScrollerScrollable,
+  useMessageScrollerVisibility,
 } from "../../ui/message-scroller/message-scroller.jsx"
 import { Message, MessageContent } from "../../ui/message/message.jsx"
 import { Bubble, BubbleContent } from "../../ui/bubble/bubble.jsx"
@@ -13,6 +16,18 @@ import "../../ui/message-scroller/message-scroller.css"
 import "../../ui/message/message.css"
 import "../../ui/bubble/bubble.css"
 import "../../ui/button/button.css"
+
+function Readout() {
+  const { currentAnchorId, visibleMessageIds } = useMessageScrollerVisibility()
+  const { start, end } = useMessageScrollerScrollable()
+  return (
+    <p style={{ fontSize: "0.8125rem", color: "var(--muted-foreground)" }}>
+      anchor <output aria-label="Current anchor">{currentAnchorId}</output> · visible{" "}
+      <output aria-label="Visible messages">{visibleMessageIds.join(" ")}</output> · scrollable{" "}
+      <output aria-label="Scrollable">{`start:${start} end:${end}`}</output>
+    </p>
+  )
+}
 
 const makeMessage = (n, note = "") => ({
   id: `m${n}`,
@@ -73,7 +88,9 @@ export default function MessageScrollerPage() {
                 ))}
               </MessageScrollerContent>
             </MessageScrollerViewport>
+            <MessageScrollerButton />
           </MessageScroller>
+          <Readout />
         </MessageScrollerProvider>
       </section>
     </>

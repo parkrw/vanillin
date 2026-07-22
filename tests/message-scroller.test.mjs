@@ -61,4 +61,44 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     }, before.id)
     near(after, before.top, 1, "anchor item top")
   })
+
+  const button = page.locator(".message-scroller-button")
+
+  await test("scroll button is active while content is below", async () => {
+    eq(await button.getAttribute("data-active"), "true")
+    eq(await button.isDisabled(), false)
+  })
+
+  await test("button click returns to bottom and re-engages follow", async () => {
+    await button.click()
+    await page.waitForFunction(() => {
+      const el = document.querySelector(".message-scroller-viewport")
+      return el.scrollHeight - el.scrollTop - el.clientHeight < 2
+    })
+    eq(await frame.getAttribute("data-state"), "following")
+    eq(await button.getAttribute("data-active"), "false")
+    eq(await button.isDisabled(), true)
+    await append.click()
+    await settle(page)
+    eq((await distanceFromEnd()) < 2, true, "still pinned after append")
+  })
+
+  await test("visibility hook reports on-screen message ids", async () => {
+    await settle(page)
+    const ids = (await page.locator('output[aria-label="Visible messages"]').textContent()).split(" ")
+    const last = await page.evaluate(
+      () => [...document.querySelectorAll(".message-scroller-item")].at(-1).dataset.messageId
+    )
+    eq(ids.includes(last), true, "newest visible")
+    eq(ids.includes("m1"), false, "scrolled-out id absent")
+    eq(await page.locator('output[aria-label="Current anchor"]').textContent(), ids[0], "anchor = first visible")
+  })
+
+  await test("scrollable hook flags direction with content", async () => {
+    eq(
+      await page.locator('output[aria-label="Scrollable"]').textContent(),
+      "start:true end:false",
+      "at bottom"
+    )
+  })
 }

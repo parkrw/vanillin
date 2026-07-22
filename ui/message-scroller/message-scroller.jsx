@@ -31,6 +31,28 @@ export function MessageScrollerProvider({
     if (autoScroll) setFollowing(true)
   }, [autoScroll, setFollowing])
 
+  const scrollToStart = useCallback(() => {
+    const viewport = viewportRef.current
+    if (!viewport) return
+    setFollowing(false)
+    viewport.scrollTop = 0
+  }, [setFollowing])
+
+  const scrollToMessage = useCallback(
+    (messageId) => {
+      const viewport = viewportRef.current
+      const item = viewport?.querySelector(`[data-message-id="${CSS.escape(messageId)}"]`)
+      if (!item) return
+      setFollowing(false)
+      viewport.scrollTop =
+        item.getBoundingClientRect().top -
+        viewport.getBoundingClientRect().top +
+        viewport.scrollTop -
+        scrollPreviousItemPeek
+    },
+    [scrollPreviousItemPeek, setFollowing]
+  )
+
   return (
     <MessageScrollerContext.Provider
       value={{
@@ -43,6 +65,8 @@ export function MessageScrollerProvider({
         followingRef,
         setFollowing,
         scrollToEnd,
+        scrollToStart,
+        scrollToMessage,
       }}
     >
       {children}
@@ -148,6 +172,103 @@ export function MessageScrollerViewport({ preserveScrollOnPrepend = true, classN
 export function MessageScrollerContent({ className, ...props }) {
   const { contentRef } = useContext(MessageScrollerContext)
   return <div ref={contentRef} className={cn("message-scroller-content", className)} {...props} />
+}
+
+/** Inert (disabled, `data-active="false"`) until there is content below the fold. */
+export function MessageScrollerButton({ className, onClick, children, ...props }) {
+  const { scrollToEnd } = useContext(MessageScrollerContext)
+  const { end } = useMessageScrollerScrollable()
+  return (
+    <button
+      type="button"
+      aria-label="Scroll to bottom"
+      data-active={end ? "true" : "false"}
+      disabled={!end}
+      className={cn("message-scroller-button", className)}
+      onClick={(event) => {
+        onClick?.(event)
+        if (!event.defaultPrevented) scrollToEnd()
+      }}
+      {...props}
+    >
+      {children ?? (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      )}
+    </button>
+  )
+}
+
+export function useMessageScroller() {
+  const { scrollToMessage, scrollToEnd, scrollToStart } = useContext(MessageScrollerContext)
+  return { scrollToMessage, scrollToEnd, scrollToStart }
+}
+
+export function useMessageScrollerScrollable() {
+  const { viewportRef, contentRef } = useContext(MessageScrollerContext)
+  const [scrollable, setScrollable] = useState({ start: false, end: false })
+  useEffect(() => {
+    const viewport = viewportRef.current
+    if (!viewport) return
+    const sync = () => {
+      const start = viewport.scrollTop > 1
+      const end = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight > 1
+      setScrollable((prev) => (prev.start === start && prev.end === end ? prev : { start, end }))
+    }
+    sync()
+    viewport.addEventListener("scroll", sync, { passive: true })
+    const resizes = new ResizeObserver(sync)
+    resizes.observe(viewport)
+    if (contentRef.current) resizes.observe(contentRef.current)
+    return () => {
+      viewport.removeEventListener("scroll", sync)
+      resizes.disconnect()
+    }
+  }, [viewportRef, contentRef])
+  return scrollable
+}
+
+export function useMessageScrollerVisibility() {
+  const { viewportRef, contentRef } = useContext(MessageScrollerContext)
+  const [visibility, setVisibility] = useState({ currentAnchorId: null, visibleMessageIds: [] })
+  useEffect(() => {
+    const viewport = viewportRef.current
+    const content = contentRef.current
+    if (!viewport || !content) return
+    const onScreen = new Map()
+    const publish = () => {
+      const ids = [...content.querySelectorAll("[data-message-id]")]
+        .filter((el) => onScreen.get(el))
+        .map((el) => el.dataset.messageId)
+      setVisibility((prev) =>
+        prev.visibleMessageIds.join(" ") === ids.join(" ")
+          ? prev
+          : { currentAnchorId: ids[0] ?? null, visibleMessageIds: ids }
+      )
+    }
+    const intersections = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) onScreen.set(entry.target, entry.isIntersecting)
+        publish()
+      },
+      { root: viewport }
+    )
+    content.querySelectorAll("[data-message-id]").forEach((el) => intersections.observe(el))
+    const mutations = new MutationObserver((records) => {
+      for (const record of records) {
+        for (const node of record.addedNodes)
+          if (node.nodeType === 1 && node.dataset.messageId) intersections.observe(node)
+        for (const node of record.removedNodes) onScreen.delete(node)
+      }
+    })
+    mutations.observe(content, { childList: true })
+    return () => {
+      intersections.disconnect()
+      mutations.disconnect()
+    }
+  }, [viewportRef, contentRef])
+  return visibility
 }
 
 export function MessageScrollerItem({ messageId, scrollAnchor = false, className, ...props }) {

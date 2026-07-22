@@ -30,7 +30,7 @@ re-engage via `scrollToEnd()` / Button press when `autoScroll`.
   `ui/message-scroller/message-scroller.css`,
   `playground/pages/message-scroller.jsx`, `playground/registry.js`,
   `tests/message-scroller.test.mjs`
-- [ ] 2. Button + hooks: MessageScrollerButton (`data-active` flips when
+- [x] 2. Button + hooks: *(stacked branch `feat/message-scroller-hooks` — core alone hit 383 net lines, both sub-tasks = 605 > 500 cap)* MessageScrollerButton (`data-active` flips when
   scrolled away from its direction; click = `scrollToEnd` + re-engage follow),
   `useMessageScroller`, `useMessageScrollerVisibility` (IntersectionObserver),
   `useMessageScrollerScrollable`; demo wires button + visibility readout —
