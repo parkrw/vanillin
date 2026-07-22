@@ -48,8 +48,9 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 - Load-bearing files: `styles/globals.css` (tokens), `lib/` primitives,
   `ui/toggle/` (stateful pattern), `ui/tabs/` (roving tabindex), `ui/accordion/`
   (disclosure/presence), `playground/registry.js`.
-- Git gates (hooks): no commits on main — `<type>/<kebab>` branch first; PR cap
-  500 net lines vs main.
+- Git gates (hooks): no commits on main — `<type>/<kebab>` branch first. The
+  ~500-net-line branch-size hook is advisory only — never split or restructure
+  work because of it.
 
 ## Adjustments log
 
