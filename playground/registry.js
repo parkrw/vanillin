@@ -65,7 +65,7 @@ export const registry = {
   textarea: { title: "Textarea", page: lazy(() => import("./pages/textarea.jsx")) },
   toast: { title: "Toast (Sonner)" },
   toggle: { title: "Toggle", page: lazy(() => import("./pages/toggle.jsx")) },
-  "toggle-group": { title: "Toggle Group" },
+  "toggle-group": { title: "Toggle Group", page: lazy(() => import("./pages/toggle-group.jsx")) },
   tooltip: { title: "Tooltip" },
   typography: { title: "Typography", page: lazy(() => import("./pages/typography.jsx")) },
 }
