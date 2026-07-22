@@ -26,7 +26,7 @@
 
 ## Sub-tasks
 
-- [ ] 1. Core open/close — test: trigger click opens (`data-state="open"`,
+- [x] 1. Core open/close — test: trigger click opens (`data-state="open"`,
   `:modal` matches), Esc + backdrop click close through the exit animation,
   body scroll locked while open, focus returns to trigger on close; files:
   `ui/dialog/dialog.jsx`, `ui/dialog/dialog.css` (skeleton),
