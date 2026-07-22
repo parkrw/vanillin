@@ -1,0 +1,72 @@
+.message {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.message--end {
+  flex-direction: row-reverse;
+}
+
+/* Avatar — bottom-anchored; clears the footer line when one is present */
+
+.message-avatar {
+  flex-shrink: 0;
+  display: flex;
+}
+
+.message:has(.message-footer) > .message-avatar {
+  margin-block-end: 1.5rem;
+}
+
+/* Content column */
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.message--end > .message-content {
+  align-items: flex-end;
+}
+
+/* Header — sender name, stays at the content block's start */
+
+.message-header {
+  align-self: flex-start;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  padding-inline: 0.25rem;
+}
+
+/* Footer — status/actions, follows the message side */
+
+.message-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  color: var(--muted-foreground);
+  padding-inline: 0.25rem;
+}
+
+/* Group — consecutive rows from the same sender */
+
+.message-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  width: 100%;
+}
+
+.message-group > .message:not(:last-child) > .message-avatar {
+  visibility: hidden;
+}
