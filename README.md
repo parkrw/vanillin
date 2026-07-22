@@ -4,7 +4,7 @@ shadcn/ui recreated with **zero dependencies** — vanilla React JSX + plain CSS
 
 ## Using it in a project
 
-This is not a package. You copy files in, like shadcn:
+This is not a package — you copy files in:
 
 1. Copy `styles/globals.css` into your project and import it once (your app entry). It holds every design token — edit this one file to retheme everything, add a `.dark` class on `<html>` for dark mode.
 2. Copy `lib/` into your project (shared primitives some components import via relative paths — keep `lib/` and `ui/` as siblings).
@@ -19,7 +19,7 @@ Your bundler (Vite, Next, etc.) compiles the JSX. Nothing to install, and the co
 
 ### Component API conventions
 
-- **Controlled or uncontrolled** — stateful components accept `value`/`defaultValue` (or `checked`/`defaultChecked`) plus an `onValueChange`/`onCheckedChange` callback, same names as shadcn/Radix:
+- **Controlled or uncontrolled** — stateful components accept `value`/`defaultValue` (or `checked`/`defaultChecked`) plus an `onValueChange`/`onCheckedChange` callback:
 
   ```jsx
   <Switch defaultChecked />                          // uncontrolled
@@ -27,12 +27,12 @@ Your bundler (Vite, Next, etc.) compiles the JSX. Nothing to install, and the co
   ```
 
 - **`as` prop** replaces Radix's `asChild` for rendering a different element/component: `<CollapsibleTrigger as={Button}>`.
-- **Subcomponent names match shadcn exactly** (`AccordionItem`, `TabsTrigger`, …), so shadcn docs and examples map 1:1.
+- **Subcomponent names match the originals exactly** (`AccordionItem`, `TabsTrigger`, …), so upstream docs and examples map 1:1.
 - **Styling hooks**: components expose `data-state` (`open`/`closed`, `checked`, `active`…), `data-orientation`, and `data-disabled` attributes; every part has a stable class (`.accordion-trigger`, `.slider-thumb`). Override by targeting those, or pass `className`.
 
 ## Theming
 
-All components consume only CSS custom properties defined in `styles/globals.css`, with the same names shadcn uses (`--background`, `--primary`, `--radius`, …). Any shadcn theme generator output in oklch/hsl drops in.
+All components consume only CSS custom properties defined in `styles/globals.css`, with the standard names (`--background`, `--primary`, `--radius`, …). Any theme generator output in oklch/hsl drops in.
 
 ### Motion
 
