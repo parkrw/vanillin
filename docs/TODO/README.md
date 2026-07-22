@@ -9,31 +9,32 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 02  | pagination               | ~S  | [x]    | reuses .btn classes                                                         |
 | 03  | field-direction          | ~M  | [x]    | Field family + RTL demo/test + logical-CSS sweep                            |
 | 04  | chat-message-bubble      | ~M  | [x]    | ui/bubble + ui/message, CSS-only                                            |
-| 05  | chat-attachment-scroller | ~M  | [ ]    | deps: 04                                                                    |
-| 06  | dialog                   | ~L  | [ ]    | pattern-setter: `<dialog>` + focus-scope + scroll-lock + presence           |
-| 07  | alert-dialog-sheet       | ~M  | [ ]    | deps: 06                                                                    |
-| 08  | drawer                   | ~M  | [ ]    | deps: 06; swipe-to-dismiss                                                  |
-| 09  | popover-tooltip          | ~L  | [ ]    | Popover API + use-anchor-position                                           |
-| 10  | hover-card               | ~S  | [ ]    | deps: 09                                                                    |
-| 11  | dropdown-menu            | ~L  | [ ]    | menu roles, submenus, safe-triangle                                         |
-| 12  | context-menu             | ~M  | [ ]    | deps: 11; pointer-coord anchor                                              |
-| 13  | menubar                  | ~M  | [ ]    | deps: 11                                                                    |
-| 14  | navigation-menu          | ~M  | [ ]    | deps: 09                                                                    |
-| 15  | select                   | ~L  | [ ]    | hardest; deps: 09, 11                                                       |
-| 16  | combobox                 | ~M  | [ ]    | deps: 15                                                                    |
-| 17  | command                  | ~M  | [ ]    | deps: 16                                                                    |
-| 18  | input-otp                | ~M  | [ ]    | hidden input + segments                                                     |
-| 19  | scroll-area              | ~M  | [ ]    | overlay synced thumb                                                        |
-| 20  | calendar                 | ~L  | [ ]    | ARIA grid, native Date/Intl                                                 |
-| 21  | date-picker              | ~S  | [ ]    | deps: 09, 20                                                                |
-| 22  | toast                    | ~L  | [ ]    | queue, stacking, hover-pause, swipe                                         |
-| 23  | carousel                 | ~M  | [ ]    | scroll-snap + pointer swipe                                                 |
-| 24  | resizable                | ~M  | [ ]    | role=separator, keyboard resize                                             |
-| 25  | data-table               | ~L  | [ ]    | pattern page over ui/table                                                  |
-| 26  | sidebar                  | ~L  | [ ]    | deps: 07 (mobile = sheet); Cmd+B                                            |
-| 27  | dark-mode-pass           | ~M  | [ ]    | deps: all; visual QA every component in `.dark`                             |
-| 28  | docs-shell               | ~M  | [ ]    | deps: 27; playground → docs app: nav, getting-started, theming/motion pages |
-| 29  | docs-content             | ~L  | [ ]    | deps: 28; per-component usage/props/data-state prose on demo pages          |
+| 05  | attachment               | ~M  | [ ]    | deps: 04; CSS-only incl. AttachmentGroup scroll-snap row                    |
+| 06  | message-scroller         | ~M  | [ ]    | deps: 04; stateful stick-to-bottom autoscroll + hooks; needs test           |
+| 07  | dialog                   | ~L  | [ ]    | pattern-setter: `<dialog>` + focus-scope + scroll-lock + presence           |
+| 08  | alert-dialog-sheet       | ~M  | [ ]    | deps: 07                                                                    |
+| 09  | drawer                   | ~M  | [ ]    | deps: 07; swipe-to-dismiss                                                  |
+| 10  | popover-tooltip          | ~L  | [ ]    | Popover API + use-anchor-position                                           |
+| 11  | hover-card               | ~S  | [ ]    | deps: 10                                                                    |
+| 12  | dropdown-menu            | ~L  | [ ]    | menu roles, submenus, safe-triangle                                         |
+| 13  | context-menu             | ~M  | [ ]    | deps: 12; pointer-coord anchor                                              |
+| 14  | menubar                  | ~M  | [ ]    | deps: 12                                                                    |
+| 15  | navigation-menu          | ~M  | [ ]    | deps: 10                                                                    |
+| 16  | select                   | ~L  | [ ]    | hardest; deps: 10, 12                                                       |
+| 17  | combobox                 | ~M  | [ ]    | deps: 16                                                                    |
+| 18  | command                  | ~M  | [ ]    | deps: 17                                                                    |
+| 19  | input-otp                | ~M  | [ ]    | hidden input + segments                                                     |
+| 20  | scroll-area              | ~M  | [ ]    | overlay synced thumb                                                        |
+| 21  | calendar                 | ~L  | [ ]    | ARIA grid, native Date/Intl                                                 |
+| 22  | date-picker              | ~S  | [ ]    | deps: 10, 21                                                                |
+| 23  | toast                    | ~L  | [ ]    | queue, stacking, hover-pause, swipe                                         |
+| 24  | carousel                 | ~M  | [ ]    | scroll-snap + pointer swipe                                                 |
+| 25  | resizable                | ~M  | [ ]    | role=separator, keyboard resize                                             |
+| 26  | data-table               | ~L  | [ ]    | pattern page over ui/table                                                  |
+| 27  | sidebar                  | ~L  | [ ]    | deps: 08 (mobile = sheet); Cmd+B                                            |
+| 28  | dark-mode-pass           | ~M  | [ ]    | deps: all; visual QA every component in `.dark`                             |
+| 29  | docs-shell               | ~M  | [ ]    | deps: 28; playground → docs app: nav, getting-started, theming/motion pages |
+| 30  | docs-content             | ~L  | [ ]    | deps: 29; per-component usage/props/data-state prose on demo pages          |
 
 ## Refs
 
@@ -70,3 +71,8 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   MessageHeader/MessageFooter. Both CSS-only, no tests. shadcn's `render` prop →
   our `as`. Task 05 (attachment + message-scroller) will need scroll/state logic
   — verify its live anatomy the same way.
+- 2026-07-22 — split task 05 into 05 attachment (CSS-only) + 06 message-scroller
+  (stateful: Provider/Viewport/Content/Item/Button, stick-to-bottom autoscroll
+  released on user scroll, 3 hooks — verified against live shadcn docs); both in
+  one PR would blow the 500-line cap given task 04 landed ~490 for two CSS-only
+  components. Renumbered 06→29 to 07→30, dep refs shifted.
