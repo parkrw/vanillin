@@ -2,8 +2,9 @@
 :root {
   --pg-accent: oklch(0.52 0.13 175);
 
-  /* Smoother motion for the playground (see Motion in styles/globals.css). */
-  --motion-scale: 1.75;
+  /* Smoother motion for the playground (see Motion in styles/globals.css).
+     Scale cranked to 2.5 as a smoothness test — tune or revert to 1.75. */
+  --motion-scale: 2.5;
   --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 

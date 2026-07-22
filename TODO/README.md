@@ -3,37 +3,37 @@
 Plan: `~/.claude/plans/vanillin-zero-dep-shadcn-ui-recreation.md`. 31 of 64
 components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 
-| #   | Slug                     | Est | Status | Notes                                                             |
-| --- | ------------------------ | --- | ------ | ----------------------------------------------------------------- |
-| 01  | toggle-group             | ~S  | [x]    | roving tabindex; reuses ui/toggle css                             |
-| 02  | pagination               | ~S  | [x]    | reuses .btn classes                                               |
-| 03  | field-direction          | ~M  | [ ]    | direction = RTL context (lib)                                     |
-| 04  | chat-message-bubble      | ~M  | [ ]    | chat set part 1                                                   |
-| 05  | chat-attachment-scroller | ~M  | [ ]    | deps: 04                                                          |
-| 06  | dialog                   | ~L  | [ ]    | pattern-setter: `<dialog>` + focus-scope + scroll-lock + presence |
-| 07  | alert-dialog-sheet       | ~M  | [ ]    | deps: 06                                                          |
-| 08  | drawer                   | ~M  | [ ]    | deps: 06; swipe-to-dismiss                                        |
-| 09  | popover-tooltip          | ~L  | [ ]    | Popover API + use-anchor-position                                 |
-| 10  | hover-card               | ~S  | [ ]    | deps: 09                                                          |
-| 11  | dropdown-menu            | ~L  | [ ]    | menu roles, submenus, safe-triangle                               |
-| 12  | context-menu             | ~M  | [ ]    | deps: 11; pointer-coord anchor                                    |
-| 13  | menubar                  | ~M  | [ ]    | deps: 11                                                          |
-| 14  | navigation-menu          | ~M  | [ ]    | deps: 09                                                          |
-| 15  | select                   | ~L  | [ ]    | hardest; deps: 09, 11                                             |
-| 16  | combobox                 | ~M  | [ ]    | deps: 15                                                          |
-| 17  | command                  | ~M  | [ ]    | deps: 16                                                          |
-| 18  | input-otp                | ~M  | [ ]    | hidden input + segments                                           |
-| 19  | scroll-area              | ~M  | [ ]    | overlay synced thumb                                              |
-| 20  | calendar                 | ~L  | [ ]    | ARIA grid, native Date/Intl                                       |
-| 21  | date-picker              | ~S  | [ ]    | deps: 09, 20                                                      |
-| 22  | toast                    | ~L  | [ ]    | queue, stacking, hover-pause, swipe                               |
-| 23  | carousel                 | ~M  | [ ]    | scroll-snap + pointer swipe                                       |
-| 24  | resizable                | ~M  | [ ]    | role=separator, keyboard resize                                   |
-| 25  | data-table               | ~L  | [ ]    | pattern page over ui/table                                        |
-| 26  | sidebar                  | ~L  | [ ]    | deps: 07 (mobile = sheet); Cmd+B                                  |
-| 27  | dark-mode-pass           | ~M  | [ ]    | deps: all; visual QA every component in `.dark`                   |
+| #   | Slug                     | Est | Status | Notes                                                                       |
+| --- | ------------------------ | --- | ------ | --------------------------------------------------------------------------- |
+| 01  | toggle-group             | ~S  | [x]    | roving tabindex; reuses ui/toggle css                                       |
+| 02  | pagination               | ~S  | [x]    | reuses .btn classes                                                         |
+| 03  | field-direction          | ~M  | [ ]    | direction = RTL context (lib)                                               |
+| 04  | chat-message-bubble      | ~M  | [ ]    | chat set part 1                                                             |
+| 05  | chat-attachment-scroller | ~M  | [ ]    | deps: 04                                                                    |
+| 06  | dialog                   | ~L  | [ ]    | pattern-setter: `<dialog>` + focus-scope + scroll-lock + presence           |
+| 07  | alert-dialog-sheet       | ~M  | [ ]    | deps: 06                                                                    |
+| 08  | drawer                   | ~M  | [ ]    | deps: 06; swipe-to-dismiss                                                  |
+| 09  | popover-tooltip          | ~L  | [ ]    | Popover API + use-anchor-position                                           |
+| 10  | hover-card               | ~S  | [ ]    | deps: 09                                                                    |
+| 11  | dropdown-menu            | ~L  | [ ]    | menu roles, submenus, safe-triangle                                         |
+| 12  | context-menu             | ~M  | [ ]    | deps: 11; pointer-coord anchor                                              |
+| 13  | menubar                  | ~M  | [ ]    | deps: 11                                                                    |
+| 14  | navigation-menu          | ~M  | [ ]    | deps: 09                                                                    |
+| 15  | select                   | ~L  | [ ]    | hardest; deps: 09, 11                                                       |
+| 16  | combobox                 | ~M  | [ ]    | deps: 15                                                                    |
+| 17  | command                  | ~M  | [ ]    | deps: 16                                                                    |
+| 18  | input-otp                | ~M  | [ ]    | hidden input + segments                                                     |
+| 19  | scroll-area              | ~M  | [ ]    | overlay synced thumb                                                        |
+| 20  | calendar                 | ~L  | [ ]    | ARIA grid, native Date/Intl                                                 |
+| 21  | date-picker              | ~S  | [ ]    | deps: 09, 20                                                                |
+| 22  | toast                    | ~L  | [ ]    | queue, stacking, hover-pause, swipe                                         |
+| 23  | carousel                 | ~M  | [ ]    | scroll-snap + pointer swipe                                                 |
+| 24  | resizable                | ~M  | [ ]    | role=separator, keyboard resize                                             |
+| 25  | data-table               | ~L  | [ ]    | pattern page over ui/table                                                  |
+| 26  | sidebar                  | ~L  | [ ]    | deps: 07 (mobile = sheet); Cmd+B                                            |
+| 27  | dark-mode-pass           | ~M  | [ ]    | deps: all; visual QA every component in `.dark`                             |
 | 28  | docs-shell               | ~M  | [ ]    | deps: 27; playground → docs app: nav, getting-started, theming/motion pages |
-| 29  | docs-content             | ~L  | [ ]    | deps: 28; per-component usage/props/data-state prose on demo pages |
+| 29  | docs-content             | ~L  | [ ]    | deps: 28; per-component usage/props/data-state prose on demo pages          |
 
 ## Refs
 
