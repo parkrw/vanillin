@@ -46,7 +46,7 @@ export const registry = {
   "message-scroller": { title: "Message Scroller" },
   "native-select": { title: "Native Select", page: lazy(() => import("./pages/native-select.jsx")) },
   "navigation-menu": { title: "Navigation Menu" },
-  pagination: { title: "Pagination" },
+  pagination: { title: "Pagination", page: lazy(() => import("./pages/pagination.jsx")) },
   popover: { title: "Popover" },
   progress: { title: "Progress", page: lazy(() => import("./pages/progress.jsx")) },
   "radio-group": { title: "Radio Group", page: lazy(() => import("./pages/radio-group.jsx")) },
