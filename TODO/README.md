@@ -2,12 +2,11 @@
 
 Plan: `~/.claude/plans/vanillin-zero-dep-shadcn-ui-recreation.md`. 31 of 64
 components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
-One task = one PR (≤500 net lines vs main).
 
 | #   | Slug                     | Est | Status | Notes                                                             |
 | --- | ------------------------ | --- | ------ | ----------------------------------------------------------------- |
 | 01  | toggle-group             | ~S  | [x]    | roving tabindex; reuses ui/toggle css                             |
-| 02  | pagination               | ~S  | [x]    | reuses .btn classes                                                |
+| 02  | pagination               | ~S  | [x]    | reuses .btn classes                                               |
 | 03  | field-direction          | ~M  | [ ]    | direction = RTL context (lib)                                     |
 | 04  | chat-message-bubble      | ~M  | [ ]    | chat set part 1                                                   |
 | 05  | chat-attachment-scroller | ~M  | [ ]    | deps: 04                                                          |
