@@ -10,7 +10,9 @@
 }
 
 .collapsible-content[data-state="closed"] {
-  animation: collapsible-up var(--motion-medium) var(--motion-ease);
+  /* forwards holds height at 0 between animationend and React's unmount,
+     otherwise the content flashes at natural height for a frame. */
+  animation: collapsible-up var(--motion-medium) var(--motion-ease) forwards;
 }
 
 @keyframes collapsible-down {
