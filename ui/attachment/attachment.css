@@ -1,0 +1,217 @@
+.attachment {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: fit-content;
+  max-inline-size: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background-color: var(--background);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.attachment--vertical {
+  flex-direction: column;
+  align-items: stretch;
+  text-align: start;
+}
+
+/* Sizes */
+
+.attachment--sm {
+  gap: 0.5rem;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.8125rem;
+}
+
+.attachment--xs {
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+/* Media */
+
+.attachment-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border-radius: var(--radius-md);
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.attachment-media > svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+
+.attachment--sm .attachment-media {
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+}
+
+.attachment--xs .attachment-media {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  border-radius: var(--radius-sm);
+}
+
+.attachment-media--image {
+  overflow: hidden;
+  background-color: transparent;
+}
+
+.attachment-media--image > img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.attachment--vertical .attachment-media {
+  inline-size: 100%;
+  block-size: 5rem;
+}
+
+/* Content */
+
+.attachment-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-inline-size: 0;
+}
+
+.attachment-title {
+  font-weight: 500;
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-description {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* States (data-state on root) */
+
+.attachment[data-state="error"] {
+  border-color: color-mix(in oklab, var(--destructive) 40%, transparent);
+}
+
+.attachment[data-state="error"] .attachment-title {
+  color: var(--destructive);
+}
+
+@keyframes attachment-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+.attachment[data-state="uploading"] .attachment-title,
+.attachment[data-state="processing"] .attachment-title {
+  color: transparent;
+  background-image: linear-gradient(
+    90deg,
+    var(--muted-foreground) 35%,
+    var(--foreground) 50%,
+    var(--muted-foreground) 65%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: attachment-shimmer 2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .attachment[data-state="uploading"] .attachment-title,
+  .attachment[data-state="processing"] .attachment-title {
+    animation: none;
+    background-image: none;
+    color: var(--muted-foreground);
+  }
+}
+
+/* Actions — above the trigger overlay */
+
+.attachment-actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-inline-start: auto;
+  flex-shrink: 0;
+}
+
+.attachment--vertical .attachment-actions {
+  position: absolute;
+  inset-block-start: 0.375rem;
+  inset-inline-end: 0.375rem;
+  margin-inline-start: 0;
+}
+
+.attachment-action {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  padding: 0;
+  color: var(--muted-foreground);
+}
+
+.attachment-action:hover {
+  color: var(--foreground);
+}
+
+/* Trigger — inset overlay making the card clickable */
+
+.attachment-trigger {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: none;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.attachment-trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+/* Group — horizontally scrollable, snapping row with edge fade */
+
+.attachment-group {
+  display: flex;
+  gap: 0.5rem;
+  max-inline-size: 100%;
+  overflow-x: auto;
+  scroll-snap-type: inline mandatory;
+  padding-block: 0.25rem;
+  /* symmetric fade, direction-safe */
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 1rem,
+    black calc(100% - 1rem),
+    transparent
+  );
+}
+
+.attachment-group > .attachment {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
