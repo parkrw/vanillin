@@ -7,7 +7,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | --- | ------------------------ | --- | ------ | --------------------------------------------------------------------------- |
 | 01  | toggle-group             | ~S  | [x]    | roving tabindex; reuses ui/toggle css                                       |
 | 02  | pagination               | ~S  | [x]    | reuses .btn classes                                                         |
-| 03  | field-direction          | ~M  | [ ]    | direction = RTL context (lib)                                               |
+| 03  | field-direction          | ~M  | [x]    | Field family + RTL demo/test + logical-CSS sweep                            |
 | 04  | chat-message-bubble      | ~M  | [ ]    | chat set part 1                                                             |
 | 05  | chat-attachment-scroller | ~M  | [ ]    | deps: 04                                                                    |
 | 06  | dialog                   | ~L  | [ ]    | pattern-setter: `<dialog>` + focus-scope + scroll-lock + presence           |
@@ -59,3 +59,8 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   pagination; TODO seed + toggle-group hit ~350 net lines on one branch (cap
   500). Renumbered 02→03 … 26→27. Runner note: tests self-host on :5199, no dev
   server needed.
+- 2026-07-22 — task 03 done on `feat/field-direction` (~476 net lines): Field is
+  CSS-only (no test, like item); direction lib pre-existed — task became demo
+  page + RTL test + physical→logical CSS sweep (button-group, typography).
+  Slider already handled RTL fully. New components: use logical properties
+  (`inline-start`/`margin-inline`/`text-align: start`) from the start.
