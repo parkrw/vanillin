@@ -6,7 +6,7 @@ import { lazy } from "react"
  */
 export const registry = {
   primitives: { title: "Primitives (lib/)", page: lazy(() => import("./pages/primitives.jsx")) },
-  accordion: { title: "Accordion" },
+  accordion: { title: "Accordion", page: lazy(() => import("./pages/accordion.jsx")) },
   alert: { title: "Alert", page: lazy(() => import("./pages/alert.jsx")) },
   "alert-dialog": { title: "Alert Dialog" },
   "aspect-ratio": { title: "Aspect Ratio", page: lazy(() => import("./pages/aspect-ratio.jsx")) },
@@ -21,7 +21,7 @@ export const registry = {
   card: { title: "Card", page: lazy(() => import("./pages/card.jsx")) },
   carousel: { title: "Carousel" },
   checkbox: { title: "Checkbox", page: lazy(() => import("./pages/checkbox.jsx")) },
-  collapsible: { title: "Collapsible" },
+  collapsible: { title: "Collapsible", page: lazy(() => import("./pages/collapsible.jsx")) },
   combobox: { title: "Combobox" },
   command: { title: "Command" },
   "context-menu": { title: "Context Menu" },
