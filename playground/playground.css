@@ -38,24 +38,12 @@
 }
 
 .pg-nav-link {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  display: block;
   padding: 0.3rem 0.5rem;
   border-radius: var(--radius-sm);
   color: var(--foreground);
   text-decoration: none;
   font-size: 0.8125rem;
-}
-
-/* Completion marker: teal dot = built, hollow = not yet. */
-.pg-nav-link::before {
-  content: "";
-  flex-shrink: 0;
-  width: 0.3125rem;
-  height: 0.3125rem;
-  border-radius: 9999px;
-  background: var(--pg-accent);
 }
 
 .pg-nav-link:hover {
@@ -72,11 +60,6 @@
 .pg-nav-link[data-todo="true"] {
   color: var(--muted-foreground);
   pointer-events: none;
-}
-
-.pg-nav-link[data-todo="true"]::before {
-  background: transparent;
-  border: 1px solid var(--muted-foreground);
 }
 
 .pg-main {
