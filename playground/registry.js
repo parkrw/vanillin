@@ -32,7 +32,7 @@ export const registry = {
   drawer: { title: "Drawer" },
   "dropdown-menu": { title: "Dropdown Menu" },
   empty: { title: "Empty", page: lazy(() => import("./pages/empty.jsx")) },
-  field: { title: "Field" },
+  field: { title: "Field", page: lazy(() => import("./pages/field.jsx")) },
   "hover-card": { title: "Hover Card" },
   input: { title: "Input", page: lazy(() => import("./pages/input.jsx")) },
   "input-group": { title: "Input Group", page: lazy(() => import("./pages/input-group.jsx")) },
