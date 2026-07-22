@@ -8,8 +8,8 @@ Plan: `~/.claude/plans/vanillin-zero-dep-shadcn-ui-recreation.md`.
 - **Smoke test: 21/21 pass** (playwright-core in scratchpad, not repo): single/multiple/collapsible semantics, unmount-on-close, keyboard nav, tabbability, aria-controls/labelledby wiring, disabled item. Light-mode screenshots eyeballed — match shadcn.
 
 ## Repo state
-- Branch `feat/phase-2-stateful`, 3 commits ahead of main, working tree clean, build green.
-- **PR-size gate: branch is ~1335 net lines vs main, cap is 500 — `gh pr create` is BLOCKED.** Commits are atomic so splitting into per-commit branches is easy, but the 5-component commit alone is ~835 lines. User must choose: bypass (needs their explicit direction), merge locally without PR, or split further. **Do not stack more components on this branch until decided.**
+- Branch `main` at `cdb191ba` — user merged `feat/phase-2-stateful` locally (fast-forward) and deleted it. Working tree clean, no stash, no remote, build green.
+- **Git gates (hooks):** commits on main are blocked — create `<type>/<kebab-name>` branch first; PR-size cap is 500 net lines vs main. Keep each remaining component batch on its own small branch and merge locally the same way.
 
 ## Conventions (must match for new components)
 - `ui/<slug>/<slug>.jsx` + `.css`; block class = component name, variants `block--modifier` (default variant on base class), subparts `.block-part`.
@@ -27,6 +27,6 @@ Plan: `~/.claude/plans/vanillin-zero-dep-shadcn-ui-recreation.md`.
 - Visual QA loop that works: `npm run dev`, then headless Chrome one-shots — `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars --window-size=1400,1200 --virtual-time-budget=6000 --screenshot=out.png "http://localhost:5173/#<slug>"`. For interactions: playwright-core npm package + `chromium.launch({ channel: "chrome" })` (no browser download).
 
 ## Next step
-1. **Resolve the PR-size/branch strategy with the user** (see Repo state).
-2. Phase 2 remainder: progress, slider, pagination, toggle-group (roving focus), field, direction, chat set (attachment, bubble, message, message-scroller). Then phases 3–7.
+1. Phase 2 remainder, one small branch per batch (≤500 lines): progress, slider, pagination, toggle-group (roving focus), field, direction, chat set (attachment, bubble, message, message-scroller). Start with progress + slider.
+2. Then phases 3–7 (#4–#8 in the plan).
 3. Dark mode visual pass still pending for everything.
