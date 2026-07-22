@@ -11,7 +11,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 04  | chat-message-bubble      | ~M  | [x]    | ui/bubble + ui/message, CSS-only                                            |
 | 05  | attachment               | ~M  | [x]    | deps: 04; CSS-only incl. AttachmentGroup scroll-snap row                    |
 | 06  | message-scroller         | ~M  | [x]    | two stacked PRs: core + button/hooks                                        |
-| 07  | dialog                   | ~L  | [ ]    | pattern-setter: `<dialog>` + focus-scope + scroll-lock + presence           |
+| 07  | dialog                   | ~L  | [x]    | native `<dialog>` pattern-setter — see task file for overlay recipe         |
 | 08  | alert-dialog-sheet       | ~M  | [ ]    | deps: 07                                                                    |
 | 09  | drawer                   | ~M  | [ ]    | deps: 07; swipe-to-dismiss                                                  |
 | 10  | popover-tooltip          | ~L  | [ ]    | Popover API + use-anchor-position                                           |
@@ -83,6 +83,14 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   scroll an inner viewport. Applies to any future edge-fade scroller
   (scroll-area 20, carousel 24, sidebar 27). QA dark mode via clip screenshots
   or after the fix, not just light.
+- 2026-07-22 — task 07 done on `feat/dialog` (~468 net lines). Overlay recipe
+  for 08/09: `showModal()` gives top layer + focus containment + inert
+  background — no Portal/useFocusTrap/useDismissableLayer. Esc = `cancel`
+  event, `preventDefault()` + route through state so exit animation plays;
+  `::backdrop` is the overlay (DialogOverlay/DialogPortal are compat no-ops);
+  `showModal()` in a plain `useEffect` declared *after* `useReturnFocus` so
+  focus capture runs before focus moves; backdrop click = pointer coords vs
+  `getBoundingClientRect` (padding clicks stay inside).
 - 2026-07-22 — task 06 done as two stacked branches (`feat/message-scroller`
   383 + `feat/message-scroller-hooks` 223 net lines; together over the 500
   cap). Gotchas: Chrome native scroll anchoring doubles manual prepend
