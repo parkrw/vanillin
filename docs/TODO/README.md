@@ -41,7 +41,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   one `tests/<slug>.test.mjs` per interactive component. (Dev server on :5173
   only needed for manual/screenshot QA.)
 - Build: `npm run build`. No lint configured.
-- Conventions + gotchas: `HANDOFF.md` (block classes, tokens-only CSS, `cn()`,
+- Conventions + gotchas: `docs/HANDOFF.md` (block classes, tokens-only CSS, `cn()`,
   `as` prop, `useControllableState` + `data-state`, `usePresence`, demo page +
   `playground/registry.js` entry per component).
 - Load-bearing files: `styles/globals.css` (tokens), `lib/` primitives,
