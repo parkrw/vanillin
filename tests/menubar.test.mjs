@@ -160,4 +160,108 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.keyboard.press("Escape")
     await waitClosed("mb-menu-edit")
   })
+
+  // ── Sub-task 2: submenu vs cross-menu arrows + re-export coverage ────
+
+  await test("ArrowRight on a SubTrigger opens the submenu, not the next menu", async () => {
+    await page.mouse.move(5, 5)
+    await fileTrigger.click()
+    await waitOpen("mb-menu-file")
+
+    await page.locator('[data-pg="mb-sub-trigger"]').focus()
+    await page.keyboard.press("ArrowRight")
+    await waitOpen("mb-sub-content")
+    eq(
+      await page.evaluate(() =>
+        document.querySelector('[data-pg="mb-menu-edit"]').matches(":popover-open")
+      ),
+      false,
+      "next menu did not open"
+    )
+    eq((await focusedText()).startsWith("Email link"), true, "first submenu item focused")
+  })
+
+  await test("ArrowLeft inside the submenu closes only the sub", async () => {
+    // Submenu is open from the previous test.
+    await page.keyboard.press("ArrowLeft")
+    await waitClosed("mb-sub-content")
+    eq(
+      await page.evaluate(() =>
+        document.querySelector('[data-pg="mb-menu-file"]').matches(":popover-open")
+      ),
+      true,
+      "parent menu still open"
+    )
+    eq(
+      await page.evaluate(() => document.activeElement?.dataset.pg),
+      "mb-sub-trigger",
+      "focus back on the sub trigger"
+    )
+  })
+
+  await test("ArrowRight on a plain submenu item jumps to the next menu", async () => {
+    // Parent menu still open, focus on the sub trigger — reopen the sub.
+    await page.keyboard.press("ArrowRight")
+    await waitOpen("mb-sub-content")
+
+    await page.keyboard.press("ArrowRight")
+    await waitOpen("mb-menu-edit")
+    await waitClosed("mb-menu-file")
+    await waitClosed("mb-sub-content")
+    eq((await focusedText()).startsWith("Undo"), true, "next menu opens with first item focused")
+
+    await page.keyboard.press("Escape")
+    await waitClosed("mb-menu-edit")
+  })
+
+  await test("checkbox item toggles, closes, persists on reopen (re-export wiring)", async () => {
+    await page.mouse.move(5, 5)
+    const viewTrigger = page.locator('[data-pg="mb-trigger-view"]')
+    await viewTrigger.click()
+    await waitOpen("mb-menu-view")
+
+    const cb = page.locator('[data-pg="mb-cb-bookmarks"]')
+    eq(await cb.getAttribute("role"), "menuitemcheckbox", "role=menuitemcheckbox")
+    eq(await cb.getAttribute("aria-checked"), "true", "starts checked")
+
+    await cb.click()
+    await waitClosed("mb-menu-view")
+    eq(await page.locator('[data-pg="mb-cb-readout"]').textContent(), "off", "readout toggled")
+
+    await viewTrigger.click()
+    await waitOpen("mb-menu-view")
+    eq(await cb.getAttribute("aria-checked"), "false", "persists on reopen")
+
+    await page.keyboard.press("Escape")
+    await waitClosed("mb-menu-view")
+  })
+
+  await test("radio group single-selects (re-export wiring)", async () => {
+    await page.mouse.move(5, 5)
+    await profilesTrigger.click()
+    await waitOpen("mb-menu-profiles")
+
+    await page
+      .locator('[data-pg="mb-menu-profiles"] [role="menuitemradio"]', { hasText: "Andy" })
+      .click()
+    await waitClosed("mb-menu-profiles")
+    eq(
+      await page.locator('[data-pg="mb-radio-readout"]').textContent(),
+      "andy",
+      "radio value changed"
+    )
+
+    await profilesTrigger.click()
+    await waitOpen("mb-menu-profiles")
+    const checked = await page.evaluate(
+      () =>
+        [...document.querySelectorAll('[data-pg="mb-menu-profiles"] [role="menuitemradio"]')]
+          .filter((el) => el.getAttribute("aria-checked") === "true")
+          .map((el) => el.textContent.trim())
+    )
+    eq(checked.join(","), "Andy", "exactly one checked")
+
+    await page.keyboard.press("Escape")
+    await waitClosed("mb-menu-profiles")
+  })
 }
