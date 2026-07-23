@@ -1,0 +1,161 @@
+/* Navigation Menu — per-item anchored panels on the native Popover API
+   (viewport-less mode). Enter/exit via transitions + @starting-style +
+   allow-discrete, popover recipe. */
+
+.navigation-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navigation-menu-list {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navigation-menu-item {
+  display: flex;
+}
+
+.navigation-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  block-size: 2.25rem;
+  padding-block: 0.5rem;
+  padding-inline: 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+  cursor: default;
+  text-decoration: none;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.navigation-menu-trigger:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.navigation-menu-trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+.navigation-menu-trigger[data-state="open"] {
+  background-color: color-mix(in oklab, var(--accent) 50%, transparent);
+  color: var(--accent-foreground);
+}
+
+.navigation-menu-trigger-chevron {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  position: relative;
+  inset-block-start: 1px;
+  transition: transform var(--motion-fast) var(--motion-ease);
+}
+
+.navigation-menu-trigger[data-state="open"] > .navigation-menu-trigger-chevron {
+  transform: rotate(180deg);
+}
+
+.navigation-menu-content {
+  /* Reset UA popover defaults */
+  position: fixed;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--popover);
+  color: var(--popover-foreground);
+  padding: 0.5rem;
+  box-shadow: var(--shadow-md);
+  inline-size: max-content;
+  max-inline-size: calc(100vw - 2rem);
+  overflow: auto;
+
+  /* overlay keeps the element in the top layer during the exit fade;
+     without it hidePopover yanks it out immediately. */
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease),
+    display var(--motion-fast) var(--motion-ease) allow-discrete,
+    overlay var(--motion-fast) var(--motion-ease) allow-discrete;
+}
+
+@starting-style {
+  .navigation-menu-content:popover-open {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.navigation-menu-content:not(:popover-open) {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.navigation-menu-content[data-side="bottom"] {
+  transform-origin: top center;
+}
+
+.navigation-menu-content[data-side="top"] {
+  transform-origin: bottom center;
+}
+
+.navigation-menu-link {
+  display: block;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.navigation-menu-link:hover,
+.navigation-menu-link:focus-visible {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.navigation-menu-link[data-active] {
+  background-color: color-mix(in oklab, var(--accent) 50%, transparent);
+}
+
+/* shadcn list-item anatomy: a title div + a muted description paragraph. */
+.navigation-menu-link > div {
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.navigation-menu-link > p {
+  margin: 0;
+  margin-block-start: 0.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--muted-foreground);
+}
+
+.navigation-menu-link:hover > p,
+.navigation-menu-link:focus-visible > p {
+  color: inherit;
+}
