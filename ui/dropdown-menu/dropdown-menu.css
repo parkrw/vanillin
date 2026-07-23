@@ -1,0 +1,113 @@
+/* DropdownMenu — native Popover API (popover="auto") with menu roles.
+   Enter/exit via transitions + @starting-style + allow-discrete
+   (mirrors the popover recipe from task 10). */
+
+.dropdown-menu {
+  /* Reset UA popover defaults */
+  position: fixed;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--popover);
+  color: var(--popover-foreground);
+  padding: 0.25rem;
+  box-shadow: var(--shadow-md);
+  min-width: 8rem;
+  max-width: calc(100vw - 2rem);
+  overflow: auto;
+
+  /* Enter/exit transitions. overlay keeps the element in the top layer
+     during the exit fade; without it hidePopover yanks it out immediately. */
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease),
+    display var(--motion-fast) var(--motion-ease) allow-discrete,
+    overlay var(--motion-fast) var(--motion-ease) allow-discrete;
+}
+
+/* Entry state */
+@starting-style {
+  .dropdown-menu:popover-open {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* Exit state */
+.dropdown-menu:not(:popover-open) {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+/* Placement-aware transform origin */
+.dropdown-menu[data-side="bottom"] {
+  transform-origin: top center;
+}
+
+.dropdown-menu[data-side="top"] {
+  transform-origin: bottom center;
+}
+
+.dropdown-menu[data-side="left"] {
+  transform-origin: center right;
+}
+
+.dropdown-menu[data-side="right"] {
+  transform-origin: center left;
+}
+
+/* ---- Item ---- */
+
+.dropdown-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-block: 0.375rem;
+  padding-inline: 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  line-height: 1.25;
+  cursor: default;
+  outline: none;
+  user-select: none;
+}
+
+.dropdown-menu-item:focus {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.dropdown-menu-item[aria-disabled="true"] {
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+/* ---- Label ---- */
+
+.dropdown-menu-label {
+  padding-block: 0.375rem;
+  padding-inline: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* ---- Separator ---- */
+
+.dropdown-menu-separator {
+  margin-block: 0.25rem;
+  margin-inline: -0.25rem;
+  block-size: 1px;
+  background-color: var(--border);
+}
+
+/* ---- Shortcut ---- */
+
+.dropdown-menu-shortcut {
+  margin-inline-start: auto;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: var(--muted-foreground);
+}

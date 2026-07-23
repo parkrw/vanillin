@@ -30,7 +30,7 @@ export const registry = {
   dialog: { title: "Dialog", page: lazy(() => import("./pages/dialog.jsx")) },
   direction: { title: "Direction", page: lazy(() => import("./pages/direction.jsx")) },
   drawer: { title: "Drawer", page: lazy(() => import("./pages/drawer.jsx")) },
-  "dropdown-menu": { title: "Dropdown Menu" },
+  "dropdown-menu": { title: "Dropdown Menu", page: lazy(() => import("./pages/dropdown-menu.jsx")) },
   empty: { title: "Empty", page: lazy(() => import("./pages/empty.jsx")) },
   field: { title: "Field", page: lazy(() => import("./pages/field.jsx")) },
   "hover-card": { title: "Hover Card", page: lazy(() => import("./pages/hover-card.jsx")) },
