@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Zero-dependency recreation of shadcn/ui components. Copy-paste JSX + CSS, React only.",
+  "description": "Zero-dependency React components. Copy-paste JSX + CSS, that's it.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
