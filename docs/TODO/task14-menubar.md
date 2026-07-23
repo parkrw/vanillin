@@ -63,7 +63,7 @@
 
 ## Sub-tasks
 
-- [ ] 1. core menubar — test: `role="menubar"` row with `role="menuitem"`
+- [x] 1. core menubar — test: `role="menubar"` row with `role="menuitem"`
   triggers, one tabbable (roving); ArrowRight/Left/Home/End move trigger
   focus without opening; click toggles a `role="menu"` below the trigger
   with first item focused (matching dropdown); ArrowDown opens focusing
@@ -76,7 +76,7 @@
   `ui/menubar/menubar.jsx` + `.css`, `ui/dropdown-menu/dropdown-menu.jsx`
   (skipItemFocusRef + one-shot ref reset), `tests/menubar.test.mjs`,
   `playground/pages/menubar.jsx`, `playground/registry.js`.
-- [ ] 2. submenu + re-export coverage — test: ArrowRight on a SubTrigger
+- [x] 2. submenu + re-export coverage — test: ArrowRight on a SubTrigger
   opens the submenu (not the next menu), ArrowRight on a plain item inside
   the submenu jumps to the next menu (whole stack closes), ArrowLeft inside
   the submenu only closes the sub; checkbox toggles `aria-checked`, closes,

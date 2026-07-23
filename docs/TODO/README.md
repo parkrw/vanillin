@@ -18,7 +18,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 11  | hover-card               | ~S  | [x]    | deps: 10; tooltip recipe + shared root timers for content-hover grace       |
 | 12  | dropdown-menu            | ~L  | [x]    | menu-overlay pattern-setter for 13/14/16 — see task file + log              |
 | 13  | context-menu             | ~M  | [x]    | deps: 12; all parts re-export dropdown-menu; see Chrome contextmenu gotcha  |
-| 14  | menubar                  | ~M  | [ ]    | deps: 12                                                                    |
+| 14  | menubar                  | ~M  | [x]    | deps: 12; all item parts re-export dropdown-menu; see click-toggle gotcha   |
 | 15  | navigation-menu          | ~M  | [ ]    | deps: 10                                                                    |
 | 16  | select                   | ~L  | [ ]    | hardest; deps: 10, 12                                                       |
 | 17  | combobox                 | ~M  | [ ]    | deps: 16                                                                    |
@@ -177,3 +177,17 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   showingRef that drifted after native light dismiss (stranded menus).
   Testing note: Playwright clicks are instant and pixel-still — races with
   light dismiss need a held press + small drift to reproduce.
+- 2026-07-23 — task 14 done on `feat/menubar` (~707 net lines — size hook is
+  advisory). Reuse: item parts re-export dropdown-menu; MenubarMenu wraps a
+  controlled DropdownMenu keyed by the root value; native auto-popover
+  exclusivity does the menu handoff on switch. Dropdown root context grew
+  one-shot `skipItemFocusRef` (hover switch focuses the menu, not an item);
+  `focusLastRef` now self-resets after the open effect. Cross-menu
+  ArrowRight/Left ride the Sub stopPropagation pattern: a next-key reaching
+  MenubarContent is always a cross-menu move, even from inside a submenu.
+  Gotcha: **trigger click-toggle races the queued light-dismiss toggle** —
+  pointerdown light-dismisses the popover, the queued toggle syncs state to
+  closed, then click re-toggles it open at human speeds (Playwright's
+  instant click passes either way and proves nothing) — snapshot open-state
+  at pointerdown. dropdown-menu's own trigger has the same latent race
+  (click-to-close untested there); fix it when touched, e.g. select (16).
