@@ -14,7 +14,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 07  | dialog                   | ~L  | [x]    | native `<dialog>` pattern-setter — see task file for overlay recipe         |
 | 08  | alert-dialog-sheet       | ~M  | [x]    | thin reuses of ui/dialog (compound classes + `dismissible`)                                                                    |
 | 09  | drawer                   | ~M  | [x]    | stacked on 08 branch; Base UI anatomy (swipeDirection), not vaul            |
-| 10  | popover-tooltip          | ~L  | [ ]    | Popover API + use-anchor-position                                           |
+| 10  | popover-tooltip          | ~L  | [x]    | anchored-overlay pattern-setter — see task file for popover recipe          |
 | 11  | hover-card               | ~S  | [ ]    | deps: 10                                                                    |
 | 12  | dropdown-menu            | ~L  | [ ]    | menu roles, submenus, safe-triangle                                         |
 | 13  | context-menu             | ~M  | [ ]    | deps: 12; pointer-coord anchor                                              |
@@ -112,6 +112,17 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   inline drag transform, so swipe hands off to the close animation for free;
   dialog.jsx now exports `useDialog()` for recipe reuses. Message-scroller
   button test flaked once mid-session despite the 08 fix — watch it.
+- 2026-07-22 — task 10 done on `feat/popover-tooltip` (~926 net lines, one
+  branch — size hook is advisory). Anchored-overlay recipe for 11/12/15/16:
+  native Popover API (`auto` = light dismiss, `manual` = hover-managed) +
+  `useAnchorPosition`; content stays **always mounted** — light dismiss can't
+  be cancelled (`beforetoggle` only cancelable on open), so state syncs from
+  the native `toggle` event, and exit motion is `@starting-style` +
+  `allow-discrete` transitions (keyframes can't play after `hidePopover`);
+  transition `overlay` too or the element leaves the top layer before the
+  exit fade. Tooltip: provider delay + 300ms skip window; focus opens
+  instantly (hover delay never applies). shadcn anatomy is Base UI: popover
+  has Header/Title/Description, no Anchor/Portal.
 - 2026-07-22 — task 06 done as two stacked branches (`feat/message-scroller`
   383 + `feat/message-scroller-hooks` 223 net lines; together over the 500
   cap). Gotchas: Chrome native scroll anchoring doubles manual prepend
