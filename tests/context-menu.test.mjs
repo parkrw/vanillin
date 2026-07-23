@@ -1,0 +1,160 @@
+export default async function run({ page, baseUrl, test, eq }) {
+  await page.goto(`${baseUrl}/#context-menu`)
+
+  const trigger = page.locator('[data-pg="context-trigger"]')
+
+  const waitOpen = () => page.waitForSelector('[data-pg="context-menu"]:popover-open')
+  const waitClosed = () =>
+    page.waitForFunction(() => {
+      const el = document.querySelector('[data-pg="context-menu"]')
+      return el && !el.matches(":popover-open") && el.dataset.state === "closed"
+    })
+
+  // Record whether the contextmenu default was prevented (document bubble
+  // listener runs after React's root handlers).
+  await page.evaluate(() => {
+    window.__ctxPrevented = null
+    document.addEventListener("contextmenu", (e) => {
+      window.__ctxPrevented = e.defaultPrevented
+    })
+  })
+
+  // Helper: right-click at viewport coords and wait for the menu.
+  const rightClickAt = async (x, y) => {
+    await page.mouse.click(x, y, { button: "right" })
+    await waitOpen()
+  }
+
+  // Helper: positionAnchored writes px left/top styles — read those (rects
+  // are skewed by the entry scale transform).
+  const menuPos = () =>
+    page.evaluate(() => {
+      const el = document.querySelector('[data-pg="context-menu"]')
+      return {
+        left: parseFloat(el.style.left),
+        top: parseFloat(el.style.top),
+        width: el.offsetWidth,
+        height: el.offsetHeight,
+        side: el.dataset.side,
+        vw: document.documentElement.clientWidth,
+        vh: document.documentElement.clientHeight,
+      }
+    })
+
+  await test("right-click opens role=menu at pointer coords with first item focused", async () => {
+    const box = await trigger.boundingBox()
+    const x = Math.round(box.x + box.width / 2)
+    const y = Math.round(box.y + box.height / 2)
+    await rightClickAt(x, y)
+
+    const menu = page.locator('[data-pg="context-menu"]')
+    eq(await menu.getAttribute("role"), "menu", "role=menu")
+    eq(await menu.getAttribute("data-state"), "open", "data-state=open")
+    eq(await page.evaluate(() => window.__ctxPrevented), true, "native menu suppressed")
+
+    // Cursor sits 2px inside the top-left corner (see ContextMenuContent);
+    // top is cross-axis clamped to the viewport (positionAnchored formula).
+    // Positioning settles a frame after :popover-open (ResizeObserver), so poll.
+    await page.waitForFunction((expectedLeft) => {
+      const el = document.querySelector('[data-pg="context-menu"]')
+      return Math.abs(parseFloat(el.style.left) - expectedLeft) < 1
+    }, x - 2)
+    const pos = await menuPos()
+    const expectedTop = Math.max(8, Math.min(y - 2, Math.max(8, pos.vh - pos.height - 8)))
+    eq(Math.abs(pos.top - expectedTop) < 1, true, `top ~ clamped click y (${pos.top} vs ${expectedTop})`)
+
+    const focusedRole = await page.evaluate(() => document.activeElement?.getAttribute("role"))
+    eq(focusedRole, "menuitem", "first item focused")
+  })
+
+  await test("right-click at a second spot repositions the menu", async () => {
+    // Menu is open from the previous test; right-click elsewhere in the area.
+    const box = await trigger.boundingBox()
+    const x = Math.round(box.x + box.width / 4)
+    const y = Math.round(box.y + box.height / 4)
+    await page.mouse.click(x, y, { button: "right" })
+
+    await page.waitForFunction((expectedLeft) => {
+      const el = document.querySelector('[data-pg="context-menu"]')
+      return (
+        el?.matches(":popover-open") && Math.abs(parseFloat(el.style.left) - expectedLeft) < 1
+      )
+    }, x - 2)
+
+    await page.keyboard.press("Escape")
+    await waitClosed()
+  })
+
+  await test("arrow nav + Enter selects item, updates readout, closes", async () => {
+    const box = await trigger.boundingBox()
+    await rightClickAt(Math.round(box.x + 40), Math.round(box.y + 40))
+
+    // First focused item is "Back"; ArrowDown skips disabled "Forward" to "Reload".
+    await page.keyboard.press("ArrowDown")
+    const focused = await page.evaluate(() => document.activeElement?.textContent?.trim())
+    eq(focused.startsWith("Reload"), true, "ArrowDown skips disabled item")
+
+    await page.keyboard.press("Enter")
+    await waitClosed()
+    const readout = await page.locator('[data-pg="context-readout"]').textContent()
+    eq(readout, "reload", "readout updated")
+  })
+
+  await test("Escape closes and state syncs (can reopen)", async () => {
+    const box = await trigger.boundingBox()
+    await rightClickAt(Math.round(box.x + 40), Math.round(box.y + 40))
+    await page.keyboard.press("Escape")
+    await waitClosed()
+
+    await rightClickAt(Math.round(box.x + 60), Math.round(box.y + 60))
+    await page.keyboard.press("Escape")
+    await waitClosed()
+  })
+
+  await test("outside click closes and state syncs", async () => {
+    const box = await trigger.boundingBox()
+    await rightClickAt(Math.round(box.x + 40), Math.round(box.y + 40))
+    await page.mouse.click(5, 5)
+    await waitClosed()
+  })
+
+  await test("menu flips near the right viewport edge", async () => {
+    const box = await trigger.boundingBox()
+    const vw = await page.evaluate(() => document.documentElement.clientWidth)
+    // Click as close to the right edge as the trigger area allows.
+    const x = Math.round(Math.min(vw - 20, box.x + box.width - 5))
+    const y = Math.round(box.y + box.height / 2)
+    await rightClickAt(x, y)
+
+    // Position settles a frame after open — poll until side + bounds match
+    // what the final size dictates (flip near the edge, always in-viewport).
+    await page.waitForFunction((clickX) => {
+      const el = document.querySelector('[data-pg="context-menu"]')
+      if (!el?.matches(":popover-open") || el.offsetWidth === 0) return false
+      const vw = document.documentElement.clientWidth
+      const fitsRight = clickX - 2 + el.offsetWidth <= vw - 8
+      const left = parseFloat(el.style.left)
+      return el.dataset.side === (fitsRight ? "right" : "left") && left + el.offsetWidth <= vw
+    }, x)
+
+    await page.keyboard.press("Escape")
+    await waitClosed()
+  })
+
+  await test("disabled trigger lets the native context menu through", async () => {
+    const disabledArea = page.locator('[data-pg="context-disabled-trigger"]')
+    await disabledArea.scrollIntoViewIfNeeded()
+    const box = await disabledArea.boundingBox()
+    await page.mouse.click(
+      Math.round(box.x + box.width / 2),
+      Math.round(box.y + box.height / 2),
+      { button: "right" }
+    )
+
+    eq(await page.evaluate(() => window.__ctxPrevented), false, "default not prevented")
+    const opened = await page.evaluate(() =>
+      [...document.querySelectorAll('[role="menu"]')].some((el) => el.matches(":popover-open"))
+    )
+    eq(opened, false, "our menu did not open")
+  })
+}

@@ -1,0 +1,4 @@
+/* ContextMenu — pointer-anchored reuse of the dropdown-menu recipe (task 12).
+   All parts re-export dropdown-menu parts, so pages stay single-import; the
+   compound .context-menu class rides on .dropdown-menu with no visual delta. */
+@import "../dropdown-menu/dropdown-menu.css";

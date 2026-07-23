@@ -24,7 +24,7 @@ export const registry = {
   collapsible: { title: "Collapsible", page: lazy(() => import("./pages/collapsible.jsx")) },
   combobox: { title: "Combobox" },
   command: { title: "Command" },
-  "context-menu": { title: "Context Menu" },
+  "context-menu": { title: "Context Menu", page: lazy(() => import("./pages/context-menu.jsx")) },
   "data-table": { title: "Data Table" },
   "date-picker": { title: "Date Picker" },
   dialog: { title: "Dialog", page: lazy(() => import("./pages/dialog.jsx")) },

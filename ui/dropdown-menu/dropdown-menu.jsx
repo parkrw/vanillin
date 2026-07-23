@@ -7,6 +7,11 @@ import { useSafeTriangle } from "../../lib/use-safe-triangle.js"
 
 const DropdownMenuContext = createContext(null)
 
+/** Root context accessor for recipe reuses (context-menu, menubar). */
+export function useDropdownMenu() {
+  return useContext(DropdownMenuContext)
+}
+
 /**
  * Root provider — controlled via `open`/`onOpenChange`, uncontrolled via `defaultOpen`.
  * Carries open state, refs, and a flag for "focus last item on open" (ArrowUp trigger).
@@ -84,9 +89,11 @@ function getMenuItems(menuEl) {
 }
 
 export function DropdownMenuContent({
+  anchorRef,
   side = "bottom",
   align = "start",
   sideOffset = 4,
+  alignOffset = 0,
   className,
   onKeyDown,
   children,
@@ -95,7 +102,9 @@ export function DropdownMenuContent({
   const { open, setOpen, triggerRef, contentRef, contentId, focusLastRef } =
     useContext(DropdownMenuContext)
 
-  useAnchorPosition(open, triggerRef, contentRef, { side, align, sideOffset })
+  // anchorRef overrides the trigger as the positioning anchor (context-menu
+  // passes a virtual pointer-coord anchor); focus still returns to the trigger.
+  useAnchorPosition(open, anchorRef ?? triggerRef, contentRef, { side, align, sideOffset, alignOffset })
 
   // showingRef tracks native popover state to avoid redundant show/hide calls.
   const showingRef = useRef(false)
