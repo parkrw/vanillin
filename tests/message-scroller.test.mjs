@@ -71,11 +71,12 @@ export default async function run({ page, baseUrl, test, eq, near }) {
 
   await test("button click returns to bottom and re-engages follow", async () => {
     await button.click()
-    await page.waitForFunction(() => {
-      const el = document.querySelector(".message-scroller-viewport")
-      return el.scrollHeight - el.scrollTop - el.clientHeight < 2
-    })
-    eq(await frame.getAttribute("data-state"), "following")
+    // Wait on the component state, not the scroll position — the follow
+    // listener re-engages a frame after the viewport reaches the end.
+    await page.waitForFunction(
+      () => document.querySelector(".message-scroller").dataset.state === "following"
+    )
+    eq((await distanceFromEnd()) < 2, true, "at bottom")
     eq(await button.getAttribute("data-active"), "false")
     eq(await button.isDisabled(), true)
     await append.click()
