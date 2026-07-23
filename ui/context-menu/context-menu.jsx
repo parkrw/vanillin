@@ -64,8 +64,15 @@ export function ContextMenuTrigger({
   const { open, setOpen, triggerRef, contentRef } = useDropdownMenu()
   const { setPoint } = useContext(ContextMenuContext)
   const longPressTimer = useRef(null)
+  const cancelPendingOpen = useRef(null)
 
-  useEffect(() => () => clearTimeout(longPressTimer.current), [])
+  useEffect(
+    () => () => {
+      clearTimeout(longPressTimer.current)
+      cancelPendingOpen.current?.()
+    },
+    []
+  )
 
   const openAt = (x, y) => {
     setPoint(x, y)
@@ -90,12 +97,36 @@ export function ContextMenuTrigger({
     }, 0)
   }
 
+  // The opening pointer is usually still down when we decide to open (macOS
+  // fires contextmenu on press; the long-press timer fires mid-press).
+  // Opening then loses to light dismiss: the entry transition scales the menu
+  // from 0.96, so the release's hit test lands outside the not-yet-full-size
+  // menu and the pointerup closes it. Open once the gesture ends instead,
+  // anchored at the original press point.
+  const openOnGestureEnd = (x, y) => {
+    cancelPendingOpen.current?.()
+    const finish = () => {
+      cancelPendingOpen.current?.()
+      openAt(x, y)
+    }
+    window.addEventListener("pointerup", finish, { capture: true, once: true })
+    window.addEventListener("pointercancel", finish, { capture: true, once: true })
+    cancelPendingOpen.current = () => {
+      cancelPendingOpen.current = null
+      window.removeEventListener("pointerup", finish, { capture: true })
+      window.removeEventListener("pointercancel", finish, { capture: true })
+    }
+  }
+
   const handleContextMenu = (event) => {
     onContextMenu?.(event)
     if (disabled || event.defaultPrevented) return
     event.preventDefault()
     clearTimeout(longPressTimer.current)
-    openAt(event.clientX, event.clientY)
+    // buttons !== 0 → the press is still in progress (macOS/Linux order);
+    // Windows fires contextmenu after the release, where opening now is safe.
+    if (event.buttons) openOnGestureEnd(event.clientX, event.clientY)
+    else openAt(event.clientX, event.clientY)
   }
 
   // Touch/pen long-press (700ms) — iOS fires no contextmenu event. Where the
@@ -105,7 +136,7 @@ export function ContextMenuTrigger({
     if (disabled || event.defaultPrevented || event.pointerType === "mouse") return
     const { clientX: x, clientY: y } = event
     clearTimeout(longPressTimer.current)
-    longPressTimer.current = setTimeout(() => openAt(x, y), 700)
+    longPressTimer.current = setTimeout(() => openOnGestureEnd(x, y), 700)
   }
 
   const clearLongPress = (handler) => (event) => {
@@ -133,11 +164,10 @@ export function ContextMenuContent({ className, ...props }) {
   const { anchorRef } = useContext(ContextMenuContext)
 
   // Bottom-right of the pointer, with the cursor 2px INSIDE the menu corner
-  // (Windows-style). Inside matters: popover light dismiss fires on the
-  // pointerup that ends the right-click, and only spares the popover when
-  // that pointerup lands within it. positionAnchored flips near viewport
-  // edges since the anchor rect is a point (the cursor stays inside the
-  // flipped corner too — negative offsets mirror with the side).
+  // (Windows-style), so the resting cursor is already over the menu.
+  // positionAnchored flips near viewport edges since the anchor rect is a
+  // point (the cursor stays inside the flipped corner too — negative offsets
+  // mirror with the side).
   return (
     <DropdownMenuContent
       anchorRef={anchorRef}

@@ -161,10 +161,19 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   via new DropdownMenuContent `anchorRef` prop; useAnchorPosition skips
   ResizeObserver for non-Element anchors). Gotchas: **Chrome hides all auto
   popovers while processing `contextmenu` even when prevented** — open in
-  `setTimeout(0)`; place the cursor 2px INSIDE the menu corner (negative
-  side/alignOffset) or the gesture-ending pointerup light-dismisses it; on
-  right-click-while-open, re-show the natively hidden popover directly (the
-  hide's toggle event is queued; hide+show coalesce to open→open, ignored
-  by the state sync). Fixed latent useControllableState bug: ref now syncs
-  on uncontrolled writes, so two setter calls in one task see each other
-  (was swallowing close-then-reopen).
+  `setTimeout(0)`; on right-click-while-open, re-show the natively hidden
+  popover directly (the hide's toggle event is queued; hide+show coalesce to
+  open→open, ignored by the state sync). Fixed latent useControllableState
+  bug: ref now syncs on uncontrolled writes, so two setter calls in one task
+  see each other (was swallowing close-then-reopen).
+- 2026-07-23 — task 13 follow-up: opening while the pointer is still down
+  loses to light dismiss — macOS fires `contextmenu` on the press, and the
+  gesture-ending pointerup hit-tests against the entry-transition rect
+  (scale 0.96), landing outside the menu; any hand drift makes it worse.
+  The old "cursor 2px inside the corner" trick only survived releases
+  slower than the animation. Fix: `openOnGestureEnd` defers the open to
+  pointerup/pointercancel (press point stays the anchor); dropdown-menu's
+  show/hide effect now gates on live `:popover-open` instead of a shadow
+  showingRef that drifted after native light dismiss (stranded menus).
+  Testing note: Playwright clicks are instant and pixel-still — races with
+  light dismiss need a held press + small drift to reproduce.

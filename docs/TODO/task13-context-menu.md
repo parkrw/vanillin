@@ -32,17 +32,28 @@
   `disabled` prop lets the native menu through untouched.
 - **Chrome contextmenu vs popovers (found in sub-task 1):** Chrome hides all
   auto popovers while processing a `contextmenu` event even when it's
-  prevented — so (a) open in a `setTimeout(0)`, never synchronously; (b) the
-  cursor must land 2px INSIDE the menu corner (`sideOffset/alignOffset -2`,
-  Windows-style) or the gesture-ending pointerup light-dismisses it; (c) on
+  prevented — so (a) open in a `setTimeout(0)`, never synchronously; (b) on
   right-click-while-open, state never leaves "open" (the native hide's toggle
   is queued) — the timer re-shows the hidden popover directly, and the
   hide+show toggles coalesce to open→open which the state sync ignores.
   Also fixed: `useControllableState` now syncs its ref on uncontrolled
   writes so two setter calls in one task see each other.
-- **Touch long-press:** pointerdown (`touch`/`pen`) starts a 700ms timer that
-  opens at the press point; pointermove/pointerup/pointercancel/pointerleave
-  clears it (Radix behavior).
+- **Open on gesture end (post-review fix):** opening while the pointer is
+  still down loses to light dismiss — macOS fires `contextmenu` on the
+  press, and the release hit-tests against the entry-transition rect
+  (scale 0.96), so a normal-speed or slightly-drifting right-click landed
+  outside and closed the menu. `openOnGestureEnd` waits for
+  pointerup/pointercancel (window capture, once) when `event.buttons !== 0`,
+  anchored at the press point; Windows (contextmenu after release) opens
+  immediately. Dropdown-menu's show/hide effect gates on live
+  `:popover-open` instead of a showingRef shadow flag, which drifted after
+  native light dismiss and stranded menus. The `-2` offsets stay purely
+  cosmetic (cursor rests inside the corner, Windows-style).
+- **Touch long-press:** pointerdown (`touch`/`pen`) starts a 700ms timer;
+  pointermove/pointerup/pointercancel/pointerleave clears it (Radix
+  behavior). Once the timer fires, the open waits for the lift
+  (`openOnGestureEnd`) — same light-dismiss race as mouse, plus implicit
+  touch capture retargets the pointerup at the trigger.
 - **Focus:** DropdownMenuContent's focus-first-item on open is kept.
   Close-time `triggerRef.current?.focus()` is a no-op on the non-focusable
   trigger span — focus falls to body, matching Radix context-menu.

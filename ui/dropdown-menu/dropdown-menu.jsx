@@ -106,8 +106,6 @@ export function DropdownMenuContent({
   // passes a virtual pointer-coord anchor); focus still returns to the trigger.
   useAnchorPosition(open, anchorRef ?? triggerRef, contentRef, { side, align, sideOffset, alignOffset })
 
-  // showingRef tracks native popover state to avoid redundant show/hide calls.
-  const showingRef = useRef(false)
   const setOpenRef = useRef(setOpen)
   setOpenRef.current = setOpen
 
@@ -116,39 +114,41 @@ export function DropdownMenuContent({
     const el = contentRef.current
     if (!el) return
     const handler = (event) => {
-      if (event.newState === "closed") {
-        showingRef.current = false
-        setOpenRef.current(false)
-      }
+      if (event.newState === "closed") setOpenRef.current(false)
     }
     el.addEventListener("toggle", handler)
     return () => el.removeEventListener("toggle", handler)
   }, [contentRef])
 
-  // Sync React state -> native popover show/hide, then focus.
+  // Sync React state -> native popover show/hide, then focus. Gate on the
+  // live :popover-open state, not a shadow flag — light dismiss and the
+  // context-menu re-show path change it outside this effect, and a stale
+  // flag skips the show/hide and strands the menu.
   useEffect(() => {
     const el = contentRef.current
     if (!el) return
-    if (open && !showingRef.current) {
-      try {
-        el.showPopover()
-      } catch {
-        /* already showing */
+    const showing = el.matches(":popover-open")
+    if (open) {
+      // The popover may already be shown (context-menu's re-show path shows
+      // it before this effect runs) — still focus on every open transition.
+      if (!showing) {
+        try {
+          el.showPopover()
+        } catch {
+          /* mid-transition; toggle sync settles it */
+        }
       }
-      showingRef.current = true
-      // Focus the appropriate item after the popover is shown.
       const items = getMenuItems(el)
       if (items.length > 0) {
         const target = focusLastRef.current ? items[items.length - 1] : items[0]
         target.focus()
       }
-    } else if (!open && showingRef.current) {
+    } else if (showing) {
       try {
         el.hidePopover()
       } catch {
         /* already hidden */
       }
-      showingRef.current = false
     }
   }, [open, contentRef, focusLastRef])
 
@@ -512,7 +512,6 @@ export function DropdownMenuSubContent({
     side,
   })
 
-  const showingRef = useRef(false)
   const setOpenRef = useRef(setOpen)
   setOpenRef.current = setOpen
 
@@ -520,34 +519,33 @@ export function DropdownMenuSubContent({
     const el = subContentRef.current
     if (!el) return
     const handler = (event) => {
-      if (event.newState === "closed") {
-        showingRef.current = false
-        setOpenRef.current(false)
-      }
+      if (event.newState === "closed") setOpenRef.current(false)
     }
     el.addEventListener("toggle", handler)
     return () => el.removeEventListener("toggle", handler)
   }, [subContentRef])
 
+  // Same live-state gating as DropdownMenuContent (see comment there).
   useEffect(() => {
     const el = subContentRef.current
     if (!el) return
-    if (open && !showingRef.current) {
-      try {
-        el.showPopover()
-      } catch {
-        /* already showing */
+    const showing = el.matches(":popover-open")
+    if (open) {
+      if (!showing) {
+        try {
+          el.showPopover()
+        } catch {
+          /* mid-transition; toggle sync settles it */
+        }
       }
-      showingRef.current = true
       const items = getMenuItems(el)
       if (items.length > 0) items[0].focus()
-    } else if (!open && showingRef.current) {
+    } else if (showing) {
       try {
         el.hidePopover()
       } catch {
         /* already hidden */
       }
-      showingRef.current = false
     }
   }, [open, subContentRef])
 

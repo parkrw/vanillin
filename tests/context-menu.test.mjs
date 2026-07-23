@@ -141,6 +141,38 @@ export default async function run({ page, baseUrl, test, eq }) {
     await waitClosed()
   })
 
+  await test("held right-click with drift survives the release (light-dismiss race)", async () => {
+    // Real gesture: contextmenu fires on the press (macOS), the hand drifts a
+    // few px, and the release lands mid entry animation. Regression: the menu
+    // used to flash open then light-dismiss on that pointerup.
+    const box = await trigger.boundingBox()
+    const x = Math.round(box.x + box.width / 2)
+    const y = Math.round(box.y + box.height / 2)
+    await page.mouse.move(x, y)
+    await page.mouse.down({ button: "right" })
+    await page.waitForTimeout(120)
+    await page.mouse.move(x - 4, y - 4)
+    await page.mouse.up({ button: "right" })
+    await waitOpen()
+    await page.waitForTimeout(400)
+    eq(
+      await page.evaluate(() =>
+        document.querySelector('[data-pg="context-menu"]').matches(":popover-open")
+      ),
+      true,
+      "menu still open after release"
+    )
+
+    // Anchored at the press point, not the release point.
+    await page.waitForFunction((expectedLeft) => {
+      const el = document.querySelector('[data-pg="context-menu"]')
+      return Math.abs(parseFloat(el.style.left) - expectedLeft) < 1
+    }, x - 2)
+
+    await page.keyboard.press("Escape")
+    await waitClosed()
+  })
+
   // ── Sub-task 2: long-press + re-export coverage ─────────────────────
 
   // Synthetic touch pointer events — Playwright's mouse is pointerType
@@ -160,12 +192,15 @@ export default async function run({ page, baseUrl, test, eq }) {
       [type, x, y]
     )
 
-  await test("touch long-press (700ms) opens at the press point", async () => {
+  await test("touch long-press (700ms) opens at the press point on release", async () => {
     const box = await trigger.boundingBox()
     const x = Math.round(box.x + 60)
     const y = Math.round(box.y + 60)
     await touchEvent("pointerdown", x, y)
     await page.waitForTimeout(800)
+    // Open is deferred to the gesture end (see openOnGestureEnd) — the lift
+    // triggers it, anchored at the press point.
+    await touchEvent("pointerup", x, y)
     await waitOpen()
 
     await page.waitForFunction((expectedLeft) => {
@@ -173,7 +208,6 @@ export default async function run({ page, baseUrl, test, eq }) {
       return Math.abs(parseFloat(el.style.left) - expectedLeft) < 1
     }, x - 2)
 
-    await touchEvent("pointerup", x, y)
     await page.keyboard.press("Escape")
     await waitClosed()
   })
