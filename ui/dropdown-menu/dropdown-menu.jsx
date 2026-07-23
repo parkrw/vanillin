@@ -207,6 +207,7 @@ export function DropdownMenuContent({
       id={contentId}
       popover="auto"
       role="menu"
+      tabIndex={-1}
       data-state={open ? "open" : "closed"}
       className={cn("dropdown-menu", className)}
       onKeyDown={handleKeyDown}
@@ -223,6 +224,8 @@ export function DropdownMenuItem({
   onSelect,
   onClick,
   onKeyDown,
+  onPointerMove,
+  onPointerLeave,
   className,
   children,
   ...props
@@ -255,6 +258,22 @@ export function DropdownMenuItem({
     }
   }
 
+  // Focus follows the pointer (Radix behavior): items highlight via :focus,
+  // so hovering focuses the item and leaving parks focus back on the menu,
+  // clearing the highlight while keeping keyboard nav anchored.
+  const handlePointerMove = (event) => {
+    onPointerMove?.(event)
+    if (event.defaultPrevented || event.pointerType !== "mouse" || disabled) return
+    if (document.activeElement !== event.currentTarget) event.currentTarget.focus()
+  }
+
+  const handlePointerLeave = (event) => {
+    onPointerLeave?.(event)
+    if (event.defaultPrevented || event.pointerType !== "mouse") return
+    if (document.activeElement === event.currentTarget)
+      event.currentTarget.closest('[role="menu"]')?.focus()
+  }
+
   return (
     <Comp
       role="menuitem"
@@ -262,6 +281,8 @@ export function DropdownMenuItem({
       className={cn("dropdown-menu-item", className)}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
       {...(disabled ? { "aria-disabled": "true", "data-disabled": "" } : {})}
       {...props}
     >
@@ -385,8 +406,13 @@ export function DropdownMenuSub({ open, defaultOpen = false, onOpenChange, child
     clearTimeout(timerRef.current)
   }, [])
 
+  // Keyboard open focuses the first item; hover open leaves focus on the
+  // trigger (Radix behavior — the pointer, not the submenu, owns highlight).
+  const focusOnOpenRef = useRef(false)
+
   const openNow = useCallback(() => {
     clearTimeout(timerRef.current)
+    focusOnOpenRef.current = true
     setOpenRef.current(true)
   }, [])
 
@@ -410,6 +436,7 @@ export function DropdownMenuSub({ open, defaultOpen = false, onOpenChange, child
         cancelSchedule,
         openNow,
         closeNow,
+        focusOnOpenRef,
       }}
     >
       {children}
@@ -417,7 +444,7 @@ export function DropdownMenuSub({ open, defaultOpen = false, onOpenChange, child
   )
 }
 
-export function DropdownMenuSubTrigger({ className, onKeyDown, onPointerEnter, onPointerLeave, children, ...props }) {
+export function DropdownMenuSubTrigger({ className, onKeyDown, onPointerEnter, onPointerMove, onPointerLeave, children, ...props }) {
   const { open, subTriggerRef, subContentId, scheduleOpen, scheduleClose, openNow } =
     useContext(DropdownMenuSubContext)
   const dir = useDirection()
@@ -438,11 +465,22 @@ export function DropdownMenuSubTrigger({ className, onKeyDown, onPointerEnter, o
     if (!event.defaultPrevented && event.pointerType !== "touch") scheduleOpen()
   }
 
+  const handlePointerMove = (event) => {
+    onPointerMove?.(event)
+    if (event.defaultPrevented || event.pointerType !== "mouse") return
+    if (document.activeElement !== event.currentTarget) event.currentTarget.focus()
+  }
+
   const handlePointerLeave = (event) => {
     onPointerLeave?.(event)
     // The safe-triangle hook on SubContent handles the grace area —
     // we just schedule a close which the triangle or content hover may cancel.
-    if (!event.defaultPrevented) scheduleClose()
+    if (event.defaultPrevented) return
+    scheduleClose()
+    // Clear the hover highlight; [data-state="open"] keeps the trigger
+    // styled while its submenu stays up.
+    if (event.pointerType === "mouse" && document.activeElement === event.currentTarget)
+      event.currentTarget.closest('[role="menu"]')?.focus()
   }
 
   return (
@@ -457,6 +495,7 @@ export function DropdownMenuSubTrigger({ className, onKeyDown, onPointerEnter, o
       className={cn("dropdown-menu-item dropdown-menu-sub-trigger", className)}
       onKeyDown={handleKeyDown}
       onPointerEnter={handlePointerEnter}
+      onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
       {...props}
     >
@@ -486,6 +525,7 @@ export function DropdownMenuSubContent({
     scheduleClose,
     cancelSchedule,
     closeNow,
+    focusOnOpenRef,
   } = useContext(DropdownMenuSubContext)
 
   const dir = useDirection()
@@ -538,8 +578,12 @@ export function DropdownMenuSubContent({
           /* mid-transition; toggle sync settles it */
         }
       }
-      const items = getMenuItems(el)
-      if (items.length > 0) items[0].focus()
+      // Only keyboard opens move focus in — hover opens leave the pointer
+      // (and its highlight) on the trigger.
+      if (focusOnOpenRef.current) {
+        const items = getMenuItems(el)
+        if (items.length > 0) items[0].focus()
+      }
     } else if (showing) {
       try {
         el.hidePopover()
@@ -547,7 +591,8 @@ export function DropdownMenuSubContent({
         /* already hidden */
       }
     }
-  }, [open, subContentRef])
+    focusOnOpenRef.current = false
+  }, [open, subContentRef, focusOnOpenRef])
 
   const handleKeyDown = (event) => {
     onKeyDown?.(event)
@@ -630,6 +675,7 @@ export function DropdownMenuSubContent({
       id={subContentId}
       popover="auto"
       role="menu"
+      tabIndex={-1}
       data-state={open ? "open" : "closed"}
       className={cn("dropdown-menu dropdown-menu-sub-content", className)}
       onKeyDown={handleKeyDown}

@@ -141,6 +141,32 @@ export default async function run({ page, baseUrl, test, eq }) {
     await waitClosed()
   })
 
+  await test("hover highlights items in menu and submenu", async () => {
+    const box = await trigger.boundingBox()
+    await rightClickAt(Math.round(box.x + 40), Math.round(box.y + 40))
+
+    const reload = page.locator('[data-pg="context-menu"] [role="menuitem"]', {
+      hasText: "Reload",
+    })
+    await reload.hover()
+    const focused = await page.evaluate(() => document.activeElement?.textContent?.trim())
+    eq(focused.startsWith("Reload"), true, "hovered item highlighted")
+
+    await page.locator('[data-pg="ctx-sub-trigger"]').hover()
+    await page.waitForSelector('[data-pg="ctx-sub-content"]:popover-open')
+    await page.locator('[data-pg="ctx-sub-content"] [role="menuitem"]').first().hover()
+    const inSub = await page.evaluate(() => {
+      const sub = document.querySelector('[data-pg="ctx-sub-content"]')
+      return sub.contains(document.activeElement)
+        ? document.activeElement.getAttribute("role")
+        : null
+    })
+    eq(inSub, "menuitem", "hovered submenu item highlighted")
+
+    await page.keyboard.press("Escape")
+    await waitClosed()
+  })
+
   await test("held right-click with drift survives the release (light-dismiss race)", async () => {
     // Real gesture: contextmenu fires on the press (macOS), the hand drifts a
     // few px, and the release lands mid entry animation. Regression: the menu

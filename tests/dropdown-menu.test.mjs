@@ -89,6 +89,36 @@ export default async function run({ page, baseUrl, test, eq }) {
     await waitClosed()
   })
 
+  await test("hover highlights item via focus; leaving parks focus on the menu", async () => {
+    await trigger.click()
+    await waitOpen()
+    const items = await getItems()
+    const target = page
+      .locator(
+        '.dropdown-menu[role="menu"]:popover-open [role="menuitem"]:not([aria-disabled])'
+      )
+      .nth(1)
+    await target.hover()
+    let focused = await page.evaluate(() => document.activeElement?.textContent?.trim())
+    eq(focused, items[1], "hovered item focused")
+
+    // Leave onto the menu padding — highlight clears, focus stays in the menu.
+    const menuBox = await page
+      .locator('.dropdown-menu[role="menu"]:popover-open')
+      .boundingBox()
+    await page.mouse.move(menuBox.x + menuBox.width / 2, menuBox.y + 2)
+    const focusedRole = await page.evaluate(() => document.activeElement?.getAttribute("role"))
+    eq(focusedRole, "menu", "focus parked on the menu")
+
+    // Keyboard picks up from the top after a hover reset.
+    await page.keyboard.press("ArrowDown")
+    focused = await page.evaluate(() => document.activeElement?.textContent?.trim())
+    eq(focused, items[0], "ArrowDown resumes at first item")
+
+    await page.keyboard.press("Escape")
+    await waitClosed()
+  })
+
   await test("Enter on item fires onSelect, closes menu, returns focus to trigger", async () => {
     await trigger.click()
     await waitOpen()
@@ -543,6 +573,31 @@ export default async function run({ page, baseUrl, test, eq }) {
     // Move pointer away to close
     await page.mouse.move(5, 5)
     await page.waitForTimeout(200)
+
+    await page.keyboard.press("Escape")
+    await waitClosed()
+  })
+
+  await test("hover-open keeps highlight on SubTrigger; sub items highlight on hover", async () => {
+    const subMenuTrigger = page.locator('[data-pg="submenu-trigger"]')
+    await subMenuTrigger.click()
+    await page.waitForSelector('[data-pg="submenu-menu"]:popover-open')
+
+    await subTrigger.hover()
+    await page.waitForTimeout(200)
+    await waitSubOpen()
+
+    // Hover-open must not steal focus into the submenu.
+    const focusedPg = await page.evaluate(() => document.activeElement?.dataset?.pg)
+    eq(focusedPg, "sub-trigger", "focus stays on SubTrigger after hover-open")
+
+    await page.locator('[data-pg="sub-content"] [role="menuitem"]').first().hover()
+    const focusedRole = await page.evaluate(() =>
+      document.activeElement?.closest('[data-pg="sub-content"]')
+        ? document.activeElement.getAttribute("role")
+        : null
+    )
+    eq(focusedRole, "menuitem", "hovered submenu item focused")
 
     await page.keyboard.press("Escape")
     await waitClosed()

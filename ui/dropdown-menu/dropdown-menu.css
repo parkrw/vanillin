@@ -79,6 +79,13 @@
   color: var(--accent-foreground);
 }
 
+/* Keep the sub-trigger highlighted while its submenu is open — hover moves
+   focus off it, but visually it is still the active path (shadcn parity). */
+.dropdown-menu-sub-trigger[data-state="open"] {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
 .dropdown-menu-item[aria-disabled="true"] {
   color: var(--muted-foreground);
   pointer-events: none;
