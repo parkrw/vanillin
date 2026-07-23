@@ -13,7 +13,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 06  | message-scroller         | ~M  | [x]    | two stacked PRs: core + button/hooks                                        |
 | 07  | dialog                   | ~L  | [x]    | native `<dialog>` pattern-setter — see task file for overlay recipe         |
 | 08  | alert-dialog-sheet       | ~M  | [x]    | thin reuses of ui/dialog (compound classes + `dismissible`)                                                                    |
-| 09  | drawer                   | ~M  | [ ]    | deps: 07; swipe-to-dismiss                                                  |
+| 09  | drawer                   | ~M  | [x]    | stacked on 08 branch; Base UI anatomy (swipeDirection), not vaul            |
 | 10  | popover-tooltip          | ~L  | [ ]    | Popover API + use-anchor-position                                           |
 | 11  | hover-card               | ~S  | [ ]    | deps: 10                                                                    |
 | 12  | dropdown-menu            | ~L  | [ ]    | menu roles, submenus, safe-triangle                                         |
@@ -100,6 +100,18 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   `showModal()` in a plain `useEffect` declared *after* `useReturnFocus` so
   focus capture runs before focus moves; backdrop click = pointer coords vs
   `getBoundingClientRect` (padding clicks stay inside).
+- 2026-07-22 — task 09 done on `feat/drawer` (~440 net lines excl. docs),
+  stacked on `feat/alert-dialog-sheet` (shares registry.js/dialog.jsx edits +
+  the message-scroller test fix). Live shadcn drawer is now **Base UI, not
+  vaul**: `swipeDirection` (up|right|down|left) + `DrawerSwipeHandle` — verify
+  live anatomy before every task. Velocity/flick dismiss dropped —
+  nondeterministic under synthetic pointer timing; threshold-only (25%).
+  Gotchas: passing `onPointerDown` to DialogContent *replaces* its
+  backdrop-click dismissal (handlers sit before the props spread) — repeat the
+  outside-coordinate check; exit keyframes without `from` start from the
+  inline drag transform, so swipe hands off to the close animation for free;
+  dialog.jsx now exports `useDialog()` for recipe reuses. Message-scroller
+  button test flaked once mid-session despite the 08 fix — watch it.
 - 2026-07-22 — task 06 done as two stacked branches (`feat/message-scroller`
   383 + `feat/message-scroller-hooks` 223 net lines; together over the 500
   cap). Gotchas: Chrome native scroll anchoring doubles manual prepend
