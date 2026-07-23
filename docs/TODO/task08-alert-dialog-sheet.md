@@ -26,7 +26,7 @@
 
 ## Sub-tasks
 
-- [ ] 1. alert-dialog — test: `role="alertdialog"`, no X button, backdrop
+- [x] 1. alert-dialog — test: `role="alertdialog"`, no X button, backdrop
   click does NOT close, Esc closes, Action and Cancel close, aria
   title/description wired; files: `ui/dialog/dialog.jsx` (role +
   `dismissible`), `ui/alert-dialog/alert-dialog.jsx` + `.css`,

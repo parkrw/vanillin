@@ -8,7 +8,7 @@ export const registry = {
   primitives: { title: "Primitives (lib/)", page: lazy(() => import("./pages/primitives.jsx")) },
   accordion: { title: "Accordion", page: lazy(() => import("./pages/accordion.jsx")) },
   alert: { title: "Alert", page: lazy(() => import("./pages/alert.jsx")) },
-  "alert-dialog": { title: "Alert Dialog" },
+  "alert-dialog": { title: "Alert Dialog", page: lazy(() => import("./pages/alert-dialog.jsx")) },
   "aspect-ratio": { title: "Aspect Ratio", page: lazy(() => import("./pages/aspect-ratio.jsx")) },
   attachment: { title: "Attachment", page: lazy(() => import("./pages/attachment.jsx")) },
   avatar: { title: "Avatar", page: lazy(() => import("./pages/avatar.jsx")) },

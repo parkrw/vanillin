@@ -51,7 +51,13 @@ export function DialogOverlay() {
   return null
 }
 
-export function DialogContent({ showCloseButton = true, className, children, ...props }) {
+export function DialogContent({
+  showCloseButton = true,
+  dismissible = true,
+  className,
+  children,
+  ...props
+}) {
   const { open, setOpen } = useContext(DialogContext)
   const baseId = useId()
   const titleId = `${baseId}-title`
@@ -90,7 +96,7 @@ export function DialogContent({ showCloseButton = true, className, children, ...
           event.clientX > rect.right ||
           event.clientY < rect.top ||
           event.clientY > rect.bottom
-        if (outside) setOpen(false)
+        if (outside && dismissible) setOpen(false)
       }}
       {...props}
     >
