@@ -25,12 +25,16 @@ export function DropdownMenu({ open, defaultOpen = false, onOpenChange, children
   const triggerRef = useRef(null)
   const contentRef = useRef(null)
   const contentId = useId()
-  // When ArrowUp opens the menu, we want to focus the last item instead of first.
+  // One-shot open modifiers, consumed (and reset) by the content's open
+  // effect: focus the last item instead of first (ArrowUp open), or skip
+  // item focus entirely and focus the menu itself (menubar hover-switch —
+  // the pointer, not the keyboard, owns highlight there).
   const focusLastRef = useRef(false)
+  const skipItemFocusRef = useRef(false)
 
   return (
     <DropdownMenuContext.Provider
-      value={{ open: isOpen, setOpen, triggerRef, contentRef, contentId, focusLastRef }}
+      value={{ open: isOpen, setOpen, triggerRef, contentRef, contentId, focusLastRef, skipItemFocusRef }}
     >
       {children}
     </DropdownMenuContext.Provider>
@@ -99,7 +103,7 @@ export function DropdownMenuContent({
   children,
   ...props
 }) {
-  const { open, setOpen, triggerRef, contentRef, contentId, focusLastRef } =
+  const { open, setOpen, triggerRef, contentRef, contentId, focusLastRef, skipItemFocusRef } =
     useContext(DropdownMenuContext)
 
   // anchorRef overrides the trigger as the positioning anchor (context-menu
@@ -138,11 +142,21 @@ export function DropdownMenuContent({
           /* mid-transition; toggle sync settles it */
         }
       }
-      const items = getMenuItems(el)
-      if (items.length > 0) {
-        const target = focusLastRef.current ? items[items.length - 1] : items[0]
-        target.focus()
+      if (skipItemFocusRef.current) {
+        // Keep keyboard nav anchored without highlighting an item.
+        el.focus()
+      } else {
+        const items = getMenuItems(el)
+        if (items.length > 0) {
+          const target = focusLastRef.current ? items[items.length - 1] : items[0]
+          target.focus()
+        }
       }
+      // One-shot: menubar opens menus from outside the trigger (hover switch,
+      // cross-menu arrows), where nobody re-arms these — a stale flag from an
+      // earlier open would leak into that next open.
+      focusLastRef.current = false
+      skipItemFocusRef.current = false
     } else if (showing) {
       try {
         el.hidePopover()
@@ -150,7 +164,7 @@ export function DropdownMenuContent({
         /* already hidden */
       }
     }
-  }, [open, contentRef, focusLastRef])
+  }, [open, contentRef, focusLastRef, skipItemFocusRef])
 
   const handleKeyDown = (event) => {
     onKeyDown?.(event)

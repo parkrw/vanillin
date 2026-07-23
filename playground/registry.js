@@ -41,7 +41,7 @@ export const registry = {
   kbd: { title: "Kbd", page: lazy(() => import("./pages/kbd.jsx")) },
   label: { title: "Label", page: lazy(() => import("./pages/label.jsx")) },
   marker: { title: "Marker", page: lazy(() => import("./pages/marker.jsx")) },
-  menubar: { title: "Menubar" },
+  menubar: { title: "Menubar", page: lazy(() => import("./pages/menubar.jsx")) },
   message: { title: "Message", page: lazy(() => import("./pages/message.jsx")) },
   "message-scroller": { title: "Message Scroller", page: lazy(() => import("./pages/message-scroller.jsx")) },
   "native-select": { title: "Native Select", page: lazy(() => import("./pages/native-select.jsx")) },

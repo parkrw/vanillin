@@ -1,0 +1,44 @@
+/* Menubar — horizontal row of task-12 menus. Panel/item/motion styles come
+   from dropdown-menu.css; this file only adds the bar and its triggers. */
+
+@import "../dropdown-menu/dropdown-menu.css";
+
+.menubar {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  inline-size: fit-content;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--background);
+  padding: 0.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.menubar-trigger {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  padding-block: 0.25rem;
+  padding-inline: 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25;
+  outline: none;
+  user-select: none;
+  cursor: default;
+}
+
+.menubar-trigger:focus,
+.menubar-trigger[data-state="open"] {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.menubar-content {
+  min-inline-size: 12rem;
+}
