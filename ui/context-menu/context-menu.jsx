@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from "react"
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react"
 import { cn } from "../../lib/cn.js"
 import {
   DropdownMenu,
@@ -54,19 +54,23 @@ export function ContextMenuTrigger({
   as: Comp = "span",
   disabled = false,
   onContextMenu,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onPointerCancel,
   className,
   ...props
 }) {
   const { open, setOpen, triggerRef, contentRef } = useDropdownMenu()
   const { setPoint } = useContext(ContextMenuContext)
+  const longPressTimer = useRef(null)
 
-  const handleContextMenu = (event) => {
-    onContextMenu?.(event)
-    if (disabled || event.defaultPrevented) return
-    event.preventDefault()
-    setPoint(event.clientX, event.clientY)
+  useEffect(() => () => clearTimeout(longPressTimer.current), [])
+
+  const openAt = (x, y) => {
+    setPoint(x, y)
     // Chrome hides all auto popovers while processing the contextmenu event
-    // (even when it's prevented) — opening synchronously here gets undone
+    // (even when it's prevented) — opening synchronously there gets undone
     // immediately. Open in a later task, after the gesture completes.
     setTimeout(() => {
       setOpen(true)
@@ -86,12 +90,39 @@ export function ContextMenuTrigger({
     }, 0)
   }
 
+  const handleContextMenu = (event) => {
+    onContextMenu?.(event)
+    if (disabled || event.defaultPrevented) return
+    event.preventDefault()
+    clearTimeout(longPressTimer.current)
+    openAt(event.clientX, event.clientY)
+  }
+
+  // Touch/pen long-press (700ms) — iOS fires no contextmenu event. Where the
+  // platform fires one anyway (Android), it lands in openAt's reopen path.
+  const handlePointerDown = (event) => {
+    onPointerDown?.(event)
+    if (disabled || event.defaultPrevented || event.pointerType === "mouse") return
+    const { clientX: x, clientY: y } = event
+    clearTimeout(longPressTimer.current)
+    longPressTimer.current = setTimeout(() => openAt(x, y), 700)
+  }
+
+  const clearLongPress = (handler) => (event) => {
+    handler?.(event)
+    if (event.pointerType !== "mouse") clearTimeout(longPressTimer.current)
+  }
+
   return (
     <Comp
       ref={triggerRef}
       data-state={open ? "open" : "closed"}
       className={className}
       onContextMenu={handleContextMenu}
+      onPointerDown={handlePointerDown}
+      onPointerMove={clearLongPress(onPointerMove)}
+      onPointerUp={clearLongPress(onPointerUp)}
+      onPointerCancel={clearLongPress(onPointerCancel)}
       {...(disabled ? { "data-disabled": "" } : {})}
       {...props}
     />

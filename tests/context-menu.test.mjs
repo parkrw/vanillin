@@ -141,6 +141,127 @@ export default async function run({ page, baseUrl, test, eq }) {
     await waitClosed()
   })
 
+  // ── Sub-task 2: long-press + re-export coverage ─────────────────────
+
+  // Synthetic touch pointer events — Playwright's mouse is pointerType
+  // "mouse", so dispatch PointerEvents directly to exercise the touch path.
+  const touchEvent = (type, x, y) =>
+    page.evaluate(
+      ([type, x, y]) => {
+        document.querySelector('[data-pg="context-trigger"]').dispatchEvent(
+          new PointerEvent(type, {
+            pointerType: "touch",
+            clientX: x,
+            clientY: y,
+            bubbles: true,
+          })
+        )
+      },
+      [type, x, y]
+    )
+
+  await test("touch long-press (700ms) opens at the press point", async () => {
+    const box = await trigger.boundingBox()
+    const x = Math.round(box.x + 60)
+    const y = Math.round(box.y + 60)
+    await touchEvent("pointerdown", x, y)
+    await page.waitForTimeout(800)
+    await waitOpen()
+
+    await page.waitForFunction((expectedLeft) => {
+      const el = document.querySelector('[data-pg="context-menu"]')
+      return Math.abs(parseFloat(el.style.left) - expectedLeft) < 1
+    }, x - 2)
+
+    await touchEvent("pointerup", x, y)
+    await page.keyboard.press("Escape")
+    await waitClosed()
+  })
+
+  await test("early release or move cancels the long-press", async () => {
+    const box = await trigger.boundingBox()
+    const x = Math.round(box.x + 60)
+    const y = Math.round(box.y + 60)
+
+    await touchEvent("pointerdown", x, y)
+    await page.waitForTimeout(200)
+    await touchEvent("pointerup", x, y)
+    await page.waitForTimeout(700)
+    let open = await page.evaluate(() =>
+      document.querySelector('[data-pg="context-menu"]').matches(":popover-open")
+    )
+    eq(open, false, "released early — no open")
+
+    await touchEvent("pointerdown", x, y)
+    await page.waitForTimeout(200)
+    await touchEvent("pointermove", x + 20, y)
+    await page.waitForTimeout(700)
+    open = await page.evaluate(() =>
+      document.querySelector('[data-pg="context-menu"]').matches(":popover-open")
+    )
+    eq(open, false, "moved — no open")
+  })
+
+  await test("checkbox item toggles and persists on reopen (re-export wiring)", async () => {
+    const box = await trigger.boundingBox()
+    await rightClickAt(Math.round(box.x + 40), Math.round(box.y + 40))
+
+    const cb = page.locator('[data-pg="ctx-cb-bookmarks"]')
+    eq(await cb.getAttribute("role"), "menuitemcheckbox", "role=menuitemcheckbox")
+    eq(await cb.getAttribute("aria-checked"), "true", "starts checked")
+
+    await cb.click()
+    await waitClosed()
+    eq(
+      await page.locator('[data-pg="ctx-cb-readout"]').textContent(),
+      "off",
+      "readout toggled"
+    )
+
+    await rightClickAt(Math.round(box.x + 40), Math.round(box.y + 40))
+    eq(await cb.getAttribute("aria-checked"), "false", "persists on reopen")
+
+    await page.keyboard.press("Escape")
+    await waitClosed()
+  })
+
+  await test("radio group single-selects (re-export wiring)", async () => {
+    const box = await trigger.boundingBox()
+    await rightClickAt(Math.round(box.x + 40), Math.round(box.y + 40))
+
+    await page.locator('[role="menuitemradio"][aria-checked="false"]').first().click()
+    await waitClosed()
+    eq(
+      await page.locator('[data-pg="ctx-radio-readout"]').textContent(),
+      "colm",
+      "radio value changed"
+    )
+  })
+
+  await test("submenu opens with ArrowRight, Escape closes the whole stack", async () => {
+    const box = await trigger.boundingBox()
+    await rightClickAt(Math.round(box.x + 40), Math.round(box.y + 40))
+
+    await page.locator('[data-pg="ctx-sub-trigger"]').focus()
+    await page.keyboard.press("ArrowRight")
+    await page.waitForSelector('[data-pg="ctx-sub-content"]:popover-open')
+
+    const focusedRole = await page.evaluate(() => {
+      const sub = document.querySelector('[data-pg="ctx-sub-content"]')
+      return sub.contains(document.activeElement)
+        ? document.activeElement.getAttribute("role")
+        : null
+    })
+    eq(focusedRole, "menuitem", "first submenu item focused")
+
+    await page.keyboard.press("Escape")
+    await waitClosed()
+    const subClosed = await page.evaluate(
+      () => !document.querySelector('[data-pg="ctx-sub-content"]').matches(":popover-open")
+    )
+    eq(subClosed, true, "submenu closed with the stack")
+  })
+
   await test("disabled trigger lets the native context menu through", async () => {
     const disabledArea = page.locator('[data-pg="context-disabled-trigger"]')
     await disabledArea.scrollIntoViewIfNeeded()
