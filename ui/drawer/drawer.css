@@ -1,0 +1,166 @@
+/* Drawer renders through ui/dialog with the compound class
+   "dialog drawer drawer--<swipeDirection>"; the direction is the anchored
+   edge. Like sheet, slide transforms are physical — translate has no
+   logical equivalent — so the edge rules stay physical too. */
+@import "../dialog/dialog.css";
+
+.dialog.drawer {
+  margin: 0;
+  border: none;
+  max-width: none;
+  max-height: none;
+}
+
+/* The UA gives <dialog> height/width: fit-content — anchored edges need
+   the full run explicitly. */
+.drawer--down {
+  top: auto;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-height: 80%;
+  border-top: 1px solid var(--border);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.drawer--up {
+  top: 0;
+  bottom: auto;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-height: 80%;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.drawer--left {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: auto;
+  width: 20rem;
+  max-width: calc(100% - 3rem);
+  height: 100%;
+  border-right: 1px solid var(--border);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+.drawer--right {
+  top: 0;
+  bottom: 0;
+  left: auto;
+  right: 0;
+  width: 20rem;
+  max-width: calc(100% - 3rem);
+  height: 100%;
+  border-left: 1px solid var(--border);
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+
+.drawer-handle {
+  flex-shrink: 0;
+  align-self: center;
+  width: 6rem;
+  height: 0.25rem;
+  border-radius: 9999px;
+  background-color: var(--muted);
+}
+
+/* The handle sits on the free edge — the side the drawer slides toward. */
+.drawer--up .drawer-handle {
+  order: 1;
+}
+
+.drawer--left .drawer-handle,
+.drawer--right .drawer-handle {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  width: 0.25rem;
+  height: 3rem;
+}
+
+.drawer--left .drawer-handle {
+  right: 0.5rem;
+}
+
+.drawer--right .drawer-handle {
+  left: 0.5rem;
+}
+
+.drawer--down[data-state="open"] {
+  animation-name: drawer-in-down;
+}
+.drawer--down[data-state="closed"] {
+  animation-name: drawer-out-down;
+}
+.drawer--up[data-state="open"] {
+  animation-name: drawer-in-up;
+}
+.drawer--up[data-state="closed"] {
+  animation-name: drawer-out-up;
+}
+.drawer--left[data-state="open"] {
+  animation-name: drawer-in-left;
+}
+.drawer--left[data-state="closed"] {
+  animation-name: drawer-out-left;
+}
+.drawer--right[data-state="open"] {
+  animation-name: drawer-in-right;
+}
+.drawer--right[data-state="closed"] {
+  animation-name: drawer-out-right;
+}
+
+/* Exit keyframes have no `from`, so a swipe-in-progress hands its current
+   translate straight to the close animation. */
+@keyframes drawer-in-down {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes drawer-out-down {
+  to {
+    transform: translateY(100%);
+  }
+}
+@keyframes drawer-in-up {
+  from {
+    transform: translateY(-100%);
+  }
+}
+@keyframes drawer-out-up {
+  to {
+    transform: translateY(-100%);
+  }
+}
+@keyframes drawer-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes drawer-out-left {
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes drawer-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes drawer-out-right {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog.drawer[data-state="open"],
+  .dialog.drawer[data-state="closed"] {
+    animation: none;
+  }
+}

@@ -29,7 +29,7 @@ export const registry = {
   "date-picker": { title: "Date Picker" },
   dialog: { title: "Dialog", page: lazy(() => import("./pages/dialog.jsx")) },
   direction: { title: "Direction", page: lazy(() => import("./pages/direction.jsx")) },
-  drawer: { title: "Drawer" },
+  drawer: { title: "Drawer", page: lazy(() => import("./pages/drawer.jsx")) },
   "dropdown-menu": { title: "Dropdown Menu" },
   empty: { title: "Empty", page: lazy(() => import("./pages/empty.jsx")) },
   field: { title: "Field", page: lazy(() => import("./pages/field.jsx")) },
