@@ -26,7 +26,8 @@
   interactive elements), setPointerCapture, inline translate along the
   swipe axis only (clamped so it can't drag away from its edge),
   `data-swiping` while dragging. Release: close when offset > 25% of the
-  drawer's axis size or flick velocity is high; otherwise transition back.
+  drawer's axis size; otherwise transition back. (No velocity/flick term —
+  nondeterministic under synthetic pointer timing, would flake the tests.)
   Exit keyframes have no `from`, so the close animation picks up from the
   dragged position for free.
 - **Look:** bottom drawer full-width, rounded corners + handle on the free
@@ -41,7 +42,7 @@
   files: `ui/drawer/drawer.jsx` + `.css`, `ui/dialog/dialog.jsx`
   (`useDialog`), `tests/drawer.test.mjs`, `playground/pages/drawer.jsx`,
   `playground/registry.js`.
-- [ ] 2. swipe-to-dismiss — test: mouse-drag past 25% closes, short drag
+- [x] 2. swipe-to-dismiss — test: mouse-drag past 25% closes, short drag
   springs back (stays open, transform cleared), drag sets `data-swiping`,
   drag on a button does not start a swipe; files: `ui/drawer/drawer.jsx`,
   `ui/drawer/drawer.css`, `tests/drawer.test.mjs`.

@@ -44,6 +44,57 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await page.waitForSelector(".drawer", { state: "detached" })
   })
 
+  await test("drag past a quarter of its size dismisses", async () => {
+    await page.locator('button:has-text("Open down")').click()
+    await page.waitForSelector('.drawer[data-state="open"]')
+    await settle(drawer)
+    const box = await drawer.boundingBox()
+    const x = box.x + box.width / 2
+    const y = box.y + 10
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.move(x, y + box.height * 0.5, { steps: 10 })
+    await page.mouse.up()
+    await page.waitForSelector(".drawer", { state: "detached" })
+  })
+
+  await test("a short drag sets data-swiping, then springs back", async () => {
+    await page.locator('button:has-text("Open down")').click()
+    await page.waitForSelector('.drawer[data-state="open"]')
+    await settle(drawer)
+    const box = await drawer.boundingBox()
+    const x = box.x + box.width / 2
+    const y = box.y + 10
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.move(x, y + box.height * 0.1, { steps: 5 })
+    eq(await drawer.evaluate((el) => el.hasAttribute("data-swiping")), true, "swiping")
+    await page.mouse.up()
+    eq(await drawer.getAttribute("data-state"), "open", "stays open")
+    await settle(drawer)
+    eq(await drawer.evaluate((el) => getComputedStyle(el).transform), "none", "sprang back")
+    await page.keyboard.press("Escape")
+    await page.waitForSelector(".drawer", { state: "detached" })
+  })
+
+  await test("a drag starting on a button does not dismiss", async () => {
+    await page.locator('button:has-text("Open up")').click()
+    await page.waitForSelector('.drawer--up[data-state="open"]')
+    const up = page.locator(".drawer--up")
+    await settle(up)
+    const box = await up.boundingBox()
+    const submit = await up.locator('button:has-text("Submit")').boundingBox()
+    const x = submit.x + submit.width / 2
+    const y = submit.y + submit.height / 2
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.move(x, y - box.height * 0.5, { steps: 10 })
+    await page.mouse.up()
+    eq(await up.getAttribute("data-state"), "open", "stays open")
+    await page.keyboard.press("Escape")
+    await page.waitForSelector(".drawer", { state: "detached" })
+  })
+
   await test("direction variants anchor to their edges", async () => {
     for (const [direction, edge] of [
       ["up", "top"],

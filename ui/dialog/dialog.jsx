@@ -8,6 +8,12 @@ import { useScrollLock } from "../../lib/scroll-lock.js"
 const DialogContext = createContext(null)
 const DialogContentContext = createContext(null)
 
+/** Internal hook for dialog-recipe reuses that must close through state so
+ * the exit animation plays (e.g. drawer swipe-dismiss). */
+export function useDialog() {
+  return useContext(DialogContext)
+}
+
 /**
  * Controlled via `open` + `onOpenChange`, uncontrolled via `defaultOpen`.
  * Content is a native <dialog> shown with showModal(): top layer, native

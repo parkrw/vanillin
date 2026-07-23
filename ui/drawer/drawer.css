@@ -9,6 +9,15 @@
   border: none;
   max-width: none;
   max-height: none;
+  /* The whole surface is draggable; scrollable content inside should set
+     its own touch-action. Spring-back after a released short drag. */
+  touch-action: none;
+  transition: transform var(--motion-fast) var(--motion-ease);
+}
+
+.dialog.drawer[data-swiping] {
+  /* The drag must track the pointer instantly. */
+  transition: none;
 }
 
 /* The UA gives <dialog> height/width: fit-content — anchored edges need
