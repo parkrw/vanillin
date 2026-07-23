@@ -120,6 +120,25 @@
   background-color: currentColor;
 }
 
+/* ---- SubTrigger ---- */
+
+.dropdown-menu-sub-trigger[data-state="open"] {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.dropdown-menu-sub-chevron {
+  width: 1rem;
+  height: 1rem;
+  margin-inline-start: auto;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+[dir="rtl"] .dropdown-menu-sub-chevron {
+  transform: scaleX(-1);
+}
+
 /* ---- Label ---- */
 
 .dropdown-menu-label {

@@ -457,4 +457,196 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.keyboard.press("Escape")
     await waitCbClosed()
   })
+
+  // ── Sub-task 3: Submenu + safe triangle ─────────────────────────────
+
+  const subTrigger = page.locator('[data-pg="sub-trigger"]')
+
+  // Helper: wait for the submenu content to be :popover-open
+  const waitSubOpen = () =>
+    page.waitForSelector('[data-pg="sub-content"]:popover-open')
+  const waitSubClosed = () =>
+    page.waitForFunction(() => {
+      const el = document.querySelector('[data-pg="sub-content"]')
+      return el && !el.matches(":popover-open") && el.dataset.state === "closed"
+    })
+
+  await test("ArrowRight on SubTrigger opens SubContent with first item focused", async () => {
+    // Open the parent menu first
+    const subMenuTrigger = page.locator('[data-pg="submenu-trigger"]')
+    await subMenuTrigger.click()
+    await page.waitForSelector('[data-pg="submenu-menu"]:popover-open')
+
+    // Navigate to the SubTrigger
+    await subTrigger.focus()
+
+    // ArrowRight should open the submenu
+    await page.keyboard.press("ArrowRight")
+    await waitSubOpen()
+
+    // First item in the submenu should be focused
+    const focused = await page.evaluate(() => {
+      const el = document.activeElement
+      if (!el) return null
+      const subContent = document.querySelector('[data-pg="sub-content"]:popover-open')
+      if (!subContent) return null
+      return subContent.contains(el) ? el.getAttribute("role") : null
+    })
+    eq(focused, "menuitem", "first submenu item focused")
+
+    // Clean up — Escape closes the whole stack
+    await page.keyboard.press("Escape")
+    await waitClosed()
+  })
+
+  await test("ArrowLeft inside SubContent closes it and refocuses SubTrigger", async () => {
+    const subMenuTrigger = page.locator('[data-pg="submenu-trigger"]')
+    await subMenuTrigger.click()
+    await page.waitForSelector('[data-pg="submenu-menu"]:popover-open')
+
+    await subTrigger.focus()
+    await page.keyboard.press("ArrowRight")
+    await waitSubOpen()
+
+    // ArrowLeft should close submenu and refocus SubTrigger
+    await page.keyboard.press("ArrowLeft")
+    await waitSubClosed()
+
+    const focusedPg = await page.evaluate(() =>
+      document.activeElement?.getAttribute("data-pg")
+    )
+    eq(focusedPg, "sub-trigger", "focus back on SubTrigger")
+
+    await page.keyboard.press("Escape")
+    await waitClosed()
+  })
+
+  await test("hover on SubTrigger opens submenu after delay", async () => {
+    const subMenuTrigger = page.locator('[data-pg="submenu-trigger"]')
+    await subMenuTrigger.click()
+    await page.waitForSelector('[data-pg="submenu-menu"]:popover-open')
+
+    // Hover over SubTrigger
+    await subTrigger.hover()
+
+    // Not open immediately
+    const immediateOpen = await page.evaluate(() => {
+      const el = document.querySelector('[data-pg="sub-content"]')
+      return el?.matches(":popover-open")
+    })
+    eq(immediateOpen, false, "not open immediately on hover")
+
+    // Wait for the delay (100ms + margin)
+    await page.waitForTimeout(200)
+    await waitSubOpen()
+
+    // Move pointer away to close
+    await page.mouse.move(5, 5)
+    await page.waitForTimeout(200)
+
+    await page.keyboard.press("Escape")
+    await waitClosed()
+  })
+
+  await test("safe triangle: diagonal move from SubTrigger into SubContent keeps it open", async () => {
+    const subMenuTrigger = page.locator('[data-pg="submenu-trigger"]')
+    await subMenuTrigger.click()
+    await page.waitForSelector('[data-pg="submenu-menu"]:popover-open')
+
+    // Hover SubTrigger to open submenu
+    await subTrigger.hover()
+    await page.waitForTimeout(200)
+    await waitSubOpen()
+
+    // Get SubTrigger and SubContent bounding boxes
+    const boxes = await page.evaluate(() => {
+      const trigger = document.querySelector('[data-pg="sub-trigger"]')
+      const content = document.querySelector('[data-pg="sub-content"]')
+      const tr = trigger.getBoundingClientRect()
+      const cr = content.getBoundingClientRect()
+      return {
+        triggerRight: tr.right,
+        triggerCenterY: tr.top + tr.height / 2,
+        contentLeft: cr.left,
+        contentCenterY: cr.top + cr.height / 2,
+        contentTop: cr.top,
+        contentBottom: cr.bottom,
+      }
+    })
+
+    // Move diagonally from trigger toward the subcontent at human speed
+    // (~320ms total, well past the 100ms close delay) — the safe triangle
+    // must keep deferring the close for the whole travel.
+    const startX = boxes.triggerRight - 2
+    const startY = boxes.triggerCenterY
+    const endX = boxes.contentLeft + 10
+    const endY = boxes.contentCenterY
+
+    await page.mouse.move(startX, startY)
+    for (let i = 1; i <= 8; i++) {
+      await page.mouse.move(
+        startX + ((endX - startX) * i) / 8,
+        startY + ((endY - startY) * i) / 8
+      )
+      await page.waitForTimeout(40)
+    }
+
+    // Submenu should still be open after the diagonal move
+    const stillOpen = await page.evaluate(() => {
+      const el = document.querySelector('[data-pg="sub-content"]')
+      return el?.matches(":popover-open")
+    })
+    eq(stillOpen, true, "submenu stays open during diagonal move")
+
+    await page.keyboard.press("Escape")
+    await waitClosed()
+  })
+
+  await test("moving straight down to sibling item closes submenu", async () => {
+    const subMenuTrigger = page.locator('[data-pg="submenu-trigger"]')
+    await subMenuTrigger.click()
+    await page.waitForSelector('[data-pg="submenu-menu"]:popover-open')
+
+    // Hover SubTrigger to open submenu
+    await subTrigger.hover()
+    await page.waitForTimeout(200)
+    await waitSubOpen()
+
+    // Move straight down to a sibling item below the SubTrigger
+    const siblingItem = page.locator('[data-pg="after-sub-item"]')
+    await siblingItem.hover()
+
+    // Wait for the close to happen
+    await waitSubClosed()
+
+    await page.keyboard.press("Escape")
+    await waitClosed()
+  })
+
+  await test("Escape inside SubContent closes the whole stack and refocuses root trigger", async () => {
+    const subMenuTrigger = page.locator('[data-pg="submenu-trigger"]')
+    await subMenuTrigger.click()
+    await page.waitForSelector('[data-pg="submenu-menu"]:popover-open')
+
+    await subTrigger.focus()
+    await page.keyboard.press("ArrowRight")
+    await waitSubOpen()
+
+    // Escape should close everything
+    await page.keyboard.press("Escape")
+    await waitClosed()
+
+    // SubContent should also be closed
+    const subClosed = await page.evaluate(() => {
+      const el = document.querySelector('[data-pg="sub-content"]')
+      return el && !el.matches(":popover-open")
+    })
+    eq(subClosed, true, "subcontent closed")
+
+    // Focus should be back on the root trigger
+    const focusedPg = await page.evaluate(() =>
+      document.activeElement?.getAttribute("data-pg")
+    )
+    eq(focusedPg, "submenu-trigger", "focus on root trigger after Esc")
+  })
 }

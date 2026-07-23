@@ -70,7 +70,7 @@
   radio group is single-select with `menuitemradio` roles and
   `value/onValueChange`; indicator visible only when checked; files:
   `ui/dropdown-menu/dropdown-menu.jsx` + `.css`, test + demo page.
-- [ ] 3. submenu + safe triangle — test: ArrowRight on SubTrigger opens
+- [x] 3. submenu + safe triangle — test: ArrowRight on SubTrigger opens
   SubContent focused on first item, ArrowLeft closes back; hover opens after
   delay; diagonal pointer path from SubTrigger across the gap into SubContent
   keeps it open (safe triangle); moving to a sibling item instead closes it;

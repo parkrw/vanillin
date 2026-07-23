@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useId, useLayoutEffect, useRef, u
 import { cn } from "../../lib/cn.js"
 import { useControllableState } from "../../lib/use-controllable-state.js"
 import { useAnchorPosition } from "../../lib/use-anchor-position.js"
+import { useDirection } from "../../lib/direction.jsx"
+import { useSafeTriangle } from "../../lib/use-safe-triangle.js"
 
 const DropdownMenuContext = createContext(null)
 
@@ -146,6 +148,10 @@ export function DropdownMenuContent({
     if (event.defaultPrevented) return
     const menu = contentRef.current
     if (!menu) return
+
+    // Defense (b): if the event originated inside a nested submenu,
+    // bail — that submenu's own handler will take care of it.
+    if (event.target.closest('[role="menu"]') !== menu) return
 
     const items = getMenuItems(menu)
     if (items.length === 0) return
@@ -335,6 +341,296 @@ export function DropdownMenuRadioItem({ value, onSelect, className, children, ..
       </span>
       {children}
     </DropdownMenuItem>
+  )
+}
+
+// ── Submenu ───────────────────────────────────────────────────────────
+
+const DropdownMenuSubContext = createContext(null)
+
+export function DropdownMenuSub({ open, defaultOpen = false, onOpenChange, children }) {
+  const [isOpen, setOpen] = useControllableState({
+    value: open,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  })
+  const subTriggerRef = useRef(null)
+  const subContentRef = useRef(null)
+  const subContentId = useId()
+  const timerRef = useRef(null)
+
+  const setOpenRef = useRef(setOpen)
+  setOpenRef.current = setOpen
+
+  const scheduleOpen = useCallback(() => {
+    clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => setOpenRef.current(true), 100)
+  }, [])
+
+  const scheduleClose = useCallback(() => {
+    clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => setOpenRef.current(false), 100)
+  }, [])
+
+  const cancelSchedule = useCallback(() => {
+    clearTimeout(timerRef.current)
+  }, [])
+
+  const openNow = useCallback(() => {
+    clearTimeout(timerRef.current)
+    setOpenRef.current(true)
+  }, [])
+
+  const closeNow = useCallback(() => {
+    clearTimeout(timerRef.current)
+    setOpenRef.current(false)
+  }, [])
+
+  useEffect(() => () => clearTimeout(timerRef.current), [])
+
+  return (
+    <DropdownMenuSubContext.Provider
+      value={{
+        open: isOpen,
+        setOpen,
+        subTriggerRef,
+        subContentRef,
+        subContentId,
+        scheduleOpen,
+        scheduleClose,
+        cancelSchedule,
+        openNow,
+        closeNow,
+      }}
+    >
+      {children}
+    </DropdownMenuSubContext.Provider>
+  )
+}
+
+export function DropdownMenuSubTrigger({ className, onKeyDown, onPointerEnter, onPointerLeave, children, ...props }) {
+  const { open, subTriggerRef, subContentId, scheduleOpen, scheduleClose, openNow } =
+    useContext(DropdownMenuSubContext)
+  const dir = useDirection()
+  const openKey = dir === "rtl" ? "ArrowLeft" : "ArrowRight"
+
+  const handleKeyDown = (event) => {
+    onKeyDown?.(event)
+    if (event.defaultPrevented) return
+    if (event.key === openKey || event.key === "Enter") {
+      event.preventDefault()
+      event.stopPropagation()
+      openNow()
+    }
+  }
+
+  const handlePointerEnter = (event) => {
+    onPointerEnter?.(event)
+    if (!event.defaultPrevented && event.pointerType !== "touch") scheduleOpen()
+  }
+
+  const handlePointerLeave = (event) => {
+    onPointerLeave?.(event)
+    // The safe-triangle hook on SubContent handles the grace area —
+    // we just schedule a close which the triangle or content hover may cancel.
+    if (!event.defaultPrevented) scheduleClose()
+  }
+
+  return (
+    <div
+      ref={subTriggerRef}
+      role="menuitem"
+      aria-haspopup="menu"
+      aria-expanded={open ? "true" : "false"}
+      aria-controls={open ? subContentId : undefined}
+      tabIndex={-1}
+      data-state={open ? "open" : "closed"}
+      className={cn("dropdown-menu-item dropdown-menu-sub-trigger", className)}
+      onKeyDown={handleKeyDown}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+      {...props}
+    >
+      {children}
+      <svg className="dropdown-menu-sub-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="m9 18 6-6-6-6" />
+      </svg>
+    </div>
+  )
+}
+
+export function DropdownMenuSubContent({
+  sideOffset = 0,
+  className,
+  onKeyDown,
+  onPointerEnter,
+  children,
+  ...props
+}) {
+  const rootCtx = useContext(DropdownMenuContext)
+  const {
+    open,
+    setOpen,
+    subTriggerRef,
+    subContentRef,
+    subContentId,
+    scheduleClose,
+    cancelSchedule,
+    closeNow,
+  } = useContext(DropdownMenuSubContext)
+
+  const dir = useDirection()
+  const side = dir === "rtl" ? "left" : "right"
+  const closeKey = dir === "rtl" ? "ArrowRight" : "ArrowLeft"
+
+  useAnchorPosition(open, subTriggerRef, subContentRef, {
+    side,
+    align: "start",
+    sideOffset,
+  })
+
+  // Safe triangle — each move inside the triangle re-arms the pending close
+  // (deferring it), leaving the triangle closes immediately, and reaching
+  // the content cancels the close (pointerenter alone isn't enough — see
+  // the hook's doc for the hit-test/rect race).
+  useSafeTriangle({
+    enabled: open,
+    triggerRef: subTriggerRef,
+    contentRef: subContentRef,
+    onClose: closeNow,
+    onInsideMove: scheduleClose,
+    onResolve: cancelSchedule,
+    side,
+  })
+
+  const showingRef = useRef(false)
+  const setOpenRef = useRef(setOpen)
+  setOpenRef.current = setOpen
+
+  useLayoutEffect(() => {
+    const el = subContentRef.current
+    if (!el) return
+    const handler = (event) => {
+      if (event.newState === "closed") {
+        showingRef.current = false
+        setOpenRef.current(false)
+      }
+    }
+    el.addEventListener("toggle", handler)
+    return () => el.removeEventListener("toggle", handler)
+  }, [subContentRef])
+
+  useEffect(() => {
+    const el = subContentRef.current
+    if (!el) return
+    if (open && !showingRef.current) {
+      try {
+        el.showPopover()
+      } catch {
+        /* already showing */
+      }
+      showingRef.current = true
+      const items = getMenuItems(el)
+      if (items.length > 0) items[0].focus()
+    } else if (!open && showingRef.current) {
+      try {
+        el.hidePopover()
+      } catch {
+        /* already hidden */
+      }
+      showingRef.current = false
+    }
+  }, [open, subContentRef])
+
+  const handleKeyDown = (event) => {
+    onKeyDown?.(event)
+    if (event.defaultPrevented) return
+
+    const menu = subContentRef.current
+    if (!menu) return
+
+    // Defense (b) for nested: ignore events from deeper nested submenus.
+    if (event.target.closest('[role="menu"]') !== menu) return
+
+    const items = getMenuItems(menu)
+    const currentIndex = items.indexOf(document.activeElement)
+
+    switch (event.key) {
+      case "ArrowDown": {
+        event.preventDefault()
+        event.stopPropagation()
+        if (items.length === 0) break
+        const next = currentIndex < items.length - 1 ? currentIndex + 1 : 0
+        items[next].focus()
+        break
+      }
+      case "ArrowUp": {
+        event.preventDefault()
+        event.stopPropagation()
+        if (items.length === 0) break
+        const prev = currentIndex > 0 ? currentIndex - 1 : items.length - 1
+        items[prev].focus()
+        break
+      }
+      case "Home": {
+        event.preventDefault()
+        event.stopPropagation()
+        if (items.length > 0) items[0].focus()
+        break
+      }
+      case "End": {
+        event.preventDefault()
+        event.stopPropagation()
+        if (items.length > 0) items[items.length - 1].focus()
+        break
+      }
+      case closeKey: {
+        // Close submenu, refocus SubTrigger.
+        event.preventDefault()
+        event.stopPropagation()
+        closeNow()
+        subTriggerRef.current?.focus()
+        break
+      }
+      case "Escape": {
+        // Close the entire menu stack and return focus to root trigger.
+        event.preventDefault()
+        event.stopPropagation()
+        rootCtx.setOpen(false)
+        rootCtx.triggerRef.current?.focus()
+        break
+      }
+      case "Tab": {
+        event.preventDefault()
+        event.stopPropagation()
+        rootCtx.setOpen(false)
+        rootCtx.triggerRef.current?.focus()
+        break
+      }
+      default:
+        break
+    }
+  }
+
+  const handlePointerEnter = (event) => {
+    onPointerEnter?.(event)
+    if (!event.defaultPrevented) cancelSchedule()
+  }
+
+  return (
+    <div
+      ref={subContentRef}
+      id={subContentId}
+      popover="auto"
+      role="menu"
+      data-state={open ? "open" : "closed"}
+      className={cn("dropdown-menu dropdown-menu-sub-content", className)}
+      onKeyDown={handleKeyDown}
+      onPointerEnter={handlePointerEnter}
+      {...props}
+    >
+      {children}
+    </div>
   )
 }
 
