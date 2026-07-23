@@ -1,0 +1,58 @@
+/* Hover Card — native Popover API (popover="manual") with anchor positioning.
+   Popover surface look; enter/exit via transitions + @starting-style +
+   allow-discrete (same recipe as tooltip/popover). */
+
+.hover-card {
+  /* Reset UA popover defaults */
+  position: fixed;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--popover);
+  color: var(--popover-foreground);
+  padding: 1rem;
+  width: 16rem;
+  box-shadow: var(--shadow-md);
+  z-index: 50;
+
+  /* Enter/exit transitions. overlay keeps the element in the top layer
+     during the exit fade; without it hidePopover yanks it out immediately. */
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease),
+    display var(--motion-fast) var(--motion-ease) allow-discrete,
+    overlay var(--motion-fast) var(--motion-ease) allow-discrete;
+}
+
+/* Entry state */
+@starting-style {
+  .hover-card:popover-open {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* Exit state */
+.hover-card:not(:popover-open) {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+/* Placement-aware transform origin */
+.hover-card[data-side="bottom"] {
+  transform-origin: top center;
+}
+
+.hover-card[data-side="top"] {
+  transform-origin: bottom center;
+}
+
+.hover-card[data-side="left"] {
+  transform-origin: center right;
+}
+
+.hover-card[data-side="right"] {
+  transform-origin: center left;
+}
