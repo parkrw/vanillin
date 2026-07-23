@@ -16,7 +16,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 09  | drawer                   | ~M  | [x]    | stacked on 08 branch; Base UI anatomy (swipeDirection), not vaul            |
 | 10  | popover-tooltip          | ~L  | [x]    | anchored-overlay pattern-setter — see task file for popover recipe          |
 | 11  | hover-card               | ~S  | [x]    | deps: 10; tooltip recipe + shared root timers for content-hover grace       |
-| 12  | dropdown-menu            | ~L  | [ ]    | menu roles, submenus, safe-triangle                                         |
+| 12  | dropdown-menu            | ~L  | [x]    | menu-overlay pattern-setter for 13/14/16 — see task file + log              |
 | 13  | context-menu             | ~M  | [ ]    | deps: 12; pointer-coord anchor                                              |
 | 14  | menubar                  | ~M  | [ ]    | deps: 12                                                                    |
 | 15  | navigation-menu          | ~M  | [ ]    | deps: 10                                                                    |
@@ -138,3 +138,20 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   preservation — set `overflow-anchor: none` on any self-managed scroller
   (scroll-area 20, carousel 23); release-on-intent = wheel/touch/keys/
   scrollbar-pointerdown listeners, re-engage when scroll reaches the end.
+- 2026-07-23 — task 12 done on `feat/dropdown-menu` (~2250 net lines, one
+  branch — size hook is advisory). Menu recipe for 13/14/16: popover-recipe
+  content with role="menu"; in-component arrow nav scoped via
+  `closest('[role="menu"]') === thisMenu` (NOT useRovingFocus — nested
+  SubContent items would leak into the parent's list); checkbox/radio items
+  compose DropdownMenuItem (role/aria-checked/data-state as props, onSelect
+  wrapped). Submenus: SubContent must stay DOM-nested (nested popover="auto"
+  stays open only via DOM ancestry when showPopover() is called manually) +
+  double keydown-bubbling defense (stopPropagation in sub, closest-check in
+  parent). **Safe-triangle race** (lib/use-safe-triangle.js): the content's
+  pointerenter fires a fraction before the rect check sees the pointer inside,
+  so an inside-triangle move can re-arm the close AFTER enter cancelled it —
+  the hook's resolve path must cancel the pending close (`onResolve`), and the
+  regression test must move the mouse SLOWER than the close delay (fast
+  `steps:` moves beat the timer and prove nothing). Process change
+  (user-directed): no red-first TDD — write tests with the implementation,
+  verify with one green run.
