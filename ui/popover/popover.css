@@ -1,0 +1,78 @@
+/* Popover — native Popover API (popover="auto") with anchor positioning.
+   Enter/exit via transitions + @starting-style + allow-discrete
+   (keyframes can't play on exit — hidePopover removes from top layer immediately). */
+
+.popover {
+  /* Reset UA popover defaults */
+  position: fixed;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--popover);
+  color: var(--popover-foreground);
+  padding: 1rem;
+  box-shadow: var(--shadow-md);
+  width: 18rem;
+  max-width: calc(100vw - 2rem);
+  overflow: auto;
+
+  /* Enter/exit transitions. overlay keeps the element in the top layer
+     during the exit fade; without it hidePopover yanks it out immediately. */
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease),
+    display var(--motion-fast) var(--motion-ease) allow-discrete,
+    overlay var(--motion-fast) var(--motion-ease) allow-discrete;
+}
+
+/* Entry state — all properties start from here when the popover opens */
+@starting-style {
+  .popover:popover-open {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* Exit state — transitions TO these values before the element is removed */
+.popover:not(:popover-open) {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+/* Placement-aware transform origin */
+.popover[data-side="bottom"] {
+  transform-origin: top center;
+}
+
+.popover[data-side="top"] {
+  transform-origin: bottom center;
+}
+
+.popover[data-side="left"] {
+  transform-origin: center right;
+}
+
+.popover[data-side="right"] {
+  transform-origin: center left;
+}
+
+.popover-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.popover-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.popover-description {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+}
