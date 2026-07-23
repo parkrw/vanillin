@@ -54,7 +54,7 @@ export const registry = {
   "scroll-area": { title: "Scroll Area" },
   select: { title: "Select" },
   separator: { title: "Separator", page: lazy(() => import("./pages/separator.jsx")) },
-  sheet: { title: "Sheet" },
+  sheet: { title: "Sheet", page: lazy(() => import("./pages/sheet.jsx")) },
   sidebar: { title: "Sidebar" },
   skeleton: { title: "Skeleton", page: lazy(() => import("./pages/skeleton.jsx")) },
   slider: { title: "Slider", page: lazy(() => import("./pages/slider.jsx")) },

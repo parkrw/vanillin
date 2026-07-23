@@ -32,7 +32,7 @@
   `dismissible`), `ui/alert-dialog/alert-dialog.jsx` + `.css`,
   `tests/alert-dialog.test.mjs`, `playground/pages/alert-dialog.jsx`,
   `playground/registry.js`.
-- [ ] 2. sheet — test: opens from side (`sheet--right` class + right edge
+- [x] 2. sheet — test: opens from side (`sheet--right` class + right edge
   flush), side="left|top|bottom" variants, X closes, backdrop click closes,
   aria wired; files: `ui/sheet/sheet.jsx` + `.css`,
   `tests/sheet.test.mjs`, `playground/pages/sheet.jsx`,

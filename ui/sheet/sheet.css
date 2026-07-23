@@ -1,0 +1,120 @@
+/* Sheet renders through ui/dialog with the compound class
+   "dialog sheet sheet--<side>"; rules here override the centered dialog
+   look (this file's rules come after dialog.css via the @import).
+   Slide transforms are physical — translate has no logical equivalent. */
+@import "../dialog/dialog.css";
+
+.dialog.sheet {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  max-width: none;
+  max-height: none;
+}
+
+/* The UA gives <dialog> height/width: fit-content — side sheets need the
+   full edge explicitly. */
+.sheet--right {
+  inset-block: 0;
+  inset-inline: auto 0;
+  width: 20rem;
+  max-width: calc(100% - 3rem);
+  height: 100%;
+  border-inline-start: 1px solid var(--border);
+}
+
+.sheet--left {
+  inset-block: 0;
+  inset-inline: 0 auto;
+  width: 20rem;
+  max-width: calc(100% - 3rem);
+  height: 100%;
+  border-inline-end: 1px solid var(--border);
+}
+
+.sheet--top {
+  inset-block: 0 auto;
+  inset-inline: 0;
+  width: 100%;
+  border-block-end: 1px solid var(--border);
+}
+
+.sheet--bottom {
+  inset-block: auto 0;
+  inset-inline: 0;
+  width: 100%;
+  border-block-start: 1px solid var(--border);
+}
+
+.sheet--right[data-state="open"] {
+  animation-name: sheet-in-right;
+}
+.sheet--right[data-state="closed"] {
+  animation-name: sheet-out-right;
+}
+.sheet--left[data-state="open"] {
+  animation-name: sheet-in-left;
+}
+.sheet--left[data-state="closed"] {
+  animation-name: sheet-out-left;
+}
+.sheet--top[data-state="open"] {
+  animation-name: sheet-in-top;
+}
+.sheet--top[data-state="closed"] {
+  animation-name: sheet-out-top;
+}
+.sheet--bottom[data-state="open"] {
+  animation-name: sheet-in-bottom;
+}
+.sheet--bottom[data-state="closed"] {
+  animation-name: sheet-out-bottom;
+}
+
+@keyframes sheet-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes sheet-out-right {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes sheet-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes sheet-out-left {
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes sheet-in-top {
+  from {
+    transform: translateY(-100%);
+  }
+}
+@keyframes sheet-out-top {
+  to {
+    transform: translateY(-100%);
+  }
+}
+@keyframes sheet-in-bottom {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes sheet-out-bottom {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog.sheet[data-state="open"],
+  .dialog.sheet[data-state="closed"] {
+    animation: none;
+  }
+}
