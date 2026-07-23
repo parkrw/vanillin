@@ -12,7 +12,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 05  | attachment               | ~M  | [x]    | deps: 04; CSS-only incl. AttachmentGroup scroll-snap row                    |
 | 06  | message-scroller         | ~M  | [x]    | two stacked PRs: core + button/hooks                                        |
 | 07  | dialog                   | ~L  | [x]    | native `<dialog>` pattern-setter — see task file for overlay recipe         |
-| 08  | alert-dialog-sheet       | ~M  | [ ]    | deps: 07                                                                    |
+| 08  | alert-dialog-sheet       | ~M  | [x]    | thin reuses of ui/dialog (compound classes + `dismissible`)                                                                    |
 | 09  | drawer                   | ~M  | [ ]    | deps: 07; swipe-to-dismiss                                                  |
 | 10  | popover-tooltip          | ~L  | [ ]    | Popover API + use-anchor-position                                           |
 | 11  | hover-card               | ~S  | [ ]    | deps: 10                                                                    |
@@ -83,6 +83,15 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   scroll an inner viewport. Applies to any future edge-fade scroller
   (scroll-area 20, carousel 24, sidebar 27). QA dark mode via clip screenshots
   or after the fix, not just light.
+- 2026-07-22 — task 08 done on `feat/alert-dialog-sheet` (~428 net lines).
+  Reuse worked as planned: both components re-export dialog parts;
+  DialogContent grew `dismissible` + role passthrough; component CSS
+  `@import`s dialog.css so pages stay single-import. Gotchas: UA gives
+  `<dialog>` height/width `fit-content` — edge sheets need explicit
+  height/width (drawer 09 too); animated-position tests must await
+  `el.getAnimations()` `.finished` before measuring geometry; fixed a
+  pre-existing message-scroller race (assert on component state, not
+  scroll position).
 - 2026-07-22 — task 07 done on `feat/dialog` (~468 net lines). Overlay recipe
   for 08/09: `showModal()` gives top layer + focus containment + inert
   background — no Portal/useFocusTrap/useDismissableLayer. Esc = `cancel`
