@@ -255,6 +255,91 @@ export function DropdownMenuItem({
   )
 }
 
+// ── Checkbox Item ─────────────────────────────────────────────────────
+
+export function DropdownMenuCheckboxItem({
+  checked,
+  defaultChecked = false,
+  onCheckedChange,
+  onSelect,
+  className,
+  children,
+  ...props
+}) {
+  const [isChecked, setChecked] = useControllableState({
+    value: checked,
+    defaultValue: defaultChecked,
+    onChange: onCheckedChange,
+  })
+
+  return (
+    <DropdownMenuItem
+      role="menuitemcheckbox"
+      aria-checked={isChecked ? "true" : "false"}
+      data-state={isChecked ? "checked" : "unchecked"}
+      className={cn("dropdown-menu-checkbox-item", className)}
+      onSelect={(event) => {
+        onSelect?.(event)
+        setChecked((prev) => !prev)
+      }}
+      {...props}
+    >
+      <span className="dropdown-menu-item-indicator">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      </span>
+      {children}
+    </DropdownMenuItem>
+  )
+}
+
+// ── Radio Group + Radio Item ──────────────────────────────────────────
+
+const DropdownMenuRadioGroupContext = createContext(null)
+
+export function DropdownMenuRadioGroup({ value, defaultValue, onValueChange, className, children, ...props }) {
+  const [current, setValue] = useControllableState({
+    value,
+    defaultValue,
+    onChange: onValueChange,
+  })
+
+  return (
+    <DropdownMenuRadioGroupContext.Provider value={{ current, setValue }}>
+      <div role="group" className={cn("dropdown-menu-group", className)} {...props}>
+        {children}
+      </div>
+    </DropdownMenuRadioGroupContext.Provider>
+  )
+}
+
+export function DropdownMenuRadioItem({ value, onSelect, className, children, ...props }) {
+  const { current, setValue } = useContext(DropdownMenuRadioGroupContext)
+  const isChecked = current === value
+
+  return (
+    <DropdownMenuItem
+      role="menuitemradio"
+      aria-checked={isChecked ? "true" : "false"}
+      data-state={isChecked ? "checked" : "unchecked"}
+      className={cn("dropdown-menu-radio-item", className)}
+      onSelect={(event) => {
+        onSelect?.(event)
+        setValue(value)
+      }}
+      {...props}
+    >
+      <span className="dropdown-menu-item-indicator">
+        <span className="dropdown-menu-radio-dot" />
+      </span>
+      {children}
+    </DropdownMenuItem>
+  )
+}
+
+// ── Structural parts ──────────────────────────────────────────────────
+
 export function DropdownMenuGroup({ className, children, ...props }) {
   return (
     <div role="group" className={cn("dropdown-menu-group", className)} {...props}>

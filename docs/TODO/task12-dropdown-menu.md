@@ -65,7 +65,7 @@
   (root/trigger/content/item/group/label/separator/shortcut),
   `tests/dropdown-menu.test.mjs`, `playground/pages/dropdown-menu.jsx`,
   `playground/registry.js`.
-- [ ] 2. checkbox + radio items — test: checkbox toggles `aria-checked`,
+- [x] 2. checkbox + radio items — test: checkbox toggles `aria-checked`,
   closes, state persists on reopen; controlled `checked/onCheckedChange`;
   radio group is single-select with `menuitemradio` roles and
   `value/onValueChange`; indicator visible only when checked; files:

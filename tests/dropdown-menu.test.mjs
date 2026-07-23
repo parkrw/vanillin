@@ -251,4 +251,210 @@ export default async function run({ page, baseUrl, test, eq }) {
     )
     eq(focusOnTrigger, true, "focus returned to trigger after Space select")
   })
+
+  // ── Sub-task 2: Checkbox + Radio items ──────────────────────────────
+
+  const cbTrigger = page.locator('[data-pg="checkbox-trigger"]')
+
+  const waitCbOpen = () =>
+    page.waitForSelector('[data-pg="checkbox-menu"]:popover-open')
+  const waitCbClosed = () =>
+    page.waitForFunction(() => {
+      const el = document.querySelector('[data-pg="checkbox-menu"]')
+      return el && !el.matches(":popover-open") && el.dataset.state === "closed"
+    })
+
+  await test("checkbox item toggles aria-checked, closes, state persists on reopen", async () => {
+    await cbTrigger.click()
+    await waitCbOpen()
+
+    // The first checkbox item should start unchecked
+    const cbItem = page.locator('[data-pg="cb-statusbar"]')
+    eq(await cbItem.getAttribute("role"), "menuitemcheckbox", "role=menuitemcheckbox")
+    eq(await cbItem.getAttribute("aria-checked"), "false", "initially unchecked")
+    eq(await cbItem.getAttribute("data-state"), "unchecked", "data-state=unchecked")
+
+    // indicator hidden when unchecked
+    const indicatorHidden = await cbItem.evaluate((el) => {
+      const ind = el.querySelector(".dropdown-menu-item-indicator")
+      if (!ind) return true
+      const style = getComputedStyle(ind)
+      return style.display === "none" || style.visibility === "hidden"
+    })
+    eq(indicatorHidden, true, "indicator hidden when unchecked")
+
+    // Click to check — should toggle, close menu
+    await cbItem.click()
+    await waitCbClosed()
+
+    // Reopen — state should persist
+    await cbTrigger.click()
+    await waitCbOpen()
+    eq(await cbItem.getAttribute("aria-checked"), "true", "checked after toggle")
+    eq(await cbItem.getAttribute("data-state"), "checked", "data-state=checked")
+
+    // indicator visible when checked
+    const indicatorVisible = await cbItem.evaluate((el) => {
+      const ind = el.querySelector(".dropdown-menu-item-indicator")
+      if (!ind) return false
+      const style = getComputedStyle(ind)
+      return style.display !== "none" && style.visibility !== "hidden"
+    })
+    eq(indicatorVisible, true, "indicator visible when checked")
+
+    // Toggle back off
+    await cbItem.click()
+    await waitCbClosed()
+    await cbTrigger.click()
+    await waitCbOpen()
+    eq(await cbItem.getAttribute("aria-checked"), "false", "unchecked after second toggle")
+
+    // readout reflects state
+    const readout = await page.locator('[data-pg="cb-readout"]').textContent()
+    eq(readout.includes("statusbar:off"), true, "readout shows unchecked")
+
+    await page.keyboard.press("Escape")
+    await waitCbClosed()
+  })
+
+  await test("controlled checkbox checked/onCheckedChange", async () => {
+    // The demo has a controlled checkbox item (activity bar)
+    await cbTrigger.click()
+    await waitCbOpen()
+
+    const controlled = page.locator('[data-pg="cb-activity"]')
+    eq(await controlled.getAttribute("aria-checked"), "true", "controlled starts checked")
+
+    // Click toggles via onCheckedChange
+    await controlled.click()
+    await waitCbClosed()
+
+    // Readout updated
+    const readout = await page.locator('[data-pg="cb-readout"]').textContent()
+    eq(readout.includes("activity:off"), true, "controlled toggled off")
+
+    // Reopen and verify
+    await cbTrigger.click()
+    await waitCbOpen()
+    eq(await controlled.getAttribute("aria-checked"), "false", "controlled now unchecked")
+
+    await page.keyboard.press("Escape")
+    await waitCbClosed()
+  })
+
+  const radioTrigger = page.locator('[data-pg="radio-trigger"]')
+
+  const waitRadioOpen = () =>
+    page.waitForSelector('[data-pg="radio-menu"]:popover-open')
+  const waitRadioClosed = () =>
+    page.waitForFunction(() => {
+      const el = document.querySelector('[data-pg="radio-menu"]')
+      return el && !el.matches(":popover-open") && el.dataset.state === "closed"
+    })
+
+  await test("radio group is single-select with menuitemradio roles", async () => {
+    await radioTrigger.click()
+    await waitRadioOpen()
+
+    const items = await page.evaluate(() => {
+      const menu = document.querySelector('[data-pg="radio-menu"]:popover-open')
+      return [...menu.querySelectorAll('[role="menuitemradio"]')].map((el) => ({
+        text: el.textContent.trim(),
+        checked: el.getAttribute("aria-checked"),
+        state: el.dataset.state,
+      }))
+    })
+
+    // Should have radio items
+    eq(items.length >= 2, true, "has radio items")
+    // Initially one should be checked (the default)
+    const checkedCount = items.filter((i) => i.checked === "true").length
+    eq(checkedCount, 1, "exactly one checked")
+
+    // Click a different item
+    const uncheckedItem = page.locator('[role="menuitemradio"][aria-checked="false"]').first()
+    await uncheckedItem.click()
+    await waitRadioClosed()
+
+    // Readout should show the new value
+    const readout = await page.locator('[data-pg="radio-readout"]').textContent()
+    eq(readout.length > 0, true, "radio readout updated")
+
+    // Reopen — the newly selected should be checked, old deselected
+    await radioTrigger.click()
+    await waitRadioOpen()
+
+    const newChecked = await page.evaluate(() => {
+      const menu = document.querySelector('[data-pg="radio-menu"]:popover-open')
+      return [...menu.querySelectorAll('[role="menuitemradio"]')]
+        .filter((el) => el.getAttribute("aria-checked") === "true")
+        .map((el) => el.textContent.trim())
+    })
+    eq(newChecked.length, 1, "still exactly one checked after change")
+
+    await page.keyboard.press("Escape")
+    await waitRadioClosed()
+  })
+
+  await test("radio item indicator visible only when checked", async () => {
+    await radioTrigger.click()
+    await waitRadioOpen()
+
+    // checked item should have visible indicator
+    const checkedIndicator = await page.evaluate(() => {
+      const item = document.querySelector('[role="menuitemradio"][aria-checked="true"]')
+      if (!item) return false
+      const ind = item.querySelector(".dropdown-menu-item-indicator")
+      if (!ind) return false
+      return getComputedStyle(ind).display !== "none"
+    })
+    eq(checkedIndicator, true, "checked radio indicator visible")
+
+    // unchecked item should have hidden indicator
+    const uncheckedIndicator = await page.evaluate(() => {
+      const item = document.querySelector('[role="menuitemradio"][aria-checked="false"]')
+      if (!item) return true
+      const ind = item.querySelector(".dropdown-menu-item-indicator")
+      if (!ind) return true
+      return getComputedStyle(ind).display === "none"
+    })
+    eq(uncheckedIndicator, true, "unchecked radio indicator hidden")
+
+    await page.keyboard.press("Escape")
+    await waitRadioClosed()
+  })
+
+  await test("checkbox keyboard nav includes menuitemcheckbox items", async () => {
+    await cbTrigger.click()
+    await waitCbOpen()
+
+    // The first focused item should be a menuitemcheckbox
+    const role = await page.evaluate(() => document.activeElement?.getAttribute("role"))
+    eq(role, "menuitemcheckbox", "first focused is menuitemcheckbox")
+
+    // ArrowDown should move to next item
+    await page.keyboard.press("ArrowDown")
+    const nextRole = await page.evaluate(() => document.activeElement?.getAttribute("role"))
+    eq(nextRole === "menuitemcheckbox" || nextRole === "menuitem", true, "arrow navigates to next item")
+
+    // Enter toggles checkbox
+    await page.keyboard.press("Home")
+    const beforeChecked = await page.evaluate(() =>
+      document.activeElement?.getAttribute("aria-checked")
+    )
+    await page.keyboard.press("Enter")
+    await waitCbClosed()
+
+    // Reopen to verify toggle happened
+    await cbTrigger.click()
+    await waitCbOpen()
+    const afterChecked = await page.evaluate(() => {
+      const item = document.querySelector('[data-pg="cb-statusbar"]')
+      return item?.getAttribute("aria-checked")
+    })
+    eq(afterChecked !== beforeChecked, true, "Enter toggled checkbox")
+
+    await page.keyboard.press("Escape")
+    await waitCbClosed()
+  })
 }
