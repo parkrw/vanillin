@@ -51,7 +51,7 @@
   controlled open/onOpenChange works, focus is NOT trapped; files:
   `ui/popover/popover.jsx` + `.css`, `tests/popover.test.mjs`,
   `playground/pages/popover.jsx`, `playground/registry.js`.
-- [ ] 2. tooltip — test: hover opens after provider delay (0 default),
+- [x] 2. tooltip — test: hover opens after provider delay (0 default),
   leave closes, focus/blur opens/closes, Esc closes, trigger has
   `aria-describedby` pointing at content, moving to a second trigger within
   the skip window opens instantly; files: `ui/tooltip/tooltip.jsx` + `.css`,

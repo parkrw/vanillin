@@ -66,6 +66,6 @@ export const registry = {
   toast: { title: "Toast (Sonner)" },
   toggle: { title: "Toggle", page: lazy(() => import("./pages/toggle.jsx")) },
   "toggle-group": { title: "Toggle Group", page: lazy(() => import("./pages/toggle-group.jsx")) },
-  tooltip: { title: "Tooltip" },
+  tooltip: { title: "Tooltip", page: lazy(() => import("./pages/tooltip.jsx")) },
   typography: { title: "Typography", page: lazy(() => import("./pages/typography.jsx")) },
 }
