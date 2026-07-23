@@ -15,7 +15,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 08  | alert-dialog-sheet       | ~M  | [x]    | thin reuses of ui/dialog (compound classes + `dismissible`)                                                                    |
 | 09  | drawer                   | ~M  | [x]    | stacked on 08 branch; Base UI anatomy (swipeDirection), not vaul            |
 | 10  | popover-tooltip          | ~L  | [x]    | anchored-overlay pattern-setter — see task file for popover recipe          |
-| 11  | hover-card               | ~S  | [ ]    | deps: 10                                                                    |
+| 11  | hover-card               | ~S  | [x]    | deps: 10; tooltip recipe + shared root timers for content-hover grace       |
 | 12  | dropdown-menu            | ~L  | [ ]    | menu roles, submenus, safe-triangle                                         |
 | 13  | context-menu             | ~M  | [ ]    | deps: 12; pointer-coord anchor                                              |
 | 14  | menubar                  | ~M  | [ ]    | deps: 12                                                                    |
@@ -123,6 +123,15 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   exit fade. Tooltip: provider delay + 300ms skip window; focus opens
   instantly (hover delay never applies). shadcn anatomy is Base UI: popover
   has Header/Title/Description, no Anchor/Portal.
+- 2026-07-22 — task 11 done on `feat/hover-card` (~432 net lines). Delta vs
+  tooltip: open/close timers live in the root context so trigger *and*
+  content share them — pointer entering the content cancels the pending
+  close (the closeDelay grace); content is `popover="manual"` with pointer
+  handlers, no `pointer-events: none`. Trigger defaults to `<a>`; no
+  role=tooltip/aria-describedby (Radix sighted-preview stance). Radix
+  defaults kept: openDelay 700 / closeDelay 300. Process note: red run was
+  compromised (impl written while the suite was mid-run); green verified
+  clean, 97/97.
 - 2026-07-22 — task 06 done as two stacked branches (`feat/message-scroller`
   383 + `feat/message-scroller-hooks` 223 net lines; together over the 500
   cap). Gotchas: Chrome native scroll anchoring doubles manual prepend
