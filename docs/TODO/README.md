@@ -17,7 +17,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 10  | popover-tooltip          | ~L  | [x]    | anchored-overlay pattern-setter — see task file for popover recipe          |
 | 11  | hover-card               | ~S  | [x]    | deps: 10; tooltip recipe + shared root timers for content-hover grace       |
 | 12  | dropdown-menu            | ~L  | [x]    | menu-overlay pattern-setter for 13/14/16 — see task file + log              |
-| 13  | context-menu             | ~M  | [ ]    | deps: 12; pointer-coord anchor                                              |
+| 13  | context-menu             | ~M  | [x]    | deps: 12; all parts re-export dropdown-menu; see Chrome contextmenu gotcha  |
 | 14  | menubar                  | ~M  | [ ]    | deps: 12                                                                    |
 | 15  | navigation-menu          | ~M  | [ ]    | deps: 10                                                                    |
 | 16  | select                   | ~L  | [ ]    | hardest; deps: 10, 12                                                       |
@@ -155,3 +155,16 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   `steps:` moves beat the timer and prove nothing). Process change
   (user-directed): no red-first TDD — write tests with the implementation,
   verify with one green run.
+- 2026-07-23 — task 13 done on `feat/context-menu` (~590 net lines — size
+  hook is advisory). Reuse worked: every part re-exports dropdown-menu
+  (root wraps DropdownMenu; content passes a virtual pointer-coord anchor
+  via new DropdownMenuContent `anchorRef` prop; useAnchorPosition skips
+  ResizeObserver for non-Element anchors). Gotchas: **Chrome hides all auto
+  popovers while processing `contextmenu` even when prevented** — open in
+  `setTimeout(0)`; place the cursor 2px INSIDE the menu corner (negative
+  side/alignOffset) or the gesture-ending pointerup light-dismisses it; on
+  right-click-while-open, re-show the natively hidden popover directly (the
+  hide's toggle event is queued; hide+show coalesce to open→open, ignored
+  by the state sync). Fixed latent useControllableState bug: ref now syncs
+  on uncontrolled writes, so two setter calls in one task see each other
+  (was swallowing close-then-reopen).
