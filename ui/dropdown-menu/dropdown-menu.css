@@ -15,6 +15,9 @@
   min-width: 8rem;
   max-width: calc(100vw - 2rem);
   overflow: auto;
+  /* The menu takes focus when the pointer leaves an item (hover highlight
+     parking) — no ring on the container, items carry the highlight. */
+  outline: none;
 
   /* Enter/exit transitions. overlay keeps the element in the top layer
      during the exit fade; without it hidePopover yanks it out immediately. */
