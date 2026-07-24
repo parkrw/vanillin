@@ -704,4 +704,24 @@ export default async function run({ page, baseUrl, test, eq }) {
     )
     eq(focusedPg, "submenu-trigger", "focus on root trigger after Esc")
   })
+
+  await test("held-press click on the open trigger closes, not reopens", async () => {
+    // Regression (task-16): pointerdown light-dismisses the popover and the
+    // queued toggle syncs state to closed before a slow click's mouseup —
+    // without the pointerdown snapshot the click re-toggles it open.
+    // Playwright's instant click passes either way; hold the press.
+    await trigger.click()
+    await waitOpen()
+    const box = await trigger.boundingBox()
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await page.mouse.down()
+    await page.waitForTimeout(150)
+    await page.mouse.up()
+    await waitClosed()
+    await page.waitForTimeout(150)
+    const reopened = await page.evaluate(() =>
+      document.querySelector('.dropdown-menu[role="menu"]:popover-open') !== null
+    )
+    eq(reopened, false, "menu stays closed after held-press click")
+  })
 }

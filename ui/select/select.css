@@ -1,0 +1,174 @@
+/* Select — combobox trigger + listbox on the native Popover API
+   (popover recipe: transitions + @starting-style + allow-discrete).
+   Popper placement only; no scroll buttons — the listbox scrolls. */
+
+.select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  block-size: 2.25rem;
+  padding-block: 0.375rem;
+  padding-inline: 0.75rem;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  white-space: nowrap;
+  cursor: default;
+  transition:
+    border-color var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) var(--motion-ease);
+}
+
+.select-trigger[data-size="sm"] {
+  block-size: 2rem;
+}
+
+.select-trigger:focus-visible {
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+.select-trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.select-trigger[aria-invalid="true"] {
+  border-color: var(--destructive);
+}
+
+.select-trigger[data-placeholder] {
+  color: var(--muted-foreground);
+}
+
+.select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.select-trigger-chevron {
+  inline-size: 1rem;
+  block-size: 1rem;
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.select-content {
+  /* Reset UA popover defaults */
+  position: fixed;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--popover);
+  color: var(--popover-foreground);
+  padding: 0.25rem;
+  box-shadow: var(--shadow-md);
+  min-inline-size: 8rem;
+  max-inline-size: calc(100vw - 2rem);
+  max-block-size: min(24rem, calc(100vh - 4rem));
+  overflow-y: auto;
+  /* Focus parks here when the pointer leaves an option — items carry the
+     highlight, no ring on the container. */
+  outline: none;
+
+  /* overlay keeps the element in the top layer during the exit fade. */
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease),
+    display var(--motion-fast) var(--motion-ease) allow-discrete,
+    overlay var(--motion-fast) var(--motion-ease) allow-discrete;
+}
+
+@starting-style {
+  .select-content:popover-open {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.select-content:not(:popover-open) {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.select-content[data-side="bottom"] {
+  transform-origin: top center;
+}
+
+.select-content[data-side="top"] {
+  transform-origin: bottom center;
+}
+
+.select-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-block: 0.375rem;
+  padding-inline: 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  line-height: 1.25;
+  cursor: default;
+  outline: none;
+  user-select: none;
+}
+
+.select-item:focus {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.select-item[aria-disabled="true"] {
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.select-item-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Check mark on the trailing edge (shadcn parity). */
+.select-item-indicator {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1rem;
+  block-size: 1rem;
+  flex-shrink: 0;
+}
+
+.select-item[data-state="checked"] > .select-item-indicator {
+  display: inline-flex;
+}
+
+.select-item-indicator svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  pointer-events: none;
+}
+
+.select-label {
+  padding-block: 0.375rem;
+  padding-inline: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.select-separator {
+  margin-block: 0.25rem;
+  margin-inline: -0.25rem;
+  block-size: 1px;
+  background-color: var(--border);
+}

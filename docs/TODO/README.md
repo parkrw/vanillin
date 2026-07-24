@@ -20,7 +20,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 13  | context-menu        | ~M  | [x]    | deps: 12; all parts re-export dropdown-menu; see Chrome contextmenu gotcha  |
 | 14  | menubar             | ~M  | [x]    | deps: 12; all item parts re-export dropdown-menu; see click-toggle gotcha   |
 | 15  | navigation-menu     | ~M  | [x]    | deps: 10; per-item panels (viewport-less mode); Viewport/Indicator no-ops   |
-| 16  | select              | ~L  | [ ]    | hardest; deps: 10, 12                                                       |
+| 16  | select              | ~L  | [x]    | deps: 10, 12; popper-only (no alignItemWithTrigger); dropdown race fixed    |
 | 17  | combobox            | ~M  | [ ]    | deps: 16                                                                    |
 | 18  | command             | ~M  | [ ]    | deps: 17                                                                    |
 | 19  | input-otp           | ~M  | [ ]    | hidden input + segments                                                     |
@@ -202,3 +202,16 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   own pointerenter hover-opens the menu and the click then closes it (Radix
   parity — hover-opened trigger + click = close), so click-to-open tests
   must sit out 350ms after a close.
+- 2026-07-23 — task 16 done on `feat/select` (~1080 net lines — size hook is
+  advisory), stacked on feat/navigation-menu. Select-specific roles
+  (combobox/listbox/option) over task-12 mechanics; deviations: popper
+  placement only (`alignItemWithTrigger` swallowed), no scroll buttons
+  (listbox scrolls), hidden `<input>` for forms (no constraint validation).
+  Items register value→label in root context so SelectValue works without
+  the listbox ever opening; `items` prop consulted first. Typeahead in both
+  states (closed sets value directly, native parity) — gotcha: reset the
+  query buffer on every open/close transition, or a query typed in one
+  state prefix-poisons matches in the other (Radix resets too). Also fixed
+  dropdown-menu's trigger click-toggle race (task-14 note) with a held-press
+  regression test — Playwright's instant click can't reproduce it.
+  Message-scroller button test flaked once again (passed on rerun).

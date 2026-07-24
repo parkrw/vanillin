@@ -52,7 +52,7 @@ export const registry = {
   "radio-group": { title: "Radio Group", page: lazy(() => import("./pages/radio-group.jsx")) },
   resizable: { title: "Resizable" },
   "scroll-area": { title: "Scroll Area" },
-  select: { title: "Select" },
+  select: { title: "Select", page: lazy(() => import("./pages/select.jsx")) },
   separator: { title: "Separator", page: lazy(() => import("./pages/separator.jsx")) },
   sheet: { title: "Sheet", page: lazy(() => import("./pages/sheet.jsx")) },
   sidebar: { title: "Sidebar" },

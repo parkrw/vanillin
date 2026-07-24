@@ -41,15 +41,30 @@ export function DropdownMenu({ open, defaultOpen = false, onOpenChange, children
   )
 }
 
-export function DropdownMenuTrigger({ as: Comp = "button", onClick, onKeyDown, className, ...props }) {
+export function DropdownMenuTrigger({ as: Comp = "button", onClick, onKeyDown, onPointerDown, className, ...props }) {
   const { open, setOpen, triggerRef, contentId, focusLastRef } = useContext(DropdownMenuContext)
+
+  // Pointerdown light-dismisses the open popover; the queued toggle may sync
+  // state to closed before the click arrives. Snapshot "was open" so the
+  // click always means close then, instead of racing the toggle task and
+  // sometimes reopening (task-14 gotcha; keyboard clicks have no pointerdown,
+  // so the live state decides).
+  const wasOpenRef = useRef(false)
+
+  const handlePointerDown = (event) => {
+    onPointerDown?.(event)
+    if (event.defaultPrevented) return
+    wasOpenRef.current = open
+  }
 
   const handleClick = (event) => {
     onClick?.(event)
-    if (!event.defaultPrevented) {
-      focusLastRef.current = false
-      setOpen((prev) => !prev)
-    }
+    if (event.defaultPrevented) return
+    focusLastRef.current = false
+    const wasOpen = wasOpenRef.current
+    wasOpenRef.current = false
+    if (wasOpen) setOpen(false)
+    else setOpen((prev) => !prev)
   }
 
   const handleKeyDown = (event) => {
@@ -77,6 +92,7 @@ export function DropdownMenuTrigger({ as: Comp = "button", onClick, onKeyDown, c
       className={className}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
+      onPointerDown={handlePointerDown}
       {...props}
     />
   )
