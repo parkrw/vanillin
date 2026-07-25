@@ -36,7 +36,7 @@ export const registry = {
   "hover-card": { title: "Hover Card", page: lazy(() => import("./pages/hover-card.jsx")) },
   input: { title: "Input", page: lazy(() => import("./pages/input.jsx")) },
   "input-group": { title: "Input Group", page: lazy(() => import("./pages/input-group.jsx")) },
-  "input-otp": { title: "Input OTP" },
+  "input-otp": { title: "Input OTP", page: lazy(() => import("./pages/input-otp.jsx")) },
   item: { title: "Item", page: lazy(() => import("./pages/item.jsx")) },
   kbd: { title: "Kbd", page: lazy(() => import("./pages/kbd.jsx")) },
   label: { title: "Label", page: lazy(() => import("./pages/label.jsx")) },

@@ -23,7 +23,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 16  | select              | ~L  | [x]    | deps: 10, 12; popper-only (no alignItemWithTrigger); dropdown race fixed    |
 | 17  | combobox            | ~M  | [x]    | deps: 16; Base UI anatomy; single-select only (chips/multiple deferred)     |
 | 18  | command             | ~M  | [x]    | deps: 17; still cmdk anatomy; substring filter (no score/re-sort)           |
-| 19  | input-otp           | ~M  | [ ]    | hidden input + segments                                                     |
+| 19  | input-otp           | ~M  | [x]    | transparent input over slots; caret parks at end of value                   |
 | 20  | scroll-area         | ~M  | [ ]    | overlay synced thumb                                                        |
 | 21  | calendar            | ~L  | [ ]    | ARIA grid, native Date/Intl                                                 |
 | 22  | date-picker         | ~S  | [ ]    | deps: 10, 21                                                                |
@@ -250,3 +250,18 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   the item registration map, not just search/children, or the first paint
   keeps a stale highlight; combobox's `[hidden] { display: none }` restatement
   applies here too.
+- 2026-07-25 — task 19 done on `feat/input-otp` (~480 net lines), stacked on
+  feat/command. shadcn still wraps `input-otp` (guilhermerodz): one
+  transparent real `<input>` over div slots, so native caret/selection/IME
+  and `autocomplete="one-time-code"` autofill come free and arrows/Backspace
+  need no code — the slot render just mirrors `value[index]` plus the input's
+  selection. Caret parks at the end of the typed value on focus/click
+  (upstream parity: no hole-in-the-middle state); pattern rejects a whole
+  failing change instead of filtering characters. Gotchas: the slots render
+  *after* the input in the DOM, so they swallow every click until the input
+  gets `z-index` and the slots `pointer-events: none` (Playwright's
+  `click()` times out on the hit-target check — the failure looks like an
+  invisible-element problem, not a stacking one); measuring
+  `[data-active]` ring styles right after a keystroke reads mid-transition
+  values under the playground's 2.5× motion scale — wait for the transition
+  before asserting computed colors.

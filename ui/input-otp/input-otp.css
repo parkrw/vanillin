@@ -1,0 +1,126 @@
+/* Input OTP — a transparent real <input> covers the whole field; the slots
+   are divs mirroring its value, and the blinking bar is a stand-in for the
+   invisible native caret. */
+
+.input-otp {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input-otp[data-disabled] {
+  opacity: 0.5;
+}
+
+/* The input must stay the hit target — the slots render after it in the DOM,
+   so without this they swallow every click. */
+.input-otp-input {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  inline-size: 100%;
+  block-size: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: transparent;
+  caret-color: transparent;
+  font: inherit;
+  outline: none;
+}
+
+.input-otp-input::selection {
+  background: none;
+}
+
+.input-otp-input:disabled {
+  cursor: not-allowed;
+}
+
+.input-otp-group {
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+/* Slots inside a group share borders; only the group's ends are rounded. */
+.input-otp-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border: 1px solid var(--input);
+  border-inline-start-width: 0;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--foreground);
+  transition:
+    border-color var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) var(--motion-ease);
+}
+
+.input-otp-slot:first-child {
+  border-inline-start-width: 1px;
+  border-start-start-radius: var(--radius-md);
+  border-end-start-radius: var(--radius-md);
+}
+
+.input-otp-slot:last-child {
+  border-start-end-radius: var(--radius-md);
+  border-end-end-radius: var(--radius-md);
+}
+
+/* The active slot draws the focus ring — the real input has none. */
+.input-otp-slot[data-active] {
+  z-index: 1;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+.input-otp-slot[aria-invalid="true"] {
+  border-color: var(--destructive);
+}
+
+.input-otp-slot[aria-invalid="true"][data-active] {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--destructive) 40%, transparent);
+}
+
+.input-otp-caret {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1rem;
+  background-color: var(--foreground);
+  animation: input-otp-blink 1s steps(1, end) infinite;
+}
+
+@keyframes input-otp-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input-otp-caret {
+    animation: none;
+  }
+}
+
+.input-otp-separator {
+  display: flex;
+  align-items: center;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.input-otp-separator svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
