@@ -19,7 +19,7 @@ export const registry = {
   "button-group": { title: "Button Group", page: lazy(() => import("./pages/button-group.jsx")) },
   calendar: { title: "Calendar", page: lazy(() => import("./pages/calendar.jsx")) },
   card: { title: "Card", page: lazy(() => import("./pages/card.jsx")) },
-  carousel: { title: "Carousel" },
+  carousel: { title: "Carousel", page: lazy(() => import("./pages/carousel.jsx")) },
   checkbox: { title: "Checkbox", page: lazy(() => import("./pages/checkbox.jsx")) },
   collapsible: { title: "Collapsible", page: lazy(() => import("./pages/collapsible.jsx")) },
   combobox: { title: "Combobox", page: lazy(() => import("./pages/combobox.jsx")) },

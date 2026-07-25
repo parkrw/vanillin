@@ -1,0 +1,98 @@
+.carousel {
+  position: relative;
+}
+
+.carousel:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+  border-radius: var(--radius-md);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Content — scroll-snap track                                               */
+/* -------------------------------------------------------------------------- */
+
+.carousel-content {
+  display: flex;
+  scroll-snap-type: x mandatory;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overflow-anchor: none;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+  user-select: none;
+}
+
+.carousel-content::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel[data-orientation="vertical"] > .carousel-content {
+  flex-direction: column;
+  scroll-snap-type: y mandatory;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Item — snap-aligned slide                                                 */
+/* -------------------------------------------------------------------------- */
+
+.carousel-item {
+  flex: 0 0 100%;
+  min-inline-size: 0;
+  scroll-snap-align: start;
+}
+
+.carousel[data-orientation="vertical"] .carousel-item {
+  min-block-size: 0;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Navigation buttons — reuse .btn .btn--outline .btn--icon from button.css  */
+/* -------------------------------------------------------------------------- */
+
+.carousel-nav {
+  position: absolute;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  box-shadow: none;
+}
+
+/* Horizontal (default) — vertically centred, outside the inline edges */
+
+.carousel-previous {
+  inset-inline-start: -3rem;
+  inset-block-start: 0;
+  inset-block-end: 0;
+  margin-block: auto;
+}
+
+.carousel-next {
+  inset-inline-end: -3rem;
+  inset-block-start: 0;
+  inset-block-end: 0;
+  margin-block: auto;
+}
+
+/* Vertical — horizontally centred, outside the block edges */
+
+.carousel[data-orientation="vertical"] .carousel-previous {
+  inset-block-start: -3rem;
+  inset-block-end: auto;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+  margin-block: 0;
+  margin-inline: auto;
+}
+
+.carousel[data-orientation="vertical"] .carousel-next {
+  inset-block-end: -3rem;
+  inset-block-start: auto;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+  margin-block: 0;
+  margin-inline: auto;
+}
