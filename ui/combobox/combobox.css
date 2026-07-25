@@ -10,7 +10,7 @@
   padding-inline-end: 0.375rem;
   border: 1px solid var(--input);
   border-radius: var(--radius-md);
-  background-color: transparent;
+  background-color: var(--input-background);
   transition:
     border-color var(--motion-fast) var(--motion-ease),
     box-shadow var(--motion-fast) var(--motion-ease);

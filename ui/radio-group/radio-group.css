@@ -13,7 +13,7 @@
   aspect-ratio: 1;
   border-radius: 9999px;
   border: 1px solid var(--input);
-  background-color: transparent;
+  background-color: var(--input-background);
   padding: 0;
   cursor: pointer;
   box-shadow: var(--shadow-sm);

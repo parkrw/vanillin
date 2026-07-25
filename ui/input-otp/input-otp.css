@@ -54,6 +54,7 @@
   block-size: 2.25rem;
   border: 1px solid var(--input);
   border-inline-start-width: 0;
+  background-color: var(--input-background);
   font-size: 0.875rem;
   line-height: 1.25rem;
   color: var(--foreground);

@@ -62,6 +62,12 @@
   border: 1px solid var(--input);
 }
 
+/* dark keeps the input-style lift instead of the page background
+   (shadcn's dark:bg-input/30); before :hover so hover still wins */
+.dark .btn--outline {
+  background-color: var(--input-background);
+}
+
 .btn--outline:hover {
   background-color: var(--accent);
   color: var(--accent-foreground);

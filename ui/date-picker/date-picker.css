@@ -14,12 +14,11 @@
 }
 
 /* override the popover's fixed 18rem width and 1rem padding —
-   the calendar provides its own padding and sizing */
-.date-picker-popover {
-  inline-size: auto;
-  padding: 0;
-}
-
+   the calendar provides its own padding and sizing. fit-content, not
+   auto: [popover] UA style sets inset: 0, so with left anchored by JS
+   an auto inline-size stretches to the viewport edge */
+.date-picker-popover,
 .date-picker-popover--wide {
-  inline-size: auto;
+  inline-size: fit-content;
+  padding: 0;
 }
