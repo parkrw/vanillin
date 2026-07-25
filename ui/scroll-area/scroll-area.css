@@ -1,0 +1,78 @@
+.scroll-area {
+  position: relative;
+  --scroll-area-corner-width: 0px;
+  --scroll-area-corner-height: 0px;
+}
+
+.scroll-area-viewport {
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: auto;
+  border-radius: inherit;
+  /* the overlay scrollbars replace the UA ones */
+  scrollbar-width: none;
+}
+
+.scroll-area-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-area-viewport:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+/* keeps horizontal content measurable instead of shrinking to the viewport */
+.scroll-area-content {
+  min-inline-size: fit-content;
+}
+
+.scroll-area-scrollbar {
+  position: absolute;
+  display: flex;
+  padding: 1px;
+  touch-action: none;
+  user-select: none;
+}
+
+.scroll-area-scrollbar[data-orientation="vertical"] {
+  inset-block: 0 var(--scroll-area-corner-height);
+  inset-inline-end: 0;
+  inline-size: 0.625rem;
+}
+
+.scroll-area-scrollbar[data-orientation="horizontal"] {
+  flex-direction: column;
+  inset-inline: 0 var(--scroll-area-corner-width);
+  inset-block-end: 0;
+  block-size: 0.625rem;
+}
+
+.scroll-area-thumb {
+  position: relative;
+  flex: 1;
+  border-radius: 9999px;
+  background-color: var(--border);
+  transition: background-color var(--motion-fast) var(--motion-ease);
+}
+
+.scroll-area-thumb:hover,
+.scroll-area-thumb[data-scrolling] {
+  background-color: color-mix(in oklab, var(--border) 60%, var(--foreground));
+}
+
+.scroll-area-thumb[data-orientation="vertical"] {
+  block-size: var(--scroll-area-thumb-height);
+}
+
+.scroll-area-thumb[data-orientation="horizontal"] {
+  inline-size: var(--scroll-area-thumb-width);
+}
+
+.scroll-area-corner {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  inline-size: var(--scroll-area-corner-width);
+  block-size: var(--scroll-area-corner-height);
+}

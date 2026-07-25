@@ -24,7 +24,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 17  | combobox            | ~M  | [x]    | deps: 16; Base UI anatomy; single-select only (chips/multiple deferred)     |
 | 18  | command             | ~M  | [x]    | deps: 17; still cmdk anatomy; substring filter (no score/re-sort)           |
 | 19  | input-otp           | ~M  | [x]    | transparent input over slots; caret parks at end of value                   |
-| 20  | scroll-area         | ~M  | [ ]    | overlay synced thumb                                                        |
+| 20  | scroll-area         | ~M  | [x]    | overlay bars over a native scroller; imperative thumb sync                  |
 | 21  | calendar            | ~L  | [ ]    | ARIA grid, native Date/Intl                                                 |
 | 22  | date-picker         | ~S  | [ ]    | deps: 10, 21                                                                |
 | 23  | toast               | ~L  | [ ]    | queue, stacking, hover-pause, swipe                                         |
@@ -265,3 +265,26 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   `[data-active]` ring styles right after a keystroke reads mid-transition
   values under the playground's 2.5× motion scale — wait for the transition
   before asserting computed colors.
+- 2026-07-25 — task 20 done on `feat/scroll-area` (~700 net lines), stacked on
+  feat/input-otp. shadcn is Base UI here and exports only ScrollArea +
+  ScrollBar; horizontal usage passes `<ScrollBar orientation="horizontal" />`
+  as a **child**, so it renders inside the viewport — it stays put only
+  because it is absolutely positioned against the root, which sits outside
+  the scroller (verified by test, not by eye). Native scroller with
+  `scrollbar-width: none`; all per-frame geometry is written straight to the
+  DOM (`--scroll-area-thumb-height/-width` on the bar, `translate3d` on the
+  thumb), so scrolling re-renders nothing — React state is only overflow /
+  scrolling / hovering. Base UI parity kept: 500ms scroll timeout, 16px min
+  thumb, thumb drag via pointer capture, track click centres the thumb,
+  `keepMounted`, corner vars. Gotchas: **React's `onWheel` is passive**, so
+  wheel-over-the-bar needs a native non-passive listener or the page scrolls
+  instead; rtl needs the negated horizontal thumb offset (flex start is the
+  right edge) and normalized negative `scrollLeft` for progress, but the
+  drag math needs no rtl branch (pointer delta and negative scrollLeft move
+  together); the demo page is lazy-loaded *and* bars mount only after the
+  first measurement, so the suite's first assertion must `waitFor` the bar
+  (a bare `count()` reads 0), and a hover test must park the mouse at 0,0
+  first — pointer position carries over from the previous test file.
+  Deviations: no `overflowEdgeThreshold`/`data-overflow-*-start|end`, no
+  overscroll thumb squish, no thumb-margin compensation, no scroll-snap
+  suspension during drag.

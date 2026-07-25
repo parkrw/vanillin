@@ -51,7 +51,7 @@ export const registry = {
   progress: { title: "Progress", page: lazy(() => import("./pages/progress.jsx")) },
   "radio-group": { title: "Radio Group", page: lazy(() => import("./pages/radio-group.jsx")) },
   resizable: { title: "Resizable" },
-  "scroll-area": { title: "Scroll Area" },
+  "scroll-area": { title: "Scroll Area", page: lazy(() => import("./pages/scroll-area.jsx")) },
   select: { title: "Select", page: lazy(() => import("./pages/select.jsx")) },
   separator: { title: "Separator", page: lazy(() => import("./pages/separator.jsx")) },
   sheet: { title: "Sheet", page: lazy(() => import("./pages/sheet.jsx")) },
