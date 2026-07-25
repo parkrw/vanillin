@@ -1,0 +1,105 @@
+/* ——— Group ——— */
+
+.resizable-group {
+  display: flex;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: hidden;
+}
+
+.resizable-group[data-direction="vertical"] {
+  flex-direction: column;
+}
+
+/* ——— Panel ——— */
+
+.resizable-panel {
+  overflow: hidden;
+}
+
+/* ——— Handle (separator) ——— */
+
+.resizable-handle {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  flex-grow: 0;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  user-select: none;
+  outline: none;
+  background-color: var(--border);
+}
+
+/* Horizontal group → vertical divider */
+.resizable-group[data-direction="horizontal"] > .resizable-handle {
+  inline-size: 1px;
+  cursor: col-resize;
+}
+
+/* Widen the hit area with a transparent overlay */
+.resizable-handle::after {
+  content: "";
+  position: absolute;
+}
+
+.resizable-group[data-direction="horizontal"] > .resizable-handle::after {
+  inset-block: 0;
+  inset-inline: -3px;
+}
+
+/* Vertical group → horizontal divider */
+.resizable-group[data-direction="vertical"] > .resizable-handle {
+  block-size: 1px;
+  cursor: row-resize;
+}
+
+.resizable-group[data-direction="vertical"] > .resizable-handle::after {
+  inset-inline: 0;
+  inset-block: -3px;
+}
+
+/* Focus ring (keyboard only via :focus-visible) */
+.resizable-handle:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Active / hover feedback */
+.resizable-handle[data-separator="active"],
+.resizable-handle[data-separator="hover"] {
+  background-color: color-mix(in oklab, var(--border) 50%, var(--foreground));
+  transition: background-color var(--motion-fast) var(--motion-ease);
+}
+
+/* ——— Grip icon (withHandle) ——— */
+
+.resizable-handle-icon {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 0.75rem;
+  block-size: 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background-color: var(--background);
+  color: var(--muted-foreground);
+}
+
+/* Vertical group → rotate the grip 90 degrees */
+.resizable-group[data-direction="vertical"]
+  > .resizable-handle
+  > .resizable-handle-icon {
+  inline-size: 1rem;
+  block-size: 0.75rem;
+}
+
+.resizable-group[data-direction="vertical"]
+  > .resizable-handle
+  > .resizable-handle-icon
+  > svg {
+  transform: rotate(90deg);
+}
