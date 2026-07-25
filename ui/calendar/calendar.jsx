@@ -59,6 +59,15 @@ function matches(date, matcher) {
   return matcher.after || matcher.before ? afterOk && beforeOk : false
 }
 
+/** ISO-8601 week number: weeks belong to the year holding their Thursday. */
+function weekNumber(date) {
+  const thursday = startOfDay(date)
+  thursday.setDate(thursday.getDate() - ((thursday.getDay() + 6) % 7) + 3)
+  const firstThursday = new Date(thursday.getFullYear(), 0, 4)
+  firstThursday.setDate(firstThursday.getDate() - ((firstThursday.getDay() + 6) % 7) + 3)
+  return 1 + Math.round((thursday - firstThursday) / (7 * 86400000))
+}
+
 function buildWeeks(month, weekStartsOn) {
   const first = startOfMonth(month)
   const lead = (first.getDay() - weekStartsOn + 7) % 7
@@ -83,7 +92,9 @@ export function Calendar({
   month,
   defaultMonth,
   onMonthChange,
+  numberOfMonths = 1,
   showOutsideDays = true,
+  showWeekNumber = false,
   captionLayout = "label",
   startMonth,
   endMonth,
@@ -113,6 +124,7 @@ export function Calendar({
   })
 
   const [focused, setFocused] = useState(null)
+  const [hovered, setHovered] = useState(null)
   const weekStart = weekStartsOn ?? firstDayOfWeek(locale)
 
   const formatters = useMemo(
@@ -137,16 +149,56 @@ export function Calendar({
     [disabled, outOfBounds]
   )
 
-  const isSelected = useCallback((date) => selectionMatches(mode, value, date), [mode, value])
+  const months = useMemo(
+    () =>
+      Array.from({ length: numberOfMonths }, (_, index) =>
+        addMonths(startOfMonth(displayed), index)
+      ),
+    [displayed, numberOfMonths]
+  )
+
+  const inView = useCallback(
+    (date) => months.some((entry) => isSameMonth(date, entry)),
+    [months]
+  )
+
+  /** Selection state plus the visual range attributes for one day. */
+  const dayModifiers = useCallback(
+    (date, monthStart) => {
+      const modifiers = {
+        outside: !isSameMonth(date, monthStart),
+        today: isSameDay(date, today),
+        disabled: isDisabled(date),
+        selected: selectionMatches(mode, value, date),
+        rangeStart: false,
+        rangeEnd: false,
+        rangeMiddle: false,
+      }
+
+      if (mode === "range" && value?.from) {
+        // an in-progress range previews against the hovered day
+        const other = value.to ?? hovered
+        const flipped = other && other < value.from
+        const start = flipped ? other : value.from
+        const end = flipped ? value.from : other
+        modifiers.rangeStart = isSameDay(date, start)
+        modifiers.rangeEnd = end ? isSameDay(date, end) : isSameDay(date, start)
+        modifiers.rangeMiddle =
+          !!end && !modifiers.rangeStart && !modifiers.rangeEnd && matches(date, { from: start, to: end })
+      }
+
+      return modifiers
+    },
+    [hovered, isDisabled, mode, today, value]
+  )
 
   // The roving tab stop: wherever focus was left, else the selection, else
   // today, else the first of the month — as long as it is in view.
   const activeDate = useMemo(() => {
     const candidates = [focused, firstSelectedDate(mode, value), today]
-    for (const candidate of candidates)
-      if (candidate && isSameMonth(candidate, displayed)) return candidate
+    for (const candidate of candidates) if (candidate && inView(candidate)) return candidate
     return startOfMonth(displayed)
-  }, [displayed, focused, mode, today, value])
+  }, [displayed, focused, inView, mode, today, value])
 
   useEffect(() => {
     const key = pendingFocusRef.current
@@ -169,9 +221,13 @@ export function Calendar({
       if (outOfBounds(target)) return
       setFocused(target)
       pendingFocusRef.current = dayKey(target)
-      if (!isSameMonth(target, displayed)) setDisplayed(startOfMonth(target))
+      if (inView(target)) return
+      // scroll the window of displayed months by the smallest amount that
+      // brings the target into view
+      const before = monthKey(target) < monthKey(months[0])
+      setDisplayed(before ? startOfMonth(target) : addMonths(startOfMonth(target), 1 - months.length))
     },
-    [displayed, outOfBounds, setDisplayed]
+    [inView, months, outOfBounds, setDisplayed]
   )
 
   const focusDay = useCallback((date) => {
@@ -231,6 +287,8 @@ export function Calendar({
 
   const previousMonth = addMonths(startOfMonth(displayed), -1)
   const nextMonth = addMonths(startOfMonth(displayed), 1)
+  // with several months on screen the *last* one has to stay within endMonth
+  const nextOutOfBounds = outOfBounds(addMonths(nextMonth, months.length - 1))
 
   return (
     <div
@@ -254,7 +312,7 @@ export function Calendar({
           type="button"
           aria-label="Next month"
           className={cn("btn", `btn--${buttonVariant}`, "calendar-nav-button")}
-          disabled={outOfBounds(nextMonth)}
+          disabled={nextOutOfBounds}
           onClick={() => goToMonth(nextMonth)}
         >
           <ChevronIcon orientation="end" />
@@ -262,24 +320,28 @@ export function Calendar({
       </div>
 
       <div className="calendar-months">
-        <CalendarMonth
-          month={startOfMonth(displayed)}
-          captionId={captionId}
-          captionLayout={captionLayout}
-          formatters={formatters}
-          weekStart={weekStart}
-          showOutsideDays={showOutsideDays}
-          activeDate={activeDate}
-          today={today}
-          isDisabled={isDisabled}
-          isSelected={isSelected}
-          onSelectDay={selectDay}
-          onFocusDay={focusDay}
-          onMonthChange={goToMonth}
-          startMonth={startMonth}
-          endMonth={endMonth}
-          locale={locale}
-        />
+        {months.map((monthStart, index) => (
+          <CalendarMonth
+            key={monthKey(monthStart)}
+            month={monthStart}
+            captionId={`${captionId}-${index}`}
+            captionLayout={captionLayout}
+            formatters={formatters}
+            weekStart={weekStart}
+            showOutsideDays={showOutsideDays}
+            showWeekNumber={showWeekNumber}
+            activeDate={activeDate}
+            dayModifiers={dayModifiers}
+            onSelectDay={selectDay}
+            onFocusDay={focusDay}
+            onHoverDay={mode === "range" ? setHovered : undefined}
+            // a dropdown in the Nth caption moves the whole window
+            onMonthChange={(next) => goToMonth(addMonths(next, -index))}
+            startMonth={startMonth}
+            endMonth={endMonth}
+            locale={locale}
+          />
+        ))}
       </div>
     </div>
   )
@@ -292,12 +354,12 @@ function CalendarMonth({
   formatters,
   weekStart,
   showOutsideDays,
+  showWeekNumber,
   activeDate,
-  today,
-  isDisabled,
-  isSelected,
+  dayModifiers,
   onSelectDay,
   onFocusDay,
+  onHoverDay,
   onMonthChange,
   startMonth,
   endMonth,
@@ -334,6 +396,9 @@ function CalendarMonth({
       <table role="grid" aria-labelledby={captionId} className="calendar-month-grid">
         <thead className="calendar-weekdays">
           <tr>
+            {showWeekNumber ? (
+              <th scope="col" abbr="Week number" className="calendar-week-number-header" />
+            ) : null}
             {weekdays.map((weekday) => (
               <th key={weekday.long} scope="col" abbr={weekday.long} className="calendar-weekday">
                 {weekday.short}
@@ -344,34 +409,40 @@ function CalendarMonth({
         <tbody>
           {weeks.map((week) => (
             <tr key={dayKey(week[0])} className="calendar-week">
+              {showWeekNumber ? (
+                <th scope="row" className="calendar-week-number">
+                  {/* label the row by its Thursday, so a Sunday-start row of
+                      late December still reads as week 1 of January */}
+                  {weekNumber(week.find((date) => date.getDay() === 4))}
+                </th>
+              ) : null}
               {week.map((date) => {
-                const outside = !isSameMonth(date, month)
-                if (outside && !showOutsideDays)
+                const modifiers = dayModifiers(date, month)
+                if (modifiers.outside && !showOutsideDays)
                   return <td key={dayKey(date)} className="calendar-day calendar-day--hidden" />
-                const selected = isSelected(date)
                 return (
                   <td
                     key={dayKey(date)}
                     role="presentation"
-                    data-outside={outside ? "" : undefined}
-                    data-selected={selected ? "" : undefined}
-                    data-today={isSameDay(date, today) ? "" : undefined}
+                    data-outside={modifiers.outside ? "" : undefined}
+                    data-selected={modifiers.selected ? "" : undefined}
+                    data-today={modifiers.today ? "" : undefined}
+                    data-range-start={modifiers.rangeStart ? "" : undefined}
+                    data-range-end={modifiers.rangeEnd ? "" : undefined}
+                    data-range-middle={modifiers.rangeMiddle ? "" : undefined}
                     className="calendar-day"
                   >
                     <CalendarDayButton
                       date={date}
                       label={formatters.day.format(date)}
-                      modifiers={{
-                        outside,
-                        selected,
-                        today: isSameDay(date, today),
-                        disabled: isDisabled(date),
-                      }}
+                      modifiers={modifiers}
                       tabIndex={isSameDay(date, activeDate) ? 0 : -1}
                       onClick={() => onSelectDay(date)}
                       // keeps arrow keys relative to wherever focus actually
                       // is, not just to where we last put it
                       onFocus={() => onFocusDay(date)}
+                      onPointerEnter={onHoverDay ? () => onHoverDay(date) : undefined}
+                      onPointerLeave={onHoverDay ? () => onHoverDay(null) : undefined}
                     />
                   </td>
                 )
@@ -436,7 +507,14 @@ export function CalendarDayButton({ date, label, modifiers, className, ...props 
       data-day-key={dayKey(date)}
       data-outside={modifiers.outside ? "" : undefined}
       data-today={modifiers.today ? "" : undefined}
-      data-selected-single={modifiers.selected ? "true" : undefined}
+      data-selected-single={
+        modifiers.selected && !modifiers.rangeStart && !modifiers.rangeEnd && !modifiers.rangeMiddle
+          ? "true"
+          : undefined
+      }
+      data-range-start={modifiers.rangeStart ? "true" : undefined}
+      data-range-end={modifiers.rangeEnd ? "true" : undefined}
+      data-range-middle={modifiers.rangeMiddle ? "true" : undefined}
       className={cn("calendar-day-button", className)}
       {...props}
     >

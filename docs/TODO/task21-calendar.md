@@ -51,7 +51,7 @@
 
 ## Sub-tasks
 
-- [ ] 1. calendar core — single mode, month nav, caption label, weekday
+- [x] 1. calendar core — single mode, month nav, caption label, weekday
   headers, outside days, disabled matchers, keyboard grid nav, ARIA;
   test: grid shape + weekday headers, day labels, select/deselect, nav
   buttons and dropdown-free caption, arrow/Home/End/PageUp keyboard walk
@@ -59,7 +59,7 @@
   rtl arrow swap; files: `ui/calendar/calendar.jsx` + `.css`,
   `tests/calendar.test.mjs`, `playground/pages/calendar.jsx`,
   `playground/registry.js`.
-- [ ] 2. calendar modes — `mode="multiple"`, `mode="range"` (+ range
+- [x] 2. calendar modes — `mode="multiple"`, `mode="range"` (+ range
   data-attrs and hover preview), `numberOfMonths`, `showWeekNumber`,
   `captionLayout="dropdown"` with `startMonth`/`endMonth`; test: multiple
   toggling, range build/swap/restart, two-month layout shares one nav,

@@ -11,6 +11,8 @@ const framed = {
 
 export default function CalendarPage() {
   const [single, setSingle] = useState(new Date(2026, 0, 15))
+  const [multiple, setMultiple] = useState([])
+  const [range, setRange] = useState(undefined)
 
   return (
     <>
@@ -84,6 +86,50 @@ export default function CalendarPage() {
             data-pg="cal-dropdown"
           />
         </div>
+      </section>
+
+      <section className="pg-section">
+        <h3>Multiple</h3>
+        <div style={framed}>
+          <Calendar
+            mode="multiple"
+            selected={multiple}
+            onSelect={setMultiple}
+            defaultMonth={new Date(2026, 0, 1)}
+            locale="en-US"
+            data-pg="cal-multiple"
+          />
+        </div>
+        <p>
+          Selected:{" "}
+          <span data-pg="cal-multiple-state">
+            {multiple.length ? multiple.map((date) => date.getDate()).join(",") : "none"}
+          </span>
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Range over two months, with week numbers</h3>
+        <div style={framed}>
+          <Calendar
+            mode="range"
+            selected={range}
+            onSelect={setRange}
+            numberOfMonths={2}
+            showWeekNumber
+            defaultMonth={new Date(2026, 0, 1)}
+            locale="en-US"
+            data-pg="cal-range"
+          />
+        </div>
+        <p>
+          Range:{" "}
+          <span data-pg="cal-range-state">
+            {range?.from
+              ? `${range.from.toISOString().slice(0, 10)} → ${range.to ? range.to.toISOString().slice(0, 10) : "…"}`
+              : "none"}
+          </span>
+        </p>
       </section>
 
       <section className="pg-section">

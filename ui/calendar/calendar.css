@@ -151,9 +151,38 @@
   font-weight: 500;
 }
 
-.calendar-day-button[data-selected-single="true"] {
+.calendar-day-button[data-selected-single="true"],
+.calendar-day-button[data-range-start="true"],
+.calendar-day-button[data-range-end="true"] {
   background-color: var(--primary);
   color: var(--primary-foreground);
+}
+
+/* the buttons fill their cells, so squaring the inner corners is what makes
+   a range read as one continuous band */
+.calendar-day-button[data-range-start="true"]:not([data-range-end="true"]) {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.calendar-day-button[data-range-end="true"]:not([data-range-start="true"]) {
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+.calendar-day-button[data-range-middle="true"] {
+  border-radius: 0;
+  background-color: var(--muted);
+  color: var(--foreground);
+}
+
+.calendar-week-number,
+.calendar-week-number-header {
+  inline-size: var(--cell-size);
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--muted-foreground);
+  user-select: none;
 }
 
 .calendar-day-button:disabled {

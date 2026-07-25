@@ -25,7 +25,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 18  | command             | ~M  | [x]    | deps: 17; still cmdk anatomy; substring filter (no score/re-sort)           |
 | 19  | input-otp           | ~M  | [x]    | transparent input over slots; caret parks at end of value                   |
 | 20  | scroll-area         | ~M  | [x]    | overlay bars over a native scroller; imperative thumb sync                  |
-| 21  | calendar            | ~L  | [ ]    | ARIA grid, native Date/Intl                                                 |
+| 21  | calendar            | ~L  | [x]    | ARIA grid, native Date/Intl; single/multiple/range, dropdown caption        |
 | 22  | date-picker         | ~S  | [ ]    | deps: 10, 21                                                                |
 | 23  | toast               | ~L  | [ ]    | queue, stacking, hover-pause, swipe                                         |
 | 24  | carousel            | ~M  | [ ]    | scroll-snap + pointer swipe                                                 |
@@ -288,3 +288,26 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   Deviations: no `overflowEdgeThreshold`/`data-overflow-*-start|end`, no
   overscroll thumb squish, no thumb-margin compensation, no scroll-snap
   suspension during drag.
+- 2026-07-25 — task 21 done on `feat/calendar` (~920 net lines, two commits),
+  stacked on feat/scroll-area. shadcn still wraps **react-day-picker v9** and
+  exports only `Calendar` + `CalendarDayButton`, so the whole day-picker core
+  is ours: `Date`/`Intl` only, weeks built from the locale's first day
+  (`Intl.Locale#getWeekInfo()`, Sunday fallback), a `<table role="grid">` per
+  month with one roving tab stop, single/multiple/range selection through
+  `useControllableState`, rdp's matcher shapes (`Date`, list, predicate,
+  `{from,to}`, `{before,after}`, `{dayOfWeek}`) behind one `matches()`.
+  Gotchas: **DOM focus arriving any other way than our own keyboard move must
+  feed state** — arrows are computed from `activeDate`, so without an
+  `onFocus` on the day button a test (or a real Tab) that focuses a day walks
+  from the wrong origin and the failure looks like broken arrow math; a
+  **same-URL `page.goto` is a same-document hash navigation**, so a test
+  cannot use it to reset the page mid-file (navigate back with keys instead);
+  ISO week numbers must be taken from the **row's Thursday**, not its first
+  cell, or a Sunday-start row of late December labels itself week 52 next to
+  January's days. Range bands read as one strip because the day buttons fill
+  their cells and only the inner corners are squared (logical radii, so rtl
+  mirrors for free); the hover preview marks `data-range-*` but never
+  `aria-selected`. Known flake, pre-existing: combobox's "Escape reverts
+  typed text" test failed twice today and passed on rerun — the revert only
+  runs on an open→closed transition, so a stray queued native toggle that
+  already closed the popup leaves the typed text in place.

@@ -152,6 +152,81 @@ export default async function run({ page, baseUrl, test, eq }) {
     )
   })
 
+  await test("multiple: days toggle independently", async () => {
+    await day("cal-multiple", "2026-01-05").click()
+    await day("cal-multiple", "2026-01-09").click()
+    eq(await cal("cal-multiple-state").textContent(), "5,9", "both kept, sorted")
+    await day("cal-multiple", "2026-01-05").click()
+    eq(await cal("cal-multiple-state").textContent(), "9", "clicking again removes one")
+    eq(
+      await day("cal-multiple", "2026-01-09").getAttribute("data-selected-single"),
+      "true",
+      "each selected day is marked"
+    )
+  })
+
+  await test("range: two clicks build it, a third restarts, an earlier click swaps", async () => {
+    await day("cal-range", "2026-01-12").click()
+    eq(await cal("cal-range-state").textContent(), "2026-01-12 → …", "first click sets from")
+    await day("cal-range", "2026-01-16").click()
+    eq(await cal("cal-range-state").textContent(), "2026-01-12 → 2026-01-16", "second completes it")
+    eq(
+      await day("cal-range", "2026-01-12").getAttribute("data-range-start"),
+      "true",
+      "start marked"
+    )
+    eq(await day("cal-range", "2026-01-14").getAttribute("data-range-middle"), "true", "middle")
+    eq(await day("cal-range", "2026-01-16").getAttribute("data-range-end"), "true", "end marked")
+    eq(
+      await day("cal-range", "2026-01-14").getAttribute("data-selected-single"),
+      null,
+      "range days are not marked as single selections"
+    )
+
+    await day("cal-range", "2026-01-20").click()
+    eq(await cal("cal-range-state").textContent(), "2026-01-20 → …", "third click restarts")
+    await day("cal-range", "2026-01-18").click()
+    eq(
+      await cal("cal-range-state").textContent(),
+      "2026-01-18 → 2026-01-20",
+      "an earlier second click swaps the ends"
+    )
+  })
+
+  await test("range: an in-progress range previews the hovered end", async () => {
+    await day("cal-range", "2026-01-05").click()
+    await day("cal-range", "2026-01-08").hover()
+    eq(await day("cal-range", "2026-01-06").getAttribute("data-range-middle"), "true", "preview fill")
+    eq(await day("cal-range", "2026-01-08").getAttribute("data-range-end"), "true", "preview end")
+    eq(
+      await day("cal-range", "2026-01-08").getAttribute("aria-selected"),
+      null,
+      "the preview is visual only — nothing is selected yet"
+    )
+    await page.mouse.move(0, 0)
+    eq(
+      await day("cal-range", "2026-01-06").getAttribute("data-range-middle"),
+      null,
+      "leaving clears the preview"
+    )
+  })
+
+  await test("two months share one nav; week numbers label the rows", async () => {
+    const captions = cal("cal-range").locator(".calendar-caption-label")
+    eq(await captions.count(), 2, "two month grids")
+    eq(await captions.first().textContent(), "January 2026")
+    eq(await captions.last().textContent(), "February 2026")
+    eq(await cal("cal-range").locator('[aria-label="Next month"]').count(), 1, "one nav")
+    await cal("cal-range").locator('[aria-label="Next month"]').click()
+    eq(await captions.first().textContent(), "February 2026", "the window slides by one month")
+    eq(await captions.last().textContent(), "March 2026")
+    await cal("cal-range").locator('[aria-label="Previous month"]').click()
+
+    const weekNumbers = cal("cal-range").locator(".calendar-week-number")
+    eq(await weekNumbers.first().textContent(), "1", "ISO week 1 holds 2026-01-01")
+    eq(await weekNumbers.nth(1).textContent(), "2", "then week 2")
+  })
+
   await test("rtl: arrow keys mirror and the locale sets the week start", async () => {
     eq(
       await cal("cal-rtl").locator(".calendar-weekday").first().getAttribute("abbr"),
