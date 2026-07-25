@@ -63,7 +63,7 @@ export const registry = {
   table: { title: "Table", page: lazy(() => import("./pages/table.jsx")) },
   tabs: { title: "Tabs", page: lazy(() => import("./pages/tabs.jsx")) },
   textarea: { title: "Textarea", page: lazy(() => import("./pages/textarea.jsx")) },
-  toast: { title: "Toast (Sonner)" },
+  toast: { title: "Toast (Sonner)", page: lazy(() => import("./pages/toast.jsx")) },
   toggle: { title: "Toggle", page: lazy(() => import("./pages/toggle.jsx")) },
   "toggle-group": { title: "Toggle Group", page: lazy(() => import("./pages/toggle-group.jsx")) },
   tooltip: { title: "Tooltip", page: lazy(() => import("./pages/tooltip.jsx")) },

@@ -1,0 +1,468 @@
+/* Toast / Toaster — sonner-shaped stacking notifications.
+   Tokens only (no hex); motion via --motion-fast/--motion-medium;
+   logical CSS where possible (position is physical — no logical
+   equivalent for fixed positioning). */
+
+.toaster {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  pointer-events: none;
+  /* Prevent horizontal page scroll from wide toasts */
+  max-width: 100%;
+}
+
+.toaster-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+/* Position variants — physical properties (no logical equivalent for
+   fixed insets used for viewport anchoring). */
+.toaster--bottom-right {
+  bottom: 0;
+  right: 0;
+}
+
+.toaster--bottom-left {
+  bottom: 0;
+  left: 0;
+}
+
+.toaster--bottom-center {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.toaster--top-right {
+  top: 0;
+  right: 0;
+}
+
+.toaster--top-left {
+  top: 0;
+  left: 0;
+}
+
+.toaster--top-center {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Individual toast                                                  */
+/* ------------------------------------------------------------------ */
+
+.toast {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 22rem;
+  max-width: calc(100vw - 2rem);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background-color: var(--background);
+  color: var(--foreground);
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+  opacity: 0;
+  z-index: var(--toast-z, 1);
+
+  /* Collapsed stacking: collapsed toasts scale down and peek behind.
+     Expanded toasts translate to their measured offset. */
+  transform: translateY(0);
+  transition:
+    transform var(--motion-medium) var(--motion-ease),
+    opacity var(--motion-fast) var(--motion-ease);
+}
+
+.toast[data-swiping] {
+  transition: none;
+  cursor: grabbing;
+}
+
+/* Top-positioned toasters flip the toast anchor to top. */
+.toaster--top-right .toast,
+.toaster--top-left .toast,
+.toaster--top-center .toast {
+  bottom: auto;
+  top: 0;
+}
+
+/* Center-positioned toasters center the toast. */
+.toaster--bottom-center .toast,
+.toaster--top-center .toast {
+  right: auto;
+  left: 0;
+}
+
+/* Left-positioned toasters anchor toast to the left. */
+.toaster--bottom-left .toast,
+.toaster--top-left .toast {
+  right: auto;
+  left: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Mounted / entry                                                   */
+/* ------------------------------------------------------------------ */
+
+.toast--mounted {
+  opacity: 1;
+}
+
+/* Collapsed stacking — newest on top, older ones peek behind */
+.toaster--bottom-right .toast--mounted,
+.toaster--bottom-left .toast--mounted,
+.toaster--bottom-center .toast--mounted {
+  transform: translateY(calc(-1 * var(--toast-offset)));
+}
+
+.toaster--top-right .toast--mounted,
+.toaster--top-left .toast--mounted,
+.toaster--top-center .toast--mounted {
+  transform: translateY(var(--toast-offset));
+}
+
+/* Collapsed stack: behind toasts scale down and peek from behind the
+   frontmost; limited toasts are fully hidden. */
+.toast--mounted:not([data-expanded]) {
+  transform: translateY(calc(
+    var(--toast-index, 0) * -0.5rem
+  )) scale(calc(1 - var(--toast-index, 0) * 0.05));
+}
+
+.toaster--top-right .toast--mounted:not([data-expanded]),
+.toaster--top-left .toast--mounted:not([data-expanded]),
+.toaster--top-center .toast--mounted:not([data-expanded]) {
+  transform: translateY(calc(
+    var(--toast-index, 0) * 0.5rem
+  )) scale(calc(1 - var(--toast-index, 0) * 0.05));
+}
+
+/* Expanded — each toast at its measured offset */
+.toast--mounted[data-expanded] {
+  transform: translateY(calc(-1 * var(--toast-offset)));
+}
+
+.toaster--top-right .toast--mounted[data-expanded],
+.toaster--top-left .toast--mounted[data-expanded],
+.toaster--top-center .toast--mounted[data-expanded] {
+  transform: translateY(var(--toast-offset));
+}
+
+/* Limited (beyond visibleToasts) in collapsed mode */
+.toast--limited {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Entry animation                                                   */
+/* ------------------------------------------------------------------ */
+
+.toaster--bottom-right .toast,
+.toaster--bottom-left .toast,
+.toaster--bottom-center .toast {
+  animation: toast-in-bottom var(--motion-medium) var(--motion-ease);
+}
+
+.toaster--top-right .toast,
+.toaster--top-left .toast,
+.toaster--top-center .toast {
+  animation: toast-in-top var(--motion-medium) var(--motion-ease);
+}
+
+@keyframes toast-in-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@keyframes toast-in-top {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Exit animation                                                    */
+/* ------------------------------------------------------------------ */
+
+.toast--exit {
+  animation: toast-exit var(--motion-fast) var(--motion-ease) forwards;
+  pointer-events: none;
+}
+
+.toaster--bottom-left .toast--exit,
+.toaster--top-left .toast--exit {
+  animation-name: toast-exit-left;
+}
+
+.toaster--bottom-center .toast--exit,
+.toaster--top-center .toast--exit {
+  animation-name: toast-exit-bottom;
+}
+
+.toaster--top-center .toast--exit {
+  animation-name: toast-exit-top;
+}
+
+/* Exit keyframes have no `from` — a swipe-in-progress hands its
+   inline transform directly to the close animation. */
+@keyframes toast-exit {
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes toast-exit-left {
+  to {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes toast-exit-bottom {
+  to {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@keyframes toast-exit-top {
+  to {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast--exit {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Content                                                           */
+/* ------------------------------------------------------------------ */
+
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.toast-description {
+  margin-block-start: 0.125rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--muted-foreground);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Icons                                                             */
+/* ------------------------------------------------------------------ */
+
+.toast-icon {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-block-start: 0.0625rem;
+}
+
+.toast--success .toast-icon {
+  color: oklch(0.55 0.18 145);
+}
+
+.toast--error .toast-icon {
+  color: var(--destructive);
+}
+
+.toast--warning .toast-icon {
+  color: oklch(0.75 0.18 65);
+}
+
+.toast--info .toast-icon {
+  color: oklch(0.55 0.18 250);
+}
+
+.toast--loading .toast-icon {
+  color: var(--muted-foreground);
+}
+
+/* Spinner for loading */
+.toast-icon--loading {
+  animation: toast-spin 1s linear infinite;
+}
+
+@keyframes toast-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Rich colors (optional)                                            */
+/* ------------------------------------------------------------------ */
+
+.toaster--rich .toast--success {
+  background-color: oklch(0.95 0.05 145);
+  border-color: oklch(0.8 0.12 145);
+  color: oklch(0.3 0.1 145);
+}
+
+.toaster--rich .toast--error {
+  background-color: oklch(0.95 0.04 25);
+  border-color: oklch(0.8 0.1 25);
+  color: oklch(0.35 0.12 25);
+}
+
+.toaster--rich .toast--warning {
+  background-color: oklch(0.95 0.05 85);
+  border-color: oklch(0.85 0.1 85);
+  color: oklch(0.35 0.1 65);
+}
+
+.toaster--rich .toast--info {
+  background-color: oklch(0.95 0.04 250);
+  border-color: oklch(0.8 0.1 250);
+  color: oklch(0.3 0.1 250);
+}
+
+/* Dark-mode rich colors */
+.dark .toaster--rich .toast--success {
+  background-color: oklch(0.25 0.06 145);
+  border-color: oklch(0.4 0.1 145);
+  color: oklch(0.85 0.1 145);
+}
+
+.dark .toaster--rich .toast--error {
+  background-color: oklch(0.25 0.05 25);
+  border-color: oklch(0.4 0.08 25);
+  color: oklch(0.85 0.08 25);
+}
+
+.dark .toaster--rich .toast--warning {
+  background-color: oklch(0.25 0.05 85);
+  border-color: oklch(0.4 0.08 85);
+  color: oklch(0.85 0.08 65);
+}
+
+.dark .toaster--rich .toast--info {
+  background-color: oklch(0.25 0.04 250);
+  border-color: oklch(0.4 0.08 250);
+  color: oklch(0.85 0.06 250);
+}
+
+.dark .toaster--rich .toast--success .toast-description,
+.dark .toaster--rich .toast--error .toast-description,
+.dark .toaster--rich .toast--warning .toast-description,
+.dark .toaster--rich .toast--info .toast-description {
+  color: inherit;
+  opacity: 0.8;
+}
+
+.toaster--rich .toast--success .toast-description,
+.toaster--rich .toast--error .toast-description,
+.toaster--rich .toast--warning .toast-description,
+.toaster--rich .toast--info .toast-description {
+  color: inherit;
+  opacity: 0.8;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Buttons                                                           */
+/* ------------------------------------------------------------------ */
+
+.toast-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  align-self: center;
+  margin-inline-start: auto;
+}
+
+.toast-buttons:empty {
+  display: none;
+}
+
+.toast-action,
+.toast-cancel {
+  flex-shrink: 0;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.toast-action {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border: none;
+}
+
+.toast-action:hover {
+  opacity: 0.9;
+}
+
+.toast-cancel {
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
+}
+
+.toast-cancel:hover {
+  opacity: 0.9;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Close button                                                      */
+/* ------------------------------------------------------------------ */
+
+.toast-close {
+  position: absolute;
+  inset-block-start: 0.25rem;
+  inset-inline-end: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background-color: var(--background);
+  padding: 0.125rem;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.toast:hover .toast-close {
+  opacity: 1;
+}
+
+.toast-close:hover {
+  color: var(--foreground);
+}
