@@ -15,7 +15,8 @@
   transition: background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease);
 }
 
-.checkbox[data-state="checked"] {
+.checkbox[data-state="checked"],
+.checkbox[data-state="indeterminate"] {
   background-color: var(--primary);
   border-color: var(--primary);
 }
