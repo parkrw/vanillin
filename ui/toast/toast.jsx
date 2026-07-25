@@ -130,15 +130,6 @@ toast.custom = (jsx, opts) => {
 /*  Toaster — the React container                                     */
 /* ------------------------------------------------------------------ */
 
-const POSITIONS = [
-  "top-left",
-  "top-center",
-  "top-right",
-  "bottom-left",
-  "bottom-center",
-  "bottom-right",
-]
-
 const TYPE_ICONS = {
   success: () => (
     <svg className="toast-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -187,8 +178,6 @@ export function Toaster({
   const [heights, setHeights] = useState({})
   const pausedRef = useRef(false)
   const listRef = useRef(null)
-
-  const isTop = position.startsWith("top")
 
   // Sync expand prop
   useEffect(() => {
@@ -266,7 +255,6 @@ export function Toaster({
             onRemove={() => handleRemove(t.id)}
             onHeight={(h) => handleHeight(t.id, h)}
             offset={offsets[t.id]}
-            isTop={isTop}
             pausedRef={pausedRef}
           />
         ))}
@@ -291,7 +279,6 @@ function ToastItem({
   onRemove,
   onHeight,
   offset,
-  isTop,
   pausedRef,
 }) {
   const ref = useRef(null)
