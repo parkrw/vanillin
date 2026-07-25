@@ -225,18 +225,28 @@ export default async function run({ page, baseUrl, test, eq }) {
     await clearAll()
   })
 
-  await test("promise toast transitions from loading to success", async () => {
+  await test("promise toast transitions from loading to success and stays visible", async () => {
     await page.locator('button:has-text("Save with promise")').click()
     await waitFor(async () => (await allToasts().count()) > 0)
 
     eq(await firstToast().getAttribute("data-type"), "loading", "starts as loading")
 
+    // Promise resolves after 2s; wait for the type flip
     await waitFor(async () => {
       const type = await firstToast().getAttribute("data-type")
       return type === "success"
     }, 5000)
     eq(await firstToast().getAttribute("data-type"), "success", "resolved to success")
 
-    await clearAll()
+    // The resolved toast must stay visible for its full duration (4s
+    // default), not flash and dismiss.  Assert still present after a
+    // comfortable margin past the transition.
+    await page.waitForTimeout(800)
+    eq(await allToasts().count() > 0, true, "still visible 800ms after resolving")
+    eq(await firstToast().getAttribute("data-type"), "success", "still success type")
+
+    // Eventually auto-dismisses
+    await waitFor(async () => (await allToasts().count()) === 0, 8000)
+    eq(await allToasts().count(), 0, "dismissed after full duration")
   })
 }

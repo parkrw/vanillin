@@ -307,6 +307,23 @@ function ToastItem({
     requestAnimationFrame(() => setMounted(true))
   }, [])
 
+  // Reset timer refs on type change (e.g. promise loading → success).
+  // Declared BEFORE the timer effect so React runs this setup first on
+  // re-renders: refs are cleared, then the timer effect sees null and
+  // re-initializes them to a fresh duration.  Skip initial mount —
+  // the timer effect handles its own first initialization.
+  useEffect(() => {
+    if (mountedTypeRef.current) {
+      mountedTypeRef.current = false
+      return
+    }
+    if (t.type !== "loading" && duration !== Infinity) {
+      startRef.current = null
+      remainingRef.current = null
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t.type])
+
   // Auto-dismiss timer with pause support.
   // remainingRef tracks how much time the toast has left; startRef marks
   // when the current running segment began.  On pause we bank the
@@ -347,20 +364,6 @@ function ToastItem({
     return () => clearTimeout(timerRef.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t.dismissed, duration, t.type])
-
-  // Reset timer on type change (e.g. promise resolved from loading).
-  // Skip the initial mount — the timer effect already initializes there.
-  useEffect(() => {
-    if (mountedTypeRef.current) {
-      mountedTypeRef.current = false
-      return
-    }
-    if (t.type !== "loading" && duration !== Infinity) {
-      startRef.current = null
-      remainingRef.current = null // cleared so the timer effect re-initializes
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [t.type])
 
   // Exit: play animation, then remove from store
   useEffect(() => {
