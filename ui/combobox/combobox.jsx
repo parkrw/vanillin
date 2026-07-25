@@ -105,13 +105,16 @@ export function Combobox({
   valueRef.current = currentValue
   const getLabelRef = useRef(getLabel)
   getLabelRef.current = getLabel
-  useEffect(() => {
-    if (isOpen) return
+  const revertInput = useCallback(() => {
     setQuery("")
     setHighlightedId(null)
     const v = valueRef.current
     setInputValue(v === "" ? "" : getLabelRef.current(v) ?? v)
-  }, [isOpen, setInputValue])
+  }, [setInputValue])
+  useEffect(() => {
+    if (isOpen) return
+    revertInput()
+  }, [isOpen, revertInput])
 
   return (
     <ComboboxContext.Provider
@@ -137,6 +140,7 @@ export function Combobox({
         registerLabel,
         matches,
         selectValue,
+        revertInput,
       }}
     >
       {children}
@@ -170,6 +174,7 @@ export function ComboboxInput({
     listId,
     disabled,
     selectValue,
+    revertInput,
   } = useContext(ComboboxContext)
 
   // Pointerdown on the input light-dismisses the open popup natively; the
@@ -255,9 +260,19 @@ export function ComboboxInput({
         break
       }
       case "Escape": {
-        if (!open) break
+        // A queued native toggle can sync `open` to false while the popup is
+        // still showing — don't gate on state alone, and revert directly
+        // instead of relying on an open→closed transition (which the stale
+        // sync already consumed). Fully closed: let Escape bubble.
+        const popupEl = contentRef.current
+        const visuallyOpen = popupEl?.matches(":popover-open")
+        if (!open && !visuallyOpen) break
         event.preventDefault()
-        setOpen(false)
+        if (open) setOpen(false)
+        if (visuallyOpen && !open) {
+          try { popupEl.hidePopover() } catch { /* mid-transition */ }
+        }
+        revertInput()
         break
       }
       case "Tab": {
