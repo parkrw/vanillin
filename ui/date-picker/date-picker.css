@@ -1,0 +1,25 @@
+/* Date Picker — composition pattern CSS for Popover + Calendar + Button.
+   No component file; import this alongside popover.css and calendar.css. */
+@import "../popover/popover.css";
+@import "../calendar/calendar.css";
+
+.date-picker-trigger {
+  justify-content: start;
+  font-weight: 400;
+  min-inline-size: 15rem;
+}
+
+.date-picker-trigger[data-empty="true"] {
+  color: var(--muted-foreground);
+}
+
+/* override the popover's fixed 18rem width and 1rem padding —
+   the calendar provides its own padding and sizing */
+.date-picker-popover {
+  inline-size: auto;
+  padding: 0;
+}
+
+.date-picker-popover--wide {
+  inline-size: auto;
+}

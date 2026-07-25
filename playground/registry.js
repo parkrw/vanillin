@@ -26,7 +26,7 @@ export const registry = {
   command: { title: "Command", page: lazy(() => import("./pages/command.jsx")) },
   "context-menu": { title: "Context Menu", page: lazy(() => import("./pages/context-menu.jsx")) },
   "data-table": { title: "Data Table" },
-  "date-picker": { title: "Date Picker" },
+  "date-picker": { title: "Date Picker", page: lazy(() => import("./pages/date-picker.jsx")) },
   dialog: { title: "Dialog", page: lazy(() => import("./pages/dialog.jsx")) },
   direction: { title: "Direction", page: lazy(() => import("./pages/direction.jsx")) },
   drawer: { title: "Drawer", page: lazy(() => import("./pages/drawer.jsx")) },
