@@ -6,10 +6,6 @@ export default async function run({ page, baseUrl, test, eq, near }) {
 
   const el = (pg, sel = "") => page.locator(`[data-pg="${pg}"] ${sel}`.trim())
 
-  /** Wait for all animations on an element to settle. */
-  const settle = (locator) =>
-    locator.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished)))
-
   /** Wait for CSS transitions on a specific element to finish. */
   const waitTransitions = (locator) =>
     locator.evaluate(
