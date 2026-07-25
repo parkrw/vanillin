@@ -293,7 +293,7 @@
 }
 
 .toast--success .toast-icon {
-  color: oklch(0.55 0.18 145);
+  color: var(--success);
 }
 
 .toast--error .toast-icon {
@@ -301,11 +301,11 @@
 }
 
 .toast--warning .toast-icon {
-  color: oklch(0.75 0.18 65);
+  color: var(--warning);
 }
 
 .toast--info .toast-icon {
-  color: oklch(0.55 0.18 250);
+  color: var(--info);
 }
 
 .toast--loading .toast-icon {
@@ -326,60 +326,27 @@
 /* ------------------------------------------------------------------ */
 
 .toaster--rich .toast--success {
-  background-color: oklch(0.95 0.05 145);
-  border-color: oklch(0.8 0.12 145);
-  color: oklch(0.3 0.1 145);
+  background-color: var(--success-background);
+  border-color: var(--success-border);
+  color: var(--success-foreground);
 }
 
 .toaster--rich .toast--error {
-  background-color: oklch(0.95 0.04 25);
-  border-color: oklch(0.8 0.1 25);
-  color: oklch(0.35 0.12 25);
+  background-color: var(--destructive-background);
+  border-color: var(--destructive-border);
+  color: var(--destructive);
 }
 
 .toaster--rich .toast--warning {
-  background-color: oklch(0.95 0.05 85);
-  border-color: oklch(0.85 0.1 85);
-  color: oklch(0.35 0.1 65);
+  background-color: var(--warning-background);
+  border-color: var(--warning-border);
+  color: var(--warning-foreground);
 }
 
 .toaster--rich .toast--info {
-  background-color: oklch(0.95 0.04 250);
-  border-color: oklch(0.8 0.1 250);
-  color: oklch(0.3 0.1 250);
-}
-
-/* Dark-mode rich colors */
-.dark .toaster--rich .toast--success {
-  background-color: oklch(0.25 0.06 145);
-  border-color: oklch(0.4 0.1 145);
-  color: oklch(0.85 0.1 145);
-}
-
-.dark .toaster--rich .toast--error {
-  background-color: oklch(0.25 0.05 25);
-  border-color: oklch(0.4 0.08 25);
-  color: oklch(0.85 0.08 25);
-}
-
-.dark .toaster--rich .toast--warning {
-  background-color: oklch(0.25 0.05 85);
-  border-color: oklch(0.4 0.08 85);
-  color: oklch(0.85 0.08 65);
-}
-
-.dark .toaster--rich .toast--info {
-  background-color: oklch(0.25 0.04 250);
-  border-color: oklch(0.4 0.08 250);
-  color: oklch(0.85 0.06 250);
-}
-
-.dark .toaster--rich .toast--success .toast-description,
-.dark .toaster--rich .toast--error .toast-description,
-.dark .toaster--rich .toast--warning .toast-description,
-.dark .toaster--rich .toast--info .toast-description {
-  color: inherit;
-  opacity: 0.8;
+  background-color: var(--info-background);
+  border-color: var(--info-border);
+  color: var(--info-foreground);
 }
 
 .toaster--rich .toast--success .toast-description,
