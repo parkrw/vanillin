@@ -236,7 +236,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   feat/combobox. Live shadcn command is **still cmdk** (not Base UI) — ported
   its API onto combobox-17 highlight mechanics, inline (no popover) with
   CommandDialog = ui/dialog. Deltas from combobox: root `value` is the
-  *highlighted* item (activation calls the item's `onSelect`, nothing
+  _highlighted_ item (activation calls the item's `onSelect`, nothing
   persists), Empty renders whenever nothing is visible (not only while
   searching), and every search change re-highlights the top result — a
   "highlight only moves when it filters out" rule looks right until you
@@ -258,7 +258,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   selection. Caret parks at the end of the typed value on focus/click
   (upstream parity: no hole-in-the-middle state); pattern rejects a whole
   failing change instead of filtering characters. Gotchas: the slots render
-  *after* the input in the DOM, so they swallow every click until the input
+  _after_ the input in the DOM, so they swallow every click until the input
   gets `z-index` and the slots `pointer-events: none` (Playwright's
   `click()` times out on the hit-target check — the failure looks like an
   invisible-element problem, not a stacking one); measuring
@@ -281,7 +281,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   instead; rtl needs the negated horizontal thumb offset (flex start is the
   right edge) and normalized negative `scrollLeft` for progress, but the
   drag math needs no rtl branch (pointer delta and negative scrollLeft move
-  together); the demo page is lazy-loaded *and* bars mount only after the
+  together); the demo page is lazy-loaded _and_ bars mount only after the
   first measurement, so the suite's first assertion must `waitFor` the bar
   (a bare `count()` reads 0), and a hover test must park the mouse at 0,0
   first — pointer position carries over from the previous test file.
