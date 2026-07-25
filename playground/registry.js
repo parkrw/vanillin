@@ -55,7 +55,7 @@ export const registry = {
   select: { title: "Select", page: lazy(() => import("./pages/select.jsx")) },
   separator: { title: "Separator", page: lazy(() => import("./pages/separator.jsx")) },
   sheet: { title: "Sheet", page: lazy(() => import("./pages/sheet.jsx")) },
-  sidebar: { title: "Sidebar" },
+  sidebar: { title: "Sidebar", page: lazy(() => import("./pages/sidebar.jsx")) },
   skeleton: { title: "Skeleton", page: lazy(() => import("./pages/skeleton.jsx")) },
   slider: { title: "Slider", page: lazy(() => import("./pages/slider.jsx")) },
   spinner: { title: "Spinner", page: lazy(() => import("./pages/spinner.jsx")) },
