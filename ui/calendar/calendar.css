@@ -1,0 +1,167 @@
+/* nav buttons reuse .btn, the dropdown caption reuses .native-select, so
+   pages stay single-import */
+@import "../button/button.css";
+@import "../native-select/native-select.css";
+
+.calendar {
+  --cell-size: 2rem;
+  --cell-radius: var(--radius-md);
+  position: relative;
+  inline-size: fit-content;
+  padding: 0.75rem;
+  background-color: var(--background);
+  font-size: 0.875rem;
+}
+
+.calendar-nav {
+  position: absolute;
+  inset-inline: 0.75rem;
+  inset-block-start: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  /* the row spans the captions, which stay clickable in dropdown mode */
+  pointer-events: none;
+}
+
+.calendar-nav-button {
+  pointer-events: auto;
+  inline-size: var(--cell-size);
+  block-size: var(--cell-size);
+  padding: 0;
+}
+
+.calendar-nav-button > svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+
+[dir="rtl"] .calendar-nav-button > svg {
+  rotate: 180deg;
+}
+
+.calendar-months {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 48rem) {
+  .calendar-months {
+    flex-direction: row;
+  }
+}
+
+.calendar-month {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  inline-size: 100%;
+}
+
+.calendar-month-caption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  block-size: var(--cell-size);
+  padding-inline: var(--cell-size);
+}
+
+.calendar-caption-label {
+  font-weight: 500;
+  user-select: none;
+}
+
+.calendar-dropdowns {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* native-select is a full-width block; in the caption it sizes to its text */
+.calendar-dropdown {
+  inline-size: auto;
+  block-size: calc(var(--cell-size) - 0.25rem);
+  padding-block: 0;
+  padding-inline: 0.5rem 1.75rem;
+  font-size: 0.875rem;
+  background-position: right 0.4rem center;
+}
+
+.calendar-month-grid {
+  border-collapse: collapse;
+  inline-size: 100%;
+}
+
+.calendar-weekday {
+  inline-size: var(--cell-size);
+  padding-block-end: 0.25rem;
+  padding-inline: 0.125rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--muted-foreground);
+  user-select: none;
+}
+
+.calendar-day {
+  inline-size: var(--cell-size);
+  block-size: var(--cell-size);
+  padding: 0;
+  text-align: center;
+}
+
+.calendar-day--hidden {
+  visibility: hidden;
+}
+
+.calendar-day-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  block-size: var(--cell-size);
+  border: none;
+  border-radius: var(--cell-radius);
+  background-color: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.calendar-day-button:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.calendar-day-button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.calendar-day-button[data-outside] {
+  color: var(--muted-foreground);
+}
+
+.calendar-day-button[data-today] {
+  background-color: var(--muted);
+  font-weight: 500;
+}
+
+.calendar-day-button[data-selected-single="true"] {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.calendar-day-button:disabled {
+  color: var(--muted-foreground);
+  opacity: 0.5;
+  cursor: default;
+}
+
+.calendar-day-button:disabled:hover {
+  background-color: transparent;
+}

@@ -17,7 +17,7 @@ export const registry = {
   bubble: { title: "Bubble", page: lazy(() => import("./pages/bubble.jsx")) },
   button: { title: "Button", page: lazy(() => import("./pages/button.jsx")) },
   "button-group": { title: "Button Group", page: lazy(() => import("./pages/button-group.jsx")) },
-  calendar: { title: "Calendar" },
+  calendar: { title: "Calendar", page: lazy(() => import("./pages/calendar.jsx")) },
   card: { title: "Card", page: lazy(() => import("./pages/card.jsx")) },
   carousel: { title: "Carousel" },
   checkbox: { title: "Checkbox", page: lazy(() => import("./pages/checkbox.jsx")) },
