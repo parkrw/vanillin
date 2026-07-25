@@ -227,19 +227,20 @@ export function CarouselContent({ className, ...props }) {
   }, [contentRef, syncState])
 
   /* ---- pointer swipe (mouse only; touch uses native scroll) ---- */
+  /* Capture is deferred to pointermove so clicks on interactive children
+   * (buttons, links) fire normally — only a real drag activates capture. */
 
   const onPointerDown = useCallback(
     (e) => {
       if (e.pointerType === "touch" || e.button !== 0) return
       const el = contentRef.current
       if (!el) return
-      e.preventDefault()
-      el.setPointerCapture(e.pointerId)
-      el.style.scrollSnapType = "none"
       dragRef.current = {
         x: e.clientX, y: e.clientY,
         scroll: vertical ? el.scrollTop : el.scrollLeft,
         startIndex: snapIndex(),
+        pointerId: e.pointerId,
+        active: false,
       }
     },
     [contentRef, snapIndex, vertical]
@@ -251,6 +252,16 @@ export function CarouselContent({ className, ...props }) {
       if (!d) return
       const el = contentRef.current
       if (!el) return
+
+      const delta = vertical ? e.clientY - d.y : e.clientX - d.x
+
+      if (!d.active) {
+        if (Math.abs(delta) < 5) return
+        d.active = true
+        el.setPointerCapture(d.pointerId)
+        el.style.scrollSnapType = "none"
+      }
+
       if (vertical) el.scrollTop = d.scroll - (e.clientY - d.y)
       else el.scrollLeft = d.scroll - (e.clientX - d.x)
     },
@@ -264,6 +275,8 @@ export function CarouselContent({ className, ...props }) {
       dragRef.current = null
       const el = contentRef.current
       if (!el) return
+
+      if (!drag.active) return // plain click — let it through
 
       el.style.scrollSnapType = ""
       if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId)

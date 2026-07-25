@@ -82,6 +82,36 @@ export default function CarouselPage() {
         </div>
       </section>
 
+      {/* Interactive content inside slides */}
+      <section className="pg-section">
+        <h3>Click target</h3>
+        <div style={{ paddingInline: "4rem", maxInlineSize: "24rem" }}>
+          <Carousel data-pg="c-click">
+            <CarouselContent>
+              {Array.from({ length: 3 }, (_, i) => (
+                <CarouselItem key={i}>
+                  <div style={card()}>
+                    <button
+                      data-pg="c-click-btn"
+                      data-clicks="0"
+                      onClick={(e) => {
+                        const n = Number(e.currentTarget.dataset.clicks) + 1
+                        e.currentTarget.dataset.clicks = String(n)
+                      }}
+                      className="btn btn--outline btn--sm"
+                    >
+                      Click me
+                    </button>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+        </div>
+      </section>
+
       {/* API demo — slide counter via setApi */}
       <section className="pg-section">
         <h3>API (slide counter)</h3>

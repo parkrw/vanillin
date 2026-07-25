@@ -174,4 +174,16 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(await el("c-vertical", ".carousel-previous").isDisabled(), true, "prev disabled")
     eq(await el("c-vertical", ".carousel-next").isDisabled(), false, "next enabled")
   })
+
+  // ---- Click-through on interactive content inside slides ----
+
+  await test("mouse click on a button inside a slide registers", async () => {
+    const btn = page.locator('[data-pg="c-click-btn"]').first()
+    await btn.waitFor()
+    eq(await btn.getAttribute("data-clicks"), "0", "starts at 0")
+    await btn.click()
+    eq(await btn.getAttribute("data-clicks"), "1", "click registered")
+    await btn.click()
+    eq(await btn.getAttribute("data-clicks"), "2", "second click registered")
+  })
 }
