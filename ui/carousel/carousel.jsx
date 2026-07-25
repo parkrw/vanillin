@@ -250,6 +250,13 @@ export function CarouselContent({ className, ...props }) {
     (e) => {
       const d = dragRef.current
       if (!d) return
+      // Button released outside the element before capture engaged — the
+      // pointerup never reached us, so drop the stale drag or a later
+      // hover move would start scrolling with no button held.
+      if (e.buttons === 0) {
+        dragRef.current = null
+        return
+      }
       const el = contentRef.current
       if (!el) return
 
