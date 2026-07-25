@@ -19,6 +19,11 @@
 
 /* ——— Handle (separator) ——— */
 
+/*
+ * The handle element is the full hit area. The visible 1px line is drawn
+ * by ::after centred inside it. This keeps pointer events reliable —
+ * a 1px element is too narrow for pointerenter to fire consistently.
+ */
 .resizable-handle {
   position: relative;
   display: flex;
@@ -29,35 +34,40 @@
   touch-action: none;
   user-select: none;
   outline: none;
+}
+
+/* The visible 1px separator line */
+.resizable-handle::after {
+  content: "";
+  position: absolute;
   background-color: var(--border);
+  transition: background-color var(--motion-fast) var(--motion-ease);
 }
 
 /* Horizontal group → vertical divider */
 .resizable-group[data-direction="horizontal"] > .resizable-handle {
-  inline-size: 1px;
+  inline-size: 0.5rem;
   cursor: col-resize;
-}
-
-/* Widen the hit area with a transparent overlay */
-.resizable-handle::after {
-  content: "";
-  position: absolute;
 }
 
 .resizable-group[data-direction="horizontal"] > .resizable-handle::after {
   inset-block: 0;
-  inset-inline: -3px;
+  inline-size: 1px;
+  inset-inline-start: 50%;
+  margin-inline-start: -0.5px;
 }
 
 /* Vertical group → horizontal divider */
 .resizable-group[data-direction="vertical"] > .resizable-handle {
-  block-size: 1px;
+  block-size: 0.5rem;
   cursor: row-resize;
 }
 
 .resizable-group[data-direction="vertical"] > .resizable-handle::after {
   inset-inline: 0;
-  inset-block: -3px;
+  block-size: 1px;
+  inset-block-start: 50%;
+  margin-block-start: -0.5px;
 }
 
 /* Focus ring (keyboard only via :focus-visible) */
@@ -66,11 +76,10 @@
   outline-offset: 2px;
 }
 
-/* Active / hover feedback */
-.resizable-handle[data-separator="active"],
-.resizable-handle[data-separator="hover"] {
+/* Active / hover feedback on the visible line */
+.resizable-handle[data-separator="active"]::after,
+.resizable-handle[data-separator="hover"]::after {
   background-color: color-mix(in oklab, var(--border) 50%, var(--foreground));
-  transition: background-color var(--motion-fast) var(--motion-ease);
 }
 
 /* ——— Grip icon (withHandle) ——— */
