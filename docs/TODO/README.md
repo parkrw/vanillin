@@ -22,7 +22,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 15  | navigation-menu     | ~M  | [x]    | deps: 10; per-item panels (viewport-less mode); Viewport/Indicator no-ops   |
 | 16  | select              | ~L  | [x]    | deps: 10, 12; popper-only (no alignItemWithTrigger); dropdown race fixed    |
 | 17  | combobox            | ~M  | [x]    | deps: 16; Base UI anatomy; single-select only (chips/multiple deferred)     |
-| 18  | command             | ~M  | [ ]    | deps: 17                                                                    |
+| 18  | command             | ~M  | [x]    | deps: 17; still cmdk anatomy; substring filter (no score/re-sort)           |
 | 19  | input-otp           | ~M  | [ ]    | hidden input + segments                                                     |
 | 20  | scroll-area         | ~M  | [ ]    | overlay synced thumb                                                        |
 | 21  | calendar            | ~L  | [ ]    | ARIA grid, native Date/Intl                                                 |
@@ -232,3 +232,21 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   coalesce pattern) since the queued toggle ordering vs click isn't
   guaranteed; the runner's `eq` is strict `===` — array assertions must
   join/measure first (two "equal-looking" failures were reference compares).
+- 2026-07-25 — task 18 done on `feat/command` (~700 net lines), stacked on
+  feat/combobox. Live shadcn command is **still cmdk** (not Base UI) — ported
+  its API onto combobox-17 highlight mechanics, inline (no popover) with
+  CommandDialog = ui/dialog. Deltas from combobox: root `value` is the
+  *highlighted* item (activation calls the item's `onSelect`, nothing
+  persists), Empty renders whenever nothing is visible (not only while
+  searching), and every search change re-highlights the top result — a
+  "highlight only moves when it filters out" rule looks right until you
+  search past the current highlight and Enter fires a stale item. Enter
+  activates by calling `el.click()` on the highlighted option, so there is no
+  callback registry. Deviations: substring filter over value + keywords +
+  label, DOM order preserved (cmdk's fuzzy `command-score` also re-sorts
+  items and groups); `Command.Loading` not exported (not a shadcn export).
+  Gotchas: an item with no `value` derives it from `textContent`, so it lands
+  in the DOM one render late — the auto-highlight/empty pass must depend on
+  the item registration map, not just search/children, or the first paint
+  keeps a stale highlight; combobox's `[hidden] { display: none }` restatement
+  applies here too.

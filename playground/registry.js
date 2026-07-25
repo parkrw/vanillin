@@ -23,7 +23,7 @@ export const registry = {
   checkbox: { title: "Checkbox", page: lazy(() => import("./pages/checkbox.jsx")) },
   collapsible: { title: "Collapsible", page: lazy(() => import("./pages/collapsible.jsx")) },
   combobox: { title: "Combobox", page: lazy(() => import("./pages/combobox.jsx")) },
-  command: { title: "Command" },
+  command: { title: "Command", page: lazy(() => import("./pages/command.jsx")) },
   "context-menu": { title: "Context Menu", page: lazy(() => import("./pages/context-menu.jsx")) },
   "data-table": { title: "Data Table" },
   "date-picker": { title: "Date Picker" },
