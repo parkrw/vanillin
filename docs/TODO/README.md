@@ -32,7 +32,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 25  | resizable           | ~M  | [x]    | v4 anatomy (data-separator); drag + keyboard, collapsible                   |
 | 26  | data-table          | ~L  | [x]    | lib/use-data-table.js replaces tanstack surface; checkbox tri-state         |
 | 27  | sidebar             | ~L  | [x]    | all 24 exports real; mobile = sheet; Cmd+B; sidebar_state cookie            |
-| 28  | dark-mode-pass      | ~M  | [ ]    | deps: all; visual QA every component in `.dark`                             |
+| 28  | dark-mode-pass      | ~M  | [x]    | axe contrast sweep + screenshot QA; `--input-background` token              |
 | 29  | docs-shell          | ~M  | [ ]    | deps: 28; playground → docs app: nav, getting-started, theming/motion pages |
 | 30  | docs-content        | ~L  | [ ]    | deps: 29; per-component usage/props/data-state prose on demo pages          |
 
@@ -380,3 +380,18 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   `contain: layout size` (component uses height 100%, not 100svh); the
   offcanvas rail pokes only a few px past the demo frame's overflow: hidden
   — click it via evaluate, not coordinates.
+- 2026-07-25 — task 28 done on `feat/dark-mode-pass`: all 62 playground pages
+  screenshotted in `.dark` (axe-core color-contrast per page) plus a second
+  pass with 16 overlays open. Fixes: (1) dark `--destructive-foreground` is
+  now dark-on-light-red (white failed 2.76:1 on button/badge/input-group —
+  same flip as dark `--primary`); (2) new `--input-background` token
+  (transparent light, `color-mix(--input 30%)` dark = shadcn `dark:bg-input/30`)
+  applied to input, textarea, native-select, select trigger, checkbox, radio,
+  otp slot, input-group, combobox group, and `.dark .btn--outline` — unchecked
+  checkbox/radio were near-invisible on near-black; (3) date-picker popover
+  `inline-size: auto` stretched to the viewport edge ([popover] UA `inset: 0`
+  is masked by popover.css's fixed 18rem width until overridden) → fit-content.
+  QA notes: near-white surfaces in dark (primary buttons, tooltip, own chat
+  bubbles, progress/slider fills) are intentional shadcn inversion — subagents
+  reviewing screenshots repeatedly flagged them; verify flags yourself before
+  fixing.
