@@ -98,14 +98,23 @@ export default function ToastPage() {
       </section>
 
       <section className="pg-section">
-        <h3>Short duration (test helper)</h3>
-        <Button
-          variant="outline"
-          data-pg="short"
-          onClick={() => toast("Quick toast", { duration: 800 })}
-        >
-          800ms toast
-        </Button>
+        <h3>Short duration (test helpers)</h3>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <Button
+            variant="outline"
+            data-pg="short"
+            onClick={() => toast("Quick toast", { duration: 800 })}
+          >
+            800ms toast
+          </Button>
+          <Button
+            variant="outline"
+            data-pg="medium"
+            onClick={() => toast("Medium toast", { duration: 2000 })}
+          >
+            2s toast
+          </Button>
+        </div>
       </section>
     </>
   )

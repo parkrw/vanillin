@@ -59,24 +59,34 @@ export default async function run({ page, baseUrl, test, eq }) {
   })
 
   await test("hover pauses the auto-dismiss timer", async () => {
+    // Fire a 2s toast, hover immediately (banking most of the 2s),
+    // stay hovered well past the original lifetime, unhover, and
+    // verify: still alive right after unhover, then dismissed once
+    // the banked remainder elapses.
     await page.mouse.move(0, 0)
-    await page.locator('[data-pg="short"]').click()
+    await page.locator('[data-pg="medium"]').click()
     await waitFor(async () => (await allToasts().count()) > 0)
     const t = firstToast()
     await settle(t)
 
-    // Hover over the toaster region to pause the timer
+    // Hover immediately — banks nearly all 2s
     const box = await t.boundingBox()
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
 
-    // Wait longer than the 800ms duration
-    await page.waitForTimeout(1200)
+    // Stay hovered for 3s — well past the original 2s lifetime
+    await page.waitForTimeout(3000)
     eq(await allToasts().count() > 0, true, "still visible while hovered")
 
-    // Move away — timer should resume and dismiss
+    // Unhover — the banked remainder resumes
     await page.mouse.move(0, 0)
-    await waitFor(async () => (await allToasts().count()) === 0, 5000)
-    eq(await allToasts().count(), 0, "dismissed after mouse left")
+
+    // Right after unhover the toast must still be present (banked time)
+    await page.waitForTimeout(100)
+    eq(await allToasts().count() > 0, true, "still alive right after unhover")
+
+    // Then it should dismiss after the banked remainder elapses
+    await waitFor(async () => (await allToasts().count()) === 0, 8000)
+    eq(await allToasts().count(), 0, "dismissed once banked remainder elapsed")
   })
 
   await test("queue limit: at most visibleToasts visible, rest hidden", async () => {

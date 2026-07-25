@@ -288,6 +288,7 @@ function ToastItem({
   const remainingRef = useRef(null)
   const startRef = useRef(null)
   const drag = useRef(null)
+  const mountedTypeRef = useRef(true)
 
   const duration = t.duration !== undefined ? t.duration : defaultDuration
   const limited = index >= visibleToasts
@@ -306,19 +307,32 @@ function ToastItem({
     requestAnimationFrame(() => setMounted(true))
   }, [])
 
-  // Auto-dismiss timer with pause support
+  // Auto-dismiss timer with pause support.
+  // remainingRef tracks how much time the toast has left; startRef marks
+  // when the current running segment began.  On pause we bank the
+  // remainder and null startRef so the resume branch re-initializes the
+  // segment without clobbering the banked value.
   useEffect(() => {
     if (t.dismissed || duration === Infinity) return
 
+    // Initialize remaining on first mount / type change
+    if (remainingRef.current === null) remainingRef.current = duration
+
     const tick = () => {
       if (pausedRef.current) {
-        // Check again next frame
+        // Bank remaining time before parking — elapsed since startRef
+        // has been running unpausedly, so subtract it now.
+        if (startRef.current !== null) {
+          remainingRef.current = Math.max(0, remainingRef.current - (Date.now() - startRef.current))
+          startRef.current = null
+        }
         timerRef.current = setTimeout(tick, 50)
         return
       }
+      // Resume / first tick: start a new running segment, keep banked
+      // remainingRef intact.
       if (startRef.current === null) {
         startRef.current = Date.now()
-        remainingRef.current = duration
       }
       const elapsed = Date.now() - startRef.current
       const left = remainingRef.current - elapsed
@@ -334,11 +348,16 @@ function ToastItem({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t.dismissed, duration, t.type])
 
-  // Reset timer on update (e.g. promise resolved)
+  // Reset timer on type change (e.g. promise resolved from loading).
+  // Skip the initial mount — the timer effect already initializes there.
   useEffect(() => {
+    if (mountedTypeRef.current) {
+      mountedTypeRef.current = false
+      return
+    }
     if (t.type !== "loading" && duration !== Infinity) {
       startRef.current = null
-      remainingRef.current = duration
+      remainingRef.current = null // cleared so the timer effect re-initializes
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t.type])
