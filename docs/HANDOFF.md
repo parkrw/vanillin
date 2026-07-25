@@ -1,18 +1,38 @@
 # HANDOFF
 
-## What landed (session of 2026-07-22, motion/dark-mode session)
-Three stacked branches, **unmerged** — user fast-forwards main themselves:
-`feat/motion-tokens` → `feat/collapsible-motion` → `fix/accordion-close-flash` (tip).
-- **Motion tokens** (`90512cee`): `--motion-scale` (duration multiplier) + `--motion-ease` + derived `--motion-fast`/`--motion-medium` in globals.css; all component transitions/animations swept onto them (spinner/skeleton loops excluded). README documents the knobs. Playground preset: scale 2.5, `cubic-bezier(0.22, 1, 0.36, 1)`.
-- **Dark-mode native controls** (same commit): `color-scheme: light/dark` on `:root`/`.dark` — fixes unreadable UA-styled buttons (primitives page) plus selects/scrollbars.
-- **Collapsible open/close animation** (`86aaf4d7`): measured-height keyframes like accordion; `--collapsible-content-height` set in CollapsibleContent.
-- **Close-flash fix** (`5192d23f`): `animation-fill-mode: forwards` on closed state (accordion + collapsible) — content flashed at natural height between animationend and unmount.
-- TODO: added 28 docs-shell + 29 docs-content (playground → docs app, after 27).
+## What landed (session of 2026-07-25, fan-out session)
+Tasks 22–27 + the combobox flake fix — **merged to main** (`287b696a`,
+16 linear commits; suite 281/281 on the merged tree). Built by six
+concurrent worktree agents (4 at a time); every branch passed convention
+checks, coordinator suite reruns, and an independent review pass (findings
+fixed on-branch before sign-off). A first merge attempt without rebasing
+was reset and redone as one cherry-picked integration branch fast-forwarded
+into main; the per-branch refs are deleted.
 
-Merge: `git switch main && git merge --ff-only fix/accordion-close-flash && git branch -d fix/accordion-close-flash feat/collapsible-motion feat/motion-tokens`
+1. combobox Escape fix — Escape checks `:popover-open`
+   as well as state, hides a stale-open popup itself, calls a shared
+   `revertInput()` directly (transition-keyed revert raced queued native
+   toggles). Fixes the suite's one recurring flake.
+2. date-picker (~358 net) — composition pattern only (no DatePicker
+   root): pattern CSS + demo + 6 tests.
+3. toast (~1359 net, 5 commits) — sonner-shaped imperative API;
+   queue/stacking/hover-pause/swipe; new `--success/--warning/--info` token
+   families in globals.css (both modes). Review caught two timer bugs
+   (pause banking; effect-order instant dismiss of resolved promise toasts).
+4. carousel (~830 net) — scroll-snap + deferred-capture swipe (5px
+   dead zone so slide-content clicks fire; `e.buttons===0` stale-drag guard).
+5. resizable (~1145 net) — react-resizable-panels v4 anatomy
+   (`data-separator`, opposite `aria-orientation`, 5% keyboard step).
+6. data-table (~1100 net, 2 commits) — zero-dep `lib/use-data-table.js`
+   over ui/table; ui/checkbox grew tri-state (`aria-checked=mixed`).
+7. sidebar (~1786 net) — all 24 shadcn exports real; mobile = sheet;
+   Cmd/Ctrl+B; `sidebar_state` cookie.
+
+Details + per-task gotchas: Adjustments log in `docs/TODO/README.md`.
 
 ## Next step
-`/cycle 03` — field-direction (~M): detail `docs/TODO/task03-field-direction.md` (doesn't exist yet), then TDD. Plan + index: `docs/TODO/README.md`.
+`/cycle 28` — dark-mode-pass (~M): visual QA every component in `.dark`
+(deps: all of the above merged). Then 29 docs-shell, 30 docs-content.
 
 **Docs layout (2026-07-22):** HANDOFF.md and TODO/ now live under `docs/` — tell /cycle and /handoff explicitly, since they default to repo-root `TODO/` and `HANDOFF.md`.
 

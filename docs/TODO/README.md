@@ -26,12 +26,12 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 19  | input-otp           | ~M  | [x]    | transparent input over slots; caret parks at end of value                   |
 | 20  | scroll-area         | ~M  | [x]    | overlay bars over a native scroller; imperative thumb sync                  |
 | 21  | calendar            | ~L  | [x]    | ARIA grid, native Date/Intl; single/multiple/range, dropdown caption        |
-| 22  | date-picker         | ~S  | [ ]    | deps: 10, 21                                                                |
-| 23  | toast               | ~L  | [ ]    | queue, stacking, hover-pause, swipe                                         |
-| 24  | carousel            | ~M  | [ ]    | scroll-snap + pointer swipe                                                 |
-| 25  | resizable           | ~M  | [ ]    | role=separator, keyboard resize                                             |
-| 26  | data-table          | ~L  | [ ]    | pattern page over ui/table                                                  |
-| 27  | sidebar             | ~L  | [ ]    | deps: 08 (mobile = sheet); Cmd+B                                            |
+| 22  | date-picker         | ~S  | [x]    | composition pattern only — no DatePicker root; pattern CSS + demo + tests   |
+| 23  | toast               | ~L  | [x]    | sonner-shaped imperative API; queue, stacking, hover-pause, swipe           |
+| 24  | carousel            | ~M  | [x]    | scroll-snap + deferred-capture swipe; embla api surface docs use            |
+| 25  | resizable           | ~M  | [x]    | v4 anatomy (data-separator); drag + keyboard, collapsible                   |
+| 26  | data-table          | ~L  | [x]    | lib/use-data-table.js replaces tanstack surface; checkbox tri-state         |
+| 27  | sidebar             | ~L  | [x]    | all 24 exports real; mobile = sheet; Cmd+B; sidebar_state cookie            |
 | 28  | dark-mode-pass      | ~M  | [ ]    | deps: all; visual QA every component in `.dark`                             |
 | 29  | docs-shell          | ~M  | [ ]    | deps: 28; playground → docs app: nav, getting-started, theming/motion pages |
 | 30  | docs-content        | ~L  | [ ]    | deps: 29; per-component usage/props/data-state prose on demo pages          |
@@ -311,3 +311,72 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   typed text" test failed twice today and passed on rerun — the revert only
   runs on an open→closed transition, so a stray queued native toggle that
   already closed the popup leaves the typed text in place.
+- 2026-07-25 — combobox Escape flake fixed on `fix/combobox-escape-revert`:
+  Escape now checks `:popover-open` as well as state, hides a stale-open popup
+  itself, and calls a shared `revertInput()` directly — the transition-keyed
+  revert raced queued native toggles. 3× green.
+- 2026-07-25 — tasks 22–27 fanned out to six concurrent worktree agents (4 at
+  a time — timing-sensitive suites flake under too many parallel Chrome/vite
+  instances; each worktree ran tests on its own port via an uncommitted
+  tests/run.mjs PORT edit). Every branch got: convention greps, coordinator
+  suite reruns, and an independent review pass; review findings fixed on the
+  branch before sign-off.
+- 2026-07-25 — task 22 done on `feat/date-picker` (~358 net): live shadcn
+  date-picker is a composition pattern only (Popover + Calendar + Button —
+  no DatePicker root). Pattern CSS `@import`s popover+calendar; demo covers
+  single/range/dropdown-caption; 6 tests. chrono-node input + time-picker
+  variants omitted (external deps).
+- 2026-07-25 — task 23 done on `feat/toast` (~1359 net, 5 commits): live
+  shadcn toast page now wraps **Base UI Toast**, but the plan's
+  "toast+sonner = one slug" kept the sonner-shaped API — module-level store,
+  imperative `toast()`/`.success`/`.error`/`.warning`/`.info`/`.loading`/
+  `.promise`/`.dismiss`/`.custom`, `<Toaster />` with position/visibleToasts/
+  duration/closeButton/expand/richColors. Swipe threshold-only (drawer
+  lesson); exit keyframes omit `from`; window blur pauses timers; new
+  semantic tokens `--success/--warning/--info` (+foreground/background/
+  border) in globals.css both modes. Review caught two timer bugs the tests
+  missed: (1) pausing never banked elapsed time, so a long hover dismissed
+  instantly on unhover — bank remaining and null the segment start on pause;
+  (2) the type-reset effect was declared AFTER the timer effect, so on
+  promise loading→success the timer initialized refs and the reset nulled
+  them — the next tick computed `null - 0 = 0` and dismissed the success
+  state in ~50ms. Lessons: effect declaration order is load-bearing when
+  effects share refs; pause/dismiss-timer tests must assert survival after
+  the pause ends, not just eventual dismissal; a module-level store persists
+  across Toaster remounts (intentional, sonner parity). (~830 net incl. review fixes):
+  scroll-snap track + mouse swipe; embla api surface implemented as far as
+  the docs' examples use it (scrollSnapList/selectedScrollSnap/on-select;
+  `plugins`, `opts.loop`, `opts.align` stubbed, documented). Review caught:
+  `preventDefault()` on pointerdown suppresses compatibility clicks —
+  interactive slide content went dead. Capture is now deferred past a 5px
+  dead zone (plain clicks never capture) + `e.buttons === 0` guard drops a
+  stale drag when release happened outside pre-capture. Lesson: never
+  preventDefault pointerdown on a bubbling swipe surface, and always test a
+  button INSIDE the swipeable area.
+- 2026-07-25 — task 25 done on `feat/resizable` (~1145 net):
+  react-resizable-panels **v4** shapes — `data-separator` (v2's
+  data-resize-handle-* is gone), separator `aria-orientation` is the
+  OPPOSITE of group direction, 5% keyboard step, Enter toggles collapse,
+  aria-valuenow via max-delta simulation. Skipped (not in docs examples):
+  autoSaveId/storage, onResize/onCollapse callbacks, F6 cycling,
+  hitAreaMargins, cascading resize. Test helper: same-URL goto is
+  same-document (calendar gotcha) — reset by navigating away, waitFor
+  detached, navigate back.
+- 2026-07-25 — task 26 done on `feat/data-table` (~1100 net, two commits):
+  zero-dep `lib/use-data-table.js` (+`flexRender`) replaces exactly the
+  tanstack surface the payments example uses (core/sorted/filtered/
+  pagination row models, visibility, selection with header tri-state);
+  ui/checkbox grew backward-compatible indeterminate (`aria-checked=mixed`).
+  Filter/pageSize changes reset pageIndex (review-verified no out-of-range).
+  Skipped: multi-sort, global/faceted filter, pinning, resizing, grouping,
+  virtualization, server-side.
+- 2026-07-25 — task 27 done on `feat/sidebar` (~1786 net): all 24 shadcn
+  exports implemented (no compat no-ops); `sidebar_state` cookie (7d),
+  Cmd/Ctrl+B, variants sidebar/floating/inset × offcanvas/icon/none, mobile
+  = ui/sheet, collapsed-icon tooltips via ui/tooltip; `--sidebar-*` tokens
+  already existed in globals.css. Gotchas: scope the desktop `display: none`
+  media rule to `.sidebar-wrapper > .sidebar` or it also hides the mobile
+  sheet content (same class); demo frames the fixed-position sidebar with
+  `contain: layout size` (component uses height 100%, not 100svh); the
+  offcanvas rail pokes only a few px past the demo frame's overflow: hidden
+  — click it via evaluate, not coordinates.
