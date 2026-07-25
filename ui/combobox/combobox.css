@@ -1,0 +1,200 @@
+/* Combobox — filterable input + listbox popup on the native Popover API
+   (popover recipe: transitions + @starting-style + allow-discrete).
+   Focus stays in the input; options carry data-highlighted, not :focus. */
+
+.combobox-input-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  block-size: 2.25rem;
+  padding-inline-end: 0.375rem;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  transition:
+    border-color var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) var(--motion-ease);
+}
+
+.combobox-input-group:focus-within {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+.combobox-input-group[data-disabled] {
+  opacity: 0.5;
+}
+
+.combobox-input {
+  flex: 1;
+  min-inline-size: 0;
+  block-size: 100%;
+  padding-block: 0.375rem;
+  padding-inline: 0.75rem 0;
+  border: none;
+  background: none;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  outline: none;
+}
+
+.combobox-input::placeholder {
+  color: var(--muted-foreground);
+}
+
+.combobox-input:disabled {
+  cursor: not-allowed;
+}
+
+.combobox-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--muted-foreground);
+  cursor: default;
+}
+
+.combobox-trigger:disabled {
+  cursor: not-allowed;
+}
+
+.combobox-trigger svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+  pointer-events: none;
+}
+
+.combobox-content {
+  /* Reset UA popover defaults */
+  position: fixed;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--popover);
+  color: var(--popover-foreground);
+  padding: 0.25rem;
+  box-shadow: var(--shadow-md);
+  min-inline-size: 8rem;
+  max-inline-size: calc(100vw - 2rem);
+  max-block-size: min(24rem, calc(100vh - 4rem));
+  overflow-y: auto;
+  outline: none;
+
+  /* overlay keeps the element in the top layer during the exit fade. */
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease),
+    display var(--motion-fast) var(--motion-ease) allow-discrete,
+    overlay var(--motion-fast) var(--motion-ease) allow-discrete;
+}
+
+@starting-style {
+  .combobox-content:popover-open {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.combobox-content:not(:popover-open) {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.combobox-content[data-side="bottom"] {
+  transform-origin: top center;
+}
+
+.combobox-content[data-side="top"] {
+  transform-origin: bottom center;
+}
+
+/* display: flex beats the UA [hidden] rule — restate it for filtered items. */
+.combobox-item[hidden] {
+  display: none;
+}
+
+.combobox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-block: 0.375rem;
+  padding-inline: 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  line-height: 1.25;
+  cursor: default;
+  user-select: none;
+}
+
+.combobox-item[data-highlighted] {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.combobox-item[aria-disabled="true"] {
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.combobox-item-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Check mark on the trailing edge (select parity). */
+.combobox-item-indicator {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1rem;
+  block-size: 1rem;
+  flex-shrink: 0;
+}
+
+.combobox-item[data-state="checked"] > .combobox-item-indicator {
+  display: inline-flex;
+}
+
+.combobox-item-indicator svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  pointer-events: none;
+}
+
+.combobox-empty {
+  padding-block: 1.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+/* A group whose options are all filtered out hides entirely. */
+.combobox-group:not(:has([role="option"]:not([hidden]))) {
+  display: none;
+}
+
+.combobox-label {
+  padding-block: 0.375rem;
+  padding-inline: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.combobox-separator {
+  margin-block: 0.25rem;
+  margin-inline: -0.25rem;
+  block-size: 1px;
+  background-color: var(--border);
+}

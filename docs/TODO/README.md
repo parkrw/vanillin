@@ -21,7 +21,7 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 | 14  | menubar             | ~M  | [x]    | deps: 12; all item parts re-export dropdown-menu; see click-toggle gotcha   |
 | 15  | navigation-menu     | ~M  | [x]    | deps: 10; per-item panels (viewport-less mode); Viewport/Indicator no-ops   |
 | 16  | select              | ~L  | [x]    | deps: 10, 12; popper-only (no alignItemWithTrigger); dropdown race fixed    |
-| 17  | combobox            | ~M  | [ ]    | deps: 16                                                                    |
+| 17  | combobox            | ~M  | [x]    | deps: 16; Base UI anatomy; single-select only (chips/multiple deferred)     |
 | 18  | command             | ~M  | [ ]    | deps: 17                                                                    |
 | 19  | input-otp           | ~M  | [ ]    | hidden input + segments                                                     |
 | 20  | scroll-area         | ~M  | [ ]    | overlay synced thumb                                                        |
@@ -215,3 +215,20 @@ components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
   dropdown-menu's trigger click-toggle race (task-14 note) with a held-press
   regression test — Playwright's instant click can't reproduce it.
   Message-scroller button test flaked once again (passed on rerun).
+- 2026-07-25 — task 17 done on `feat/combobox` (~1010 net lines — size hook is
+  advisory), stacked on feat/select. Live shadcn combobox is **Base UI, not
+  Popover+Command** — new ui/combobox on select-16 mechanics with the combobox
+  delta: focus never leaves the input (aria-activedescendant +
+  data-highlighted root state, no real focus on options); `query` separate
+  from `inputValue` (close resets query so the selected label never filters
+  the reopened list); items stay mounted and toggle `hidden`, groups auto-hide
+  via CSS `:has()`. Deviations: single-select only (chips/multiple/showClear
+  deferred), blur does not close (item pointerdown-preventDefault would break
+  scrollbar drags; Tab + light dismiss cover exit). Gotchas: **`display: flex`
+  on an item silently defeats the `hidden` attribute** — restate
+  `[hidden] { display: none }` and assert computed display in tests, not just
+  the attribute (screenshot QA caught it, the suite didn't); input click while
+  open must re-show the natively light-dismissed popup directly (task-13
+  coalesce pattern) since the queued toggle ordering vs click isn't
+  guaranteed; the runner's `eq` is strict `===` — array assertions must
+  join/measure first (two "equal-looking" failures were reference compares).
