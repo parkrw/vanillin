@@ -1,4 +1,4 @@
-export default async function run({ page, baseUrl, test, eq }) {
+export default async function run({ page, baseUrl, test, eq, near }) {
   await page.goto(`${baseUrl}/#popover`)
 
   const trigger = page.locator('button:has-text("Open popover")')
@@ -169,5 +169,32 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(animating, true, "exit animation running")
 
     await waitClosed()
+  })
+
+  await test("anchored position survives dir=rtl on the root", async () => {
+    // The [popover] UA sheet sets inset: 0. With a definite width that
+    // over-constrains the box, and CSS 2.1 §10.3.7 drops `left` under RTL —
+    // the popover would snap to the viewport edge instead of the anchor.
+    await page.evaluate(() => {
+      document.documentElement.dir = "rtl"
+    })
+    try {
+      await trigger.click()
+      const el = await waitOpen()
+      // offsetLeft, not getBoundingClientRect: the enter transition scales the
+      // box, but offsetLeft is a layout value and ignores transforms.
+      const { usedLeft, styleLeft } = await el.evaluate((e) => ({
+        usedLeft: e.offsetLeft,
+        styleLeft: parseFloat(e.style.left),
+      }))
+      near(usedLeft, styleLeft, 1.5, "used left tracks the inline left")
+
+      await page.keyboard.press("Escape")
+      await waitClosed()
+    } finally {
+      await page.evaluate(() => {
+        document.documentElement.dir = "ltr"
+      })
+    }
   })
 }
