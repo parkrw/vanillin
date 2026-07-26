@@ -5,7 +5,7 @@ export default function InstallationPage() {
 
       <p>
         <em>
-          Stub — a CLI (<code>vanillin add &lt;component&gt;</code>) is planned
+          [Stub] A CLI (<code>van add &lt;component&gt;</code>) is planned
           and will replace these steps.
         </em>
       </p>

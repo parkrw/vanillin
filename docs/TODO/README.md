@@ -38,7 +38,7 @@ platform features shadcn cannot adopt (Tailwind/Radix/React-18 bound).
 | 27           | sidebar             | ~L  | [x]    | all 24 exports real; mobile = sheet; Cmd+B; sidebar_state cookie                                  |
 | 28           | dark-mode-pass      | ~M  | [x]    | axe contrast sweep + screenshot QA; `--input-background` token                                    |
 | 29           | docs-shell          | ~M  | [x]    | grouped nav (Get started / Components); intro + install/theming stubs; empty hash → #introduction |
-| 30 (do last) | docs-content        | ~M  | [ ]    | **runs last**, after 58; now a consistency/gap pass only — tasks write own docs (2026-07-26)      |
+| 30 (do last) | docs-content        | ~M  | [ ]    | **runs last**, after 65; now a consistency/gap pass only — tasks write own docs (2026-07-26)      |
 
 ## Phase 2 — config, form, parity, platform
 
