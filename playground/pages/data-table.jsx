@@ -19,6 +19,7 @@ import {
   DropdownMenuSeparator,
 } from "../../ui/dropdown-menu/dropdown-menu.jsx"
 import { useDataTable, flexRender } from "../../lib/use-data-table.js"
+import { DataTableColumnHeader } from "../../ui/data-table/data-table.jsx"
 
 import "../../ui/table/table.css"
 import "../../ui/checkbox/checkbox.css"
@@ -28,31 +29,6 @@ import "../../ui/dropdown-menu/dropdown-menu.css"
 import "../../ui/data-table/data-table.css"
 
 // ── Inline SVG icons (zero-dep, no lucide) ───────────────────────────
-
-function ArrowUpDown() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="m7 15 5 5 5-5" />
-      <path d="m7 9 5-5 5 5" />
-    </svg>
-  )
-}
-
-function ArrowUp() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="m7 9 5-5 5 5" />
-    </svg>
-  )
-}
-
-function ArrowDown() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="m7 15 5 5 5-5" />
-    </svg>
-  )
-}
 
 function ChevronLeft() {
   return (
@@ -78,12 +54,6 @@ function MoreHorizontal() {
       <circle cx="5" cy="12" r="1" />
     </svg>
   )
-}
-
-function SortIcon({ sorted }) {
-  if (sorted === "asc") return <ArrowUp />
-  if (sorted === "desc") return <ArrowDown />
-  return <ArrowUpDown />
 }
 
 // ── Sample data (mirrors the shadcn payments example) ────────────────
@@ -150,38 +120,16 @@ const columns = [
   },
   {
     accessorKey: "email",
-    header: ({ column }) => {
-      const sorted = column.getIsSorted()
-      return (
-        <button
-          className="data-table-sort-btn"
-          onClick={() => column.toggleSorting(sorted === "asc")}
-          {...(sorted ? { "data-sorted": sorted } : {})}
-        >
-          Email
-          <SortIcon sorted={sorted} />
-        </button>
-      )
-    },
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
     cell: ({ row }) => <span>{row.getValue("email")}</span>,
   },
   {
     accessorKey: "amount",
-    header: ({ column }) => {
-      const sorted = column.getIsSorted()
-      return (
-        <div style={{ textAlign: "end" }}>
-          <button
-            className="data-table-sort-btn"
-            onClick={() => column.toggleSorting(sorted === "asc")}
-            {...(sorted ? { "data-sorted": sorted } : {})}
-          >
-            Amount
-            <SortIcon sorted={sorted} />
-          </button>
-        </div>
-      )
-    },
+    header: ({ column }) => (
+      <div style={{ textAlign: "end" }}>
+        <DataTableColumnHeader column={column} title="Amount" />
+      </div>
+    ),
     cell: ({ row }) => (
       <div style={{ textAlign: "end", fontWeight: 500 }}>
         {currencyFmt.format(row.getValue("amount"))}
@@ -271,10 +219,11 @@ export default function DataTablePage() {
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   const sorted = header.column.getIsSorted()
+                  const isPrimary = sorted && header.column.getSortIndex() === 0
                   return (
                     <TableHead
                       key={header.id}
-                      {...(sorted
+                      {...(isPrimary
                         ? {
                             "aria-sort":
                               sorted === "asc" ? "ascending" : "descending",
