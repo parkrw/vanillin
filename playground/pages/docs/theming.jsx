@@ -144,6 +144,51 @@ export default function ThemingPage() {
         All three are safe to use without fallback. Browsers that lack them
         are below the kit's support floor.
       </p>
+
+      <h3>Cursor affordance</h3>
+
+      <p>
+        A base rule in <code>globals.css</code> sets{" "}
+        <code>cursor:&nbsp;pointer</code> on every interactive semantic:{" "}
+        <code>button</code>, <code>summary</code>, <code>label[for]</code>,{" "}
+        <code>a[href]</code>, <code>select</code>, and ARIA roles{" "}
+        <code>button</code>, <code>menuitem</code>,{" "}
+        <code>menuitemcheckbox</code>, <code>menuitemradio</code>,{" "}
+        <code>option</code>, <code>tab</code>, <code>switch</code>,{" "}
+        <code>radio</code>, <code>checkbox</code>, and <code>link</code>.
+        New components that use these roles inherit the pointer automatically.
+      </p>
+
+      <p>
+        Disabled states rely on <code>pointer-events:&nbsp;none</code> (or an
+        explicit <code>cursor:&nbsp;not-allowed</code> for form inputs) to
+        suppress the pointer — no <code>:not(:disabled)</code> guard is needed
+        in the base rule.
+      </p>
+
+      <p>
+        A few components opt into non-pointer cursors:
+      </p>
+      <ul>
+        <li>
+          <strong>Slider</strong> thumb — <code>grab</code>, changing to{" "}
+          <code>grabbing</code> during a drag (via{" "}
+          <code>data-dragging</code> on the root).
+        </li>
+        <li>
+          <strong>Resizable</strong> handle — <code>col-resize</code> or{" "}
+          <code>row-resize</code> depending on group direction.
+        </li>
+        <li>
+          <strong>Carousel</strong> track — <code>grab</code> at rest,{" "}
+          <code>grabbing</code> once the 5&nbsp;px drag dead zone is passed
+          (via <code>data-dragging</code> on the content element).
+        </li>
+        <li>
+          <strong>Scroll area</strong> thumb — <code>default</code>, matching
+          native scrollbar behavior.
+        </li>
+      </ul>
     </>
   )
 }
