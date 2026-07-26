@@ -49,9 +49,13 @@
   background-color: var(--muted-foreground);
 }
 
+/* Indeterminate loop: fixed duration, deliberately not --motion-medium.
+ * That token is calc(200ms * var(--motion-scale)) — using it here would
+ * strobe at ~2.5Hz and would scale with --motion-scale, which indeterminate
+ * loops must not do. Matches the ui/skeleton pulse. */
 .status-dot[data-status="pending"] {
   background-color: var(--muted-foreground);
-  animation: status-dot-pulse var(--motion-medium) ease-in-out infinite alternate;
+  animation: status-dot-pulse 2s ease-in-out infinite alternate;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -142,6 +142,16 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     eq(animName, "status-dot-pulse", "pulse animation is active")
   })
 
+  await test("status-dot: pending pulse is fixed, not scaled by --motion-scale", async () => {
+    const pendingDot = page.locator('[data-pg="sd-statuses"] .status-dot[data-status="pending"]')
+    const before = await pendingDot.evaluate((el) => getComputedStyle(el).animationDuration)
+    await page.evaluate(() => document.documentElement.style.setProperty("--motion-scale", "3"))
+    const after = await pendingDot.evaluate((el) => getComputedStyle(el).animationDuration)
+    await page.evaluate(() => document.documentElement.style.removeProperty("--motion-scale"))
+    eq(after, before, "indeterminate loop must not track --motion-scale")
+    eq(before, "2s", "pulse runs at the fixed skeleton-style cadence")
+  })
+
   await test("status-dot: pending animation absent under prefers-reduced-motion", async () => {
     await page.emulateMedia({ reducedMotion: "reduce" })
     const pendingDot = page.locator('[data-pg="sd-statuses"] .status-dot[data-status="pending"]')
