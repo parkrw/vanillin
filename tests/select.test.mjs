@@ -1,4 +1,4 @@
-export default async function run({ page, baseUrl, test, eq }) {
+export default async function run({ page, baseUrl, test, eq, near }) {
   await page.goto(`${baseUrl}/#select`)
 
   const trigger = page.locator('[data-pg="sel-trigger"]')
@@ -110,7 +110,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     await waitAllClosed()
   })
 
-  await test("controlled value + hidden form input", async () => {
+  await test("controlled value + hidden native select", async () => {
     const readout = page.locator('[data-pg="sel-ctrl-state"]')
     eq(await readout.textContent(), "none", "initially none")
     await page.locator('[data-pg="sel-ctrl-trigger"]').click()
@@ -118,12 +118,12 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.locator('[data-pg="sel-item-cat"]').click()
     await waitAllClosed()
     eq(await readout.textContent(), "cat", "onValueChange fired")
-    const hidden = await page.evaluate(() => {
-      const input = document.querySelector('[data-pg="sel-form"] input[name="pet"]')
-      return input ? { type: input.type, value: input.value } : null
+    const native = await page.evaluate(() => {
+      const sel = document.querySelector('[data-pg="sel-form"] select[name="pet"]')
+      return sel ? { tag: sel.tagName, value: sel.value } : null
     })
-    eq(hidden?.type, "hidden", "hidden input rendered")
-    eq(hidden?.value, "cat", "hidden input carries the value")
+    eq(native?.tag, "SELECT", "hidden native select rendered")
+    eq(native?.value, "cat", "hidden native select carries the value")
   })
 
   await test("click on the open trigger closes it", async () => {
@@ -143,5 +143,167 @@ export default async function run({ page, baseUrl, test, eq }) {
       () => document.querySelectorAll('[role="listbox"]:popover-open').length
     )
     eq(openCount, 0, "stays closed")
+  })
+
+  // -- Item-aligned positioning tests --
+
+  await test("item-aligned mode places selected item near the trigger", async () => {
+    const alignedTrigger = page.locator('[data-pg="sel-aligned-trigger"]')
+    await alignedTrigger.click()
+    await waitOpen("sel-aligned-content")
+
+    const diff = await page.evaluate(() => {
+      const trigger = document.querySelector('[data-pg="sel-aligned-trigger"]')
+      const item = document.querySelector('[data-pg="sel-aligned-item-15"]')
+      const tr = trigger.getBoundingClientRect()
+      const ir = item.getBoundingClientRect()
+      return Math.abs(tr.top - ir.top)
+    })
+    eq(diff < 10, true, `selected item within 10px of trigger (got ${diff.toFixed(1)})`)
+
+    await page.keyboard.press("Escape")
+    await waitAllClosed()
+  })
+
+  await test("item-aligned mode clamps to viewport and enables scroll buttons", async () => {
+    const alignedTrigger = page.locator('[data-pg="sel-aligned-trigger"]')
+    await alignedTrigger.click()
+    await waitOpen("sel-aligned-content")
+
+    // Content should be within the viewport
+    const contentRect = await page.evaluate(() => {
+      const el = document.querySelector('[data-pg="sel-aligned-content"]')
+      const r = el.getBoundingClientRect()
+      return { top: r.top, bottom: r.bottom }
+    })
+    eq(contentRect.top >= 0, true, "content top within viewport")
+    eq(
+      contentRect.bottom <= await page.evaluate(() => window.innerHeight),
+      true,
+      "content bottom within viewport"
+    )
+
+    // Scroll buttons should be visible since item 15 is in the middle
+    const upState = await page.locator('[data-pg="sel-scroll-up"]').getAttribute("data-state")
+    const downState = await page.locator('[data-pg="sel-scroll-down"]').getAttribute("data-state")
+    eq(upState, "visible", "scroll-up visible")
+    eq(downState, "visible", "scroll-down visible")
+
+    await page.keyboard.press("Escape")
+    await waitAllClosed()
+  })
+
+  await test("scroll buttons hide at each scroll extreme", async () => {
+    const scrollTrigger = page.locator('[data-pg="sel-scroll-trigger"]')
+    await scrollTrigger.click()
+    await waitOpen("sel-scroll-content")
+
+    // At the top: up button hidden, down button visible
+    const content = page.locator('[data-pg="sel-scroll-content"]')
+    await page.evaluate(() => {
+      document.querySelector('[data-pg="sel-scroll-content"]').scrollTop = 0
+    })
+    // Wait for IntersectionObserver to fire
+    await page.waitForFunction(() => {
+      const up = document.querySelector('[data-pg="sel-scroll-up-popper"]')
+      return up && up.dataset.state === "hidden"
+    })
+    eq(
+      await page.locator('[data-pg="sel-scroll-up-popper"]').getAttribute("data-state"),
+      "hidden",
+      "up button hidden at top"
+    )
+    eq(
+      await page.locator('[data-pg="sel-scroll-down-popper"]').getAttribute("data-state"),
+      "visible",
+      "down button visible at top"
+    )
+
+    // Scroll to the bottom
+    await page.evaluate(() => {
+      const el = document.querySelector('[data-pg="sel-scroll-content"]')
+      el.scrollTop = el.scrollHeight
+    })
+    await page.waitForFunction(() => {
+      const down = document.querySelector('[data-pg="sel-scroll-down-popper"]')
+      return down && down.dataset.state === "hidden"
+    })
+    eq(
+      await page.locator('[data-pg="sel-scroll-up-popper"]').getAttribute("data-state"),
+      "visible",
+      "up button visible at bottom"
+    )
+    eq(
+      await page.locator('[data-pg="sel-scroll-down-popper"]').getAttribute("data-state"),
+      "hidden",
+      "down button hidden at bottom"
+    )
+
+    await page.keyboard.press("Escape")
+    await waitAllClosed()
+  })
+
+  // -- Constraint validation tests --
+
+  await test("required empty select blocks form.requestSubmit() and reports invalid", async () => {
+    // Reset: navigate away and back to clear the pet selection
+    await page.goto(`${baseUrl}/#button`)
+    await page.waitForSelector("h2")
+    await page.goto(`${baseUrl}/#select`)
+    await page.waitForSelector('[data-pg="sel-form"]')
+
+    const isValid = await page.evaluate(() => {
+      const form = document.querySelector('[data-pg="sel-form"]')
+      return form.checkValidity()
+    })
+    eq(isValid, false, "empty required select is invalid")
+
+    // Try submitting — should not produce a result
+    const hadResult = await page.evaluate(() => {
+      const form = document.querySelector('[data-pg="sel-form"]')
+      let submitted = false
+      const handler = () => { submitted = true }
+      form.addEventListener("submit", handler)
+      try { form.requestSubmit() } catch {}
+      form.removeEventListener("submit", handler)
+      return submitted
+    })
+    eq(hadResult, false, "requestSubmit blocked by validation")
+  })
+
+  await test("value posts under name after form submission", async () => {
+    // Select a pet
+    await page.locator('[data-pg="sel-ctrl-trigger"]').click()
+    await page.waitForSelector('[role="listbox"]:popover-open')
+    await page.locator('[data-pg="sel-item-dog"]').click()
+    await waitAllClosed()
+
+    // Verify the form is now valid
+    const isValid = await page.evaluate(() => {
+      const form = document.querySelector('[data-pg="sel-form"]')
+      return form.checkValidity()
+    })
+    eq(isValid, true, "form valid after selecting dog")
+
+    // Submit the form
+    await page.locator('[data-pg="sel-submit"]').click()
+    await page.waitForSelector('[data-pg="sel-form-result"]')
+    const result = await page.locator('[data-pg="sel-form-result"]').textContent()
+    eq(result.includes('"pet":"dog"'), true, "value posted under name")
+  })
+
+  await test("existing popper behaviour unchanged", async () => {
+    // The default select (popper mode) should still work as before
+    await trigger.click()
+    await waitOpen()
+
+    // Content should have data-side (set by positionAnchored in popper mode)
+    const side = await page.evaluate(() =>
+      document.querySelector('[data-pg="sel-content"]').dataset.side
+    )
+    eq(side === "bottom" || side === "top", true, "data-side set in popper mode")
+
+    await page.keyboard.press("Escape")
+    await waitAllClosed()
   })
 }
