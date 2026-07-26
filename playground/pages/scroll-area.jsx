@@ -6,6 +6,7 @@ import "../../ui/separator/separator.css"
 
 const tags = Array.from({ length: 40 }, (_, i) => `v1.2.0-beta.${40 - i}`)
 const columns = Array.from({ length: 12 }, (_, i) => `Column ${i + 1}`)
+const snapItems = Array.from({ length: 8 }, (_, i) => `Slide ${i + 1}`)
 
 export default function ScrollAreaPage() {
   return (
@@ -143,6 +144,152 @@ export default function ScrollAreaPage() {
             <ScrollBar orientation="horizontal" data-pg="sa-rtl-bar" />
           </ScrollArea>
         </DirectionProvider>
+      </section>
+
+      {/* ── New parity features ───────────────────────────────── */}
+
+      <section className="pg-section">
+        <h3>Fade mask (overflow edge detection)</h3>
+        <p style={{ fontSize: "0.875rem", marginBlockEnd: "0.75rem", color: "var(--muted-foreground)" }}>
+          <code>data-overflow-y-start</code> / <code>data-overflow-y-end</code> drive a CSS{" "}
+          <code>mask-image</code> fade at clipped edges. Scroll to see the mask appear and disappear.
+        </p>
+        <ScrollArea
+          data-pg="sa-fade"
+          className="scroll-area--fade-demo"
+          style={{
+            blockSize: "10rem",
+            inlineSize: "16rem",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-md)",
+          }}
+        >
+          <div style={{ padding: "1rem" }}>
+            {tags.slice(0, 20).map((tag) => (
+              <div key={tag} style={{ fontSize: "0.875rem", marginBlockEnd: "0.5rem" }}>
+                {tag}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+        <style>{`
+          .scroll-area--fade-demo .scroll-area-viewport {
+            --fade-size: 2rem;
+            --mask-start: transparent, black var(--fade-size);
+            --mask-end: black calc(100% - var(--fade-size)), transparent;
+            mask-image: linear-gradient(to bottom, black, black);
+          }
+          .scroll-area--fade-demo[data-overflow-y-start] .scroll-area-viewport {
+            mask-image: linear-gradient(to bottom, var(--mask-start), black var(--fade-size));
+          }
+          .scroll-area--fade-demo[data-overflow-y-end] .scroll-area-viewport {
+            mask-image: linear-gradient(to bottom, black calc(100% - var(--fade-size)), var(--mask-end));
+          }
+          .scroll-area--fade-demo[data-overflow-y-start][data-overflow-y-end] .scroll-area-viewport {
+            mask-image: linear-gradient(to bottom, var(--mask-start), var(--mask-end));
+          }
+        `}</style>
+      </section>
+
+      <section className="pg-section">
+        <h3>With threshold (overflowEdgeThreshold)</h3>
+        <p style={{ fontSize: "0.875rem", marginBlockEnd: "0.75rem", color: "var(--muted-foreground)" }}>
+          Threshold set to 20px. Scroll slowly from the top — the start attribute only appears
+          after 20px of content is clipped.
+        </p>
+        <ScrollArea
+          data-pg="sa-threshold"
+          overflowEdgeThreshold={20}
+          style={{
+            blockSize: "8rem",
+            inlineSize: "16rem",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-md)",
+          }}
+        >
+          <div style={{ padding: "1rem" }}>
+            {tags.slice(0, 15).map((tag) => (
+              <div key={tag} style={{ fontSize: "0.875rem", marginBlockEnd: "0.5rem" }}>
+                {tag}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </section>
+
+      <section className="pg-section">
+        <h3>Snap content (snap suspension)</h3>
+        <p style={{ fontSize: "0.875rem", marginBlockEnd: "0.75rem", color: "var(--muted-foreground)" }}>
+          Horizontal scroll-snap content inside a scroll area. Dragging the scrollbar thumb
+          suspends snap so it does not re-snap mid-drag.
+        </p>
+        <ScrollArea
+          data-pg="sa-snap"
+          style={{
+            inlineSize: "20rem",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-md)",
+          }}
+        >
+          <div
+            data-pg="sa-snap-track"
+            style={{
+              display: "flex",
+              gap: "0.75rem",
+              padding: "1rem 1rem 1.25rem",
+              scrollSnapType: "x mandatory",
+              overflowX: "auto",
+              scrollbarWidth: "none",
+            }}
+          >
+            {snapItems.map((item) => (
+              <div
+                key={item}
+                style={{
+                  flex: "0 0 auto",
+                  inlineSize: "10rem",
+                  blockSize: "6rem",
+                  display: "grid",
+                  placeItems: "center",
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  borderRadius: "var(--radius-md)",
+                  backgroundColor: "var(--muted)",
+                  scrollSnapAlign: "start",
+                }}
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+      </section>
+
+      <section className="pg-section">
+        <h3>Overscroll squish</h3>
+        <p style={{ fontSize: "0.875rem", marginBlockEnd: "0.75rem", color: "var(--muted-foreground)" }}>
+          Touch or pen only (trackpad already has native overscroll on macOS). Scroll to the top
+          or bottom, then continue dragging — the content rubber-bands and springs back on
+          release. Disabled under <code>prefers-reduced-motion: reduce</code>.
+        </p>
+        <ScrollArea
+          data-pg="sa-squish"
+          style={{
+            blockSize: "10rem",
+            inlineSize: "16rem",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-md)",
+          }}
+        >
+          <div style={{ padding: "1rem" }}>
+            {tags.slice(0, 12).map((tag) => (
+              <div key={tag} style={{ fontSize: "0.875rem", marginBlockEnd: "0.5rem" }}>
+                {tag}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
       </section>
     </>
   )
