@@ -52,6 +52,8 @@
 }
 
 .command-list {
+  display: flex;
+  flex-direction: column;
   max-block-size: 18rem;
   overflow-y: auto;
   padding: 0.25rem;
@@ -129,6 +131,13 @@
 
 .command-item[data-selected] .command-shortcut {
   color: var(--accent-foreground);
+}
+
+.command-loading {
+  padding-block: 0.375rem;
+  padding-inline: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
 }
 
 /* Dialog palette: the dialog is only a frame — the Command fills it. */
