@@ -155,6 +155,69 @@ function fmtOklch(l, c, h) {
   return `oklch(${fmtNum(l)} ${fmtNum(c)} ${fmtNum(h)})`
 }
 
+// ---------------------------------------------------------------------------
+// Contrast measurement (WCAG 2.x)
+// ---------------------------------------------------------------------------
+
+const DEG = Math.PI / 180
+
+/**
+ * WCAG relative luminance of an oklch colour, gamut-clipped to sRGB.
+ * oklch -> OKLab -> LMS -> linear sRGB, then the WCAG luminance weights
+ * (which are defined over linear sRGB channels).
+ */
+export function relativeLuminance({ l, c, h }) {
+  const a = c * Math.cos(h * DEG)
+  const b = c * Math.sin(h * DEG)
+  const lm = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3
+  const mm = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3
+  const sm = (l - 0.0894841775 * a - 1.291485548 * b) ** 3
+  const clip = (v) => Math.min(1, Math.max(0, v))
+  const r = clip(4.0767416621 * lm - 3.3077115913 * mm + 0.2309699292 * sm)
+  const g = clip(-1.2684380046 * lm + 2.6097574011 * mm - 0.3413193965 * sm)
+  const bl = clip(-0.0041960863 * lm - 0.7034186147 * mm + 1.707614701 * sm)
+  return 0.2126 * r + 0.7152 * g + 0.0722 * bl
+}
+
+/** WCAG contrast ratio between two oklch colours ({l,c,h} or oklch() strings). */
+export function contrastRatio(fg, bg) {
+  const ya = relativeLuminance(typeof fg === "string" ? parseOklch(fg) : fg)
+  const yb = relativeLuminance(typeof bg === "string" ? parseOklch(bg) : bg)
+  const [hi, lo] = ya >= yb ? [ya, yb] : [yb, ya]
+  return (hi + 0.05) / (lo + 0.05)
+}
+
+const FG_CANDIDATES = [
+  { l: 0.985, c: 0, h: 0 },
+  { l: 0.205, c: 0, h: 0 },
+]
+const MIN_CONTRAST = 4.5
+
+function bestForeground(bg) {
+  let best = null
+  for (const fg of FG_CANDIDATES) {
+    const ratio = contrastRatio(fg, bg)
+    if (!best || ratio > best.ratio) best = { fg, ratio }
+  }
+  return best
+}
+
+/**
+ * Pick the foreground candidate with the highest measured contrast against
+ * the background; throw if not even the best one reaches 4.5:1.
+ */
+function pickForeground(bg, label) {
+  const best = bestForeground(bg)
+  if (best.ratio < MIN_CONTRAST) {
+    throw new Error(
+      `${label}: no derivable foreground reaches ${MIN_CONTRAST}:1 against ` +
+        `${fmtOklch(bg.l, bg.c, bg.h)} (best candidate measures ${best.ratio.toFixed(2)}:1); ` +
+        `adjust the colour's lightness away from the middle of the range`,
+    )
+  }
+  return fmtOklch(best.fg.l, best.fg.c, best.fg.h)
+}
+
 /**
  * From a single brand oklch colour, derive primary, primary-foreground,
  * and ring tokens for both light and dark modes.
@@ -166,18 +229,23 @@ function fmtOklch(l, c, h) {
 function deriveBrand(brandStr) {
   const { l, c, h } = parseOklch(brandStr)
 
-  // Dark mode: boost lightness, slightly reduce chroma for legibility
-  const darkL = Math.min(l + 0.3, 0.85)
-  const darkC = c * 0.85
+  // Dark mode: boost lightness, slightly reduce chroma for legibility.
+  // The boost is a starting point, not a contract — this colour is derived,
+  // not user-specified, so keep raising lightness until a foreground
+  // candidate measures 4.5:1 (a mid-lightness start can fail both).
+  const dark = { l: Math.min(l + 0.3, 0.85), c: c * 0.85, h }
+  while (bestForeground(dark).ratio < MIN_CONTRAST && dark.l < 0.985) {
+    dark.l = Math.min(dark.l + 0.01, 0.985)
+  }
 
-  // Foreground: pick for contrast against the respective background
-  const lightFg = l < 0.6 ? "oklch(0.985 0 0)" : "oklch(0.205 0 0)"
-  const darkFg = darkL < 0.6 ? "oklch(0.985 0 0)" : "oklch(0.205 0 0)"
+  // Foreground: measured contrast against the respective background
+  const lightFg = pickForeground({ l, c, h }, "theme.brand (light)")
+  const darkFg = pickForeground(dark, "theme.brand (dark)")
 
   return {
-    primary: `light-dark(${fmtOklch(l, c, h)}, ${fmtOklch(darkL, darkC, h)})`,
+    primary: `light-dark(${fmtOklch(l, c, h)}, ${fmtOklch(dark.l, dark.c, dark.h)})`,
     "primary-foreground": `light-dark(${lightFg}, ${darkFg})`,
-    ring: `light-dark(${fmtOklch(l, c, h)}, ${fmtOklch(darkL, darkC, h)})`,
+    ring: `light-dark(${fmtOklch(l, c, h)}, ${fmtOklch(dark.l, dark.c, dark.h)})`,
   }
 }
 
