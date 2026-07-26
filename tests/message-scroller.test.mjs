@@ -71,11 +71,14 @@ export default async function run({ page, baseUrl, test, eq, near }) {
 
   await test("button click returns to bottom and re-engages follow", async () => {
     await button.click()
-    // Wait on the component state, not the scroll position — the follow
-    // listener re-engages a frame after the viewport reaches the end.
-    await page.waitForFunction(
-      () => document.querySelector(".message-scroller").dataset.state === "following"
-    )
+    // scrollToEnd() sets following=true synchronously (render 1), but the
+    // scrollable hook driving button data-active updates on the async scroll
+    // event (render 2).  Wait for both to settle.
+    await page.waitForFunction(() => {
+      const root = document.querySelector(".message-scroller")
+      const btn = document.querySelector(".message-scroller-button")
+      return root.dataset.state === "following" && btn.dataset.active === "false"
+    })
     eq((await distanceFromEnd()) < 2, true, "at bottom")
     eq(await button.getAttribute("data-active"), "false")
     eq(await button.isDisabled(), true)
