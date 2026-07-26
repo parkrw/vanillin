@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react"
 import { cn } from "../../lib/cn.js"
+import { useSwipe } from "../../lib/use-swipe.js"
 
 /* ------------------------------------------------------------------ */
 /*  Module-level toast store — usable outside React                   */
@@ -264,7 +265,6 @@ export function Toaster({
 }
 
 const VELOCITY_THRESHOLD = 1.0 // px/ms — a deliberate flick (~1000 px/s)
-const VELOCITY_WINDOW = 100 // ms — trailing sample window
 
 /* ------------------------------------------------------------------ */
 /*  Individual toast                                                  */
@@ -290,8 +290,48 @@ function ToastItem({
   const timerRef = useRef(null)
   const remainingRef = useRef(null)
   const startRef = useRef(null)
-  const drag = useRef(null)
   const mountedTypeRef = useRef(true)
+
+  // Swipe-to-dismiss via the shared primitive.
+  const swipeAxis = position.includes("center") ? "y" : "x"
+  const swipeSign = position.includes("left") ? -1 : 1
+
+  const swipeHandlers = useSwipe({
+    axis: swipeAxis,
+    shouldStart: (event) => !event.target.closest("button, a, input"),
+    onMove: (delta, event) => {
+      const el = event.currentTarget
+      const offset = Math.max(0, delta * swipeSign)
+      el.setAttribute("data-swiping", "")
+      el.style.transform =
+        swipeAxis === "x"
+          ? `translateX(${offset * swipeSign}px)`
+          : `translateY(${offset}px)`
+    },
+    onEnd: ({ delta, velocity }, event) => {
+      const el = event.currentTarget
+      el.removeAttribute("data-swiping")
+      const offset = Math.max(0, delta * swipeSign)
+      const rect = el.getBoundingClientRect()
+      const size = swipeAxis === "x" ? rect.width : rect.height
+      const velocityDismiss = velocity * swipeSign > VELOCITY_THRESHOLD
+
+      if (offset > size * 0.25 || velocityDismiss) {
+        if (velocityDismiss) {
+          const scale = Math.max(0.3, VELOCITY_THRESHOLD / Math.abs(velocity))
+          el.style.setProperty("--exit-scale", scale.toFixed(2))
+        }
+        onDismiss()
+      } else {
+        el.style.transform = ""
+      }
+    },
+    onCancel: (event) => {
+      const el = event.currentTarget
+      el.removeAttribute("data-swiping")
+      el.style.transform = ""
+    },
+  })
 
   const duration = t.duration !== undefined ? t.duration : defaultDuration
   const limited = index >= visibleToasts
@@ -386,91 +426,6 @@ function ToastItem({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t.dismissed])
 
-  // Swipe-to-dismiss (inline, threshold only, no velocity)
-  const swipeAxis = position.includes("center") ? "y" : "x"
-  const swipeSign = position.includes("left") ? -1 : 1
-
-  const onPointerDown = (event) => {
-    if (event.target.closest("button, a, input")) return
-    const el = ref.current
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    const pos = swipeAxis === "x" ? event.clientX : event.clientY
-    drag.current = {
-      start: pos,
-      offset: 0,
-      size: swipeAxis === "x" ? rect.width : rect.height,
-      samples: [{ time: event.timeStamp, position: pos }],
-    }
-    el.setPointerCapture(event.pointerId)
-  }
-
-  const onPointerMove = (event) => {
-    if (!drag.current) return
-    const el = ref.current
-    const pos = swipeAxis === "x" ? event.clientX : event.clientY
-    const raw = (pos - drag.current.start) * swipeSign
-    const offset = Math.max(0, raw)
-    drag.current.offset = offset
-    const now = event.timeStamp
-    drag.current.samples.push({ time: now, position: pos })
-    while (drag.current.samples.length > 1 && drag.current.samples[0].time < now - VELOCITY_WINDOW) {
-      drag.current.samples.shift()
-    }
-    el.setAttribute("data-swiping", "")
-    el.style.transform =
-      swipeAxis === "x"
-        ? `translateX(${offset * swipeSign}px)`
-        : `translateY(${offset}px)`
-  }
-
-  const onPointerUp = (event) => {
-    if (!drag.current) return
-    const el = ref.current
-    const { offset, size, samples } = drag.current
-    drag.current = null
-    el.removeAttribute("data-swiping")
-
-    // Add the final sample and prune the window
-    const pos = swipeAxis === "x" ? event.clientX : event.clientY
-    const now = event.timeStamp
-    samples.push({ time: now, position: pos })
-    while (samples.length > 1 && samples[0].time < now - VELOCITY_WINDOW) {
-      samples.shift()
-    }
-
-    // Windowed velocity (px/ms) — direction must agree with dismiss edge.
-    // Require dt >= 16ms (one frame); sub-frame intervals are unreliable.
-    let velocity = 0
-    if (samples.length >= 2) {
-      const first = samples[0]
-      const last = samples[samples.length - 1]
-      const dt = last.time - first.time
-      if (dt >= 16) velocity = (last.position - first.position) / dt
-    }
-    const velocityDismiss = velocity * swipeSign > VELOCITY_THRESHOLD
-
-    if (offset > size * 0.25 || velocityDismiss) {
-      if (velocityDismiss) {
-        const scale = Math.max(0.3, VELOCITY_THRESHOLD / Math.abs(velocity))
-        el.style.setProperty("--exit-scale", scale.toFixed(2))
-      }
-      onDismiss()
-    } else {
-      el.style.transform = ""
-    }
-  }
-
-  const onPointerCancel = () => {
-    if (!drag.current) return
-    drag.current = null
-    const el = ref.current
-    if (el) {
-      el.removeAttribute("data-swiping")
-      el.style.transform = ""
-    }
-  }
-
   return (
     <li
       ref={ref}
@@ -495,10 +450,7 @@ function ToastItem({
         "--toast-offset": `${offset}px`,
         "--toast-z": 1000 - index,
       }}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerCancel}
+      {...swipeHandlers}
     >
       {t.custom ? (
         typeof t.custom === "function" ? t.custom({ id: t.id, dismiss: () => onDismiss() }) : t.custom
