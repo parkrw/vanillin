@@ -4,7 +4,7 @@
  */
 
 import assert from "node:assert/strict"
-import { s, SchemaError } from "../lib/schema.js"
+import { s, SchemaError, schemaResolver } from "../lib/schema.js"
 
 let passed = 0
 let failed = 0
@@ -402,6 +402,121 @@ test('coerce.date parses ISO strings and rejects "" and null', () => {
   assert.equal(s.coerce.date().safeParse("").success, false)
   assert.equal(s.coerce.date().safeParse(null).success, false)
   assert.equal(s.coerce.date().safeParse("garbage").success, false)
+})
+
+// ---------------------------------------------------------------------------
+// schemaResolver — the use-form resolver contract
+// ---------------------------------------------------------------------------
+
+// The same options object use-form passes to every resolver.
+const RESOLVER_OPTIONS = {
+  criteriaMode: "firstError",
+  fields: {},
+  names: [],
+  shouldUseNativeValidation: false,
+}
+
+// The exact scenario the hand-written RHF-shaped resolver in
+// playground/pages/use-form.jsx implements (exercised by
+// tests/use-form.test.mjs): email required + format, age required and
+// coerced to number, address.city required at a nested path.
+const demoSchema = s.object({
+  email: s.string().min(1, "Email required").email("Invalid email"),
+  age: s.coerce.number().min(1, "Min 1"),
+  address: s.object({ city: s.string().min(1, "City required") }),
+})
+
+test("resolver: invalid values produce { values: {}, errors } like the fake", async () => {
+  const resolve = schemaResolver(demoSchema)
+  const r = await resolve(
+    { email: "", age: "", address: { city: "" } },
+    undefined,
+    RESOLVER_OPTIONS
+  )
+  assert.deepEqual(r.values, {})
+  assert.equal(r.errors.email.message, "Email required")
+  assert.equal(typeof r.errors.email.type, "string")
+  assert.equal(typeof r.errors.age.message, "string")
+  assert.equal(r.errors.address.city.message, "City required")
+})
+
+test("resolver: valid values return coerced output and empty errors", async () => {
+  const resolve = schemaResolver(demoSchema)
+  const r = await resolve(
+    { email: "a@b.com", age: "30", address: { city: "Portland" } },
+    undefined,
+    RESOLVER_OPTIONS
+  )
+  assert.deepEqual(r.errors, {})
+  assert.equal(r.values.age, 30) // coerced string -> number, like the fake
+  assert.equal(r.values.email, "a@b.com")
+})
+
+test("resolver: email format error carries { type, message }", async () => {
+  const resolve = schemaResolver(demoSchema)
+  const r = await resolve(
+    { email: "nope", age: "5", address: { city: "x" } },
+    undefined,
+    RESOLVER_OPTIONS
+  )
+  assert.deepEqual(r.errors.email, { type: "invalid_string", message: "Invalid email" })
+})
+
+test("resolver: deeply nested useFieldArray shape — errors readable at dotted paths", async () => {
+  const schema = s.object({
+    users: s.array(
+      s.object({
+        name: s.string().min(1, "Name required"),
+        pets: s
+          .array(s.object({ tag: s.string().min(1, "Tag required") }))
+          .min(1, "At least one pet"),
+      })
+    ),
+  })
+  const resolve = schemaResolver(schema)
+  const r = await resolve(
+    {
+      users: [
+        { name: "Ada", pets: [{ tag: "ok" }, { tag: "" }] },
+        { name: "", pets: [] },
+      ],
+    },
+    undefined,
+    RESOLVER_OPTIONS
+  )
+  // Errors nested so getByPath-style reads work: errors.users[0].pets[1].tag
+  assert.deepEqual(r.errors.users[0].pets[1].tag, {
+    type: "too_small",
+    message: "Tag required",
+  })
+  assert.deepEqual(r.errors.users[1].name, {
+    type: "too_small",
+    message: "Name required",
+  })
+  assert.deepEqual(r.errors.users[1].pets, {
+    type: "too_small",
+    message: "At least one pet",
+  })
+  // Valid siblings stay error-free
+  assert.equal(r.errors.users[0].name, undefined)
+  assert.equal(r.errors.users[0].pets[0], undefined)
+})
+
+test("resolver: firstError — one error per path, first issue wins", async () => {
+  const schema = s.object({ name: s.string().min(5, "first") }).refine(() => false, {
+    message: "second",
+    path: "name",
+  })
+  const r = await schemaResolver(schema)({ name: "ab" }, undefined, RESOLVER_OPTIONS)
+  assert.equal(r.errors.name.message, "first")
+})
+
+test("resolver: object-level refine without path lands under root", async () => {
+  const schema = s
+    .object({ a: s.number(), b: s.number() })
+    .refine((v) => v.a + v.b <= 10, "Sum too large")
+  const r = await schemaResolver(schema)({ a: 6, b: 7 }, undefined, RESOLVER_OPTIONS)
+  assert.deepEqual(r.errors.root, { type: "custom", message: "Sum too large" })
 })
 
 // ---------------------------------------------------------------------------
