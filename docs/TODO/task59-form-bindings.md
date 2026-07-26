@@ -56,7 +56,7 @@ allowed to know about both.
 
 ## Sub-tasks
 
-- [ ] 1. The generic binding + `TextField` and `TextareaField` (the `register`
+- [x] 1. The generic binding + `TextField` and `TextareaField` (the `register`
   path) — test: a bound text field renders label, description and error with the
   same `id` / `aria-describedby` / `aria-invalid` wiring as the hand-wired
   version, and typing updates form state; files: `ui/form-fields/`,
