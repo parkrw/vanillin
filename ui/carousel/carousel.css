@@ -49,6 +49,14 @@
   scroll-snap-align: start;
 }
 
+.carousel[data-align="center"] .carousel-item {
+  scroll-snap-align: center;
+}
+
+.carousel[data-align="end"] .carousel-item {
+  scroll-snap-align: end;
+}
+
 .carousel[data-orientation="vertical"] .carousel-item {
   min-block-size: 0;
 }

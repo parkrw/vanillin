@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { Children, cloneElement, createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { cn } from "../../lib/cn.js"
 import { useDirection } from "../../lib/direction.jsx"
 
@@ -16,8 +16,9 @@ const DRAG_THRESHOLD = 50
  * Scroll-snap carousel with pointer swipe and keyboard nav.
  *
  * API surface mirrors shadcn/embla: `opts`, `setApi`, `plugins`.
- * `plugins` is accepted but stubbed (no plugin system).
- * `opts.loop` is accepted but not implemented.
+ * `opts.align`: "start" | "center" | "end" — sets scroll-snap-align on slides.
+ * `opts.loop`: wrap around at both ends via clone-and-recentre.
+ * `plugins`: array of `{ name, init(api, opts), destroy() }` objects.
  * The api object exposes: scrollPrev, scrollNext, canScrollPrev,
  * canScrollNext, selectedScrollSnap, scrollSnapList, on, off.
  * Smooth-scroll timing is native (not routed through --motion-* tokens).
@@ -32,12 +33,15 @@ export function Carousel({
   ...props
 }) {
   const direction = useDirection()
+  const rootRef = useRef(null)
   const contentRef = useRef(null)
   const [canScrollPrev, setCanScrollPrev] = useState(false)
   const [canScrollNext, setCanScrollNext] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const listenersRef = useRef(new Map())
   const vertical = orientation === "vertical"
+  const align = opts.align || "start"
+  const loop = !!opts.loop
 
   const emit = useCallback((event) => {
     const cbs = listenersRef.current.get(event)
@@ -50,46 +54,77 @@ export function Carousel({
     return el ? Array.from(el.querySelectorAll(":scope > .carousel-item")) : []
   }, [])
 
-  /** Index of the item whose snap edge is closest to the container's snap edge. */
+  /** Measure distance between an item rect and the container rect at the given alignment. */
+  const alignDist = useCallback(
+    (cr, ir) => {
+      if (vertical) {
+        if (align === "center") return Math.abs((ir.top + ir.height / 2) - (cr.top + cr.height / 2))
+        if (align === "end") return Math.abs(ir.bottom - cr.bottom)
+        return Math.abs(ir.top - cr.top)
+      }
+      if (direction === "rtl") {
+        if (align === "center") return Math.abs((ir.left + ir.width / 2) - (cr.left + cr.width / 2))
+        if (align === "end") return Math.abs(ir.left - cr.left)
+        return Math.abs(ir.right - cr.right) // start in RTL = right edge
+      }
+      if (align === "center") return Math.abs((ir.left + ir.width / 2) - (cr.left + cr.width / 2))
+      if (align === "end") return Math.abs(ir.right - cr.right)
+      return Math.abs(ir.left - cr.left)
+    },
+    [align, direction, vertical]
+  )
+
+  /** Index of the real item whose snap edge is closest to the container's snap edge. */
   const snapIndex = useCallback(() => {
     const el = contentRef.current
     if (!el) return 0
     const items = getItems()
     if (!items.length) return 0
     const cr = el.getBoundingClientRect()
+
+    // Under loop, also check clone elements to map back to real indices
+    const allSnappable = loop
+      ? Array.from(el.querySelectorAll(":scope > .carousel-item"))
+      : items
+
     let best = 0
     let bestDist = Infinity
-    for (let i = 0; i < items.length; i++) {
-      const ir = items[i].getBoundingClientRect()
-      const dist = vertical
-        ? Math.abs(ir.top - cr.top)
-        : direction === "rtl"
-          ? Math.abs(ir.right - cr.right)
-          : Math.abs(ir.left - cr.left)
-      if (dist < bestDist) { bestDist = dist; best = i }
+    for (let i = 0; i < allSnappable.length; i++) {
+      const dist = alignDist(cr, allSnappable[i].getBoundingClientRect())
+      if (dist < bestDist) {
+        bestDist = dist
+        const node = allSnappable[i]
+        best = node.hasAttribute("data-carousel-clone")
+          ? Number(node.dataset.cloneIndex)
+          : items.indexOf(node)
+      }
     }
     return best
-  }, [direction, getItems, vertical])
+  }, [alignDist, getItems, loop])
 
   /** Update boundary flags + selected index from the current scroll position. */
   const syncState = useCallback(() => {
     const el = contentRef.current
     if (!el) return
-    const max = vertical
-      ? el.scrollHeight - el.clientHeight
-      : el.scrollWidth - el.clientWidth
 
     let prev, next
-    if (vertical) {
-      prev = el.scrollTop > 1
-      next = el.scrollTop < max - 1
-    } else if (direction === "rtl") {
-      // Chrome RTL: scrollLeft 0 (start) → -(scrollWidth-clientWidth) (end)
-      prev = el.scrollLeft < -1
-      next = el.scrollLeft > -(max - 1)
+    if (loop) {
+      prev = true
+      next = true
     } else {
-      prev = el.scrollLeft > 1
-      next = el.scrollLeft < max - 1
+      const max = vertical
+        ? el.scrollHeight - el.clientHeight
+        : el.scrollWidth - el.clientWidth
+      if (vertical) {
+        prev = el.scrollTop > 1
+        next = el.scrollTop < max - 1
+      } else if (direction === "rtl") {
+        prev = el.scrollLeft < -1
+        next = el.scrollLeft > -(max - 1)
+      } else {
+        prev = el.scrollLeft > 1
+        next = el.scrollLeft < max - 1
+      }
     }
 
     setCanScrollPrev((p) => (p === prev ? p : prev))
@@ -100,44 +135,90 @@ export function Carousel({
       if (p !== idx) { queueMicrotask(() => emit("select")); return idx }
       return p
     })
-  }, [direction, emit, snapIndex, vertical])
+  }, [direction, emit, loop, snapIndex, vertical])
+
+  /** Compute the scroll offset delta to align a given element to the current snap alignment. */
+  const alignOffset = useCallback(
+    (el, item) => {
+      const cr = el.getBoundingClientRect()
+      const ir = item.getBoundingClientRect()
+      if (vertical) {
+        if (align === "center") return (ir.top + ir.height / 2) - (cr.top + cr.height / 2)
+        if (align === "end") return ir.bottom - cr.bottom
+        return ir.top - cr.top
+      }
+      if (direction === "rtl") {
+        if (align === "center") return (ir.left + ir.width / 2) - (cr.left + cr.width / 2)
+        if (align === "end") return ir.left - cr.left
+        return ir.right - cr.right
+      }
+      if (align === "center") return (ir.left + ir.width / 2) - (cr.left + cr.width / 2)
+      if (align === "end") return ir.right - cr.right
+      return ir.left - cr.left
+    },
+    [align, direction, vertical]
+  )
+
+  /** Scroll a DOM element into the container's snap-aligned position. */
+  const scrollToElement = useCallback(
+    (item, behavior = "smooth") => {
+      const el = contentRef.current
+      if (!el || !item) return
+      const delta = alignOffset(el, item)
+      if (vertical) {
+        el.scrollTo({ top: el.scrollTop + delta, behavior })
+      } else {
+        el.scrollTo({ left: el.scrollLeft + delta, behavior })
+      }
+    },
+    [alignOffset, vertical]
+  )
 
   /** Programmatic scroll to align `index` with the container's snap edge. */
   const scrollToItem = useCallback(
     (index) => {
-      const el = contentRef.current
-      if (!el) return
       const item = getItems()[index]
-      if (!item) return
-      const cr = el.getBoundingClientRect()
-      const ir = item.getBoundingClientRect()
-      if (vertical) {
-        el.scrollTo({ top: el.scrollTop + (ir.top - cr.top), behavior: "smooth" })
-      } else if (direction === "rtl") {
-        el.scrollTo({ left: el.scrollLeft + (ir.right - cr.right), behavior: "smooth" })
-      } else {
-        el.scrollTo({ left: el.scrollLeft + (ir.left - cr.left), behavior: "smooth" })
-      }
+      if (item) scrollToElement(item)
     },
-    [direction, getItems, vertical]
+    [getItems, scrollToElement]
   )
 
   const scrollPrev = useCallback(() => {
     const i = snapIndex()
-    if (i > 0) scrollToItem(i - 1)
-  }, [snapIndex, scrollToItem])
+    const items = getItems()
+    if (loop && i === 0) {
+      // Scroll to the leading clone of the last item, recentre will follow
+      const el = contentRef.current
+      if (!el) return
+      const clones = el.querySelectorAll(`:scope > [data-carousel-clone][data-clone-index="${items.length - 1}"]`)
+      // Leading clone is the first match
+      if (clones[0]) scrollToElement(clones[0])
+    } else if (i > 0) {
+      scrollToItem(i - 1)
+    }
+  }, [getItems, loop, snapIndex, scrollToElement, scrollToItem])
 
   const scrollNext = useCallback(() => {
     const i = snapIndex()
-    if (i < getItems().length - 1) scrollToItem(i + 1)
-  }, [getItems, snapIndex, scrollToItem])
+    const items = getItems()
+    if (loop && i === items.length - 1) {
+      // Scroll to the trailing clone of the first item, recentre will follow
+      const el = contentRef.current
+      if (!el) return
+      const clones = el.querySelectorAll(`:scope > [data-carousel-clone][data-clone-index="0"]`)
+      // Trailing clone is the last match
+      if (clones.length) scrollToElement(clones[clones.length - 1])
+    } else if (i < items.length - 1) {
+      scrollToItem(i + 1)
+    }
+  }, [getItems, loop, snapIndex, scrollToElement, scrollToItem])
 
   /* ---- stable embla-compatible API ---- */
 
   const stateRef = useRef({})
   stateRef.current = { canScrollPrev, canScrollNext, selectedIndex }
   const fnRef = useRef({})
-  fnRef.current = { scrollPrev, scrollNext, getItems }
+  fnRef.current = { scrollPrev, scrollNext, getItems, scrollToElement }
 
   const apiRef = useRef(null)
   if (!apiRef.current) {
@@ -148,6 +229,7 @@ export function Carousel({
       canScrollNext() { return stateRef.current.canScrollNext },
       selectedScrollSnap() { return stateRef.current.selectedIndex },
       scrollSnapList() { return fnRef.current.getItems().map((_, i) => i) },
+      rootNode() { return rootRef.current },
       on(event, cb) {
         if (!listenersRef.current.has(event)) listenersRef.current.set(event, new Set())
         listenersRef.current.get(event).add(cb)
@@ -157,6 +239,15 @@ export function Carousel({
   }
 
   useEffect(() => { setApi?.(apiRef.current) }, [setApi])
+
+  /* ---- plugins ---- */
+
+  useEffect(() => {
+    if (!plugins?.length) return
+    const api = apiRef.current
+    const active = plugins.map((p) => { p.init(api, opts); return p })
+    return () => { for (const p of active) p.destroy() }
+  }, [plugins, opts])
 
   /* ---- keyboard ---- */
 
@@ -184,19 +275,24 @@ export function Carousel({
     () => ({
       orientation, vertical, direction, contentRef,
       canScrollPrev, canScrollNext, scrollPrev, scrollNext,
-      syncState, getItems, snapIndex, scrollToItem,
+      syncState, getItems, snapIndex, scrollToItem, scrollToElement,
+      align, loop,
     }),
     [orientation, vertical, direction, canScrollPrev, canScrollNext,
-     scrollPrev, scrollNext, syncState, getItems, snapIndex, scrollToItem]
+     scrollPrev, scrollNext, syncState, getItems, snapIndex, scrollToItem,
+     scrollToElement, align, loop]
   )
 
   return (
     <CarouselContext.Provider value={ctx}>
       <div
+        ref={rootRef}
         role="region"
         aria-roledescription="carousel"
         tabIndex={0}
         data-orientation={orientation}
+        data-align={align !== "start" ? align : undefined}
+        data-loop={loop || undefined}
         className={cn("carousel", className)}
         onKeyDown={onKeyDown}
         {...props}
@@ -211,9 +307,13 @@ export function Carousel({
 /*  CarouselContent (scroll container)                                        */
 /* -------------------------------------------------------------------------- */
 
-export function CarouselContent({ className, ...props }) {
-  const { vertical, direction, contentRef, syncState, snapIndex, scrollToItem, getItems } = useCarousel()
+export function CarouselContent({ className, children, ...props }) {
+  const {
+    vertical, direction, contentRef, syncState, snapIndex, scrollToItem,
+    scrollToElement, getItems, loop, align,
+  } = useCarousel()
   const dragRef = useRef(null)
+  const recentringRef = useRef(false)
 
   /* scroll + resize sync */
   useLayoutEffect(() => {
@@ -225,6 +325,94 @@ export function CarouselContent({ className, ...props }) {
     syncState()
     return () => { el.removeEventListener("scroll", syncState); ro.disconnect() }
   }, [contentRef, syncState])
+
+  /* ---- loop: set initial scroll to first real item ---- */
+  useLayoutEffect(() => {
+    if (!loop) return
+    const el = contentRef.current
+    if (!el) return
+    const firstReal = el.querySelector(":scope > .carousel-item:not([data-carousel-clone])")
+    if (!firstReal) return
+    // Instant scroll so first real item is at the snap-aligned edge
+    const cr = el.getBoundingClientRect()
+    const ir = firstReal.getBoundingClientRect()
+    if (vertical) {
+      el.scrollTop = el.scrollTop + (ir.top - cr.top)
+    } else {
+      el.scrollLeft = el.scrollLeft + (ir.left - cr.left)
+    }
+  }, [contentRef, loop, vertical])
+
+  /* ---- loop: recentre when scroll settles on a clone ---- */
+  useLayoutEffect(() => {
+    if (!loop) return
+    const el = contentRef.current
+    if (!el) return
+
+    const recentre = () => {
+      if (recentringRef.current) return
+      const allItems = el.querySelectorAll(":scope > .carousel-item")
+      const cr = el.getBoundingClientRect()
+      let closest = null
+      let closestDist = Infinity
+      for (const item of allItems) {
+        const ir = item.getBoundingClientRect()
+        let dist
+        if (vertical) {
+          dist = Math.abs(ir.top - cr.top)
+        } else if (direction === "rtl") {
+          dist = Math.abs(ir.right - cr.right)
+        } else {
+          dist = Math.abs(ir.left - cr.left)
+        }
+        if (dist < closestDist) { closestDist = dist; closest = item }
+      }
+      if (!closest || !closest.hasAttribute("data-carousel-clone")) return
+
+      // Find the corresponding real item
+      const idx = Number(closest.dataset.cloneIndex)
+      const realItems = el.querySelectorAll(":scope > .carousel-item:not([data-carousel-clone])")
+      const realItem = realItems[idx]
+      if (!realItem) return
+
+      recentringRef.current = true
+      const cir = closest.getBoundingClientRect()
+      const rir = realItem.getBoundingClientRect()
+      // Disable snap and jump instantly
+      el.style.scrollSnapType = "none"
+      if (vertical) {
+        el.scrollTop += rir.top - cir.top
+      } else {
+        el.scrollLeft += rir.left - cir.left
+      }
+      // Re-enable snap on next frame
+      requestAnimationFrame(() => {
+        el.style.scrollSnapType = ""
+        recentringRef.current = false
+        syncState()
+      })
+    }
+
+    // scrollend with debounce fallback
+    let settleTimer
+    const onScrollSettle = () => { recentre() }
+    const onScrollFallback = () => {
+      clearTimeout(settleTimer)
+      settleTimer = setTimeout(recentre, 120)
+    }
+
+    const supportsScrollEnd = "onscrollend" in el
+    if (supportsScrollEnd) {
+      el.addEventListener("scrollend", onScrollSettle)
+    }
+    el.addEventListener("scroll", onScrollFallback, { passive: true })
+
+    return () => {
+      clearTimeout(settleTimer)
+      if (supportsScrollEnd) el.removeEventListener("scrollend", onScrollSettle)
+      el.removeEventListener("scroll", onScrollFallback)
+    }
+  }, [contentRef, direction, loop, syncState, vertical])
 
   /* ---- pointer swipe (mouse only; touch uses native scroll) ---- */
   /* Capture is deferred to pointermove so clicks on interactive children
@@ -250,9 +438,6 @@ export function CarouselContent({ className, ...props }) {
     (e) => {
       const d = dragRef.current
       if (!d) return
-      // Button released outside the element before capture engaged — the
-      // pointerup never reached us, so drop the stale drag or a later
-      // hover move would start scrolling with no button held.
       if (e.buttons === 0) {
         if (d.active) delete contentRef.current?.dataset.dragging
         dragRef.current = null
@@ -297,14 +482,46 @@ export function CarouselContent({ className, ...props }) {
         const goNext = vertical ? delta < 0 : direction === "rtl" ? delta > 0 : delta < 0
         const target = goNext ? drag.startIndex + 1 : drag.startIndex - 1
         const items = getItems()
-        if (target >= 0 && target < items.length) scrollToItem(target)
-        else scrollToItem(drag.startIndex)
+        if (loop) {
+          // Under loop, wrap the target index
+          const wrapped = ((target % items.length) + items.length) % items.length
+          scrollToItem(wrapped)
+        } else if (target >= 0 && target < items.length) {
+          scrollToItem(target)
+        } else {
+          scrollToItem(drag.startIndex)
+        }
       } else {
         scrollToItem(drag.startIndex)
       }
     },
-    [contentRef, direction, getItems, scrollToItem, vertical]
+    [contentRef, direction, getItems, loop, scrollToItem, vertical]
   )
+
+  /* ---- render clones for loop ---- */
+  let content = children
+  if (loop) {
+    const childArray = Children.toArray(children)
+    const leadingClones = childArray.map((child, i) =>
+      cloneElement(child, {
+        key: `clone-lead-${i}`,
+        "data-carousel-clone": "",
+        "data-clone-index": i,
+        "aria-hidden": "true",
+        inert: true,
+      })
+    )
+    const trailingClones = childArray.map((child, i) =>
+      cloneElement(child, {
+        key: `clone-trail-${i}`,
+        "data-carousel-clone": "",
+        "data-clone-index": i,
+        "aria-hidden": "true",
+        inert: true,
+      })
+    )
+    content = [...leadingClones, ...childArray, ...trailingClones]
+  }
 
   return (
     <div
@@ -315,7 +532,9 @@ export function CarouselContent({ className, ...props }) {
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
       {...props}
-    />
+    >
+      {content}
+    </div>
   )
 }
 
