@@ -36,6 +36,7 @@ export const registry = {
   command: { title: "Command", page: lazy(() => import("./pages/command.jsx")) },
   "context-menu": { title: "Context Menu", page: lazy(() => import("./pages/context-menu.jsx")) },
   "data-table": { title: "Data Table", page: lazy(() => import("./pages/data-table.jsx")) },
+  density: { title: "Density", page: lazy(() => import("./pages/density.jsx")) },
   "date-input": { title: "Date Input", page: lazy(() => import("./pages/date-picker.jsx")) },
   "date-picker": { title: "Date Picker", page: lazy(() => import("./pages/date-picker.jsx")) },
   dialog: { title: "Dialog", page: lazy(() => import("./pages/dialog.jsx")) },
