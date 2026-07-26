@@ -65,9 +65,11 @@ export default async function ({ page, baseUrl, repoRoot, test, eq, near }) {
   await page.goto(`${baseUrl}/#button`)
   await page.waitForSelector(".btn")
 
-  // Inject the fixture CSS
+  // Inject the fixture CSS. The runner shares one page across every test file,
+  // and this fixture re-declares :root tokens, so the tag must be removed
+  // before the next file runs — see the cleanup at the end of this section.
   const generatedCSS = generate(fixtureConfig, { root: repoRoot })
-  await page.addStyleTag({ content: generatedCSS })
+  const styleHandle = await page.addStyleTag({ content: generatedCSS })
 
   // Test: generated variant applies correct background
   await test("generated variant: btn--testv background", async () => {
@@ -155,6 +157,11 @@ export default async function ({ page, baseUrl, repoRoot, test, eq, near }) {
     })
     eq(font.startsWith("TestSans"), true, "font-sans should start with TestSans")
   })
+
+  // Remove the injected tag. Without this its :root tokens (notably
+  // --density-scale: 0.875) leak into every later file, since the runner shares
+  // one page and hash navigation never reloads the document.
+  await styleHandle.evaluate((el) => el.remove())
 
   // -------------------------------------------------------------------------
   // Validation errors
