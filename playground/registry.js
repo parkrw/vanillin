@@ -1,6 +1,16 @@
 import { lazy } from "react"
 
 /**
+ * Docs pages — the shell around the component registry. Installation and
+ * theming are stubs until the config generator and CLI land (tasks 37/38).
+ */
+export const docs = {
+  introduction: { title: "Introduction", page: lazy(() => import("./pages/docs/introduction.jsx")) },
+  installation: { title: "Installation", page: lazy(() => import("./pages/docs/installation.jsx")) },
+  theming: { title: "Theming", page: lazy(() => import("./pages/docs/theming.jsx")) },
+}
+
+/**
  * All planned components. `page` is set once the component's demo page
  * exists; entries without one render greyed-out in the nav.
  */

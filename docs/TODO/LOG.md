@@ -413,3 +413,15 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   toward `--foreground` instead moves the surface away from
   `--destructive-foreground` in both themes: light 4.32 → 5.54:1, dark 5.20 →
   6.92:1. axe only samples rest state, so it never flagged this.
+- 2026-07-25 — task 29 done on `feat/docs-shell` (~155 net, worktree): thin
+  docs shell over the playground — new `docs` map in registry.js
+  (introduction/installation/theming, pages under `pages/docs/`), sidebar nav
+  grouped into "Get started" / "Components", empty hash now routes to
+  `#introduction`. Component routes stay flat `#<slug>` (tests goto them
+  directly). Install/theming pages are one-paragraph stubs — 37/38 rewrite
+  them; 30 writes per-component prose against the final surface. Gotcha:
+  several suites click a bare `locator("h2")` as an outside-click target, so
+  the only h2 on a page must be the page title — the nav group label is a
+  `div.pg-nav-label` (same call as ui/sidebar's SidebarGroupLabel), not a
+  heading; adding any second h2 to the shell fails 7 tests across
+  combobox/select/navigation-menu/input-otp.

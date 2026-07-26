@@ -1,5 +1,10 @@
 import { Suspense, useEffect, useState } from "react"
-import { registry } from "./registry.js"
+import { docs, registry } from "./registry.js"
+
+const sections = [
+  { label: "Get started", entries: docs },
+  { label: "Components", entries: registry },
+]
 
 function useHashRoute() {
   const [hash, setHash] = useState(() => window.location.hash.slice(1))
@@ -8,13 +13,13 @@ function useHashRoute() {
     window.addEventListener("hashchange", onChange)
     return () => window.removeEventListener("hashchange", onChange)
   }, [])
-  return hash || "primitives"
+  return hash || "introduction"
 }
 
 export function App() {
   const route = useHashRoute()
   const [dark, setDark] = useState(false)
-  const entry = registry[route]
+  const entry = docs[route] ?? registry[route]
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark)
@@ -27,20 +32,25 @@ export function App() {
         <button className="pg-theme-toggle" onClick={() => setDark((d) => !d)}>
           {dark ? "light" : "dark"} mode
         </button>
-        <ul className="pg-nav-list">
-          {Object.entries(registry).map(([slug, { title, page }]) => (
-            <li key={slug}>
-              <a
-                className="pg-nav-link"
-                href={`#${slug}`}
-                data-active={route === slug}
-                data-todo={!page}
-              >
-                {title}
-              </a>
-            </li>
-          ))}
-        </ul>
+        {sections.map(({ label, entries }) => (
+          <section className="pg-nav-group" key={label} aria-label={label}>
+            <div className="pg-nav-label">{label}</div>
+            <ul className="pg-nav-list">
+              {Object.entries(entries).map(([slug, { title, page }]) => (
+                <li key={slug}>
+                  <a
+                    className="pg-nav-link"
+                    href={`#${slug}`}
+                    data-active={route === slug}
+                    data-todo={!page}
+                  >
+                    {title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
       </nav>
       <main className="pg-main">
         {entry?.page ? (

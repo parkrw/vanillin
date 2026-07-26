@@ -37,7 +37,7 @@ platform features shadcn cannot adopt (Tailwind/Radix/React-18 bound).
 | 26  | data-table          | ~L  | [x]    | lib/use-data-table.js replaces tanstack surface; checkbox tri-state         |
 | 27  | sidebar             | ~L  | [x]    | all 24 exports real; mobile = sheet; Cmd+B; sidebar_state cookie            |
 | 28  | dark-mode-pass      | ~M  | [x]    | axe contrast sweep + screenshot QA; `--input-background` token              |
-| 29  | docs-shell          | ~M  | [ ]    | deps: 28; **thin** — nav + routing only; stub install/theming (31+ rewrites) |
+| 29  | docs-shell          | ~M  | [x]    | grouped nav (Get started / Components); intro + install/theming stubs; empty hash → #introduction |
 | 30 (59)  | docs-content        | ~L  | [ ]    | **runs last**, after 58; per-component prose against the final surface       |
 
 ## Phase 2 — config, form, parity, platform
