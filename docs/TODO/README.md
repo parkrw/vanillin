@@ -50,35 +50,37 @@ the code, on the component's playground page or the relevant
 `playground/pages/docs/` page. Task 30 is no longer where documentation gets
 written; it is a final consistency and gap pass.
 
-| #   | Slug                     | Est | Status | Notes                                                                        |
-| --- | ------------------------ | --- | ------ | ---------------------------------------------------------------------------- |
-| 31  | cursor-affordance        | ~S  | [ ]    | global interactive-cursor rule + per-component sweep (grab, resize)          |
-| 32  | status-colors            | ~M  | [ ]    | badge success/warning/info/destructive + new `ui/status-dot`                 |
-| 33  | token-foundation         | ~M  | [ ]    | `@property`, `light-dark()`, relative-color brand derivation, density scaffold |
-| 34  | tokenize-core-a          | ~M  | [ ]    | deps: 33; form controls — button, badge, input, textarea, checkbox, radio, switch, label, field, native-select |
+| #   | Slug                     | Est | Status | Notes                                                                                            |
+| --- | ------------------------ | --- | ------ | ------------------------------------------------------------------------------------------------ |
+| 31  | cursor-affordance        | ~S  | [x]    | global interactive-cursor rule + per-component sweep (grab, resize)                                |
+| 32  | status-colors            | ~M  | [x]    | badge success/warning/info/destructive + new `ui/status-dot`                                         |
+| 33  | token-foundation         | ~M  | [x]    | `@property`, `light-dark()`, relative-color brand derivation, density scaffold                         |
+| 34  | tokenize-core-a          | ~M  | [ ]    | deps: 33; form controls — button, badge, input, textarea, checkbox, radio, switch, label, field,\  |
+|     |                          |     |      | native-select                                                                                                   |
+
 | 35  | tokenize-core-b          | ~M  | [ ]    | deps: 33; surfaces — card, dialog, alert, popover, tooltip, toast, table, avatar, separator, progress, slider, tabs |
 | 36  | density-modes            | ~S  | [ ]    | deps: 34, 35; `compact`, `comfortable`, `spacious` over tokenized components |
 | 37  | config-generator         | ~L  | [ ]    | deps: 34, 35; `vanillin.config.json` schema + zero-dep generator → `vanillin.css` |
 | 38  | cli                      | ~L  | [ ]    | deps: 37; `bin/vanillin.mjs` init/add/build/list + `registry.json`; **git-sourced, stays `private: true`** |
 | 39  | container-queries        | ~M  | [ ]    | deps: 34, 35; components size to container, not viewport (console panels)    |
-| 40  | use-form-core            | ~L  | [ ]    | zero-dep `lib/use-form.js`, RHF-shaped; resolver contract = `@hookform/resolvers` compatible |
+| 40  | use-form-core            | ~L  | [x]    | zero-dep `lib/use-form.js`, RHF-shaped; resolver contract = `@hookform/resolvers` compatible |
 | 41  | form-component           | ~M  | [ ]    | deps: 40; `ui/form/` engine-agnostic (context, never imports the engine) + React 19 Actions path |
-| 42  | format-intl              | ~M  | [ ]    | `lib/format.js` + `<RelativeTime>` `<Bytes>` `<Duration>` `<Cost>`; pure Intl |
-| 43  | select-parity            | ~M  | [ ]    | `alignItemWithTrigger`, scroll buttons, constraint validation                |
+| 42  | format-intl              | ~M  | [x]    | `lib/format.js` + `<RelativeTime>` `<Bytes>` `<Duration>` `<Cost>`; pure Intl |
+| 43  | select-parity            | ~M  | [x]    | `alignItemWithTrigger`, scroll buttons, constraint validation                |
 | 44  | combobox-multi           | ~M  | [ ]    | deps: 43; `multiple` + chips + `showClear`                                   |
-| 45  | command-fuzzy            | ~S  | [ ]    | port cmdk `command-score`, re-sort items + groups, `Command.Loading`         |
+| 45  | command-fuzzy            | ~S  | [x]    | port cmdk `command-score`, re-sort items + groups, `Command.Loading`         |
 | 46  | navigation-menu-viewport | ~L  | [ ]    | shared morphing viewport + sliding Indicator (drops the 15 no-ops); **under-specified — expect to split into viewport + indicator on approach** |
-| 47  | data-table-filtering     | ~M  | [ ]    | global filter, faceted filter, multi-sort                                    |
+| 47  | data-table-filtering     | ~M  | [x]    | global filter, faceted filter, multi-sort                                    |
 | 48  | data-table-columns       | ~M  | [ ]    | deps: 47; column pinning + resizing                                          |
 | 49  | data-table-scale         | ~L  | [ ]    | deps: 48; grouping, virtualization, `manual*` server-side modes; **unresolved: `content-visibility` may cover virtualization outright — measure before building a windowing layer** |
 | 50  | resizable-parity         | ~M  | [ ]    | `autoSaveId`/storage, `onResize`/`onCollapse`, F6 cycling, `hitAreaMargins`  |
 | 51  | scroll-area-parity       | ~M  | [ ]    | `overflowEdgeThreshold` + `data-overflow-*`, overscroll squish, snap suspension |
 | 52  | swipe-velocity           | ~S  | [ ]    | flick dismiss for toast + drawer — `useSwipe` already returns velocity       |
-| 53  | date-picker-parity       | ~M  | [ ]    | natural-language input parsing (zero-dep chrono subset) + time picker        |
+| 53  | date-picker-parity       | ~M  | [x]    | natural-language input parsing (zero-dep chrono subset) + time picker        |
 | 54  | view-transitions         | ~M  | [ ]    | `startViewTransition` for route/detail/theme-toggle; reduced-motion guard    |
 | 55  | highlight-api            | ~S  | [ ]    | CSS Custom Highlight for search matches (table, command, log) — no DOM mutation |
 | 56  | forced-colors            | ~M  | [ ]    | `forced-colors`, `prefers-contrast`, `prefers-reduced-transparency` sweep    |
-| 57  | platform-polish          | ~S  | [ ]    | Speculation Rules prefetch, `field-sizing: content` on textarea              |
+| 57  | platform-polish          | ~S  | [x]    | Speculation Rules prefetch, `field-sizing: content` on textarea              |
 | 58  | carousel-parity          | ~S  | [ ]    | nice-to-have; `plugins`, `opts.loop`, `opts.align` (currently stubbed)       |
 
 **Browser-support gate:** 33, 39, 54, 55, 57 depend on features that were

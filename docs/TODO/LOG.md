@@ -435,3 +435,51 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   37/38 will force a rewrite of the install/theming pages, and some component
   prose will be revised by the tokenization tasks. Applied retroactively to the
   in-flight wave (31, 32, 33, 40).
+
+## Phase 2, session of 2026-07-26 (concurrent worktree fan-out)
+
+Tasks 31, 32, 33, 40, 42, 43, 45, 47, 53, 57 built as 10 concurrent worktree
+agents and cherry-picked onto `feat/phase-2`. Suite 406/406, build clean.
+
+- **Browser-support answers (task 33, Chrome 150, verified by round-trip not
+  just `CSS.supports`):** `light-dark()`, relative color syntax, and
+  `@property` are all safe — no fallback path needed. 37 and 39 can rely on
+  this; re-check before assuming it holds for older targets.
+- **`@property` changes computed-value representation.** oklch alpha `10%`
+  becomes `0.1`, `0.625rem` becomes `10px`, `color-mix()` resolves fully. Token
+  snapshot tests must normalise through a real CSS property, not string-compare.
+  `initial-value` must be computationally independent — no `var()`, no `rem`.
+- **`light-dark()` resolves at the declaring element's `color-scheme`.** A
+  scoped `.dark` on a descendant does not re-resolve inherited tokens; `.dark`
+  must sit on `<html>`. Matches current usage, but consumers need telling.
+- **Indeterminate loops must not use motion tokens.** Task 32 shipped the
+  `pending` pulse as `var(--motion-medium)`, which is `calc(200ms *
+  var(--motion-scale))` — a ~2.5Hz strobe that also tracked `--motion-scale`,
+  the one thing the spec forbade. Fixed to a literal `2s`, matching
+  `ui/skeleton`. Precedent: `ui/spinner` `1s linear`, `ui/skeleton` `2s`.
+- **`tests/run.mjs` imports every `tests/*.test.mjs` and calls its default
+  export.** Pure-node tests must therefore be named `*.unit.mjs`
+  (`parse-date`, `command-score`). One that was not aborted the entire browser
+  suite and hid ~350 results. The runner now isolates per-file failures instead
+  of dying, and reports a missing default export as a normal FAIL.
+- **`message-scroller: button click returns to bottom` is a genuine
+  pre-existing flake** — reproduced on a clean base (285/286, then 286/286 on
+  identical code). Not caused by any phase-2 branch. Worth a dedicated fix; it
+  is the second such flake after the combobox one in the 22–27 session.
+- **Concurrency gotchas for the next fan-out session:** the test runner's port
+  is now `VANILLIN_TEST_PORT` (was hard-coded 5199), and worktree
+  `node_modules` symlinks need `node_modules` (no trailing slash) in
+  `.git/info/exclude` or `git add -A` will stage them. Do not leave per-agent
+  vite servers running — a dozen of them destabilises Chrome and produces
+  test failures that look like real regressions.
+- **zod/RHF devDependencies were added and then removed.** Task 40's spec
+  called for verifying `@hookform/resolvers`' `zodResolver` against our
+  resolver contract as a test-only dependency. It verified clean
+  (`@hookform/resolvers` 5.5.3 + `zod` 4.4.3, 2026-07-26), but the agent also
+  imported zod from a playground page, which broke `npm run build`. Decision:
+  keep the verified result, drop all three packages, and guard our side of the
+  contract with a hand-written RHF-shaped resolver instead — the zod test
+  asserted zod's output, never that our engine consumed it correctly.
+- **`@starting-style { transform: scale(0.96) }` corrupts
+  `getBoundingClientRect`** taken right after `showPopover()` (task 43).
+  Item-aligned select sets `transform: none` to measure, popper clears it.
