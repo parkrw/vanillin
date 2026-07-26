@@ -1,4 +1,4 @@
-/* Sidebar — zero-dependency shadcn/ui recreation.
+/* Sidebar — zero-dependency implementation.
    Imports sheet.css (mobile path uses dialog/sheet) and tooltip.css.
    Width vars --sidebar-width / --sidebar-width-icon are set inline by
    SidebarProvider; all sidebar-specific color tokens live in globals.css. */

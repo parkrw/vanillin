@@ -82,7 +82,7 @@ export default function CommandPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [highlighted, setHighlighted] = useState("")
 
-  // ⌘K / Ctrl+K opens the palette (shadcn's documented pattern).
+  // ⌘K / Ctrl+K opens the palette (the conventional shortcut).
   useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key === "k" && (event.metaKey || event.ctrlKey)) {

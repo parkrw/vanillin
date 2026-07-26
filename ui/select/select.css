@@ -139,7 +139,7 @@
   white-space: nowrap;
 }
 
-/* Check mark on the trailing edge (shadcn parity). */
+/* Check mark on the trailing edge. */
 .select-item-indicator {
   display: none;
   align-items: center;

@@ -27,7 +27,7 @@ const STATUS_LABELS = {
  * `ring` draws a soft halo for the "live / running" look.
  *
  * Note: uses `error` (the console convention) for the same semantic
- * state that Badge calls `destructive` (shadcn parity). The `error`
+ * state that Badge calls `destructive`. The `error`
  * status maps to `--destructive-*` tokens.
  */
 export function StatusDot({

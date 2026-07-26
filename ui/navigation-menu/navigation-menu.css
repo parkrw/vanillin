@@ -314,7 +314,7 @@
   background-color: color-mix(in oklab, var(--accent) 50%, transparent);
 }
 
-/* shadcn list-item anatomy: a title div + a muted description paragraph. */
+/* List-item anatomy: a title div + a muted description paragraph. */
 .navigation-menu-link > div {
   font-weight: 500;
   line-height: 1.25;

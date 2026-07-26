@@ -15,7 +15,7 @@ const NavigationMenuItemContext = createContext(null)
  * Horizontal nav of hover/click triggers with content panels.
  *
  * Two rendering modes:
- * - **Viewport mode (default, matching shadcn):** one shared panel morphs
+ * - **Viewport mode (default):** one shared panel morphs
  *   between menu contents. Place `<NavigationMenuViewport />` after the list.
  * - **Per-item mode (`viewport={false}`):** each item gets its own anchored
  *   popover panel (the original task-15 behaviour).
@@ -524,7 +524,7 @@ export function NavigationMenuLink({ as: Comp = "a", active, onClick, className,
   )
 }
 
-/** Class string for styling a bare Link like a trigger (shadcn export). */
+/** Class string for styling a bare Link like a trigger (upstream export). */
 export function navigationMenuTriggerStyle() {
   return "navigation-menu-trigger"
 }

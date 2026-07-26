@@ -15,7 +15,7 @@ const DRAG_THRESHOLD = 50
 /**
  * Scroll-snap carousel with pointer swipe and keyboard nav.
  *
- * API surface mirrors shadcn/embla: `opts`, `setApi`, `plugins`.
+ * API surface mirrors embla: `opts`, `setApi`, `plugins`.
  * `opts.align`: "start" | "center" | "end" — sets scroll-snap-align on slides.
  * `opts.loop`: wrap around at both ends via clone-and-recentre.
  * `plugins`: array of `{ name, init(api, opts), destroy() }` objects.

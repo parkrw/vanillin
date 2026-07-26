@@ -13,7 +13,7 @@ const InputOTPContext = createContext(null)
  * One real <input> sits transparent over the rendered slots: native caret,
  * selection, IME and `autocomplete="one-time-code"` autofill keep working
  * while the boxes are plain divs mirroring `value[index]`. `onChange` gets
- * the string (shadcn/upstream signature), not the event.
+ * the string (upstream signature), not the event.
  */
 export function InputOTP({
   maxLength = 6,

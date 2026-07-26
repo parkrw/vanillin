@@ -48,7 +48,7 @@
  * Status variants — soft treatment (tinted background, coloured text,
  * tinted border). Contrast-safe in both light and dark modes.
  *
- * The existing `destructive` variant is the solid red badge (shadcn parity).
+ * The existing `destructive` variant is the solid red badge.
  * `destructive-soft` is the soft equivalent; callers who want the softer
  * look in a status context should use it instead.
  */

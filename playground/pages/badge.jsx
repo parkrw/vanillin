@@ -9,7 +9,7 @@ export default function BadgePage() {
       <section className="pg-section">
         <h3>Variants</h3>
         <p>
-          The four base variants match shadcn/ui. <code>destructive</code> is a
+          Four base variants. <code>destructive</code> is a
           solid red badge — high contrast, meant for critical actions and
           destructive confirmations.
         </p>
@@ -40,7 +40,7 @@ export default function BadgePage() {
         <p>
           Note: <code>StatusDot</code> calls this semantic state{" "}
           <code>error</code> (the console convention); Badge keeps{" "}
-          <code>destructive</code> for shadcn parity.
+          <code>destructive</code>, the name the variant has always had.
         </p>
         <div className="pg-row" data-pg="badge-status">
           <Badge variant="success">Success</Badge>

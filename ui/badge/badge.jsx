@@ -8,12 +8,12 @@ import { cn } from "../../lib/cn.js"
  * treatment — tinted background, coloured foreground, tinted border — so
  * they stay readable when badges cluster in dense tables.
  *
- * The original `destructive` variant is the solid red badge kept for
- * shadcn parity. `destructive-soft` matches the other status variants'
+ * The original `destructive` variant is the solid red badge, kept as-is.
+ * `destructive-soft` matches the other status variants'
  * visual weight.
  *
  * Note: status-dot uses `error` for the same semantic state because that
- * is the console convention; badge keeps `destructive` for shadcn compat.
+ * is the console convention; badge keeps `destructive` for compatibility.
  */
 export function Badge({ variant = "default", className, ...props }) {
   return (

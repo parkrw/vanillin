@@ -1,6 +1,6 @@
 # vanillin
 
-shadcn/ui recreated with **zero dependencies** — vanilla React JSX + plain CSS. No Tailwind, no Radix, no Floating UI. The only thing your project needs is React.
+**Zero-dependency** React components — vanilla JS, JSX, and plain CSS. No Tailwind, no Radix, no Floating UI. Only React is required.
 
 ## Using it in a project
 

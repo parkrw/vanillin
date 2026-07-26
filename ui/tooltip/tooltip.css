@@ -1,6 +1,6 @@
 /* Tooltip — native Popover API (popover="manual") with anchor positioning.
    Enter/exit via transitions + @starting-style + allow-discrete.
-   Inverse look: --primary bg, --primary-foreground text (shadcn convention). */
+   Inverse look: --primary bg, --primary-foreground text (upstream convention). */
 
 .tooltip {
   /* Reset UA popover defaults */

@@ -31,7 +31,7 @@ export default function NavigationMenuPage() {
         <p style={{ fontSize: "0.8125rem", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
           One shared viewport morphs its size when switching between items.
           Content slides directionally; the indicator arrow follows the active
-          trigger. This is the shadcn default.
+          trigger. This is the default mode.
         </p>
         <NavigationMenu delayDuration={100} closeDelay={100} data-pg="nm-vp">
           <NavigationMenuList>

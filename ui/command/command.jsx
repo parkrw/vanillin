@@ -169,8 +169,8 @@ export function Command({
 
 /**
  * Palette form: ui/dialog (showModal recipe) around a Command. The header is
- * visually hidden — the dialog still needs an accessible name (shadcn
- * parity), and the input is the first focusable so showModal() lands there.
+ * visually hidden — the dialog still needs an accessible name, and the
+ * input is the first focusable so showModal() lands there.
  */
 export function CommandDialog({
   title = "Command Palette",

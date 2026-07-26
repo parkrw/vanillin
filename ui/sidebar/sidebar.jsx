@@ -27,7 +27,7 @@ import {
 } from "../tooltip/tooltip.jsx"
 
 // ---------------------------------------------------------------------------
-// Constants (match shadcn)
+// Constants (match upstream)
 // ---------------------------------------------------------------------------
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"

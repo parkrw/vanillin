@@ -10,8 +10,7 @@ export default function StatusDotPage() {
         A small coloured indicator for tables, resource lists, and anywhere a
         concise visual state signal is needed without a label. Uses{" "}
         <code>error</code> for the failure state (the console convention);
-        Badge uses <code>destructive</code> for the same semantic state to
-        keep shadcn parity.
+        Badge uses <code>destructive</code> for the same semantic state.
       </p>
 
       <section className="pg-section">

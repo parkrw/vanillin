@@ -3,7 +3,7 @@
 /*
  * vanillin — project-wide design tokens.
  * This is the single theming config: edit these variables (or add a .dark
- * override) and every component follows. Token names match shadcn/ui.
+ * override) and every component follows.
  *
  * Modern features used:
  *  - @property: typed tokens; invalid values fall back to initial-value.
@@ -111,7 +111,7 @@
   --border: light-dark(oklch(0.922 0 0), oklch(1 0 0 / 10%));
   --input: light-dark(oklch(0.922 0 0), oklch(1 0 0 / 15%));
   /* fill for bordered form controls — transparent in light; dark gives them
-     a faint lift so they read on near-black (shadcn's dark:bg-input/30) */
+     a faint lift so they read on near-black */
   --input-background: light-dark(transparent, color-mix(in oklab, var(--input) 30%, transparent));
   --ring: light-dark(oklch(0.708 0 0), oklch(0.556 0 0));
 

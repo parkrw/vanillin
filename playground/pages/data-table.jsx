@@ -64,7 +64,7 @@ function MoreHorizontal() {
   )
 }
 
-// ── Sample data (mirrors the shadcn payments example) ────────────────
+// ── Sample data (a payments table) ───────────────────────────────────
 
 const payments = [
   { id: "728ed52f", amount: 100, status: "pending", email: "m@example.com" },

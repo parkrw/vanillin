@@ -1,4 +1,4 @@
-/* Collapsible ships visually unstyled in shadcn; classes exist as styling
+/* Collapsible ships visually unstyled; classes exist as styling
    hooks. Open/close motion follows the global motion tokens. */
 
 .collapsible-content {

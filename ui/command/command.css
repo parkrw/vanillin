@@ -13,7 +13,7 @@
   color: var(--popover-foreground);
 }
 
-/* Standalone (non-dialog) palettes: shadcn's inline example adds a border and
+/* Standalone (non-dialog) palettes: the inline form adds a border and
    shadow on the root — a variant here so pages stay class-only. */
 .command--bordered {
   border: 1px solid var(--border);

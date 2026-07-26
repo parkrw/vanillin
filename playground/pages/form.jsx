@@ -105,7 +105,7 @@ function EnginePathDemo() {
               <FormLabel>Username</FormLabel>
               <FormControl
                 as={Input}
-                placeholder="shadcn"
+                placeholder="caseynolan"
                 data-pg="form-username"
                 {...register("username")}
               />

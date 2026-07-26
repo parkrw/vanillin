@@ -13,7 +13,7 @@ import { useAnchorPosition } from "../../lib/use-anchor-position.js"
 const HoverCardContext = createContext(null)
 
 /**
- * Rich link-preview popup for sighted users (shadcn/Radix anatomy:
+ * Rich link-preview popup for sighted users (upstream anatomy:
  * HoverCard / HoverCardTrigger / HoverCardContent). Unlike tooltip, the
  * pointer may travel into the content — the root owns shared open/close
  * timers so trigger and content cancel each other's pending close.

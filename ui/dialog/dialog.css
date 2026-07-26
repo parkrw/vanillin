@@ -93,7 +93,7 @@
 }
 
 .dialog::backdrop {
-  /* shadcn dims with black in both themes (not --foreground, which would
+  /* Dim with black in both themes (not --foreground, which would
      flip to near-white in dark mode) */
   background-color: color-mix(in oklab, black 50%, transparent);
 }

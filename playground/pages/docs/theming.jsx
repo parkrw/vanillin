@@ -4,8 +4,8 @@ export default function ThemingPage() {
       <h2>Theming</h2>
 
       <p>
-        Every design token lives in <code>styles/globals.css</code>. Token
-        names match shadcn/ui. Edit that one file to retheme everything.
+        Every design token lives in <code>styles/globals.css</code>. Edit that
+        one file to retheme everything.
       </p>
 
       <h3>Token families</h3>
