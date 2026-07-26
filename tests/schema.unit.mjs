@@ -246,6 +246,165 @@ test("union failure inside an object keeps the field path", () => {
 })
 
 // ---------------------------------------------------------------------------
+// refinements — string
+// ---------------------------------------------------------------------------
+
+test("string min/max/length", () => {
+  assert.ok(s.string().min(2).safeParse("ab").success)
+  assert.equal(s.string().min(2).safeParse("a").error.issues[0].code, "too_small")
+  assert.equal(s.string().max(2).safeParse("abc").error.issues[0].code, "too_big")
+  assert.ok(s.string().length(3).safeParse("abc").success)
+  assert.equal(s.string().length(3).safeParse("ab").success, false)
+})
+
+test("custom messages: string and { message } forms", () => {
+  assert.equal(s.string().min(2, "too short").safeParse("a").error.issues[0].message, "too short")
+  assert.equal(
+    s.string().min(2, { message: "too short" }).safeParse("a").error.issues[0].message,
+    "too short"
+  )
+})
+
+test("chaining is immutable — refining does not mutate the base schema", () => {
+  const base = s.string()
+  base.min(5)
+  assert.ok(base.safeParse("a").success)
+})
+
+test("first failing check wins per field", () => {
+  const r = s.string().min(5).regex(/^\d+$/).safeParse("ab")
+  assert.equal(r.error.issues.length, 1)
+  assert.equal(r.error.issues[0].code, "too_small")
+})
+
+test("regex / email / url", () => {
+  assert.ok(s.string().regex(/^\d+$/).safeParse("123").success)
+  assert.equal(s.string().regex(/^\d+$/).safeParse("12a").success, false)
+  assert.ok(s.string().email().safeParse("a@b.com").success)
+  assert.equal(s.string().email().safeParse("not-an-email").success, false)
+  assert.ok(s.string().url().safeParse("https://example.com/x").success)
+  assert.equal(s.string().url().safeParse("not a url").success, false)
+})
+
+// ---------------------------------------------------------------------------
+// refinements — number, date, array
+// ---------------------------------------------------------------------------
+
+test("number min/max/int/positive", () => {
+  assert.ok(s.number().min(1).safeParse(1).success)
+  assert.equal(s.number().min(1).safeParse(0).error.issues[0].code, "too_small")
+  assert.equal(s.number().max(10).safeParse(11).error.issues[0].code, "too_big")
+  assert.ok(s.number().int().safeParse(3).success)
+  assert.equal(s.number().int().safeParse(3.5).error.issues[0].code, "not_integer")
+  assert.ok(s.number().positive().safeParse(0.1).success)
+  assert.equal(s.number().positive().safeParse(0).success, false)
+})
+
+test("date min/max compare by time", () => {
+  const lo = new Date("2026-01-01")
+  const hi = new Date("2026-12-31")
+  assert.ok(s.date().min(lo).max(hi).safeParse(new Date("2026-07-26")).success)
+  assert.equal(s.date().min(lo).safeParse(new Date("2025-01-01")).success, false)
+})
+
+test("array min/max/length on element count", () => {
+  assert.ok(s.array(s.number()).min(1).safeParse([1]).success)
+  assert.equal(s.array(s.number()).min(2).safeParse([1]).error.issues[0].code, "too_small")
+  assert.equal(s.array(s.number()).length(1).safeParse([1, 2]).success, false)
+})
+
+test("array length failure still reports element issues", () => {
+  const r = s.array(s.number()).min(3).safeParse([1, "x"])
+  assert.deepEqual(
+    r.error.issues.map((i) => i.code),
+    ["too_small", "invalid_type"]
+  )
+})
+
+// ---------------------------------------------------------------------------
+// refine / transform
+// ---------------------------------------------------------------------------
+
+test("refine adds a custom issue when the predicate fails", () => {
+  const even = s.number().refine((v) => v % 2 === 0, "Must be even")
+  assert.ok(even.safeParse(4).success)
+  const r = even.safeParse(3)
+  assert.equal(r.error.issues[0].code, "custom")
+  assert.equal(r.error.issues[0].message, "Must be even")
+})
+
+test("refine does not run when the inner schema already failed", () => {
+  let ran = false
+  const schema = s.number().refine(() => ((ran = true), true), "x")
+  schema.safeParse("nope")
+  assert.equal(ran, false)
+})
+
+test("refine with { path } targets a sibling field (password confirm)", () => {
+  const schema = s
+    .object({ password: s.string(), confirm: s.string() })
+    .refine((v) => v.password === v.confirm, {
+      message: "Passwords must match",
+      path: "confirm",
+    })
+  const r = schema.safeParse({ password: "a", confirm: "b" })
+  assert.equal(r.error.issues[0].path, "confirm")
+  assert.equal(r.error.issues[0].message, "Passwords must match")
+})
+
+test("transform maps the parsed value on success only", () => {
+  const trimmed = s.string().transform((v) => v.trim())
+  assert.equal(trimmed.parse("  hi  "), "hi")
+  assert.equal(trimmed.safeParse(5).success, false)
+})
+
+test("transform result flows into the parent object output", () => {
+  const schema = s.object({ name: s.string().transform((v) => v.toUpperCase()) })
+  assert.deepEqual(schema.parse({ name: "ada" }), { name: "ADA" })
+})
+
+// ---------------------------------------------------------------------------
+// coerce — opt-in only
+// ---------------------------------------------------------------------------
+
+test('coerce.number parses "42"; plain number still rejects it', () => {
+  assert.equal(s.coerce.number().parse("42"), 42)
+  assert.equal(s.number().safeParse("42").success, false)
+})
+
+test('coerce.number rejects "", null, undefined and non-numeric strings', () => {
+  assert.equal(s.coerce.number().safeParse("").success, false)
+  assert.equal(s.coerce.number().safeParse(null).success, false)
+  assert.equal(s.coerce.number().safeParse(undefined).success, false)
+  assert.equal(s.coerce.number().safeParse("abc").success, false)
+})
+
+test("coerce.number feeds refinements the coerced value", () => {
+  assert.equal(s.coerce.number().min(18).safeParse("17").error.issues[0].code, "too_small")
+  assert.equal(s.coerce.number().min(18).parse("21"), 21)
+})
+
+test("coerce.string stringifies numbers but not null/undefined", () => {
+  assert.equal(s.coerce.string().parse(42), "42")
+  assert.equal(s.coerce.string().safeParse(null).success, false)
+  assert.equal(s.coerce.string().safeParse(undefined).success, false)
+})
+
+test("coerce.boolean uses Boolean()", () => {
+  assert.equal(s.coerce.boolean().parse(1), true)
+  assert.equal(s.coerce.boolean().parse(""), false)
+})
+
+test('coerce.date parses ISO strings and rejects "" and null', () => {
+  const r = s.coerce.date().safeParse("2026-07-26")
+  assert.ok(r.success)
+  assert.equal(r.data.getTime(), new Date("2026-07-26").getTime())
+  assert.equal(s.coerce.date().safeParse("").success, false)
+  assert.equal(s.coerce.date().safeParse(null).success, false)
+  assert.equal(s.coerce.date().safeParse("garbage").success, false)
+})
+
+// ---------------------------------------------------------------------------
 // Run
 // ---------------------------------------------------------------------------
 
