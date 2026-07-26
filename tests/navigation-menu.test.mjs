@@ -1,11 +1,14 @@
 export default async function run({ page, baseUrl, test, eq }) {
   await page.goto(`${baseUrl}/#navigation-menu`)
 
+  // ----------------------------------------------------------------
+  //  Helpers — per-item popover mode (viewport={false}, data-pg="nm")
+  // ----------------------------------------------------------------
   const waitOpen = (pg) =>
     page.waitForSelector(`[data-pg="${pg}"]:popover-open`)
   const waitAllClosed = () =>
     page.waitForFunction(() => {
-      const panels = document.querySelectorAll(".navigation-menu-content")
+      const panels = document.querySelectorAll('[data-pg="nm"] .navigation-menu-content')
       return (
         panels.length > 0 &&
         [...panels].every(
@@ -15,7 +18,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     })
   const openCount = () =>
     page.evaluate(
-      () => document.querySelectorAll(".navigation-menu-content:popover-open").length
+      () => document.querySelectorAll('[data-pg="nm"] .navigation-menu-content:popover-open').length
     )
   const cleanup = async () => {
     await page.mouse.move(0, 0)
@@ -28,7 +31,6 @@ export default async function run({ page, baseUrl, test, eq }) {
   const componentsTrigger = page.locator('[data-pg="nm-trigger-components"]')
 
   await test("hover opens after delay, leave closes after grace", async () => {
-    // Demo uses delayDuration=100, closeDelay=100 for test speed.
     await learnTrigger.hover()
     eq(await openCount(), 0, "not open before delay")
     await waitOpen("nm-content-learn")
@@ -67,9 +69,6 @@ export default async function run({ page, baseUrl, test, eq }) {
   })
 
   await test("click toggles open and closed", async () => {
-    // Sit out the skip window (300ms) from the previous close — inside it,
-    // click's own pointerenter hover-opens instantly and the click then
-    // means close (Radix parity: clicking a hover-opened trigger closes).
     await page.waitForTimeout(350)
     await learnTrigger.click()
     await waitOpen("nm-content-learn")
@@ -79,7 +78,7 @@ export default async function run({ page, baseUrl, test, eq }) {
   })
 
   await test("outside click closes and syncs state", async () => {
-    await page.waitForTimeout(350) // skip-window guard, see above
+    await page.waitForTimeout(350)
     await learnTrigger.click()
     await waitOpen("nm-content-learn")
     await page.locator("h2").click()
@@ -155,5 +154,291 @@ export default async function run({ page, baseUrl, test, eq }) {
         document.querySelector('[data-pg="nm-ctrl-state"]').textContent === "none"
     )
     await cleanup()
+  })
+
+  // ================================================================
+  //  Viewport mode tests (data-pg="nm-vp")
+  // ================================================================
+
+  const vpLearn = page.locator('[data-pg="nm-vp-trigger-learn"]')
+  const vpComp = page.locator('[data-pg="nm-vp-trigger-comp"]')
+
+  const vpWaitOpen = (pg) =>
+    page.waitForFunction(
+      (sel) => {
+        const el = document.querySelector(`[data-pg="${sel}"]`)
+        return el && el.dataset.state === "open"
+      },
+      pg
+    )
+  const vpWaitClosed = () =>
+    page.waitForFunction(() => {
+      const vp = document.querySelector('[data-pg="nm-vp"] .navigation-menu-viewport')
+      return vp && vp.dataset.state === "closed"
+    })
+  const vpCleanup = async () => {
+    await page.mouse.move(0, 0)
+    await page.keyboard.press("Escape")
+    await page.evaluate(() => document.activeElement?.blur())
+    await vpWaitClosed()
+  }
+
+  await test("viewport: single viewport element is reused across items", async () => {
+    const vpCount = await page.evaluate(
+      () => document.querySelectorAll('[data-pg="nm-vp"] .navigation-menu-viewport').length
+    )
+    eq(vpCount, 1, "exactly one viewport element")
+  })
+
+  await test("viewport: content teleports into viewport; source item stays mounted", async () => {
+    await vpLearn.hover()
+    await vpWaitOpen("nm-vp-content-learn")
+
+    // Content panel is inside the viewport element.
+    const insideViewport = await page.evaluate(() => {
+      const vp = document.querySelector('[data-pg="nm-vp"] .navigation-menu-viewport')
+      const content = document.querySelector('[data-pg="nm-vp-content-learn"]')
+      return vp && content && vp.contains(content)
+    })
+    eq(insideViewport, true, "content is inside viewport")
+
+    // The source NavigationMenuItem li is still in the DOM.
+    const itemMounted = await page.evaluate(() => {
+      const item = document.querySelector('[data-pg="nm-vp-trigger-learn"]')
+      return item && item.closest(".navigation-menu-item") !== null
+    })
+    eq(itemMounted, true, "source item is still mounted")
+
+    await vpCleanup()
+  })
+
+  await test("viewport: hover opens, hover-switch morphs, leave closes", async () => {
+    await vpLearn.hover()
+    await vpWaitOpen("nm-vp-content-learn")
+
+    // Viewport is visible.
+    const vpOpen = await page.evaluate(() =>
+      document.querySelector('[data-pg="nm-vp"] .navigation-menu-viewport').dataset.state
+    )
+    eq(vpOpen, "open", "viewport open")
+
+    // Switch to components.
+    await vpComp.hover()
+    await vpWaitOpen("nm-vp-content-comp")
+
+    // Learn panel is now closed.
+    const learnState = await page.evaluate(
+      () => document.querySelector('[data-pg="nm-vp-content-learn"]')?.dataset.state
+    )
+    eq(learnState, "closed", "learn panel closed after switch")
+
+    // Move away — viewport closes.
+    await page.mouse.move(0, 0)
+    await vpWaitClosed()
+  })
+
+  await test("viewport: data-motion matches traversal direction (LTR)", async () => {
+    await vpLearn.hover()
+    await vpWaitOpen("nm-vp-content-learn")
+
+    // Switch forward (learn -> components).
+    await vpComp.hover()
+    await vpWaitOpen("nm-vp-content-comp")
+
+    const compMotion = await page.evaluate(
+      () => document.querySelector('[data-pg="nm-vp-content-comp"]')?.dataset.motion
+    )
+    eq(compMotion, "from-end", "forward switch: entering content from-end")
+
+    const learnMotion = await page.evaluate(
+      () => document.querySelector('[data-pg="nm-vp-content-learn"]')?.dataset.motion
+    )
+    eq(learnMotion, "to-start", "forward switch: exiting content to-start")
+
+    // Switch backward (components -> learn).
+    await vpLearn.hover()
+    await vpWaitOpen("nm-vp-content-learn")
+
+    const learnMotion2 = await page.evaluate(
+      () => document.querySelector('[data-pg="nm-vp-content-learn"]')?.dataset.motion
+    )
+    eq(learnMotion2, "from-start", "backward switch: entering content from-start")
+
+    const compMotion2 = await page.evaluate(
+      () => document.querySelector('[data-pg="nm-vp-content-comp"]')?.dataset.motion
+    )
+    eq(compMotion2, "to-end", "backward switch: exiting content to-end")
+
+    await vpCleanup()
+  })
+
+  await test("viewport: first open has no data-motion (no morph)", async () => {
+    await vpLearn.hover()
+    await vpWaitOpen("nm-vp-content-learn")
+
+    const motion = await page.evaluate(
+      () => document.querySelector('[data-pg="nm-vp-content-learn"]')?.dataset.motion
+    )
+    eq(motion, undefined, "no data-motion on first open")
+
+    await vpCleanup()
+  })
+
+  await test("viewport: outside click closes", async () => {
+    await page.waitForTimeout(350)
+    await vpLearn.click()
+    await vpWaitOpen("nm-vp-content-learn")
+    await page.locator("h2").click()
+    await vpWaitClosed()
+    eq(
+      await vpLearn.getAttribute("data-state"),
+      "closed",
+      "trigger state closed after outside click"
+    )
+  })
+
+  await test("viewport: Escape closes and refocuses trigger", async () => {
+    await vpLearn.hover()
+    await vpWaitOpen("nm-vp-content-learn")
+
+    // Move focus into the content.
+    const link = page.locator('[data-pg="nm-vp-link-intro"]')
+    await link.focus()
+
+    await page.keyboard.press("Escape")
+    await vpWaitClosed()
+    await page.waitForFunction(
+      () => document.activeElement?.dataset.pg === "nm-vp-trigger-learn"
+    )
+  })
+
+  await test("viewport: ArrowDown opens and focuses first link", async () => {
+    await vpLearn.focus()
+    await page.keyboard.press("ArrowDown")
+    await vpWaitOpen("nm-vp-content-learn")
+    await page.waitForFunction(
+      () => document.activeElement?.dataset.pg === "nm-vp-link-intro"
+    )
+    await vpCleanup()
+  })
+
+  await test("viewport: data-motion inverts under RTL", async () => {
+    // Set RTL on <html> to match the popover RTL gotcha configuration.
+    await page.evaluate(() => document.documentElement.setAttribute("dir", "rtl"))
+    try {
+      await vpLearn.hover()
+      await vpWaitOpen("nm-vp-content-learn")
+
+      // Switch forward in DOM order (learn -> components).
+      // In RTL this is visually right-to-left, so direction inverts.
+      await vpComp.hover()
+      await vpWaitOpen("nm-vp-content-comp")
+
+      const compMotion = await page.evaluate(
+        () => document.querySelector('[data-pg="nm-vp-content-comp"]')?.dataset.motion
+      )
+      eq(compMotion, "from-start", "RTL forward switch: entering content from-start (inverted)")
+
+      const learnMotion = await page.evaluate(
+        () => document.querySelector('[data-pg="nm-vp-content-learn"]')?.dataset.motion
+      )
+      eq(learnMotion, "to-end", "RTL forward switch: exiting content to-end (inverted)")
+
+      await vpCleanup()
+    } finally {
+      await page.evaluate(() => document.documentElement.removeAttribute("dir"))
+    }
+  })
+
+  await test("viewport: no size animation under reduced motion", async () => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    try {
+      await vpLearn.hover()
+      await vpWaitOpen("nm-vp-content-learn")
+
+      const vpTransition = await page.evaluate(() => {
+        const vp = document.querySelector('[data-pg="nm-vp"] .navigation-menu-viewport')
+        return getComputedStyle(vp).transitionDuration
+      })
+      // Under reduced motion, transition is suppressed (0s or none).
+      const allZero = vpTransition.split(",").every(
+        (d) => parseFloat(d.trim()) === 0
+      )
+      eq(allZero, true, "viewport transition suppressed under reduced motion")
+
+      // Content animations are also suppressed.
+      const contentAnimation = await page.evaluate(() => {
+        const el = document.querySelector('[data-pg="nm-vp-content-learn"]')
+        return getComputedStyle(el).animationName
+      })
+      eq(contentAnimation, "none", "content animation suppressed under reduced motion")
+
+      await vpCleanup()
+    } finally {
+      await page.emulateMedia({ reducedMotion: "no-preference" })
+    }
+  })
+
+  await test("viewport: indicator offset tracks active trigger", async () => {
+    const indicator = page.locator('[data-pg="nm-vp"] .navigation-menu-indicator')
+
+    await vpLearn.hover()
+    await vpWaitOpen("nm-vp-content-learn")
+
+    // Indicator should be visible and positioned at the learn trigger.
+    const indState = await indicator.getAttribute("data-state")
+    eq(indState, "open", "indicator is open")
+
+    const pos1 = await page.evaluate(() => {
+      const ind = document.querySelector('[data-pg="nm-vp"] .navigation-menu-indicator')
+      return ind?.style.getPropertyValue("--indicator-offset")
+    })
+    const learnOffset = await page.evaluate(() => {
+      const trigger = document.querySelector('[data-pg="nm-vp-trigger-learn"]')
+      return trigger?.offsetLeft + "px"
+    })
+    eq(pos1, learnOffset, "indicator offset matches learn trigger")
+
+    // Switch to components.
+    await vpComp.hover()
+    await vpWaitOpen("nm-vp-content-comp")
+
+    const pos2 = await page.evaluate(() => {
+      const ind = document.querySelector('[data-pg="nm-vp"] .navigation-menu-indicator')
+      return ind?.style.getPropertyValue("--indicator-offset")
+    })
+    const compOffset = await page.evaluate(() => {
+      const trigger = document.querySelector('[data-pg="nm-vp-trigger-comp"]')
+      return trigger?.offsetLeft + "px"
+    })
+    eq(pos2, compOffset, "indicator offset matches components trigger")
+
+    // Indicator width matches trigger width.
+    const indWidth = await page.evaluate(() => {
+      const ind = document.querySelector('[data-pg="nm-vp"] .navigation-menu-indicator')
+      return ind?.style.getPropertyValue("--indicator-width")
+    })
+    const compWidth = await page.evaluate(() => {
+      const trigger = document.querySelector('[data-pg="nm-vp-trigger-comp"]')
+      return trigger?.offsetWidth + "px"
+    })
+    eq(indWidth, compWidth, "indicator width matches trigger width")
+
+    await vpCleanup()
+  })
+
+  await test("viewport={false}: per-item panels are popovers, not in a shared viewport", async () => {
+    // The data-pg="nm" section uses viewport={false}.
+    const hasPopover = await page.evaluate(() => {
+      const content = document.querySelector('[data-pg="nm-content-learn"]')
+      return content?.getAttribute("popover")
+    })
+    eq(hasPopover, "auto", "per-item content has popover=auto")
+
+    const viewportInSection = await page.evaluate(() => {
+      const nav = document.querySelector('[data-pg="nm"]')
+      return nav?.querySelector(".navigation-menu-viewport")
+    })
+    eq(viewportInSection, null, "no viewport element in per-item mode")
   })
 }
