@@ -40,9 +40,18 @@ try {
   await waitForServer()
   browser = await chromium.launch({ channel: "chrome" })
   const page = await browser.newPage()
+  // Optional subset run: `node tests/run.mjs drawer toast` or
+  // VANILLIN_TEST_FILTER=drawer,toast. Substring match on the file name.
+  // Integration always runs the whole suite — this is for focused work.
+  const filters = (process.argv.slice(2).join(",") || process.env.VANILLIN_TEST_FILTER || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean)
   const files = readdirSync(fileURLToPath(new URL(".", import.meta.url)))
     .filter((file) => file.endsWith(".test.mjs"))
+    .filter((file) => !filters.length || filters.some((filter) => file.includes(filter)))
     .sort()
+  if (filters.length && !files.length) throw new Error(`no test files match ${filters.join(",")}`)
   for (const file of files) {
     const label = file.replace(".test.mjs", "")
     const test = async (name, fn) => {
