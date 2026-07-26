@@ -98,14 +98,43 @@ export default function StatusDotPage() {
         <p>
           The <code>pending</code> status pulses with a slow opacity
           animation behind a <code>prefers-reduced-motion</code> guard.
-          Because this is an indeterminate loop (no start/end), it does{" "}
-          <strong>not</strong> scale with <code>--motion-scale</code> — it
-          uses <code>var(--motion-medium)</code> directly as a fixed
-          duration.
+          Because this is an indeterminate loop (no start, no end), it uses a
+          fixed <code>2s</code> literal and deliberately <strong>not</strong>{" "}
+          a motion token. <code>--motion-medium</code> is{" "}
+          <code>calc(200ms * var(--motion-scale))</code>; using it here would
+          pulse at roughly 2.5Hz and would speed up or slow down with the
+          user&rsquo;s motion-scale preference, which is meaningless for a
+          loop that never terminates.
         </p>
         <div className="pg-row">
           <StatusDot status="pending" />
           <StatusDot status="pending" ring />
+        </div>
+      </section>
+
+      <section className="pg-section">
+        <h3>Forced colors and non-colour cues</h3>
+        <p>
+          Status is communicated by colour, which disappears in Windows High
+          Contrast mode — the OS replaces every colour with its own palette.
+          Under <code>forced-colors: active</code> each status therefore takes
+          a distinct <em>shape</em>: <code>warning</code> becomes a diamond,{" "}
+          <code>error</code> a square, <code>info</code> a ringed circle, and{" "}
+          <code>pending</code> stays a circle because its animation already
+          distinguishes it.
+        </p>
+        <p>
+          The dots opt out of the forced palette with{" "}
+          <code>forced-color-adjust: none</code> so the shapes stay legible.
+          To see this, enable High Contrast in your OS settings, or emulate{" "}
+          <code>forced-colors: active</code> in DevTools under Rendering.
+        </p>
+        <div className="pg-row">
+          <StatusDot status="success" />
+          <StatusDot status="warning" />
+          <StatusDot status="error" />
+          <StatusDot status="info" />
+          <StatusDot status="pending" />
         </div>
       </section>
     </>
