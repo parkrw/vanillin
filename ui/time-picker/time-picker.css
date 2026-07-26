@@ -1,0 +1,61 @@
+/* TimePicker — segmented hour/minute/second/meridiem input. */
+
+.time-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--input);
+  background-color: var(--input-background);
+  padding-inline: 0.25rem;
+  transition: border-color var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) var(--motion-ease);
+}
+
+.time-picker:focus-within {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+.time-picker[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.time-picker-segment {
+  width: 2ch;
+  padding: 0.125rem 0.125rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  text-align: center;
+  color: var(--foreground);
+  caret-color: transparent;
+}
+
+.time-picker-segment:focus-visible {
+  outline: none;
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.time-picker-segment:disabled {
+  cursor: not-allowed;
+}
+
+.time-picker-meridiem {
+  width: 3ch;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+
+.time-picker-separator {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1;
+  user-select: none;
+}
