@@ -41,7 +41,7 @@
 
 .table-head {
   height: 2.5rem;
-  padding: 0 0.75rem;
+  padding: 0 var(--space-3);
   font-weight: 500;
   color: var(--muted-foreground);
   text-align: inherit;
@@ -49,12 +49,12 @@
 }
 
 .table-cell {
-  padding: 0.75rem;
+  padding: var(--space-3);
   vertical-align: middle;
 }
 
 .table-caption {
-  margin-top: 1rem;
+  margin-top: var(--space-4);
   font-size: 0.875rem;
   color: var(--muted-foreground);
 }
