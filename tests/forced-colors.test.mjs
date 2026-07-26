@@ -3,14 +3,10 @@ export default async function run({ page, baseUrl, test, eq }) {
      forced-colors: active
      ================================================================ */
 
-  // Force a real document load before measuring focus rings. Earlier files
-  // (dropdown-menu) leave the browser's input modality set to "pointer", and
-  // because this playground is a hash-based SPA, page.goto("#…") is only a
-  // hash change — the modality survives it. Programmatic .focus() then fails to
-  // match :focus-visible on non-input elements, so the repair layer's outlines
-  // read as "none". about:blank resets it.
-  await page.goto("about:blank")
-
+  // Focus-ring assertions below depend on a clean input modality: a "pointer"
+  // modality left by an earlier file stops programmatic .focus() from matching
+  // :focus-visible. The runner resets the page before each file, so this file
+  // starts from a fresh document — see resetPage() in tests/run.mjs.
   await page.emulateMedia({ forcedColors: "active" })
 
   // ── Focus outlines survive on every focusable family ──

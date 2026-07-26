@@ -52,8 +52,24 @@ try {
     .filter((file) => !filters.length || filters.some((filter) => file.includes(filter)))
     .sort()
   if (filters.length && !files.length) throw new Error(`no test files match ${filters.join(",")}`)
+  // The whole suite shares one page for speed (warm HTTP cache, no context
+  // churn). That makes per-file state leak downhill in alphabetical order, and
+  // it has already cost us two rounds of phantom failures: an injected :root
+  // style tag from one file re-themed the next, and mouse-driven tests left the
+  // input modality set to "pointer" so programmatic .focus() stopped matching
+  // :focus-visible. Both are invisible in a filtered single-file run and only
+  // appear in full-suite order, which is the worst way to find them.
+  //
+  // A real navigation (not a #hash change — the playground is an SPA) discards
+  // injected tags and resets modality; clearing emulateMedia covers the rest.
+  const resetPage = async () => {
+    await page.goto("about:blank")
+    await page.emulateMedia({ colorScheme: null, forcedColors: null, reducedMotion: null })
+  }
+
   for (const file of files) {
     const label = file.replace(".test.mjs", "")
+    await resetPage()
     const test = async (name, fn) => {
       try {
         await fn()
