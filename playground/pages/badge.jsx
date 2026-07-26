@@ -49,6 +49,14 @@ export default function BadgePage() {
           <Badge variant="destructive-soft">Destructive soft</Badge>
         </div>
       </section>
+
+      <section className="pg-section">
+        <h3>Density</h3>
+        <p>
+          Padding and gap scale with <code>--density-scale</code> via the{" "}
+          <code>--space-*</code> ramp.
+        </p>
+      </section>
     </>
   )
 }

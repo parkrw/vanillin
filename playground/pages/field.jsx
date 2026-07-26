@@ -126,6 +126,14 @@ export default function FieldPage() {
           </Field>
         </div>
       </section>
+
+      <section className="pg-section">
+        <h3>Density</h3>
+        <p>
+          All gaps, margins, and padding scale with{" "}
+          <code>--density-scale</code> via the <code>--space-*</code> ramp.
+        </p>
+      </section>
     </>
   )
 }

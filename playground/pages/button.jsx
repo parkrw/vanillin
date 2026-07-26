@@ -42,6 +42,16 @@ export default function ButtonPage() {
           </Button>
         </div>
       </section>
+
+      <section className="pg-section">
+        <h3>Density</h3>
+        <p>
+          Padding and gap scale with <code>--density-scale</code> via the{" "}
+          <code>--space-*</code> ramp. Hover backgrounds use opaque derived
+          tokens (<code>--primary-hover</code>, <code>--destructive-hover</code>,{" "}
+          <code>--secondary-hover</code>) instead of transparent color-mix.
+        </p>
+      </section>
     </>
   )
 }

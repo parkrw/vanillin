@@ -63,6 +63,14 @@ export default function TextareaPage() {
           <Textarea placeholder="Invalid" aria-invalid="true" />
         </div>
       </section>
+
+      <section className="pg-section">
+        <h3>Density</h3>
+        <p>
+          Padding scales with <code>--density-scale</code> via the{" "}
+          <code>--space-*</code> ramp.
+        </p>
+      </section>
     </>
   )
 }

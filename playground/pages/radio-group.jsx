@@ -56,6 +56,14 @@ export default function RadioGroupPage() {
         </RadioGroup>
         <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>Selected: {value}</p>
       </section>
+
+      <section className="pg-section">
+        <h3>Density</h3>
+        <p>
+          Group gap scales with <code>--density-scale</code> via{" "}
+          <code>--space-3</code>.
+        </p>
+      </section>
     </>
   )
 }
