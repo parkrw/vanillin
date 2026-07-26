@@ -65,7 +65,7 @@ collide with, and the demo and the defaults are the same artifact.
 
 ## Sub-tasks
 
-- [ ] 1. `config/defaults.json` (name yours) that reproduces today's tokens
+- [x] 1. `config/defaults.json` (name yours) that reproduces today's tokens
   exactly. Generate, diff against the current `:root`, iterate to zero diff.
   Expect gaps — record each one and whether it became a generator feature or
   moved to machinery.

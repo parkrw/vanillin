@@ -2,17 +2,24 @@
 /**
  * Vanillin theme generator.
  *
- * Reads van.config.json and produces styles/van.css -- a static CSS
- * file that overrides the project's design tokens. Import it after globals.css:
+ * Two jobs, same code path:
  *
- *   import "../styles/globals.css"
- *   import "../styles/van.css"
+ *  - `--defaults`: van.defaults.json -> styles/defaults.css, the kit's own
+ *    token values. globals.css @imports that file, so this is the one
+ *    authoritative :root of token values -- there is no hand-written copy to
+ *    drift from.
+ *  - default: van.config.json -> styles/van.css, a consumer's overrides.
+ *    Import it after globals.css:
+ *
+ *      import "../styles/globals.css"
+ *      import "../styles/van.css"
  *
  * The output is deterministic: same config -> byte-identical CSS. Consumers
  * should commit van.css; the generator is a dev-time tool.
  *
  * Interface for task 38 (CLI):
  *   - generate(config, { root }) -> string   (CSS text)
+ *   - buildDefaults({ root })    -> string   (writes styles/defaults.css)
  *   - discoverComponents(root)   -> Map       (slug -> blockClass)
  *   - extractTokenDefaults(css)  -> object    (token -> { light, dark })
  *   The CLI should read the config, call generate(), and write the result.
@@ -26,6 +33,22 @@ import { validate, parseOklch, parseColorTokens } from "./config-schema.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const VERSION = "0.1.0"
+
+/** The kit's own defaults: config in, generated stylesheet out. */
+export const DEFAULTS_CONFIG = "van.defaults.json"
+export const DEFAULTS_OUTPUT = "styles/defaults.css"
+
+/** Stylesheets whose :root blocks hold the current token values. */
+const TOKEN_SOURCES = [DEFAULTS_OUTPUT, "styles/globals.css"]
+
+/** Concatenate the token-source stylesheets that exist, in cascade order. */
+function readTokenSources(root, sources) {
+  return sources
+    .map((rel) => resolve(root, rel))
+    .filter((path) => existsSync(path))
+    .map((path) => readFileSync(path, "utf-8"))
+    .join("\n")
+}
 
 // ---------------------------------------------------------------------------
 // Component discovery
@@ -88,15 +111,23 @@ function splitLightDark(value) {
 }
 
 /**
- * Parse the :root block of globals.css to extract token defaults.
+ * Parse every :root block in a CSS string to extract token defaults.
  * Returns { tokenName: { light, dark } } for each custom property.
+ *
+ * All blocks, not just the first: since task 60 the kit's token values live in
+ * the generated styles/defaults.css and globals.css keeps a second :root for
+ * machinery. Later declarations win, matching the cascade.
  */
 export function extractTokenDefaults(css) {
   const defaults = {}
-  // Find the :root { ... } block
-  const rootIdx = css.indexOf(":root {")
-  if (rootIdx === -1) return defaults
+  for (const m of css.matchAll(/:root\s*\{/g)) {
+    collectRootBlock(css, m.index, defaults)
+  }
+  return defaults
+}
 
+/** Parse one :root block starting at `rootIdx`, merging into `defaults`. */
+function collectRootBlock(css, rootIdx, defaults) {
   let braceDepth = 0
   let blockStart = -1
   let blockEnd = -1
@@ -112,7 +143,7 @@ export function extractTokenDefaults(css) {
       }
     }
   }
-  if (blockStart === -1 || blockEnd === -1) return defaults
+  if (blockStart === -1 || blockEnd === -1) return
 
   const block = css.slice(blockStart, blockEnd)
 
@@ -140,7 +171,6 @@ export function extractTokenDefaults(css) {
       defaults[name] = { light: value, dark: value }
     }
   }
-  return defaults
 }
 
 // ---------------------------------------------------------------------------
@@ -328,10 +358,17 @@ function deriveBrand(brand) {
  * @param {object} opts
  * @param {string} opts.root - Repo root path (for discovering components and
  *   reading globals.css). Defaults to one directory above scripts/.
+ * @param {string[]} opts.tokenSources - CSS files, relative to root, whose
+ *   :root blocks supply the current token values. A one-mode override
+ *   (theme.light without theme.dark) fills the missing mode from these.
+ *   Defaults to the kit's stylesheets. The defaults build passes globals.css
+ *   only: reading its own previous output would make the result depend on
+ *   what was on disk.
+ * @param {string} opts.source - Config filename to name in the header banner.
  * @returns {string} The complete CSS file content.
  * @throws {Error} If validation fails.
  */
-export function generate(config, { root } = {}) {
+export function generate(config, { root, tokenSources = TOKEN_SOURCES, source } = {}) {
   root = root || resolve(__dirname, "..")
 
   // Context for validation
@@ -339,7 +376,7 @@ export function generate(config, { root } = {}) {
   const colorTokens = parseColorTokens(globalsCss)
   const componentMap = discoverComponents(root)
   const knownComponents = new Set(componentMap.keys())
-  const tokenDefaults = extractTokenDefaults(globalsCss)
+  const tokenDefaults = extractTokenDefaults(readTokenSources(root, tokenSources))
 
   // Validate
   const result = validate(config, { colorTokens, knownComponents })
@@ -352,7 +389,8 @@ export function generate(config, { root } = {}) {
   const sections = []
 
   // Header
-  sections.push(`/* Generated by van v${VERSION} -- do not edit by hand. */`)
+  const from = source ? ` from ${source}` : ""
+  sections.push(`/* Generated by van v${VERSION}${from} -- do not edit by hand. */`)
 
   // Collect :root overrides (sorted for determinism)
   const rootProps = new Map()
@@ -492,11 +530,55 @@ export function generate(config, { root } = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// Defaults build
+// ---------------------------------------------------------------------------
+
+/**
+ * Regenerate styles/defaults.css from van.defaults.json -- the kit's own
+ * token values, which globals.css @imports. Called by the vite plugin before
+ * anything resolves globals.css, and by `npm run theme:defaults`.
+ *
+ * Writes only when the content changed, so a dev-server boot does not touch
+ * the file's mtime and retrigger its own HMR.
+ *
+ * @returns {string} The generated CSS.
+ */
+export function buildDefaults({ root } = {}) {
+  root = root || resolve(__dirname, "..")
+  const config = JSON.parse(readFileSync(resolve(root, DEFAULTS_CONFIG), "utf-8"))
+  const css = generate(config, {
+    root,
+    // Not DEFAULTS_OUTPUT: reading the previous build would make this one
+    // depend on what happened to be on disk.
+    tokenSources: ["styles/globals.css"],
+    source: DEFAULTS_CONFIG,
+  })
+  const outPath = resolve(root, DEFAULTS_OUTPUT)
+  if (!existsSync(outPath) || readFileSync(outPath, "utf-8") !== css) {
+    writeFileSync(outPath, css)
+  }
+  return css
+}
+
+// ---------------------------------------------------------------------------
 // CLI entry point
 // ---------------------------------------------------------------------------
 
 function main() {
   const root = resolve(__dirname, "..")
+
+  if (process.argv.includes("--defaults")) {
+    let css
+    try {
+      css = buildDefaults({ root })
+    } catch (err) {
+      console.error(err.message)
+      process.exit(1)
+    }
+    console.log(`${DEFAULTS_OUTPUT} written (${css.length} bytes)`)
+    return
+  }
+
   const configPath = resolve(root, "van.config.json")
 
   let raw
