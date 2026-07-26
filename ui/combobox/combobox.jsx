@@ -35,7 +35,7 @@ function normalizeItem(item) {
  */
 export function Combobox({
   value,
-  defaultValue = "",
+  defaultValue,
   onValueChange,
   open,
   defaultOpen = false,
@@ -45,13 +45,15 @@ export function Combobox({
   onInputValueChange,
   items,
   autoHighlight = false,
+  multiple = false,
   name,
   disabled = false,
   children,
 }) {
+  const effectiveDefault = defaultValue !== undefined ? defaultValue : (multiple ? [] : "")
   const [currentValue, setValue] = useControllableState({
     value,
-    defaultValue,
+    defaultValue: effectiveDefault,
     onChange: onValueChange,
   })
   const [isOpen, setOpen] = useControllableState({
@@ -91,25 +93,44 @@ export function Combobox({
 
   const selectValue = useCallback(
     (itemValue) => {
-      setValue(itemValue)
-      setInputValue(getLabel(itemValue) ?? itemValue)
-      setOpen(false)
-      inputRef.current?.focus()
+      if (multiple) {
+        setValue((prev) => {
+          const list = prev ?? []
+          return list.includes(itemValue)
+            ? list.filter((v) => v !== itemValue)
+            : [...list, itemValue]
+        })
+        setInputValue("")
+        setQuery("")
+        inputRef.current?.focus()
+      } else {
+        setValue(itemValue)
+        setInputValue(getLabel(itemValue) ?? itemValue)
+        setOpen(false)
+        inputRef.current?.focus()
+      }
     },
-    [setValue, setInputValue, getLabel, setOpen]
+    [multiple, setValue, setInputValue, getLabel, setOpen, setQuery]
   )
 
   // Close resets the filter and highlight, and reverts the input to the
   // selected label — typed text that selected nothing doesn't stick.
+  // In multiple mode there is no display label; just clear the query.
   const valueRef = useRef(currentValue)
   valueRef.current = currentValue
   const getLabelRef = useRef(getLabel)
   getLabelRef.current = getLabel
+  const multipleRef = useRef(multiple)
+  multipleRef.current = multiple
   const revertInput = useCallback(() => {
     setQuery("")
     setHighlightedId(null)
-    const v = valueRef.current
-    setInputValue(v === "" ? "" : getLabelRef.current(v) ?? v)
+    if (multipleRef.current) {
+      setInputValue("")
+    } else {
+      const v = valueRef.current
+      setInputValue(v === "" ? "" : getLabelRef.current(v) ?? v)
+    }
   }, [setInputValue])
   useEffect(() => {
     if (isOpen) return
@@ -136,8 +157,10 @@ export function Combobox({
         listId,
         items,
         autoHighlight,
+        multiple,
         disabled,
         registerLabel,
+        getLabel,
         matches,
         selectValue,
         revertInput,
@@ -443,7 +466,7 @@ export function ComboboxContent({
  * themselves via `hidden`.
  */
 export function ComboboxList({ className, children, ...props }) {
-  const { listId, items, matches } = useContext(ComboboxContext)
+  const { listId, items, multiple, matches } = useContext(ComboboxContext)
 
   let rendered = children
   if (typeof children === "function") {
@@ -454,7 +477,13 @@ export function ComboboxList({ className, children, ...props }) {
   }
 
   return (
-    <div id={listId} role="listbox" className={cn("combobox-list", className)} {...props}>
+    <div
+      id={listId}
+      role="listbox"
+      aria-multiselectable={multiple ? "true" : undefined}
+      className={cn("combobox-list", className)}
+      {...props}
+    >
       {rendered}
     </div>
   )
@@ -475,13 +504,16 @@ export function ComboboxItem({
     value,
     highlightedId,
     setHighlightedId,
+    multiple,
     registerLabel,
     matches,
     selectValue,
   } = useContext(ComboboxContext)
   const id = useId()
   const itemRef = useRef(null)
-  const selected = value === itemValue
+  const selected = multiple
+    ? Array.isArray(value) && value.includes(itemValue)
+    : value === itemValue
   const highlighted = highlightedId === id
   const [label, setLabel] = useState(textValue ?? "")
 
