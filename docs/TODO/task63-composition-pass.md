@@ -59,8 +59,13 @@ Each is verified, not speculative:
 
 ## Sub-tasks
 
-- [ ] 1. Split the date demos: real `playground/pages/date-input.jsx` and
+- [x] 1. Split the date demos: real `playground/pages/date-input.jsx` and
   `time-picker.jsx`, each carrying its own prose, registry pointed at them.
+  Landed `0f48e2fe84de`. `tests/date-input.test.mjs` and
+  `tests/time-picker.test.mjs` now drive their own slugs; their assertions were
+  not touched. `CalendarIcon` stayed a per-page local — that is the existing
+  playground convention (`command.jsx` has its own copy) and an icon in a demo
+  page is incidental, not semantic.
 - [ ] 2. `ui/form` composes `ui/field` + `ui/label`. Public export names and
   rendered DOM must not change — the existing form tests are the contract.
 - [ ] 3. Consolidate chips: one implementation, `ui/combobox` consumes it.

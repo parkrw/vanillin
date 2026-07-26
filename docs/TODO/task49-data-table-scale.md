@@ -129,6 +129,14 @@ pagination + server-side modes. **Do not build windowing. Do not use
 - **Grouped rows change the meaning of `row.id`.** A group row's id must be
   stable and distinct from data-row ids — use `group:<colId>:<value>` so
   expand state survives re-renders. Data rows keep their original-index id.
+- **Every state change re-renders the whole table.** `use-data-table` holds its
+  eight state slices as plain `useState` (`lib/use-data-table.js:38-48`), so
+  typing in the global filter re-renders every row. Contrast `lib/use-form.js`,
+  which keeps values in a mutable ref and notifies only the subscribed slices —
+  typing in one field re-renders no siblings. At 10K rows this is likely the
+  dominant cost, and it is cheaper to fix than any windowing layer. **Measure it
+  before building anything else here** (noted 2026-07-26; a general
+  state-management task was rejected, but this specific case is real).
 - **Task 48 dependency is load-bearing.** Group rows span the full table
   width, which requires knowing the visible column count. Pinned columns
   inside a group must keep their sticky offsets. Do not start this until 48

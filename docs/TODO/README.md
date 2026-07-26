@@ -45,9 +45,21 @@ platform features shadcn cannot adopt (Tailwind/Radix/React-18 bound).
 Sequence: 28 → 29 (thin) → 31…61 → 30. Rationale in the 2026-07-25 log entry.
 Tasks are detailed just-in-time; only the rows below are durable.
 
-59–61 were added 2026-07-26, after 31–58 landed: 59 from the user directly, 60
-and 61 from reviewing what task 37 actually shipped. **61 before 60** — the
-default config in 60 can only express a one-colour brand until 61 lands.
+59–63 were added 2026-07-26, after 31–58 landed: 59 and 62 from the user
+directly, 60/61/63 from reviewing what phase 2 actually shipped. **61 before
+60** — the default config in 60 can only express a one-colour brand until 61
+lands.
+
+**Considered and rejected 2026-07-26: a vanillin state-management library**
+(zustand-shaped `create()` over `useSyncExternalStore`). Off-mission for a
+component kit; no vanillin component needs a global store, so unlike form
+validation there is no hole to fill; and a consumer already on zustand or Redux
+would end up with two stores, which inverts the zero-dependency argument. The
+fallback idea — extract the fine-grained subscription primitive that `use-form`
+and `use-data-table` supposedly shared — died on measurement: `use-data-table` is
+eight plain `useState` calls (`lib/use-data-table.js:38-48`) with no listeners,
+proxy or subscription engine, so there is nothing shared to extract. Do not
+revive either without new evidence.
 
 **Every task writes its own docs** (2026-07-26) — prose lands in the same PR as
 the code, on the component's playground page or the relevant
@@ -87,6 +99,8 @@ written; it is a final consistency and gap pass.
 | 59  | form-bindings            | ~M  | [ ]    | deps: 40, 41; user-requested. Third layer composing `use-form` + `ui/form` + controls into one import; `ui/form` must still never import the engine. Also where `ui/form` stops reimplementing label/description/message |
 | 60  | generated-defaults       | ~L  | [ ]    | deps: 37, 61; kit's own theme generated from a default config — one authoritative `:root`. Resolves task 37's spec contradiction (import the output vs. stay pixel-identical) |
 | 61  | brand-multicolor         | ~M  | [ ]    | deps: 37; `brand` as string-or-object (primary/secondary/accent/neutral); **sub-task 1 is an a11y fix — foregrounds picked by measured contrast, not a lightness threshold — and ships independently** |
+| 62  | schema-core              | ~L  | [ ]    | `lib/schema.js` — zero-dep zod-shaped validation + `schemaResolver` adapter. Pairs with 59; neither blocks the other, the resolver contract is already the seam. Runtime only — no TS inference story |
+| 63  | composition-pass         | ~M  | [~]    | components reuse each other where the relationship is **semantic**, not everywhere — a blanket rule would destroy copy-paste independence. Sub-task 1 (date demo split) landed `0f48e2fe84de` |
 
 **Browser-support gate:** 33, 39, 54, 55, 57 depend on features that were
 partially supported at plan time (relative color syntax, `light-dark()`,
