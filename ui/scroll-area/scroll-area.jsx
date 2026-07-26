@@ -10,6 +10,10 @@ const SNAP_SETTLE_TIMEOUT = 1000
 /** Fallback delay when scrollend is not available. */
 const SNAP_FALLBACK_DELAY = 150
 const HAS_SCROLL_END = typeof window !== "undefined" && "onscrollend" in window
+const SQUISH_DAMPING = 0.3
+const SQUISH_MAX = 50
+/** Minimum per-frame move in px before engaging squish (avoids jitter). */
+const SQUISH_MOVE_THRESHOLD = 2
 
 const ScrollAreaContext = createContext(null)
 
@@ -305,6 +309,146 @@ export function ScrollArea({ className, children, overflowEdgeThreshold = 0, ...
     },
     [direction, markScrolling, suspendSnap]
   )
+
+  // Overscroll squish — touch/pen only, reduced-motion guarded.
+  // useSwipe cannot support this: its unconditional setPointerCapture hijacks
+  // native scrolling, violating the "must not hijack a real scroll" rule.
+  useEffect(() => {
+    const viewport = viewportRef.current
+    const content = contentRef.current
+    if (!viewport || !content) return
+
+    const mql = window.matchMedia("(prefers-reduced-motion: reduce)")
+
+    let touchId = null
+    let lastY = 0
+    let lastX = 0
+    let active = false
+    let originY = 0
+    let originX = 0
+    // 'min' = scroll at minimum → finger moving positive, 'max' = opposite
+    let edgeY = null
+    let edgeX = null
+
+    function findTouch(touches, id) {
+      for (let i = 0; i < touches.length; i++) if (touches[i].identifier === id) return touches[i]
+      return null
+    }
+
+    function onTouchStart(e) {
+      if (mql.matches || e.touches.length !== 1) return
+      const t = e.touches[0]
+      touchId = t.identifier
+      lastY = t.clientY
+      lastX = t.clientX
+      active = false
+      edgeY = null
+      edgeX = null
+    }
+
+    function onTouchMove(e) {
+      if (mql.matches || touchId === null) return
+      const t = findTouch(e.touches, touchId)
+      if (!t) return
+
+      const moveY = t.clientY - lastY
+      const moveX = t.clientX - lastX
+      lastY = t.clientY
+      lastX = t.clientX
+
+      if (active) {
+        let sy = 0
+        let sx = 0
+
+        if (edgeY) {
+          const d = t.clientY - originY
+          const ok = edgeY === "min" ? d > 0 : d < 0
+          if (ok) sy = Math.sign(d) * Math.min(Math.abs(d) * SQUISH_DAMPING, SQUISH_MAX)
+          else edgeY = null
+        }
+
+        if (edgeX) {
+          const d = t.clientX - originX
+          const ok = edgeX === "min" ? d > 0 : d < 0
+          if (ok) sx = Math.sign(d) * Math.min(Math.abs(d) * SQUISH_DAMPING, SQUISH_MAX)
+          else edgeX = null
+        }
+
+        if (edgeY || edgeX) {
+          content.style.transform = `translate3d(${sx}px, ${sy}px, 0)`
+        } else {
+          content.style.transform = ""
+          active = false
+        }
+        return
+      }
+
+      // Detect boundaries and start squish
+      const maxY = viewport.scrollHeight - viewport.clientHeight
+      const maxX = viewport.scrollWidth - viewport.clientWidth
+
+      if (maxY > 1) {
+        const atTop = viewport.scrollTop <= 0
+        const atBottom = viewport.scrollTop >= maxY - 1
+        if (atTop && moveY > SQUISH_MOVE_THRESHOLD) {
+          edgeY = "min"
+          originY = t.clientY
+          active = true
+        } else if (atBottom && moveY < -SQUISH_MOVE_THRESHOLD) {
+          edgeY = "max"
+          originY = t.clientY
+          active = true
+        }
+      }
+
+      if (maxX > 1) {
+        const sl = viewport.scrollLeft
+        const rtl = getComputedStyle(viewport).direction === "rtl"
+        const atSlMin = sl <= (rtl ? -(maxX - 1) : 0) + 1
+        const atSlMax = sl >= (rtl ? 0 : maxX - 1) - 1
+        if (atSlMin && moveX > SQUISH_MOVE_THRESHOLD) {
+          edgeX = "min"
+          originX = t.clientX
+          active = true
+        } else if (atSlMax && moveX < -SQUISH_MOVE_THRESHOLD) {
+          edgeX = "max"
+          originX = t.clientX
+          active = true
+        }
+      }
+    }
+
+    function springBack() {
+      if (!active) {
+        touchId = null
+        return
+      }
+      content.style.transition = "transform var(--motion-medium) var(--motion-ease)"
+      content.style.transform = ""
+      const cleanup = () => {
+        content.style.transition = ""
+      }
+      content.addEventListener("transitionend", cleanup, { once: true })
+      // Safety: clear transition even if transitionend doesn't fire
+      setTimeout(cleanup, 300)
+      active = false
+      touchId = null
+      edgeY = null
+      edgeX = null
+    }
+
+    viewport.addEventListener("touchstart", onTouchStart, { passive: true })
+    viewport.addEventListener("touchmove", onTouchMove, { passive: true })
+    viewport.addEventListener("touchend", springBack, { passive: true })
+    viewport.addEventListener("touchcancel", springBack, { passive: true })
+
+    return () => {
+      viewport.removeEventListener("touchstart", onTouchStart)
+      viewport.removeEventListener("touchmove", onTouchMove)
+      viewport.removeEventListener("touchend", springBack)
+      viewport.removeEventListener("touchcancel", springBack)
+    }
+  }, [])
 
   const context = useMemo(
     () => ({

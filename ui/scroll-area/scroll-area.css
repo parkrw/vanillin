@@ -11,6 +11,8 @@
   border-radius: inherit;
   /* the overlay scrollbars replace the UA ones */
   scrollbar-width: none;
+  /* suppress native overscroll so the custom squish replaces it */
+  overscroll-behavior: contain;
 }
 
 .scroll-area-viewport::-webkit-scrollbar {
