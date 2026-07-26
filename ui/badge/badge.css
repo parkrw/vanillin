@@ -73,6 +73,11 @@
 
 .badge--destructive-soft {
   background-color: var(--destructive-background);
-  color: var(--destructive-foreground);
+  /* --destructive-foreground is the text-on-solid-red token (near-white
+     in light, near-black in dark) — not suitable for soft backgrounds.
+     --destructive alone yields 3.98:1 on light (under WCAG AA 4.5:1 for
+     small text).  Mixing 70% with --foreground darkens just enough in
+     light and stays readable in dark. */
+  color: color-mix(in oklab, var(--destructive) 70%, var(--foreground));
   border-color: var(--destructive-border);
 }
