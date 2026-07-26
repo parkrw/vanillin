@@ -104,16 +104,43 @@ export default function ThemingPage() {
         dark without separate declarations.
       </p>
 
-      <h3>Density scale</h3>
+      <h3>Density modes</h3>
 
       <p>
-        <code>--density-scale</code> (default&nbsp;1) and a spacing ramp
-        (<code>--space-1</code> through <code>--space-8</code>) are defined
-        but <strong>not yet applied</strong> to any component. Override{" "}
-        <code>--density-scale</code> at <code>:root</code> to prepare for
-        future density support (e.g.&nbsp;0.875 for compact, 1.25 for
-        spacious), but nothing will change visually until components are
-        wired to use the spacing tokens.
+        Three named density modes scale all spacing that flows through the{" "}
+        <code>--space-*</code> token ramp:
+      </p>
+
+      <pre>
+{`[data-density="compact"]     { --density-scale: 0.875; }
+[data-density="comfortable"] { --density-scale: 1; }
+[data-density="spacious"]    { --density-scale: 1.25; }`}
+      </pre>
+
+      <p>
+        Apply them with the <code>&lt;Density&gt;</code> component or set{" "}
+        <code>data-density</code> directly on any element. They are scoped,
+        not global &mdash; a compact table inside a comfortable page is the
+        intended use case. Nesting works: a <code>data-density</code> inside
+        another one wins.
+      </p>
+
+      <p>
+        <strong>Font size is never scaled.</strong> Density is spacing.
+        Shrinking text below 14px fails accessibility and is why compact
+        modes usually look broken.
+      </p>
+
+      <p>
+        <strong>Touch targets are clamped.</strong> Interactive elements
+        enforce a 24px minimum (WCAG&nbsp;2.5.8) so compact mode stays
+        usable on coarse-pointer devices.
+      </p>
+
+      <p>
+        For a custom scale, set <code>--density-scale</code> to any number
+        directly. The named modes are the API, but the raw variable stays
+        supported.
       </p>
 
       <h3>Browser support</h3>
