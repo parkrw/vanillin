@@ -1,18 +1,89 @@
 # HANDOFF
 
-## What landed (session of 2026-07-26, phase-2 fan-out)
+## What landed (session 2 of 2026-07-26, phase-2 wave two)
 
-**11 tasks on `feat/phase-2`, 65 commits, suite 421/421, `npm run build`
-clean.** Built by 11 concurrent worktree agents, cherry-picked onto the
-integration branch. `main` is untouched at `cbb2041`.
+**15 more tasks on `feat/phase-2`.** Suite was 538/550 before task 48 was
+added; **12 known failures, all cross-task, being fixed by an agent that was
+still running when this session ended** (see "In flight" below). `main` is at
+`6bfe4d63be91` and untouched.
 
-Done: **31** cursor-affordance, **32** status-colors, **33** token-foundation,
-**40** use-form-core, **42** format-intl, **43** select-parity, **45**
-command-fuzzy, **47** data-table-filtering, **52** swipe-velocity, **53**
-date-picker-parity, **57** platform-polish.
+Done this session: **34** tokenize-core-a, **35** tokenize-core-b, **36**
+density-modes, **37** config-generator, **41** form-component, **44**
+combobox-multi, **46** navigation-menu-viewport, **48** data-table-columns,
+**50** resizable-parity, **51** scroll-area-parity, **54** view-transitions,
+**55** highlight-api, **56** forced-colors, **58** carousel-parity.
+
+Plus, not from the task list:
+- `--space-1-5` / `--space-2-5` added to the ramp. Tasks 34 and 35
+  independently hit the same hole and each rounded inconsistently, always
+  downward, silently tightening eight components at default density.
+- `lib/use-swipe.js` had **zero consumers** while `ui/drawer` and `ui/toast`
+  each hand-copied its windowed-velocity algorithm. Now one primitive with
+  conditional pointer capture; both consume it. +3 net lines, tests unmodified.
+- Carousel `opts.loop` cloned all N slides both sides (3N nodes). Now measures
+  the viewport; a 50-image gallery went 150 nodes → ~56.
+- `message-scroller` flake root-caused (test watched upstream state, not the
+  downstream observable) and `tests/run.mjs` gained a subset filter.
+
+Specs written: **30** (docs consistency pass), **44**, **48**, **49**.
 
 Per-task decisions, deviations and gotchas: `docs/TODO/LOG.md` (append there,
 not to the TODO README).
+
+## In flight when this session ended
+
+One agent on branch `fix/phase-2-integration` (worktree
+`../vanillin-wt/integration-fix`) fixing the 12 failures. Its brief forbids
+weakening any assertion. Check `git -C ../vanillin-wt/integration-fix log
+--oneline feat/phase-2..HEAD` for commits and cherry-pick them. **Note its
+target of 550/550 predates task 48's four commits**, so the true total is
+higher now — re-run the suite yourself rather than trusting its number.
+
+The three root-cause groups:
+- **4 `tokens` failures** — task 37 wires `styles/vanillin.css` into
+  `playground/main.jsx` after `globals.css`, and the committed demo config
+  re-declares `--accent`/`--primary`/`--radius` at `:root` with a blue hue-265
+  brand. It re-themes the whole playground and invalidates 34/35's visual
+  baselines. **Decision already made:** scope the generated output to a
+  preview container; the kit's default rendering must be byte-identical to
+  pre-37. Do not edit the token snapshot tests.
+- **6 `forced-colors` failures** — all report `outline-style: none`, i.e. task
+  56's `!important` repair rules never apply. The `@import` *is* correctly at
+  line 1 of `globals.css` (verified), so it is not being dropped. Prime
+  suspect is test isolation: `tests/run.mjs` shares one Playwright page across
+  every file in alphabetical order, and 56's final commit added an
+  `about:blank` flush to stop `emulateMedia` leaking. If instead the layer
+  genuinely fails in a browser, that is an accessibility bug and outranks the
+  test.
+- **2 `density` failures** — compact and comfortable both resolve to the
+  *compact* value. Likely cause: the half-step tokens above were added after
+  task 36's spec, so its `[data-density]` block may re-declare only the
+  original six `--space-*`, leaving the ramp half-broken in every mode.
+
+## The composition problem — read this before fanning out again
+
+Twenty branches cherry-picked with almost zero conflicts, and that number is
+misleading. **The file-ownership discipline that produced it actively
+prevented components from composing.** Every agent was told which files it
+alone owned and to report rather than touch anything else, so no agent ever
+reused another's work. The result:
+
+- `ui/form` reimplements label, description and message instead of using
+  `ui/field` and `ui/label` (verified: it imports only React, `react-dom`,
+  `lib/cn.js`).
+- `ui/data-table` never uses `ui/scroll-area` despite needing horizontal
+  scrolling; it relies on `ui/table`'s raw `overflow: auto`.
+- Task 44 built its own chips because I told it not to extend `ui/badge` —
+  a merge-conflict decision that added a third chip-like thing to the kit.
+- `lib/use-swipe.js` sat unused while two components duplicated it.
+- `date-input`, `date-picker` and `time-picker` are three real components
+  sharing one demo page via three registry aliases.
+
+The fix is not less parallelism — it is briefing agents to *reuse named
+components* and assigning a shared file to exactly one owner with the others
+reporting requests. When two tasks need the same component, sequence them
+instead of duplicating. Cohesion is a design property; it does not survive
+being treated as a merge-conflict problem.
 
 ### The merge is yours to run
 
@@ -30,14 +101,32 @@ each, then delete the per-task branches.
 
 ## Next step
 
-Phase 2 continues. Remaining: **34, 35** (tokenize-core, both deps 33 ✓) →
-**36, 37, 39** → **38**; plus independents **41** (deps 40 ✓), **44** (deps 43
-✓), **46**, **48** (deps 47 ✓), **49**, **50**, **51**, **54**, **55**, **56**,
-**58**. Then **30** last.
+1. **Land the in-flight integration fix** and get the full suite green. Nothing
+   else should start before that.
+2. **Task 59 — form bindings (new, user-requested, spec not yet written).**
+   The user explicitly asked for this. `ui/form` is deliberately
+   engine-agnostic and must stay that way — it may never import
+   `lib/use-form.js`. Keep that boundary; add a **third layer above both**
+   that ships the wiring nobody currently gets: a `ui/form-bindings/` (name
+   is yours) that composes `lib/use-form.js` + `ui/form` + the existing
+   `ui/field` / `ui/label` / `ui/input` / `ui/select` / `ui/checkbox`
+   controls into a one-import path, so a consumer writes a form without
+   hand-rolling glue. shadcn ships `useForm` + `Form` working together; we
+   currently ship a context and a to-do. **This task is also where `ui/form`
+   should stop reimplementing label/description/message and start using
+   `ui/field` and `ui/label`.**
+3. **Remaining plan tasks:** **39** container-queries (deps 34, 35 ✓ — hold
+   until 48's data-table work is stable, both rewrite `ui/data-table`), **38**
+   cli (deps 37 ✓), **49** data-table-scale (deps 48 ✓, spec written, verdict
+   is *no windowing layer* — measured), then **30** docs pass last.
+4. **Composition backlog** (from the section above, none of it owned by any
+   task): `ui/data-table` → `ui/scroll-area`; the `date-input` /
+   `date-picker` / `time-picker` shared-page aliasing; the third chip
+   implementation in `ui/combobox` vs `ui/badge`; wiring
+   `lib/use-highlight.js` into `ui/data-table` (task 55 deferred it and its
+   report says exactly what the follow-up needs).
 
-Task files exist for 37, 38, 41, 46, 50, 51, 54, 55, 56, 58 — most written this
-session, ready to dispatch as-is. **Missing and must be written first: 34, 35,
-36, 39, 44, 48, 49, 30.**
+Task files exist for 38, 39, 49, 30 — ready to dispatch as-is.
 
 **Docs policy changed 2026-07-26:** every task now ships its prose in the same
 PR as its code. Task 30 is no longer where docs get written — it is a final
