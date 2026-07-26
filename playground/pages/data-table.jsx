@@ -182,6 +182,37 @@ export default function DataTablePage() {
     <>
       <h2>Data Table</h2>
 
+      <section className="pg-section">
+        <h3>Filtering</h3>
+        <p>
+          The global filter is a case-insensitive substring match across every
+          column with an <code>accessorKey</code>. Set{" "}
+          <code>enableGlobalFilter: false</code> on a column def to exclude it.
+          Use <code>getFilterValue(rawValue)</code> on a column def to override
+          what string the global filter matches against (useful for timestamps
+          or enum codes). Global and column filters compose with AND — a row
+          must pass both to appear.
+        </p>
+        <h3>Faceted counts</h3>
+        <p>
+          <code>column.getFacetedUniqueValues()</code> returns a{" "}
+          <code>Map&lt;value, count&gt;</code> computed from rows passing every
+          active filter <em>except</em> the facet column's own selection. This
+          keeps counts useful: selecting "pending" does not collapse all other
+          status counts to zero.
+        </p>
+        <h3>Multi-sort</h3>
+        <p>
+          Shift-click a sortable column header to append it as a secondary (or
+          tertiary) sort key. Plain click resets to single-column sort. The
+          comparator chain is stable — ties on all sort keys preserve original
+          data order. <code>maxMultiSortColCount</code> (default 3) caps the
+          depth; exceeding it drops the oldest key. <code>aria-sort</code> goes
+          on the primary column only; secondary columns expose their position
+          via the button's <code>aria-label</code>.
+        </p>
+      </section>
+
       <section className="pg-section" data-pg="dt">
         <h3>Payments</h3>
 
