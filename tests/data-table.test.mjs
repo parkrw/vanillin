@@ -717,4 +717,256 @@ export default async function run({ page, baseUrl, test, eq }) {
     const pinnedCount = await dtSized.locator(".data-table-pinned").count()
     eq(pinnedCount, 0, "no pinned cells after unpin")
   })
+
+  // ── Grouping ──────────────────────────────────────────────────────
+
+  const dtGrouped = page.locator('[data-pg="dt-grouped"]')
+  const groupedDataRows = dtGrouped.locator(
+    ".table-body .table-row:not(.data-table-group-row)"
+  )
+  const groupedPageInfo = () =>
+    page.locator('[data-pg="dt-grouped-page-info"]').textContent()
+
+  await test("grouping produces collapsed group rows in value order", async () => {
+    await dtGrouped.waitFor()
+
+    const groupRows = dtGrouped.locator(".data-table-group-row")
+    eq(await groupRows.count(), 4, "4 status groups")
+    eq(await groupedDataRows.count(), 0, "children hidden while collapsed")
+    eq(
+      await groupRows.first().getAttribute("data-depth"),
+      "0",
+      "top-level groups have depth 0"
+    )
+
+    const labels = await dtGrouped
+      .locator(".data-table-group-label")
+      .allTextContents()
+    eq(
+      labels.join(","),
+      "failed,pending,processing,success",
+      "groups ordered by value"
+    )
+
+    const counts = await dtGrouped
+      .locator(".data-table-group-count")
+      .allTextContents()
+    eq(
+      counts.reduce((s, c) => s + Number(c), 0),
+      20,
+      "leaf counts sum to all rows"
+    )
+  })
+
+  await test("expand/collapse round-trips", async () => {
+    const firstToggle = dtGrouped.locator(".data-table-group-toggle").first()
+    eq(await firstToggle.getAttribute("aria-expanded"), "false", "starts collapsed")
+
+    await firstToggle.click()
+    await page.waitForTimeout(50)
+    eq(await firstToggle.getAttribute("aria-expanded"), "true", "expanded after click")
+    eq(await groupedDataRows.count(), 4, "failed group shows its 4 rows")
+
+    await firstToggle.click()
+    await page.waitForTimeout(50)
+    eq(await firstToggle.getAttribute("aria-expanded"), "false", "collapsed again")
+    eq(await groupedDataRows.count(), 0, "children hidden after collapse")
+  })
+
+  await test("nested grouping adds depth-1 group rows", async () => {
+    await page.locator('[data-pg="dt-grouped-nested"]').click()
+    await page.waitForTimeout(50)
+    eq(
+      await dtGrouped.locator(".data-table-group-row").count(),
+      4,
+      "still 4 collapsed top-level groups"
+    )
+
+    // Expand the first status group — its children are method group rows
+    const firstToggle = dtGrouped.locator(".data-table-group-toggle").first()
+    await firstToggle.click()
+    await page.waitForTimeout(50)
+
+    const depth1 = dtGrouped.locator('.data-table-group-row[data-depth="1"]')
+    eq(await depth1.count(), 2, "failed splits into 2 method groups")
+    eq(await groupedDataRows.count(), 0, "no data rows until a method group opens")
+
+    // Expand the first method group — exactly its leaf rows appear
+    const leafCount = Number(
+      await depth1.first().locator(".data-table-group-count").textContent()
+    )
+    await depth1.first().locator(".data-table-group-toggle").click()
+    await page.waitForTimeout(50)
+    eq(await groupedDataRows.count(), leafCount, "method group reveals its leaves")
+
+    // Restore: collapse the status group, back to single-level grouping
+    await firstToggle.click()
+    await page.waitForTimeout(50)
+    await page.locator('[data-pg="dt-grouped-nested"]').click()
+    await page.waitForTimeout(50)
+    eq(
+      await dtGrouped.locator(".data-table-group-row").count(),
+      4,
+      "back to 4 status groups"
+    )
+    eq(await groupedDataRows.count(), 0, "all collapsed after restore")
+  })
+
+  await test("sort applies within each group, not across the result", async () => {
+    // Expand all (page size 30 shows the full flattened result)
+    await page.locator('[data-pg="dt-grouped-expand-all"]').click()
+    await page.waitForTimeout(50)
+    eq(
+      await dtGrouped.locator(".table-body .table-row").count(),
+      24,
+      "4 group rows + 20 data rows when all expanded"
+    )
+
+    await dtGrouped.locator(".data-table-sort-btn").first().click()
+    await page.waitForTimeout(50)
+
+    const rows = await page.$$eval(
+      '[data-pg="dt-grouped"] .table-body .table-row',
+      (els) =>
+        els.map((el) => {
+          const isGroup = el.classList.contains("data-table-group-row")
+          const cell = el.querySelectorAll(".table-cell")[3]
+          return {
+            isGroup,
+            amount: isGroup ? null : parseFloat(cell.textContent.replace(/[$,]/g, "")),
+          }
+        })
+    )
+    eq(rows.filter((r) => r.isGroup).length, 4, "group headers intact after sort")
+
+    let withinGroupSorted = true
+    let prev = -Infinity
+    for (const r of rows) {
+      if (r.isGroup) {
+        prev = -Infinity
+        continue
+      }
+      if (r.amount < prev) withinGroupSorted = false
+      prev = r.amount
+    }
+    eq(withinGroupSorted, true, "amounts ascend within each group")
+
+    const amounts = rows.filter((r) => !r.isGroup).map((r) => r.amount)
+    const globallySorted = amounts.every((a, i) => i === 0 || a >= amounts[i - 1])
+    eq(globallySorted, false, "sort does not run across group boundaries")
+  })
+
+  await test("pagination applies to the flattened result", async () => {
+    // All expanded from the previous test: 24 flattened rows
+    await page.locator('[data-pg="dt-grouped-page-size"]').selectOption("10")
+    await page.waitForTimeout(50)
+    eq(await groupedPageInfo(), "Page 1 of 3", "24 flattened rows = 3 pages of 10")
+    eq(await dtGrouped.locator(".table-body .table-row").count(), 10, "page 1 has 10 rows")
+
+    await page.locator('[data-pg="dt-grouped-next"]').click()
+    await page.locator('[data-pg="dt-grouped-next"]').click()
+    await page.waitForTimeout(50)
+    eq(await groupedPageInfo(), "Page 3 of 3", "on last page")
+    eq(await dtGrouped.locator(".table-body .table-row").count(), 4, "last page has 4 rows")
+    eq(
+      await page.locator('[data-pg="dt-grouped-next"]').isDisabled(),
+      true,
+      "next disabled on last page"
+    )
+
+    // Restore: one page again, everything collapsed
+    await page.locator('[data-pg="dt-grouped-page-size"]').selectOption("30")
+    await page.waitForTimeout(50)
+    await page.locator('[data-pg="dt-grouped-expand-all"]').click()
+    await page.waitForTimeout(50)
+    eq(await groupedDataRows.count(), 0, "collapse-all hides data rows")
+  })
+
+  // ── Manual modes ──────────────────────────────────────────────────
+
+  const dtManual = page.locator('[data-pg="dt-manual"]')
+  const manualProducts = () =>
+    page.$$eval('[data-pg="dt-manual"] .table-body .table-row', (rows) =>
+      rows.map((r) => r.querySelectorAll(".table-cell")[1].textContent.trim())
+    )
+  const manualFires = () =>
+    page.locator('[data-pg="dt-manual-fires"]').textContent()
+
+  await test("manualSorting preserves data order; callback fires once per change", async () => {
+    await dtManual.waitFor()
+    const before = await manualProducts()
+    eq(before.join(","), "Keyboard,Mouse,Headset,Cable,Dock", "initial data order")
+    eq(await manualFires(), "onSortingChange fired 0 time(s).", "no fires yet")
+
+    const sortBtn = dtManual.locator(".data-table-sort-btn")
+    await sortBtn.click()
+    await page.waitForTimeout(50)
+    eq(
+      await dtManual.locator(".table-head[aria-sort]").getAttribute("aria-sort"),
+      "ascending",
+      "sort indicator updates"
+    )
+    eq((await manualProducts()).join(","), before.join(","), "row order preserved")
+    eq(await manualFires(), "onSortingChange fired 1 time(s).", "fired exactly once")
+
+    await sortBtn.click()
+    await page.waitForTimeout(50)
+    eq(
+      await dtManual.locator(".table-head[aria-sort]").getAttribute("aria-sort"),
+      "descending",
+      "indicator toggles to descending"
+    )
+    eq((await manualProducts()).join(","), before.join(","), "order still untouched")
+    eq(await manualFires(), "onSortingChange fired 2 time(s).", "fired exactly twice")
+  })
+
+  // ── Server-side (manualPagination + manualSorting) ────────────────
+
+  const dtServer = page.locator('[data-pg="dt-server"]')
+  const serverPageInfo = () =>
+    page.locator('[data-pg="dt-server-page-info"]').textContent()
+  const serverIdle = () =>
+    page.waitForSelector('[data-pg="dt-server-status"][data-loading="false"]')
+  const serverOrders = () =>
+    page.$$eval('[data-pg="dt-server"] .table-body .table-row', (rows) =>
+      rows.map((r) => r.querySelectorAll(".table-cell")[0].textContent.trim())
+    )
+
+  await test("manualPagination derives page count from rowCount", async () => {
+    await dtServer.waitFor()
+    await serverIdle()
+    eq(await serverPageInfo(), "Page 1 of 50", "500 rows / 10 per page = 50 pages")
+    eq((await serverOrders()).join(","), "1,2,3,4,5,6,7,8,9,10", "first server page")
+  })
+
+  await test("page change triggers a server re-fetch", async () => {
+    await page.locator('[data-pg="dt-server-next"]').click()
+    await page.waitForSelector('[data-pg="dt-server-status"][data-loading="true"]')
+    await serverIdle()
+    eq(await serverPageInfo(), "Page 2 of 50", "moved to page 2")
+    eq(
+      (await serverOrders()).join(","),
+      "11,12,13,14,15,16,17,18,19,20",
+      "second server page"
+    )
+  })
+
+  await test("sort change re-fetches server-sorted data and resets to page 1", async () => {
+    await dtServer.locator(".data-table-sort-btn").click()
+    await page.waitForSelector('[data-pg="dt-server-status"][data-loading="true"]')
+    await serverIdle()
+    eq(await serverPageInfo(), "Page 1 of 50", "sorting resets to page 1")
+
+    const amounts = await page.$$eval(
+      '[data-pg="dt-server"] .table-body .table-row',
+      (rows) =>
+        rows.map((r) =>
+          parseFloat(
+            r.querySelectorAll(".table-cell")[2].textContent.replace(/[$,]/g, "")
+          )
+        )
+    )
+    const ascending = amounts.every((a, i) => i === 0 || a >= amounts[i - 1])
+    eq(ascending, true, "server returned the sorted page")
+  })
 }
