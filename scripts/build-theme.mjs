@@ -252,11 +252,65 @@ function deriveBrandColor(key, colorStr) {
 }
 
 /**
+ * Nudge a foreground's lightness away from the background until the pair
+ * measures 4.5:1. Used where the starting point comes from the kit's own
+ * lightness ramp rather than user input.
+ */
+function ensureContrast(fg, bg, label) {
+  const out = { ...fg }
+  const dir = relativeLuminance(out) >= relativeLuminance(bg) ? 1 : -1
+  while (contrastRatio(out, bg) < MIN_CONTRAST) {
+    const next = out.l + dir * 0.005
+    if (next <= 0 || next >= 1) {
+      throw new Error(`${label}: cannot reach ${MIN_CONTRAST}:1 against ${fmtOklch(bg.l, bg.c, bg.h)}`)
+    }
+    out.l = next
+  }
+  return out
+}
+
+// Tinting caps chroma: the greys must stay greys that lean toward the brand
+// hue, and higher chroma pushes the l=0.97 tints out of sRGB gamut.
+const NEUTRAL_TINT_CHROMA = 0.03
+
+// The kit's grey ramp from globals.css; neutral keeps these lightness values
+// and threads its hue (and capped chroma) through them.
+const NEUTRAL_RAMP = {
+  secondary: { light: 0.97, dark: 0.269, fgLight: 0.205, fgDark: 0.985 },
+  muted: { light: 0.97, dark: 0.269, fgLight: 0.556, fgDark: 0.708 },
+  accent: { light: 0.97, dark: 0.269, fgLight: 0.205, fgDark: 0.985 },
+}
+
+/**
+ * Tint the grey families toward the brand hue. Only hue and (capped) chroma
+ * are taken from the neutral colour — its lightness is ignored so the
+ * surface hierarchy keeps the kit's ramp. Foregrounds are contrast-corrected
+ * (the default muted pair sits just under 4.5:1; tinting is the moment we
+ * start deriving it, so it must pass).
+ */
+function deriveNeutral(colorStr) {
+  const { c, h } = parseOklch(colorStr)
+  const tc = Math.min(c, NEUTRAL_TINT_CHROMA)
+  const tokens = {}
+  for (const [key, ramp] of Object.entries(NEUTRAL_RAMP)) {
+    const bgLight = { l: ramp.light, c: tc, h }
+    const bgDark = { l: ramp.dark, c: tc, h }
+    const fgLight = ensureContrast({ l: ramp.fgLight, c: tc, h }, bgLight, `theme.brand.neutral (${key}, light)`)
+    const fgDark = ensureContrast({ l: ramp.fgDark, c: tc, h }, bgDark, `theme.brand.neutral (${key}, dark)`)
+    tokens[key] = `light-dark(${fmtOklch(bgLight.l, bgLight.c, bgLight.h)}, ${fmtOklch(bgDark.l, bgDark.c, bgDark.h)})`
+    tokens[`${key}-foreground`] = `light-dark(${fmtOklch(fgLight.l, fgLight.c, fgLight.h)}, ${fmtOklch(fgDark.l, fgDark.c, fgDark.h)})`
+  }
+  return tokens
+}
+
+/**
  * Derive tokens from theme.brand. A string is sugar for { primary }.
+ * neutral runs first so explicit secondary/accent keys overwrite its tints.
  */
 function deriveBrand(brand) {
   if (typeof brand === "string") brand = { primary: brand }
   const tokens = {}
+  if (brand.neutral) Object.assign(tokens, deriveNeutral(brand.neutral))
   for (const key of ["primary", "secondary", "accent"]) {
     if (brand[key]) Object.assign(tokens, deriveBrandColor(key, brand[key]))
   }

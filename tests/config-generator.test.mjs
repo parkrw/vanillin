@@ -155,6 +155,36 @@ export default async function ({ page, baseUrl, repoRoot, test, eq, near }) {
     eq(light, "oklch(0.9 0.02 190)", "literal override lost to derivation")
   })
 
+  await test("neutral brand: tints the grey families, pairs pass 4.5:1", async () => {
+    const css = generate({ theme: { brand: { neutral: "oklch(0.55 0.02 265)" } } }, { root: repoRoot })
+    for (const key of ["secondary", "muted", "accent"]) {
+      const bg = tokenModes(css, key)
+      const fg = tokenModes(css, `${key}-foreground`)
+      for (const mode of ["light", "dark"]) {
+        eq(bg[mode].endsWith(" 0.02 265)"), true, `${key} ${mode} should carry the neutral hue: ${bg[mode]}`)
+        const ratio = contrastRatio(fg[mode], bg[mode])
+        eq(ratio >= 4.5, true, `${key} ${mode}: ${fg[mode]} on ${bg[mode]} measures ${ratio.toFixed(2)}:1`)
+      }
+    }
+    // Lightness ramp is the kit's, not the neutral colour's
+    eq(tokenModes(css, "secondary").light.startsWith("oklch(0.97 "), true, "light tint keeps ramp lightness")
+    eq(tokenModes(css, "secondary").dark.startsWith("oklch(0.269 "), true, "dark tint keeps ramp lightness")
+  })
+
+  await test("neutral brand: chroma is capped", async () => {
+    const css = generate({ theme: { brand: { neutral: "oklch(0.55 0.2 265)" } } }, { root: repoRoot })
+    eq(tokenModes(css, "muted").light, "oklch(0.97 0.03 265)", "chroma should cap at 0.03")
+  })
+
+  await test("neutral brand: explicit secondary wins over the tint", async () => {
+    const css = generate(
+      { theme: { brand: { neutral: "oklch(0.55 0.02 265)", secondary: "oklch(0.65 0.14 190)" } } },
+      { root: repoRoot },
+    )
+    eq(tokenModes(css, "secondary").light, "oklch(0.65 0.14 190)", "explicit key lost to neutral tint")
+    eq(tokenModes(css, "muted").light, "oklch(0.97 0.02 265)", "muted should still be tinted")
+  })
+
   await test("contrast: mid-range brand with no passing foreground throws", async () => {
     // oklch(0.58 0 0) fails both candidates (best measures ~4.18:1);
     // the old threshold silently picked white here.
