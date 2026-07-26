@@ -38,7 +38,7 @@ platform features shadcn cannot adopt (Tailwind/Radix/React-18 bound).
 | 27  | sidebar             | ~L  | [x]    | all 24 exports real; mobile = sheet; Cmd+B; sidebar_state cookie            |
 | 28  | dark-mode-pass      | ~M  | [x]    | axe contrast sweep + screenshot QA; `--input-background` token              |
 | 29  | docs-shell          | ~M  | [x]    | grouped nav (Get started / Components); intro + install/theming stubs; empty hash → #introduction |
-| 30 (59)  | docs-content        | ~L  | [ ]    | **runs last**, after 58; per-component prose against the final surface       |
+| 30 (do last)  | docs-content        | ~L  | [ ]    | **runs last**, after 58; per-component prose against the final surface       |
 
 ## Phase 2 — config, form, parity, platform
 
@@ -121,4 +121,3 @@ detail just-in-time after 58 lands. Rough order of usefulness:
 - Git gates (hooks): no commits on main — `<type>/<kebab>` branch first. The
   ~500-net-line branch-size hook is advisory only — never split or restructure
   work because of it.
-

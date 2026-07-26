@@ -34,8 +34,8 @@ Details + per-task gotchas: `docs/TODO/LOG.md` (split out of the TODO README on
 
 ## Next step
 
-`/cycle 28` — dark-mode-pass (~M): visual QA every component in `.dark`
-(deps: all of the above merged). Then 29 docs-shell, 30 docs-content.
+Phase 2: `/cycle 31` — cursor-affordance (~S). 28 dark-mode-pass and 29
+docs-shell are done; 30 docs-content runs last, after 58.
 
 **Docs layout (2026-07-22):** HANDOFF.md and TODO/ now live under `docs/` — tell /cycle and /handoff explicitly, since they default to repo-root `TODO/` and `HANDOFF.md`.
 
@@ -58,5 +58,3 @@ Details + per-task gotchas: `docs/TODO/LOG.md` (split out of the TODO README on
 - Playground styles: child combinators only (`.pg-section > h3`) — descendant selectors leak into demos. `--pg-accent` + motion preset live in playground.css, not globals.css.
 - Roving tabindex only for tabs/radio/toolbars; positioning is always-JS (`lib/use-anchor-position.js`).
 - Visual QA: `npm run dev` (:5173) + playwright-core one-shot script (import via absolute path to repo node_modules); dark mode = click `.pg-theme-toggle` first. Hash routes are `#<slug>` (no slash).
-- Git gates (hooks): no commits on main; merges/rebases never auto-run — user runs them. Hook evaluates the whole command line — don't chain `git switch -c` with `git commit` while on main.
-- Dark-mode component QA is still task 27 — only `color-scheme` was fixed this session.
