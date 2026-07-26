@@ -425,3 +425,13 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   `div.pg-nav-label` (same call as ui/sidebar's SidebarGroupLabel), not a
   heading; adding any second h2 to the shell fails 7 tests across
   combobox/select/navigation-menu/input-otp.
+- 2026-07-26 — **docs are written per task, not deferred to 30.** The phase-2
+  seed put all per-component prose in task 30, to be written "against the final
+  surface" after 58. Changed: every task now ships its docs in the same PR as
+  its code, and 30 shrinks to a consistency/gap pass. Reasons: the surface
+  knowledge is freshest at implementation time; 28 tasks of prose written in one
+  lump at the end is the classic never-finished chore; and an undocumented API
+  (task 40's `useForm` especially) is unusable in the interim. Cost, accepted:
+  37/38 will force a rewrite of the install/theming pages, and some component
+  prose will be revised by the tokenization tasks. Applied retroactively to the
+  in-flight wave (31, 32, 33, 40).

@@ -38,13 +38,17 @@ platform features shadcn cannot adopt (Tailwind/Radix/React-18 bound).
 | 27  | sidebar             | ~L  | [x]    | all 24 exports real; mobile = sheet; Cmd+B; sidebar_state cookie            |
 | 28  | dark-mode-pass      | ~M  | [x]    | axe contrast sweep + screenshot QA; `--input-background` token              |
 | 29  | docs-shell          | ~M  | [x]    | grouped nav (Get started / Components); intro + install/theming stubs; empty hash → #introduction |
-| 30 (do last)  | docs-content        | ~L  | [ ]    | **runs last**, after 58; per-component prose against the final surface       |
+| 30 (do last)  | docs-content        | ~M  | [ ]    | **runs last**, after 58; now a consistency/gap pass only — each task writes its own docs (2026-07-26) |
 
 ## Phase 2 — config, form, parity, platform
 
 Sequence: 28 → 29 (thin) → 31…58 → 30. Rationale in the 2026-07-25 log entry.
-Tasks are detailed just-in-time; only the rows below are durable. Task files
-exist for the architectural ones (31, 32, 33, 37, 38, 40, 41).
+Tasks are detailed just-in-time; only the rows below are durable.
+
+**Every task writes its own docs** (2026-07-26) — prose lands in the same PR as
+the code, on the component's playground page or the relevant
+`playground/pages/docs/` page. Task 30 is no longer where documentation gets
+written; it is a final consistency and gap pass.
 
 | #   | Slug                     | Est | Status | Notes                                                                        |
 | --- | ------------------------ | --- | ------ | ---------------------------------------------------------------------------- |
