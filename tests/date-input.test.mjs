@@ -1,5 +1,5 @@
 export default async function run({ page, baseUrl, test, eq }) {
-  await page.goto(`${baseUrl}/#date-picker`)
+  await page.goto(`${baseUrl}/#date-input`)
   await page.locator('[data-pg="dp-typed-input"]').waitFor()
 
   const input = () => page.locator('[data-pg="dp-typed-input"]')

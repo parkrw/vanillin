@@ -1,5 +1,5 @@
 export default async function run({ page, baseUrl, test, eq }) {
-  await page.goto(`${baseUrl}/#date-picker`)
+  await page.goto(`${baseUrl}/#time-picker`)
   await page.locator('[data-pg="dp-time-12h"]').waitFor()
 
   const seg = (picker, segment) =>
@@ -38,7 +38,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     // That's too many keypresses. Instead, let's test the boundary:
     // Go to minute=0 by pressing down enough, or just test the concept
     // Reset: navigate away and back to get fresh state
-    await page.goto(`${baseUrl}/#date-picker`)
+    await page.goto(`${baseUrl}/#time-picker`)
     await page.locator('[data-pg="dp-time-12h"]').waitFor()
 
     // Initial 14:30. Set minute to 0 by pressing ArrowDown 30 times...
@@ -60,7 +60,7 @@ export default async function run({ page, baseUrl, test, eq }) {
   })
 
   await test("time-picker 24h: hour wraps from 23 to 0", async () => {
-    await page.goto(`${baseUrl}/#date-picker`)
+    await page.goto(`${baseUrl}/#time-picker`)
     await page.locator('[data-pg="dp-time-24h"]').waitFor()
     // Initial: 14:30, press ArrowUp 10 times to get to 0:30 (wraps at 24)
     await seg("dp-time-24h", "hour").focus()
@@ -100,7 +100,7 @@ export default async function run({ page, baseUrl, test, eq }) {
 
   await test("time-picker 12h: meridiem toggle via ArrowUp", async () => {
     // Force full page reload to get clean React state
-    await page.goto(`${baseUrl}/#date-picker`, { waitUntil: "networkidle" })
+    await page.goto(`${baseUrl}/#time-picker`, { waitUntil: "networkidle" })
     await page.reload()
     await page.locator('[data-pg="dp-time-12h"]').waitFor()
     // Initial: 14:30 = PM
