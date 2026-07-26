@@ -206,3 +206,80 @@
   width: 1rem;
   height: 1rem;
 }
+
+/* ── Sized table opt-in ──────────────────────────────────────────── */
+
+.data-table-sized {
+  table-layout: fixed;
+}
+
+.data-table-sized .table-head {
+  position: relative;
+}
+
+/* ── Column resizer handle ───────────────────────────────────────── */
+
+.data-table-resizer {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: -2px;
+  width: 5px;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  z-index: 1;
+  transition: background-color var(--motion-fast) var(--motion-ease);
+}
+
+.data-table-resizer:hover,
+.data-table-resizer[data-resizing] {
+  background-color: var(--ring);
+}
+
+.data-table-resizer:focus-visible {
+  outline: none;
+  background-color: var(--ring);
+}
+
+/* ── Pinned columns ──────────────────────────────────────────────── */
+
+.data-table-pinned {
+  position: sticky;
+  z-index: 1;
+  background-color: var(--background);
+}
+
+.table-header .data-table-pinned {
+  z-index: 2;
+}
+
+/* Hover — opaque equivalent of the row's semi-transparent hover bg */
+.table-body .table-row:hover > .data-table-pinned {
+  background-color: color-mix(in oklab, var(--muted) 50%, var(--background));
+}
+
+/* Selected — must beat hover (equal specificity, later in source) */
+.table-body .table-row[data-selected="true"] > .data-table-pinned {
+  background-color: var(--accent);
+}
+
+/* Edge shadow on the last left-pinned / first right-pinned column */
+.data-table-pinned[data-pin-edge="left"] {
+  box-shadow: 4px 0 6px -3px color-mix(in oklab, var(--foreground) 10%, transparent);
+}
+
+.data-table-pinned[data-pin-edge="right"] {
+  box-shadow: -4px 0 6px -3px color-mix(in oklab, var(--foreground) 10%, transparent);
+}
+
+/* RTL: flip shadow direction */
+.data-table-pinned[data-pin-edge="left"]:dir(rtl) {
+  box-shadow: -4px 0 6px -3px color-mix(in oklab, var(--foreground) 10%, transparent);
+}
+
+.data-table-pinned[data-pin-edge="right"]:dir(rtl) {
+  box-shadow: 4px 0 6px -3px color-mix(in oklab, var(--foreground) 10%, transparent);
+}

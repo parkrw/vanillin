@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { cn } from "../../lib/cn.js"
 import { Popover, PopoverTrigger, PopoverContent } from "../popover/popover.jsx"
 import {
@@ -200,5 +200,86 @@ export function DataTableFacetedFilter({ column, title, options: optionsProp }) 
         </Command>
       </PopoverContent>
     </Popover>
+  )
+}
+
+// ── Column resizer ─────────────────────────────────────────────────
+
+/**
+ * Drag handle for column resizing. Place inside a `<th>`.
+ *
+ * Pointer drag updates a CSS custom property (`--dt-size-<colId>`) on the
+ * nearest `<table>` element for zero-rerender feedback, then commits to
+ * React state on pointerup. Double-click resets to the column def's
+ * default `size`. Keyboard: arrows ±8 px, Home/End to min/max.
+ */
+export function DataTableColumnResizer({ column }) {
+  const handleRef = useRef(null)
+
+  const min = column.columnDef?.minSize ?? 40
+  const max = column.columnDef?.maxSize ?? 800
+
+  const onPointerDown = (e) => {
+    if (e.button !== 0) return
+    e.preventDefault()
+    const el = handleRef.current
+    const tableEl = el.closest("table")
+    const isRtl = getComputedStyle(el).direction === "rtl"
+    const startX = e.clientX
+    const startSize = column.getSize()
+
+    el.setPointerCapture(e.pointerId)
+    el.setAttribute("data-resizing", "")
+
+    const onMove = (ev) => {
+      const delta = (ev.clientX - startX) * (isRtl ? -1 : 1)
+      const clamped = Math.min(max, Math.max(min, startSize + delta))
+      tableEl.style.setProperty(`--dt-size-${column.id}`, `${clamped}px`)
+    }
+
+    const onUp = (ev) => {
+      el.removeAttribute("data-resizing")
+      el.removeEventListener("pointermove", onMove)
+      el.removeEventListener("pointerup", onUp)
+      el.removeEventListener("lostpointercapture", onUp)
+      const delta = (ev.clientX - startX) * (isRtl ? -1 : 1)
+      column.setSize(Math.min(max, Math.max(min, startSize + delta)))
+    }
+
+    el.addEventListener("pointermove", onMove)
+    el.addEventListener("pointerup", onUp)
+    el.addEventListener("lostpointercapture", onUp)
+  }
+
+  const onKeyDown = (e) => {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      e.preventDefault()
+      const isRtl = getComputedStyle(e.target).direction === "rtl"
+      let delta = e.key === "ArrowRight" ? 8 : -8
+      if (isRtl) delta = -delta
+      column.setSize(Math.min(max, Math.max(min, column.getSize() + delta)))
+    } else if (e.key === "Home") {
+      e.preventDefault()
+      column.setSize(min)
+    } else if (e.key === "End") {
+      e.preventDefault()
+      column.setSize(max)
+    }
+  }
+
+  return (
+    <div
+      ref={handleRef}
+      className="data-table-resizer"
+      role="separator"
+      aria-orientation="vertical"
+      aria-valuenow={column.getSize()}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      tabIndex={0}
+      onPointerDown={onPointerDown}
+      onDoubleClick={() => column.resetSize()}
+      onKeyDown={onKeyDown}
+    />
   )
 }
