@@ -78,5 +78,6 @@ export const registry = {
   toggle: { title: "Toggle", page: lazy(() => import("./pages/toggle.jsx")) },
   "toggle-group": { title: "Toggle Group", page: lazy(() => import("./pages/toggle-group.jsx")) },
   tooltip: { title: "Tooltip", page: lazy(() => import("./pages/tooltip.jsx")) },
+  "use-form": { title: "useForm", page: lazy(() => import("./pages/use-form.jsx")) },
   typography: { title: "Typography", page: lazy(() => import("./pages/typography.jsx")) },
 }
