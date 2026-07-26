@@ -5,7 +5,7 @@ import { chromium } from "playwright-core"
 
 // Boots the playground on its own port, drives it with the locally
 // installed Chrome (no browser download), runs every tests/*.test.mjs.
-const PORT = 5199
+const PORT = Number(process.env.VANILLIN_TEST_PORT) || 5199
 const baseUrl = `http://localhost:${PORT}`
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))
 
