@@ -36,7 +36,6 @@ export function NavigationMenu({
   ...props
 }) {
   const useViewport = viewport !== false
-  const dir = useDirection()
 
   const [current, setValue] = useControllableState({
     value,
@@ -67,21 +66,28 @@ export function NavigationMenu({
   // Reading it during render gives the stale (= previous) value, which
   // is exactly what we need for direction computation.
   const prevValueRef = useRef(current)
-  const motionDirection = useMemo(() => {
-    const prev = prevValueRef.current
-    if (!useViewport || prev === "" || current === "" || prev === current) return null
-    const prevEl = triggerMapRef.current.get(prev)
+  const motionDirectionRef = useRef(null)
+  // Compute direction synchronously during render so content panels
+  // can read it for their data-motion attribute in the same pass.
+  const prevForDirection = prevValueRef.current
+  if (useViewport && prevForDirection !== "" && current !== "" && prevForDirection !== current) {
+    const prevEl = triggerMapRef.current.get(prevForDirection)
     const nextEl = triggerMapRef.current.get(current)
-    if (!prevEl || !nextEl) return null
-    const isAfterInDom = !!(
-      prevEl.compareDocumentPosition(nextEl) & Node.DOCUMENT_POSITION_FOLLOWING
-    )
-    // In RTL the visual order is reversed: "after in DOM" = left visually,
-    // so we invert the direction. This makes data-motion values invert
-    // under RTL, matching Radix's behaviour.
-    const forward = dir === "rtl" ? !isAfterInDom : isAfterInDom
-    return forward ? 1 : -1
-  }, [current, useViewport, dir])
+    if (prevEl && nextEl) {
+      const isAfterInDom = !!(
+        prevEl.compareDocumentPosition(nextEl) & Node.DOCUMENT_POSITION_FOLLOWING
+      )
+      // Read actual DOM direction — handles dir="rtl" on <html> without
+      // requiring a DirectionProvider wrapper. In RTL the visual order is
+      // reversed, so we invert.
+      const resolvedDir = getComputedStyle(prevEl).direction
+      const forward = resolvedDir === "rtl" ? !isAfterInDom : isAfterInDom
+      motionDirectionRef.current = forward ? 1 : -1
+    }
+  } else if (current === "" || prevForDirection === "" || prevForDirection === current) {
+    motionDirectionRef.current = null
+  }
+  const motionDirection = motionDirectionRef.current
 
   // Keep the previous-value ref stable for direction + closedAt tracking.
   useEffect(() => {
@@ -143,12 +149,11 @@ export function NavigationMenu({
       setViewportEl,
       registerTrigger,
       motionDirection,
-      dir,
     }),
     [
       current, setValue, scheduleOpen, scheduleClose, cancelSchedule,
       closeNow, useViewport, viewportEl, setViewportEl, registerTrigger,
-      motionDirection, dir,
+      motionDirection,
     ]
   )
 
@@ -624,46 +629,35 @@ export function NavigationMenuViewport({ className, ...props }) {
  * to customise.
  */
 export function NavigationMenuIndicator({ className, children, ...props }) {
-  const { value, dir } = useContext(NavigationMenuContext)
+  const { value } = useContext(NavigationMenuContext)
   const ref = useRef(null)
   const open = value !== ""
 
-  useLayoutEffect(() => {
+  const positionIndicator = useCallback(() => {
     const el = ref.current
-    if (!el || !open) return
+    if (!el) return
     const list = el.closest(".navigation-menu-list")
     if (!list) return
     const trigger = list.querySelector('.navigation-menu-trigger[data-state="open"]')
     if (!trigger) return
-
-    const isRtl = dir === "rtl"
+    const isRtl = getComputedStyle(list).direction === "rtl"
     const inlineOffset = isRtl
       ? list.clientWidth - trigger.offsetLeft - trigger.offsetWidth
       : trigger.offsetLeft
     el.style.setProperty("--indicator-offset", inlineOffset + "px")
     el.style.setProperty("--indicator-width", trigger.offsetWidth + "px")
-  }, [value, open, dir])
+  }, [])
+
+  useLayoutEffect(() => {
+    if (open) positionIndicator()
+  }, [value, open, positionIndicator])
 
   // Reposition on window resize (trigger may have moved).
   useEffect(() => {
     if (!open) return
-    const reposition = () => {
-      const el = ref.current
-      if (!el) return
-      const list = el.closest(".navigation-menu-list")
-      if (!list) return
-      const trigger = list.querySelector('.navigation-menu-trigger[data-state="open"]')
-      if (!trigger) return
-      const isRtl = dir === "rtl"
-      const inlineOffset = isRtl
-        ? list.clientWidth - trigger.offsetLeft - trigger.offsetWidth
-        : trigger.offsetLeft
-      el.style.setProperty("--indicator-offset", inlineOffset + "px")
-      el.style.setProperty("--indicator-width", trigger.offsetWidth + "px")
-    }
-    window.addEventListener("resize", reposition)
-    return () => window.removeEventListener("resize", reposition)
-  }, [open, dir])
+    window.addEventListener("resize", positionIndicator)
+    return () => window.removeEventListener("resize", positionIndicator)
+  }, [open, positionIndicator])
 
   return (
     <li

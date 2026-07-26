@@ -342,7 +342,8 @@
     transition: none;
   }
 
-  .navigation-menu[data-viewport] .navigation-menu-content,
+  /* Must match the specificity of the animation-setting selectors above. */
+  .navigation-menu[data-viewport] .navigation-menu-content[data-state="open"]:not([data-motion]),
   .navigation-menu[data-viewport] .navigation-menu-content[data-motion] {
     animation: none;
   }
