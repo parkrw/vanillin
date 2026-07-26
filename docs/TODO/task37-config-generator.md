@@ -1,6 +1,6 @@
 # task37: config-generator
 
-**Goal:** `vanillin.config.json` → `styles/vanillin.css`. One stdlib-only Node
+**Goal:** `van.config.json` → `styles/van.css`. One stdlib-only Node
 script, no runtime cost in the consumer app.
 **Branch:** feat/config-generator
 **Deps:** 33 (typed/derivable tokens), 34 + 35 (component tokens to target)
@@ -46,7 +46,7 @@ script, no runtime cost in the consumer app.
   .btn--xs    { --btn-height: 1.75rem; --btn-padding-inline: .5rem; }
   ```
 
-- **Output is a single `styles/vanillin.css`, imported *after* `globals.css`.**
+- **Output is a single `styles/van.css`, imported *after* `globals.css`.**
   Never rewrite `globals.css` in place — the consumer may have edited it, and
   an in-place rewrite makes the generator destructive. Layer order matters:
   emit into `@layer vanillin.config` so config always wins over component CSS
@@ -86,10 +86,10 @@ script, no runtime cost in the consumer app.
   `scripts/build-theme.mjs`.
 - [ ] 3. Generator: component section → per-component token overrides,
   generated variants, generated sizes. Files: `scripts/build-theme.mjs`.
-- [ ] 4. `npm run theme` script; a `vanillin.config.json` at the repo root
+- [ ] 4. `npm run theme` script; a `van.config.json` at the repo root
   exercising every feature; playground imports the generated file so the docs
   theming page (29's stub) has something real to show. Files: `package.json`,
-  `vanillin.config.json`, `playground/main.jsx`.
+  `van.config.json`, `playground/main.jsx`.
 - [ ] 5. Test: end-to-end — generate from a fixture config, load it in the
   playground, assert computed styles on a button with a generated variant and
   a generated size; assert byte-identical output across two runs. Files:

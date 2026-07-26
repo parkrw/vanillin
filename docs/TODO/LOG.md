@@ -339,7 +339,7 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   context and never imports the engine, so consumers already on real RHF pass
   their form object in unchanged, and the resolver contract stays
   `@hookform/resolvers`-compatible. (b) **Config is build-time**, not runtime:
-  `vanillin.config.json` + a stdlib-only generator emits static CSS — no FOUC,
+  `van.config.json` + a stdlib-only generator emits static CSS — no FOUC,
   no runtime cost, but vanillin has to become installable, not just
   copy-paste. (c) **Tokenization is tiered and additive** — `.btn { --btn-bg:
   var(--primary); background: var(--btn-bg) }` renders byte-identical to
@@ -370,7 +370,7 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   fixing.
 - 2026-07-25 — **task 38 distribution decided: git-sourced, `private: true`
   stays.** Corrects the phase-2 seed entry above, which assumed a CLI meant
-  publishing to npm. It does not: `npx github:progrums/vanillin add button`
+  publishing to npm. It does not: `npx github:progrums/van add button`
   installs from the repo, and `private: true` only blocks `npm publish`, not
   git installs. Rationale: no registry name or semver contract to maintain
   (there is no runtime contract — consumers own the copied code); pinning to a

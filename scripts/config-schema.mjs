@@ -1,7 +1,7 @@
 /**
  * Vanillin config schema and validator.
  *
- * Validates vanillin.config.json structure, rejects CSS injection vectors,
+ * Validates van.config.json structure, rejects CSS injection vectors,
  * clamps numeric ranges, expands property shorthands, and enforces
  * derivation-vs-literal precedence.
  *

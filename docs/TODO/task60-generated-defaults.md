@@ -10,7 +10,7 @@ scheduled; otherwise the default config can only express a one-colour brand)
 ## Why
 
 Task 37 shipped a generator whose output nobody consumes, and a sample
-`vanillin.config.json` with a blue hue-265 brand. `playground/main.jsx` imported
+`van.config.json` with a blue hue-265 brand. `playground/main.jsx` imported
 the generated CSS after `globals.css`; at equal specificity (0,1,0) it won on
 source order, re-themed the whole playground and pinned `--density-scale` so
 `[data-density]` could not override it on the root element. That was 6 of the 12
@@ -52,7 +52,7 @@ collide with, and the demo and the defaults are the same artifact.
   to fix or a value to move into machinery — not a baseline to relax.
 
 - **Keep the worked sample config.** Task 38's `init` writes
-  `vanillin.config.json`, so a real example of the schema is load-bearing
+  `van.config.json`, so a real example of the schema is load-bearing
   documentation. The 2026-07-26 integration agent emptied it to `{}`; that was
   reverted in favour of removing the import. Do not empty it again.
 

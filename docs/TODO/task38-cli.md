@@ -35,7 +35,7 @@ Tag releases (`v0.1.0`, …) so consumers have something stable to pin. Untagged
 
 ## Design decisions
 
-- **The CLI copies; it never wraps.** `vanillin add button` writes
+- **The CLI copies; it never wraps.** `van add button` writes
   `ui/button/button.jsx` + `.css` into the consumer's project and stops. No
   imports from a `vanillin` package at runtime, no version coupling, no
   breaking changes pushed at consumers. Copy-paste stays the distribution
@@ -49,11 +49,11 @@ Tag releases (`v0.1.0`, …) so consumers have something stable to pin. Untagged
   graph will rot within two tasks. Derive it by parsing the import statements.
 
 - **Commands:**
-  - `init` — writes `vanillin.config.json`, copies `styles/globals.css` and
+  - `init` — writes `van.config.json`, copies `styles/globals.css` and
     `lib/`, runs `build`, prints the one-line import to add.
   - `add <slug…>` — resolves the dependency closure from the registry, shows
     what it will write, copies. `--dry-run` prints the file list and exits.
-  - `build` — regenerates `styles/vanillin.css` from the config (task 37).
+  - `build` — regenerates `styles/van.css` from the config (task 37).
   - `list` — available components, marking which are already installed.
 
 - **Never clobber silently.** If a target file exists and differs from the
@@ -68,7 +68,7 @@ Tag releases (`v0.1.0`, …) so consumers have something stable to pin. Untagged
   read as "differs". Only a hash recorded at install time separates them, and the
   two cases deserve opposite behaviour: upstream-moved is a safe update,
   consumer-edited must not be overwritten. So `add` **writes a
-  `ui/<slug>/.vanillin.json` sidecar** per task 64 — `kitVersion`, `source`,
+  `ui/<slug>/.van.json` sidecar** per task 64 — `kitVersion`, `source`,
   `requires`, and a `files` map of sha256 hashes — and later runs compare against
   it. Build the manifest format in 64 before implementing `add`, or `add` will
   bake in its own incompatible assumptions.
@@ -85,7 +85,7 @@ Tag releases (`v0.1.0`, …) so consumers have something stable to pin. Untagged
 - **Detect the project layout instead of assuming.** Read the consumer's
   `components.json` if present (shadcn users have one, and honouring its
   `aliases` is a cheap migration story); otherwise ask, defaulting to
-  `./components/ui`. Persist the answer in `vanillin.config.json` so later
+  `./components/ui`. Persist the answer in `van.config.json` so later
   `add` calls are non-interactive.
 
 - **No colour/spinner library.** Plain output, `process.stdout`. If it needs
@@ -99,11 +99,11 @@ Tag releases (`v0.1.0`, …) so consumers have something stable to pin. Untagged
 - [ ] 2. Registry generator — walk `ui/`, parse imports, emit `registry.json`
   with the dependency closure. Files: `scripts/build-registry.mjs`,
   `registry.json`.
-- [ ] 3. CLI arg parsing + `list` + `build`. Files: `bin/vanillin.mjs`.
+- [ ] 3. CLI arg parsing + `list` + `build`. Files: `bin/van.mjs`.
 - [ ] 4. `add` with closure resolution, existence/clobber checks, `--dry-run`,
-  `--force`, path-escape rejection. Files: `bin/vanillin.mjs`.
+  `--force`, path-escape rejection. Files: `bin/van.mjs`.
 - [ ] 5. `init` — config scaffold, globals + lib copy, first build, next-steps
-  output. Files: `bin/vanillin.mjs`.
+  output. Files: `bin/van.mjs`.
 - [ ] 6. Test: run the CLI against a scratch directory — `init` produces a
   buildable tree; `add dialog` pulls its `lib/` deps; `add alert-dialog` pulls
   `dialog` transitively and its CSS `@import` resolves; re-`add` of a modified
@@ -119,4 +119,4 @@ Tag releases (`v0.1.0`, …) so consumers have something stable to pin. Untagged
   `add button dialog data-table`, and render them. The unit tests run against
   the working tree and cannot prove a git install resolves correctly — only
   this can. Do this before calling the task done.
-- `npx vanillin add` output is legible to someone who has never seen the tool.
+- `npx van add` output is legible to someone who has never seen the tool.

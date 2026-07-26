@@ -21,7 +21,7 @@ is what makes `requires` true.
 
 ## The manifest
 
-One sidecar per installed component: `ui/<slug>/.vanillin.json`.
+One sidecar per installed component: `ui/<slug>/.van.json`.
 
 ```json
 {
@@ -40,7 +40,7 @@ One sidecar per installed component: `ui/<slug>/.vanillin.json`.
 
 - **Sidecar, not a root lockfile.** The sidecar travels with the folder, so
   copying a component into another project keeps its provenance — that *is* the
-  copy-paste property. A root `vanillin.lock.json` diffs more nicely but creates
+  copy-paste property. A root `van.lock.json` diffs more nicely but creates
   two sources of truth that silently diverge the moment someone hand-copies a
   directory. Need a project-wide view? Derive it by globbing; never store a
   second copy.
@@ -53,7 +53,7 @@ One sidecar per installed component: `ui/<slug>/.vanillin.json`.
   worse than refusing to update.
 
 - **Provenance only — no theming config.** It is tempting to put
-  `button: { radius: "9999px" }` here. Do not: `vanillin.config.json` (task 37)
+  `button: { radius: "9999px" }` here. Do not: `van.config.json` (task 37)
   owns theming, and splitting a theme across 60 sidecars means there is no single
   place to read your theme.
 
@@ -125,7 +125,7 @@ what to do is worse than no check.
 
 ## Follow-on (not this task)
 
-`vanillin update` with 3-way merge (base = recorded `kitVersion`, ours = local,
+`van update` with 3-way merge (base = recorded `kitVersion`, ours = local,
 theirs = upstream). It is the biggest payoff — shadcn cannot take upstream fixes
 into an edited component at all — and the easiest to make destructive. It needs
 its own task and its own tests, after this manifest lands.
