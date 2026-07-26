@@ -1,0 +1,57 @@
+/* ── form ─────────────────────────────────────────────────────────── */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── form-item ────────────────────────────────────────────────────── */
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ── form-label ───────────────────────────────────────────────────── */
+
+.form-label--error {
+  color: var(--destructive);
+}
+
+/* ── form-description ─────────────────────────────────────────────── */
+
+.form-description {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+/* ── form-message ─────────────────────────────────────────────────── */
+
+.form-message {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--destructive);
+  animation: form-message-in var(--motion-fast) var(--motion-ease);
+}
+
+@keyframes form-message-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form-message {
+    animation: none;
+  }
+}
+
+/* ── form-submit ──────────────────────────────────────────────────── */
+
+.form-submit:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
