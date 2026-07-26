@@ -245,9 +245,12 @@ export function Carousel({
   useEffect(() => {
     if (!plugins?.length) return
     const api = apiRef.current
-    const active = plugins.map((p) => { p.init(api, opts); return p })
+    // Init once on mount; destroy on unmount or when `plugins` identity changes.
+    // `opts` is intentionally excluded — it is a new object literal on each
+    // render, and re-initing would reset plugin state (e.g. pause flags).
+    const active = plugins.map((p) => { p.init(api); return p })
     return () => { for (const p of active) p.destroy() }
-  }, [plugins, opts])
+  }, [plugins])
 
   /* ---- keyboard ---- */
 
@@ -304,6 +307,61 @@ export function Carousel({
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Clone-count measurement for loop                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Compute how many leading and trailing clones are needed to fill one
+ * viewport on each side, using measured cumulative widths (not a ratio)
+ * so heterogeneous item sizes are handled correctly.
+ *
+ * Leading clones = copies of the last K real items (shown when scrolling
+ * backward past the start). Trailing = copies of the first M real items
+ * (shown when scrolling forward past the end).
+ *
+ * Returns { lead, trail } in [1, N].  Falls back to N (clone-all)
+ * when the viewport cannot be measured (e.g. display:none container).
+ */
+function computeCloneCounts(el, vertical) {
+  const reals = el.querySelectorAll(
+    ":scope > .carousel-item:not([data-carousel-clone])"
+  )
+  const N = reals.length
+  if (!N) return { lead: 0, trail: 0 }
+
+  const viewport = vertical ? el.clientHeight : el.clientWidth
+  if (viewport <= 0) return { lead: N, trail: N } // unmeasurable → clone all
+
+  const style = getComputedStyle(el)
+  const gap =
+    parseFloat(vertical ? style.rowGap : style.columnGap) || 0
+
+  // Trailing: walk forward from item 0
+  let trail = 0
+  let acc = 0
+  for (let i = 0; i < N; i++) {
+    if (trail > 0) acc += gap
+    acc += vertical ? reals[i].offsetHeight : reals[i].offsetWidth
+    trail++
+    if (acc > viewport) break
+  }
+  trail = Math.min(trail + 1, N) // +1 safety margin, cap at N
+
+  // Leading: walk backward from item N-1
+  let lead = 0
+  acc = 0
+  for (let i = N - 1; i >= 0; i--) {
+    if (lead > 0) acc += gap
+    acc += vertical ? reals[i].offsetHeight : reals[i].offsetWidth
+    lead++
+    if (acc > viewport) break
+  }
+  lead = Math.min(lead + 1, N)
+
+  return { lead: Math.max(lead, 1), trail: Math.max(trail, 1) }
+}
+
+/* -------------------------------------------------------------------------- */
 /*  CarouselContent (scroll container)                                        */
 /* -------------------------------------------------------------------------- */
 
@@ -314,6 +372,16 @@ export function CarouselContent({ className, children, ...props }) {
   } = useCarousel()
   const dragRef = useRef(null)
   const recentringRef = useRef(false)
+
+  /*
+   * Clone counts for loop mode.  Initialised to 1 (floor); a layout
+   * effect measures real item widths and raises this to exactly enough
+   * to cover one viewport + 1 per side.
+   */
+  const [cloneCounts, setCloneCounts] = useState({ lead: 1, trail: 1 })
+  const initializedRef = useRef(false)
+  const lastSnapRef = useRef(0)
+  const childCount = Children.count(children)
 
   /* scroll + resize sync */
   useLayoutEffect(() => {
@@ -326,22 +394,56 @@ export function CarouselContent({ className, children, ...props }) {
     return () => { el.removeEventListener("scroll", syncState); ro.disconnect() }
   }, [contentRef, syncState])
 
-  /* ---- loop: set initial scroll to first real item ---- */
+  /* ---- loop: measure clone counts, recompute on resize / item change ---- */
+  useLayoutEffect(() => {
+    if (!loop) {
+      initializedRef.current = false
+      return
+    }
+    const el = contentRef.current
+    if (!el) return
+
+    const measure = () => {
+      if (initializedRef.current) lastSnapRef.current = snapIndex()
+      const computed = computeCloneCounts(el, vertical)
+      setCloneCounts((prev) => {
+        if (prev.lead === computed.lead && prev.trail === computed.trail) return prev
+        return computed
+      })
+    }
+
+    measure()
+
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [contentRef, loop, vertical, childCount, snapIndex])
+
+  /* ---- loop: position scroll after clone counts settle ---- */
   useLayoutEffect(() => {
     if (!loop) return
     const el = contentRef.current
     if (!el) return
-    const firstReal = el.querySelector(":scope > .carousel-item:not([data-carousel-clone])")
-    if (!firstReal) return
-    // Instant scroll so first real item is at the snap-aligned edge
-    const cr = el.getBoundingClientRect()
-    const ir = firstReal.getBoundingClientRect()
+    const reals = el.querySelectorAll(
+      ":scope > .carousel-item:not([data-carousel-clone])"
+    )
+    if (!reals.length) return
+
+    const idx = initializedRef.current ? lastSnapRef.current : 0
+    const target = reals[idx] || reals[0]
+
+    el.style.scrollSnapType = "none"
     if (vertical) {
-      el.scrollTop = el.scrollTop + (ir.top - cr.top)
+      el.scrollTop = target.offsetTop
     } else {
-      el.scrollLeft = el.scrollLeft + (ir.left - cr.left)
+      el.scrollLeft = target.offsetLeft
     }
-  }, [contentRef, loop, vertical])
+    requestAnimationFrame(() => {
+      el.style.scrollSnapType = ""
+      initializedRef.current = true
+      syncState()
+    })
+  }, [contentRef, loop, vertical, cloneCounts, syncState])
 
   /* ---- loop: recentre when scroll settles on a clone ---- */
   useLayoutEffect(() => {
@@ -369,23 +471,22 @@ export function CarouselContent({ className, children, ...props }) {
       }
       if (!closest || !closest.hasAttribute("data-carousel-clone")) return
 
-      // Find the corresponding real item
       const idx = Number(closest.dataset.cloneIndex)
-      const realItems = el.querySelectorAll(":scope > .carousel-item:not([data-carousel-clone])")
+      const realItems = el.querySelectorAll(
+        ":scope > .carousel-item:not([data-carousel-clone])"
+      )
       const realItem = realItems[idx]
       if (!realItem) return
 
       recentringRef.current = true
       const cir = closest.getBoundingClientRect()
       const rir = realItem.getBoundingClientRect()
-      // Disable snap and jump instantly
       el.style.scrollSnapType = "none"
       if (vertical) {
         el.scrollTop += rir.top - cir.top
       } else {
         el.scrollLeft += rir.left - cir.left
       }
-      // Re-enable snap on next frame
       requestAnimationFrame(() => {
         el.style.scrollSnapType = ""
         recentringRef.current = false
@@ -393,7 +494,6 @@ export function CarouselContent({ className, children, ...props }) {
       })
     }
 
-    // scrollend with debounce fallback
     let settleTimer
     const onScrollSettle = () => { recentre() }
     const onScrollFallback = () => {
@@ -483,7 +583,6 @@ export function CarouselContent({ className, children, ...props }) {
         const target = goNext ? drag.startIndex + 1 : drag.startIndex - 1
         const items = getItems()
         if (loop) {
-          // Under loop, wrap the target index
           const wrapped = ((target % items.length) + items.length) % items.length
           scrollToItem(wrapped)
         } else if (target >= 0 && target < items.length) {
@@ -502,24 +601,38 @@ export function CarouselContent({ className, children, ...props }) {
   let content = children
   if (loop) {
     const childArray = Children.toArray(children)
-    const leadingClones = childArray.map((child, i) =>
-      cloneElement(child, {
-        key: `clone-lead-${i}`,
-        "data-carousel-clone": "",
-        "data-clone-index": i,
-        "aria-hidden": "true",
-        inert: true,
-      })
-    )
-    const trailingClones = childArray.map((child, i) =>
-      cloneElement(child, {
-        key: `clone-trail-${i}`,
-        "data-carousel-clone": "",
-        "data-clone-index": i,
-        "aria-hidden": "true",
-        inert: true,
-      })
-    )
+    const N = childArray.length
+    const { lead, trail } = cloneCounts
+
+    // Leading clones: copies of the last `lead` real items
+    const leadingClones = []
+    for (let i = 0; i < lead; i++) {
+      const srcIdx = N - lead + i
+      leadingClones.push(
+        cloneElement(childArray[srcIdx], {
+          key: `clone-lead-${srcIdx}`,
+          "data-carousel-clone": "",
+          "data-clone-index": srcIdx,
+          "aria-hidden": "true",
+          inert: true,
+        })
+      )
+    }
+
+    // Trailing clones: copies of the first `trail` real items
+    const trailingClones = []
+    for (let i = 0; i < trail; i++) {
+      trailingClones.push(
+        cloneElement(childArray[i], {
+          key: `clone-trail-${i}`,
+          "data-carousel-clone": "",
+          "data-clone-index": i,
+          "aria-hidden": "true",
+          inert: true,
+        })
+      )
+    }
+
     content = [...leadingClones, ...childArray, ...trailingClones]
   }
 

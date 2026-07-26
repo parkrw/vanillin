@@ -349,38 +349,23 @@ export default async function run({ page, baseUrl, test, eq, near }) {
   })
 
   await test("autoplay: pauses on hover", async () => {
-    // Record current slide
-    const before = await page.evaluate(() => {
-      const content = document.querySelector('[data-pg="c-autoplay"] .carousel-content')
-      const reals = content.querySelectorAll(':scope > .carousel-item:not([data-carousel-clone])')
-      const cr = content.getBoundingClientRect()
-      let best = 0, bestDist = Infinity
-      reals.forEach((r, i) => {
-        const d = Math.abs(r.getBoundingClientRect().left - cr.left)
-        if (d < bestDist) { bestDist = d; best = i }
-      })
-      return best
-    })
+    // Use .hover() which scrolls the element into view — manual mouse.move
+    // fails when the carousel is below the viewport fold.
+    await el("c-autoplay").hover()
+    await waitForSnap("c-autoplay")          // let any in-flight scroll settle
+    await page.waitForTimeout(200)           // recentre rAF headroom
 
-    // Hover over the carousel
-    const box = await el("c-autoplay").boundingBox()
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    const before = await page.evaluate(() =>
+      document.querySelector('[data-pg="c-autoplay"] .carousel-content').scrollLeft
+    )
 
-    // Wait longer than one autoplay interval
+    // Stay hovered for longer than one autoplay interval
     await page.waitForTimeout(3800)
 
-    const after = await page.evaluate(() => {
-      const content = document.querySelector('[data-pg="c-autoplay"] .carousel-content')
-      const reals = content.querySelectorAll(':scope > .carousel-item:not([data-carousel-clone])')
-      const cr = content.getBoundingClientRect()
-      let best = 0, bestDist = Infinity
-      reals.forEach((r, i) => {
-        const d = Math.abs(r.getBoundingClientRect().left - cr.left)
-        if (d < bestDist) { bestDist = d; best = i }
-      })
-      return best
-    })
-    eq(after, before, "slide did not advance while hovered")
+    const after = await page.evaluate(() =>
+      document.querySelector('[data-pg="c-autoplay"] .carousel-content').scrollLeft
+    )
+    near(after, before, 2, "scrollLeft unchanged while hovered")
 
     // Move mouse away to resume
     await page.mouse.move(0, 0)
@@ -414,5 +399,110 @@ export default async function run({ page, baseUrl, test, eq, near }) {
 
     // Restore for any remaining tests
     await page.emulateMedia({ reducedMotion: "no-preference" })
+  })
+
+  // ---- Clone-count optimisation ----
+
+  await test("loop clones: wide items produce fewer clones than N per side", async () => {
+    // c-loop: 5 items at 100% width in a 256px container
+    const info = await page.evaluate(() => {
+      const c = document.querySelector('[data-pg="c-loop"] .carousel-content')
+      const all = c.querySelectorAll(':scope > .carousel-item')
+      const clones = c.querySelectorAll(':scope > [data-carousel-clone]')
+      const reals = c.querySelectorAll(':scope > .carousel-item:not([data-carousel-clone])')
+      return { total: all.length, clones: clones.length, reals: reals.length }
+    })
+    eq(info.reals, 5, "5 real items")
+    // With all-N cloning this would be 15 total (5 + 2*5).
+    // Measured cloning should produce fewer: 5 + 6 = 11.
+    eq(info.total < info.reals * 3, true,
+      `total ${info.total} < 3N (${info.reals * 3})`)
+    eq(info.clones, 6, "6 clones (3 per side) for wide single-item carousel")
+  })
+
+  await test("loop clones: narrow items produce more clones than the wide case", async () => {
+    // c-loop-narrow: 10 items at 25% width in a 384px container
+    const info = await page.evaluate(() => {
+      const c = document.querySelector('[data-pg="c-loop-narrow"] .carousel-content')
+      const all = c.querySelectorAll(':scope > .carousel-item')
+      const clones = c.querySelectorAll(':scope > [data-carousel-clone]')
+      const reals = c.querySelectorAll(':scope > .carousel-item:not([data-carousel-clone])')
+      return { total: all.length, clones: clones.length, reals: reals.length }
+    })
+    eq(info.reals, 10, "10 real items")
+    // With all-N cloning this would be 30 total.
+    // Measured cloning should produce fewer: 10 + 12 = 22.
+    eq(info.total < info.reals * 3, true,
+      `total ${info.total} < 3N (${info.reals * 3})`)
+    eq(info.clones, 12, "12 clones (6 per side) for narrow multi-item carousel")
+    // More clones than the wide case (6 vs 12)
+    eq(info.clones > 6, true, "narrow items need more clones than wide items")
+  })
+
+  await test("loop clones: narrow carousel loops forward seamlessly", async () => {
+    // Navigate forward through all 10 items and wrap to the first
+    const el2 = (sel) => page.locator(`[data-pg="c-loop-narrow"] ${sel}`.trim())
+
+    // Reset to first item
+    await page.evaluate(() => {
+      const c = document.querySelector('[data-pg="c-loop-narrow"] .carousel-content')
+      const firstReal = c.querySelector(':scope > .carousel-item:not([data-carousel-clone])')
+      c.style.scrollSnapType = 'none'
+      c.scrollLeft = firstReal.offsetLeft
+      c.style.scrollSnapType = ''
+    })
+    await page.waitForTimeout(300)
+
+    // Click next 10 times (full cycle)
+    for (let i = 0; i < 10; i++) {
+      await el2(".carousel-next").click()
+      await waitForSnap("c-loop-narrow")
+      await page.waitForTimeout(200)
+    }
+
+    const idx = await page.evaluate(() => {
+      const c = document.querySelector('[data-pg="c-loop-narrow"] .carousel-content')
+      const reals = c.querySelectorAll(':scope > .carousel-item:not([data-carousel-clone])')
+      const cr = c.getBoundingClientRect()
+      let best = 0, bestDist = Infinity
+      reals.forEach((r, i) => {
+        const d = Math.abs(r.getBoundingClientRect().left - cr.left)
+        if (d < bestDist) { bestDist = d; best = i }
+      })
+      return best
+    })
+    eq(idx, 0, "looped back to first item after 10 nexts")
+  })
+
+  await test("loop clones: narrow carousel loops backward seamlessly", async () => {
+    const el2 = (sel) => page.locator(`[data-pg="c-loop-narrow"] ${sel}`.trim())
+
+    // Reset to first item
+    await page.evaluate(() => {
+      const c = document.querySelector('[data-pg="c-loop-narrow"] .carousel-content')
+      const firstReal = c.querySelector(':scope > .carousel-item:not([data-carousel-clone])')
+      c.style.scrollSnapType = 'none'
+      c.scrollLeft = firstReal.offsetLeft
+      c.style.scrollSnapType = ''
+    })
+    await page.waitForTimeout(300)
+
+    // Click prev once — should wrap to last item
+    await el2(".carousel-previous").click()
+    await waitForSnap("c-loop-narrow")
+    await page.waitForTimeout(300)
+
+    const idx = await page.evaluate(() => {
+      const c = document.querySelector('[data-pg="c-loop-narrow"] .carousel-content')
+      const reals = c.querySelectorAll(':scope > .carousel-item:not([data-carousel-clone])')
+      const cr = c.getBoundingClientRect()
+      let best = 0, bestDist = Infinity
+      reals.forEach((r, i) => {
+        const d = Math.abs(r.getBoundingClientRect().left - cr.left)
+        if (d < bestDist) { bestDist = d; best = i }
+      })
+      return best
+    })
+    eq(idx, 9, "wrapped to last item (index 9)")
   })
 }

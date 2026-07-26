@@ -165,6 +165,33 @@ export default function CarouselPage() {
         </div>
       </section>
 
+      {/* Loop with many narrow items — tests clone optimisation */}
+      <section className="pg-section">
+        <h3>Loop (narrow items)</h3>
+        <p className="pg-prose">
+          Same loop behaviour but with narrower items. The carousel only
+          clones enough slides to fill one viewport plus a safety margin
+          on each side, so this 10-item carousel has fewer clones than a
+          naive 2N approach.
+        </p>
+        <div style={{ paddingInline: "4rem", maxInlineSize: "32rem" }}>
+          <Carousel opts={{ loop: true }} data-pg="c-loop-narrow">
+            <CarouselContent style={{ gap: "0.5rem" }}>
+              {Array.from({ length: 10 }, (_, i) => (
+                <CarouselItem
+                  key={i}
+                  style={{ flex: "0 0 calc(25% - 0.375rem)" }}
+                >
+                  <div style={card("6rem")}>{i + 1}</div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+        </div>
+      </section>
+
       {/* Autoplay plugin */}
       <section className="pg-section">
         <h3>Autoplay</h3>
