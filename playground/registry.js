@@ -69,6 +69,7 @@ export const registry = {
   skeleton: { title: "Skeleton", page: lazy(() => import("./pages/skeleton.jsx")) },
   slider: { title: "Slider", page: lazy(() => import("./pages/slider.jsx")) },
   spinner: { title: "Spinner", page: lazy(() => import("./pages/spinner.jsx")) },
+  "status-dot": { title: "Status Dot", page: lazy(() => import("./pages/status-dot.jsx")) },
   switch: { title: "Switch", page: lazy(() => import("./pages/switch.jsx")) },
   table: { title: "Table", page: lazy(() => import("./pages/table.jsx")) },
   tabs: { title: "Tabs", page: lazy(() => import("./pages/tabs.jsx")) },

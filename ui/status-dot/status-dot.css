@@ -1,0 +1,96 @@
+/*
+ * StatusDot — coloured indicator pip.
+ *
+ * status → colour via data-status; size via modifier; ring via modifier.
+ * `error` maps to --destructive-* tokens (see badge doc comment for why).
+ */
+
+.status-dot {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 0.5rem;      /* 8px — default */
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--muted-foreground);
+  vertical-align: middle;
+}
+
+/* ── Sizes ── */
+
+.status-dot--sm {
+  width: 0.375rem;    /* 6px */
+  height: 0.375rem;
+}
+
+.status-dot--lg {
+  width: 0.625rem;    /* 10px */
+  height: 0.625rem;
+}
+
+/* ── Status colours ── */
+
+.status-dot[data-status="success"] {
+  background-color: var(--success);
+}
+
+.status-dot[data-status="warning"] {
+  background-color: var(--warning);
+}
+
+.status-dot[data-status="error"] {
+  background-color: var(--destructive);
+}
+
+.status-dot[data-status="info"] {
+  background-color: var(--info);
+}
+
+.status-dot[data-status="neutral"] {
+  background-color: var(--muted-foreground);
+}
+
+.status-dot[data-status="pending"] {
+  background-color: var(--muted-foreground);
+  animation: status-dot-pulse var(--motion-medium) ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-dot[data-status="pending"] {
+    animation: none;
+  }
+}
+
+@keyframes status-dot-pulse {
+  0% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+/* ── Ring (halo) ── */
+
+.status-dot--ring {
+  box-shadow: 0 0 0 3px color-mix(in oklab, currentColor 20%, transparent);
+}
+
+.status-dot--ring[data-status="success"] {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--success) 20%, transparent);
+}
+
+.status-dot--ring[data-status="warning"] {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--warning) 20%, transparent);
+}
+
+.status-dot--ring[data-status="error"] {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--destructive) 20%, transparent);
+}
+
+.status-dot--ring[data-status="info"] {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--info) 20%, transparent);
+}
+
+.status-dot--ring[data-status="neutral"] {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--muted-foreground) 20%, transparent);
+}
+
+.status-dot--ring[data-status="pending"] {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--muted-foreground) 20%, transparent);
+}
