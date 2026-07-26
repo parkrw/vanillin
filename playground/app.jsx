@@ -1,4 +1,5 @@
 import { Suspense, useEffect, useState } from "react"
+import { withViewTransition } from "../lib/view-transition.js"
 import { docs, registry } from "./registry.js"
 
 const sections = [
@@ -29,7 +30,15 @@ export function App() {
     <div className="pg">
       <nav className="pg-nav">
         <h1>vanillin</h1>
-        <button className="pg-theme-toggle" onClick={() => setDark((d) => !d)}>
+        <button
+          className="pg-theme-toggle"
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect()
+            const x = rect.left + rect.width / 2
+            const y = rect.top + rect.height / 2
+            withViewTransition(() => setDark((d) => !d), { clipPath: { x, y } })
+          }}
+        >
           {dark ? "light" : "dark"} mode
         </button>
         {sections.map(({ label, entries }) => (

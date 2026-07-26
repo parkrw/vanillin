@@ -124,3 +124,35 @@
   border-color: var(--pg-accent);
   color: var(--pg-accent);
 }
+
+/* View Transitions — theme toggle circular wipe */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* Shared-element transitions for list-detail demos */
+
+::view-transition-old(shared-element),
+::view-transition-new(shared-element) {
+  animation-duration: var(--motion-medium);
+  animation-timing-function: var(--motion-ease);
+}
