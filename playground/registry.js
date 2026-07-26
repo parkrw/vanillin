@@ -43,6 +43,7 @@ export const registry = {
   "dropdown-menu": { title: "Dropdown Menu", page: lazy(() => import("./pages/dropdown-menu.jsx")) },
   empty: { title: "Empty", page: lazy(() => import("./pages/empty.jsx")) },
   field: { title: "Field", page: lazy(() => import("./pages/field.jsx")) },
+  format: { title: "Format", page: lazy(() => import("./pages/format.jsx")) },
   "hover-card": { title: "Hover Card", page: lazy(() => import("./pages/hover-card.jsx")) },
   input: { title: "Input", page: lazy(() => import("./pages/input.jsx")) },
   "input-group": { title: "Input Group", page: lazy(() => import("./pages/input-group.jsx")) },
