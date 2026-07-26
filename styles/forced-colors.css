@@ -1,0 +1,317 @@
+/*
+ * Forced-colors, high-contrast, and reduced-transparency repair layer.
+ *
+ * Cross-cutting overrides for Windows High Contrast, prefers-contrast,
+ * and prefers-reduced-transparency.  System colour keywords inside the
+ * forced-colors block are correct and expected -- they resolve to the
+ * user's chosen palette.
+ *
+ * Per-component forced-color-adjust: none lives in the component CSS
+ * (status-dot, progress, slider) with a comment explaining why.
+ */
+
+/* ======================================================================
+   forced-colors: active
+   ====================================================================== */
+
+@media (forced-colors: active) {
+
+  /* ---- Focus: outline for every family that suppressed it ----
+     box-shadow is killed in forced-colors mode.  Every component below
+     used outline: none + box-shadow for its focus ring; we restore a
+     real outline so focus is always visible.  !important is standard
+     practice in forced-colors repair -- this stylesheet loads before
+     component CSS, so without it the component outline: none wins. */
+
+  .btn:focus-visible,
+  .checkbox:focus-visible,
+  .switch:focus-visible,
+  .radio-group-item:focus-visible,
+  .select-trigger:focus-visible,
+  .input:focus-visible,
+  .textarea:focus-visible,
+  .native-select:focus-visible,
+  .tabs-trigger:focus-visible,
+  .tabs-content:focus-visible,
+  .toggle:focus-visible,
+  .accordion-trigger:focus-visible,
+  .slider-thumb:focus-visible,
+  .carousel:focus-visible,
+  .dialog-close:focus-visible,
+  .badge:focus-visible,
+  .attachment-trigger:focus-visible,
+  .date-input-field:focus-visible,
+  .navigation-menu-trigger:focus-visible,
+  .data-table-page-size > select:focus-visible,
+  .data-table-sort-btn:focus-visible,
+  .data-table-actions-trigger:focus-visible {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px !important;
+  }
+
+  /* Wrapper-level focus (drawn via :focus-within, not :focus-visible) */
+  .combobox-input-group:focus-within,
+  .time-picker:focus-within,
+  .input-group:focus-within {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px !important;
+  }
+
+  /* OTP active slot draws the ring instead of the hidden input */
+  .input-otp-slot[data-active] {
+    outline: 2px solid Highlight !important;
+    outline-offset: -2px !important;
+  }
+
+  /* Items highlighted by accent-background + outline: none --
+     the accent bg becomes Canvas in forced-colors, so the highlight
+     vanishes.  An inset outline restores it. */
+  .menubar-trigger:focus,
+  .menubar-trigger[data-state="open"],
+  .navigation-menu-link:focus-visible,
+  .time-picker-segment:focus-visible {
+    outline: 2px solid Highlight !important;
+    outline-offset: -2px !important;
+  }
+
+  /* ---- Surfaces: borders on background-only containers ----
+     These surfaces differ from their parent only by fill colour;
+     forced-colors replaces all fills with Canvas, losing the edge. */
+
+  .tooltip {
+    border: 1px solid CanvasText;
+  }
+
+  .tabs-list {
+    border: 1px solid CanvasText;
+  }
+
+  .badge {
+    border-color: CanvasText;
+  }
+
+  .switch {
+    border-color: CanvasText;
+  }
+
+  .skeleton {
+    border: 1px solid GrayText;
+  }
+
+  .kbd {
+    border: 1px solid CanvasText;
+  }
+
+  .drawer-handle {
+    border: 1px solid CanvasText;
+  }
+
+  .avatar-fallback {
+    border: 1px solid CanvasText;
+  }
+
+  .empty-icon {
+    border: 1px solid CanvasText;
+  }
+
+  /* Sidebar edge -- forced-colors loses the bg distinction between
+     sidebar and main content. */
+  .sidebar:not(.sidebar--bordered) {
+    border-inline-end: 1px solid CanvasText;
+  }
+  .sidebar--right:not(.sidebar--bordered) {
+    border-inline-end: 0;
+    border-inline-start: 1px solid CanvasText;
+  }
+
+  /* ---- States: selected, highlighted, active, disabled ----
+     The browser maps every author colour to the system palette, but
+     it cannot infer semantic intent from data- attributes.  We set
+     system keywords explicitly so states are legible. */
+
+  /* Active tab */
+  .tabs-trigger[data-state="active"] {
+    border-color: Highlight;
+  }
+
+  /* Toggle on */
+  .toggle[data-state="on"] {
+    border-color: Highlight;
+  }
+
+  /* Switch checked */
+  .switch[data-state="checked"] {
+    background-color: Highlight;
+  }
+  .switch[data-state="checked"] .switch-thumb {
+    background-color: HighlightText;
+  }
+
+  /* Checkbox / radio checked */
+  .checkbox[data-state="checked"],
+  .checkbox[data-state="indeterminate"] {
+    background-color: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+
+  .radio-group-item[data-state="checked"] {
+    border-color: Highlight;
+  }
+  .radio-group-indicator {
+    background-color: Highlight;
+  }
+
+  /* Menu / select / command / combobox item highlight */
+  .dropdown-menu-item:focus,
+  .dropdown-menu-sub-trigger[data-state="open"],
+  .command-item[data-selected],
+  .combobox-item[data-highlighted],
+  .select-item:focus {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+  }
+
+  /* Calendar selected day */
+  .calendar-day-button[data-selected-single="true"],
+  .calendar-day-button[data-range-start="true"],
+  .calendar-day-button[data-range-end="true"] {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+  }
+  .calendar-day-button[data-today] {
+    border: 1px solid CanvasText;
+  }
+  .calendar-day-button[data-range-middle="true"] {
+    border-block: 1px solid Highlight;
+  }
+
+  /* Table selected row */
+  .table-row[data-selected="true"] {
+    border-color: Highlight;
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  /* Disabled -- GrayText is the system disabled colour */
+  .btn:disabled,
+  .checkbox:disabled,
+  .switch:disabled,
+  .radio-group-item:disabled,
+  .select-trigger:disabled,
+  .input:disabled,
+  .textarea:disabled,
+  .slider[data-disabled],
+  .toggle:disabled,
+  .tabs-trigger:disabled {
+    color: GrayText;
+    border-color: GrayText;
+  }
+
+  /* Links */
+  a[href] {
+    color: LinkText;
+  }
+
+  /* Toast status borders -- in forced-colors the background tints
+     vanish; the border carries the status instead. */
+  .toaster--rich .toast--success {
+    border-color: CanvasText;
+  }
+  .toaster--rich .toast--error {
+    border-color: CanvasText;
+  }
+  .toaster--rich .toast--warning {
+    border-color: CanvasText;
+  }
+  .toaster--rich .toast--info {
+    border-color: CanvasText;
+  }
+}
+
+/* ======================================================================
+   prefers-contrast: more -- sharper borders, thicker focus
+   ====================================================================== */
+
+@media (prefers-contrast: more) {
+
+  :root {
+    /* Full-opacity borders in dark mode (default dark --border is
+       oklch(1 0 0 / 10%) which is near-invisible at high-contrast). */
+    --border: light-dark(oklch(0.7 0 0), oklch(0.55 0 0));
+    --input: light-dark(oklch(0.7 0 0), oklch(0.55 0 0));
+    --sidebar-border: light-dark(oklch(0.7 0 0), oklch(0.55 0 0));
+  }
+
+  /* Thicken focus outlines */
+  :focus-visible {
+    outline-width: 3px;
+  }
+
+  /* Full-opacity borders on outline-style badges and toggles */
+  .badge--outline {
+    border-color: var(--foreground);
+  }
+  .toggle--outline {
+    border-color: var(--foreground);
+  }
+
+  /* Separator visibility */
+  .separator {
+    background-color: var(--foreground);
+    opacity: 0.5;
+  }
+}
+
+/* ======================================================================
+   prefers-reduced-transparency -- opaque equivalents
+   ====================================================================== */
+
+@media (prefers-reduced-transparency: reduce) {
+
+  /* Dialog / sheet / drawer / alert-dialog backdrop scrim */
+  .dialog::backdrop {
+    background-color: oklch(0 0 0 / 80%);
+  }
+
+  /* Table hover and stripe rows */
+  .table-body .table-row:hover {
+    background-color: var(--muted);
+  }
+
+  /* Navigation-menu translucent hover states */
+  .navigation-menu-trigger:hover,
+  .navigation-menu-link:hover {
+    background-color: var(--accent);
+  }
+
+  /* Progress track -- normally 20% primary */
+  .progress {
+    background-color: var(--muted);
+  }
+
+  /* Status-dot ring halos -- normally 20% tints */
+  .status-dot--ring {
+    box-shadow: 0 0 0 3px var(--muted-foreground);
+  }
+  .status-dot--ring[data-status="success"] {
+    box-shadow: 0 0 0 3px var(--success);
+  }
+  .status-dot--ring[data-status="warning"] {
+    box-shadow: 0 0 0 3px var(--warning);
+  }
+  .status-dot--ring[data-status="error"] {
+    box-shadow: 0 0 0 3px var(--destructive);
+  }
+  .status-dot--ring[data-status="info"] {
+    box-shadow: 0 0 0 3px var(--info);
+  }
+
+  /* Highlight paint */
+  ::highlight(vanillin-search) {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+}
