@@ -186,4 +186,233 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await btn.click()
     eq(await btn.getAttribute("data-clicks"), "2", "second click registered")
   })
+
+  // ---- Alignment ----
+
+  await test("align: center sets scroll-snap-align on items", async () => {
+    const item = el("c-align", ".carousel-item").first()
+    const snapAlign = await item.evaluate((el) => getComputedStyle(el).scrollSnapAlign)
+    eq(snapAlign, "center", "scroll-snap-align is center")
+  })
+
+  await test("align: default (start) carousel items have scroll-snap-align: start", async () => {
+    const item = el("c-basic", ".carousel-item").first()
+    const snapAlign = await item.evaluate((el) => getComputedStyle(el).scrollSnapAlign)
+    eq(snapAlign, "start", "scroll-snap-align is start")
+  })
+
+  // ---- Loop ----
+
+  await test("loop: both nav buttons enabled at start", async () => {
+    eq(await el("c-loop", ".carousel-previous").isDisabled(), false, "prev enabled")
+    eq(await el("c-loop", ".carousel-next").isDisabled(), false, "next enabled")
+  })
+
+  await test("loop: next from last slide lands on the first", async () => {
+    // Navigate to the last real slide
+    for (let i = 0; i < 4; i++) {
+      await el("c-loop", ".carousel-next").click()
+      await waitForSnap("c-loop")
+    }
+    // Verify we're at slide 5 (index 4)
+    const idxBefore = await page.evaluate(() => {
+      const content = document.querySelector('[data-pg="c-loop"] .carousel-content')
+      const reals = content.querySelectorAll(':scope > .carousel-item:not([data-carousel-clone])')
+      const cr = content.getBoundingClientRect()
+      let best = 0, bestDist = Infinity
+      reals.forEach((r, i) => {
+        const d = Math.abs(r.getBoundingClientRect().left - cr.left)
+        if (d < bestDist) { bestDist = d; best = i }
+      })
+      return best
+    })
+    eq(idxBefore, 4, "at last slide before wrap")
+
+    // Nav buttons still enabled
+    eq(await el("c-loop", ".carousel-next").isDisabled(), false, "next still enabled at end")
+
+    // Click next — should wrap to first slide
+    await el("c-loop", ".carousel-next").click()
+    await waitForSnap("c-loop")
+    // Wait a bit for the recentre to complete
+    await page.waitForTimeout(300)
+
+    const idxAfter = await page.evaluate(() => {
+      const content = document.querySelector('[data-pg="c-loop"] .carousel-content')
+      const reals = content.querySelectorAll(':scope > .carousel-item:not([data-carousel-clone])')
+      const cr = content.getBoundingClientRect()
+      let best = 0, bestDist = Infinity
+      reals.forEach((r, i) => {
+        const d = Math.abs(r.getBoundingClientRect().left - cr.left)
+        if (d < bestDist) { bestDist = d; best = i }
+      })
+      return best
+    })
+    eq(idxAfter, 0, "wrapped to first slide")
+  })
+
+  await test("loop: prev from first slide lands on the last", async () => {
+    // Reset to first slide
+    await page.evaluate(() => {
+      const content = document.querySelector('[data-pg="c-loop"] .carousel-content')
+      const firstReal = content.querySelector(':scope > .carousel-item:not([data-carousel-clone])')
+      const cr = content.getBoundingClientRect()
+      const ir = firstReal.getBoundingClientRect()
+      content.scrollLeft += ir.left - cr.left
+    })
+    await page.waitForTimeout(200)
+
+    await el("c-loop", ".carousel-previous").click()
+    await waitForSnap("c-loop")
+    await page.waitForTimeout(300)
+
+    const idx = await page.evaluate(() => {
+      const content = document.querySelector('[data-pg="c-loop"] .carousel-content')
+      const reals = content.querySelectorAll(':scope > .carousel-item:not([data-carousel-clone])')
+      const cr = content.getBoundingClientRect()
+      let best = 0, bestDist = Infinity
+      reals.forEach((r, i) => {
+        const d = Math.abs(r.getBoundingClientRect().left - cr.left)
+        if (d < bestDist) { bestDist = d; best = i }
+      })
+      return best
+    })
+    eq(idx, 4, "wrapped to last slide")
+  })
+
+  await test("loop: clones are aria-hidden and inert", async () => {
+    const clones = el("c-loop", "[data-carousel-clone]")
+    const count = await clones.count()
+    eq(count > 0, true, "clones exist")
+    for (let i = 0; i < count; i++) {
+      eq(await clones.nth(i).getAttribute("aria-hidden"), "true", `clone ${i} aria-hidden`)
+      // inert attribute is present (boolean attribute, value is empty string or "true")
+      const hasInert = await clones.nth(i).evaluate((el) => el.inert)
+      eq(hasInert, true, `clone ${i} inert`)
+    }
+  })
+
+  await test("loop: focus never lands on a clone via Tab", async () => {
+    // Focus the carousel, then tab through — no clone should receive focus
+    await el("c-loop").focus()
+    const focusedClone = await page.evaluate(() => {
+      const carousel = document.querySelector('[data-pg="c-loop"]')
+      const clones = carousel.querySelectorAll("[data-carousel-clone]")
+      // Try to focus each clone — inert should prevent it
+      for (const c of clones) {
+        c.focus()
+        if (document.activeElement === c) return true
+        // Also check children
+        const focusable = c.querySelectorAll("button, a, input, [tabindex]")
+        for (const f of focusable) {
+          f.focus()
+          if (document.activeElement === f) return true
+        }
+      }
+      return false
+    })
+    eq(focusedClone, false, "no clone or clone child is focusable")
+  })
+
+  // ---- Autoplay ----
+
+  await test("autoplay: advances slide automatically", async () => {
+    // The autoplay demo has a 3s delay — wait for it to advance at least once
+    const initial = await page.evaluate(() => {
+      const content = document.querySelector('[data-pg="c-autoplay"] .carousel-content')
+      const reals = content.querySelectorAll(':scope > .carousel-item:not([data-carousel-clone])')
+      const cr = content.getBoundingClientRect()
+      let best = 0, bestDist = Infinity
+      reals.forEach((r, i) => {
+        const d = Math.abs(r.getBoundingClientRect().left - cr.left)
+        if (d < bestDist) { bestDist = d; best = i }
+      })
+      return best
+    })
+
+    // Wait for autoplay to tick
+    await page.waitForTimeout(3500)
+    await waitForSnap("c-autoplay")
+
+    const after = await page.evaluate(() => {
+      const content = document.querySelector('[data-pg="c-autoplay"] .carousel-content')
+      const reals = content.querySelectorAll(':scope > .carousel-item:not([data-carousel-clone])')
+      const cr = content.getBoundingClientRect()
+      let best = 0, bestDist = Infinity
+      reals.forEach((r, i) => {
+        const d = Math.abs(r.getBoundingClientRect().left - cr.left)
+        if (d < bestDist) { bestDist = d; best = i }
+      })
+      return best
+    })
+    eq(after !== initial, true, `autoplay advanced from ${initial} to ${after}`)
+  })
+
+  await test("autoplay: pauses on hover", async () => {
+    // Record current slide
+    const before = await page.evaluate(() => {
+      const content = document.querySelector('[data-pg="c-autoplay"] .carousel-content')
+      const reals = content.querySelectorAll(':scope > .carousel-item:not([data-carousel-clone])')
+      const cr = content.getBoundingClientRect()
+      let best = 0, bestDist = Infinity
+      reals.forEach((r, i) => {
+        const d = Math.abs(r.getBoundingClientRect().left - cr.left)
+        if (d < bestDist) { bestDist = d; best = i }
+      })
+      return best
+    })
+
+    // Hover over the carousel
+    const box = await el("c-autoplay").boundingBox()
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+
+    // Wait longer than one autoplay interval
+    await page.waitForTimeout(3800)
+
+    const after = await page.evaluate(() => {
+      const content = document.querySelector('[data-pg="c-autoplay"] .carousel-content')
+      const reals = content.querySelectorAll(':scope > .carousel-item:not([data-carousel-clone])')
+      const cr = content.getBoundingClientRect()
+      let best = 0, bestDist = Infinity
+      reals.forEach((r, i) => {
+        const d = Math.abs(r.getBoundingClientRect().left - cr.left)
+        if (d < bestDist) { bestDist = d; best = i }
+      })
+      return best
+    })
+    eq(after, before, "slide did not advance while hovered")
+
+    // Move mouse away to resume
+    await page.mouse.move(0, 0)
+  })
+
+  await test("autoplay: never starts under reduced motion", async () => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    // Full reload so the plugin re-inits under the new media setting
+    await page.reload({ waitUntil: "load" })
+    await page.locator('[data-pg="c-autoplay"] .carousel-content').waitFor()
+    await page.mouse.move(0, 0)
+
+    // Verify the emulation is active
+    const isReduced = await page.evaluate(() =>
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    )
+    eq(isReduced, true, "reduced motion emulation active")
+
+    // Wait for loop initialisation to settle
+    await page.waitForTimeout(800)
+
+    // Sample scrollLeft twice separated by more than one autoplay interval
+    const before = await page.evaluate(() =>
+      document.querySelector('[data-pg="c-autoplay"] .carousel-content').scrollLeft
+    )
+    await page.waitForTimeout(4000)
+    const after = await page.evaluate(() =>
+      document.querySelector('[data-pg="c-autoplay"] .carousel-content').scrollLeft
+    )
+    near(after, before, 2, "scrollLeft unchanged — autoplay did not run")
+
+    // Restore for any remaining tests
+    await page.emulateMedia({ reducedMotion: "no-preference" })
+  })
 }
