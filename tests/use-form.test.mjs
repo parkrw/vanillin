@@ -338,43 +338,4 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(err, "Required", "onBlur mode validates on blur")
   })
 
-  // ── Zod resolver integration ──────────────────────────────────────
-
-  await test("zodResolver loads and validates", async () => {
-    // Wait for dynamic import of zod + resolver
-    await page.waitForFunction(
-      () =>
-        document.querySelector('[data-pg="uf-zod-status"]')?.textContent ===
-        "ready",
-      { timeout: 10000 }
-    )
-
-    // Submit empty form -> validation errors
-    await page.locator('[data-pg="uf-zod-submit"]').click()
-    await page.waitForTimeout(100)
-
-    const errEmail = await page
-      .locator('[data-pg="uf-zod-err-email"]')
-      .textContent()
-    eq(
-      errEmail.length > 0,
-      true,
-      "zod email error shown: " + errEmail
-    )
-  })
-
-  await test("zodResolver passes valid data through", async () => {
-    await page.locator('[data-pg="uf-zod-email"]').fill("test@test.com")
-    await page.locator('[data-pg="uf-zod-age"]').fill("30")
-    await page.locator('[data-pg="uf-zod-submit"]').click()
-    await page.waitForTimeout(100)
-
-    const result = await page
-      .locator('[data-pg="uf-zod-result"]')
-      .textContent()
-    eq(result.startsWith("ok:"), true, "zod valid submit: " + result)
-    const data = JSON.parse(result.replace("ok:", ""))
-    eq(data.email, "test@test.com", "zod parsed email")
-    eq(data.age, 30, "zod coerced age to number")
-  })
 }

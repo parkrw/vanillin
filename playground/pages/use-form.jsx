@@ -393,89 +393,7 @@ function NestedPaths() {
 }
 
 /* ================================================================== */
-/*  Section 9 — Zod resolver (devDependency only)                      */
-/* ================================================================== */
-
-function ZodResolverDemo() {
-  // Dynamic import state — zod + @hookform/resolvers loaded at mount
-  const [ready, setReady] = useState(false)
-  const resolverRef = useRef(null)
-  const [result, setResult] = useState(null)
-
-  // Load zod and resolver on mount
-  if (!ready && !resolverRef.current) {
-    resolverRef.current = "loading"
-    Promise.all([
-      import("zod"),
-      import("@hookform/resolvers/zod"),
-    ])
-      .then(([zodMod, resolverMod]) => {
-        const z = zodMod.z || zodMod
-        const schema = z.object({
-          email: z.string().min(1, "Email required").email("Invalid email"),
-          age: z.coerce.number().min(1, "Min 1").max(150, "Max 150"),
-        })
-        resolverRef.current = resolverMod.zodResolver(schema)
-        setReady(true)
-      })
-      .catch((err) => {
-        resolverRef.current = null
-        setResult("zod-load-error:" + err.message)
-      })
-  }
-
-  if (!ready) {
-    return (
-      <section data-pg="uf-zod">
-        <h3>Zod resolver</h3>
-        <span data-pg="uf-zod-status">loading</span>
-        {result && <pre data-pg="uf-zod-result">{result}</pre>}
-      </section>
-    )
-  }
-
-  return <ZodForm resolver={resolverRef.current} onResult={setResult} />
-}
-
-function ZodForm({ resolver, onResult }) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    defaultValues: { email: "", age: "" },
-    resolver,
-  })
-  const [result, setResult] = useState(null)
-  return (
-    <section data-pg="uf-zod">
-      <h3>Zod resolver</h3>
-      <span data-pg="uf-zod-status">ready</span>
-      <form
-        onSubmit={handleSubmit(
-          (data) => { const r = "ok:" + JSON.stringify(data); setResult(r); onResult(r) },
-          (errs) => { const r = "invalid:" + JSON.stringify(errs); setResult(r); onResult(r) }
-        )}
-      >
-        <input data-pg="uf-zod-email" placeholder="email" {...register("email")} />
-        {errors.email && (
-          <span data-pg="uf-zod-err-email">{errors.email.message}</span>
-        )}
-        <input data-pg="uf-zod-age" placeholder="age" {...register("age")} />
-        {errors.age && (
-          <span data-pg="uf-zod-err-age">{errors.age.message}</span>
-        )}
-        <button type="submit" data-pg="uf-zod-submit">
-          Submit
-        </button>
-      </form>
-      {result && <pre data-pg="uf-zod-result">{result}</pre>}
-    </section>
-  )
-}
-
-/* ================================================================== */
-/*  Section 10 — Validation modes                                      */
+/*  Section 9 — Validation modes                                       */
 /* ================================================================== */
 
 function ValidationModes() {
@@ -620,7 +538,6 @@ export default function UseFormPage() {
       <ContextDemo />
       <FieldArrayDemo />
       <NestedPaths />
-      <ZodResolverDemo />
       <ValidationModes />
     </div>
   )
