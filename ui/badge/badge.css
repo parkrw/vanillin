@@ -26,6 +26,45 @@
   pointer-events: none;
 }
 
+/*
+ * Chip — the dismissible pill. Colour comes from `badge--secondary`
+ * (`Chip` always renders that variant); only the geometry differs from a
+ * badge: a fixed 1.5rem row so a wrap of chips inside an input group keeps
+ * an even rhythm, a tighter end padding for the remove button, and the
+ * smaller radius that reads as "inside a field" rather than "on a row".
+ */
+.badge--chip {
+  block-size: 1.5rem;
+  padding-block: 0;
+  padding-inline: var(--space-2) var(--space-1);
+  border-radius: var(--radius-sm);
+  user-select: none;
+}
+
+.badge-chip-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-inline-size: 10rem;
+}
+
+.badge-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--muted-foreground);
+  cursor: default;
+}
+
+.badge-chip-remove:hover {
+  color: var(--foreground);
+}
+
 /* Variants */
 
 .badge--secondary {

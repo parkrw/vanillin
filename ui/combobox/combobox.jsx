@@ -10,6 +10,7 @@ import {
   useState,
 } from "react"
 import { cn } from "../../lib/cn.js"
+import { Chip } from "../badge/badge.jsx"
 import { useControllableState } from "../../lib/use-controllable-state.js"
 import { useAnchorPosition } from "../../lib/use-anchor-position.js"
 
@@ -382,34 +383,18 @@ export function ComboboxInput({
       className={cn("combobox-input-group", className)}
     >
       {chips.map((v) => (
-        <span key={v} className="combobox-chip">
-          <span className="combobox-chip-text">{getLabel(v) ?? v}</span>
-          <button
-            type="button"
-            tabIndex={-1}
-            aria-label={`Remove ${getLabel(v) ?? v}`}
-            className="combobox-chip-remove"
-            onClick={(e) => {
-              e.stopPropagation()
-              removeValue(v)
-              inputRef.current?.focus()
-            }}
-            disabled={disabled || undefined}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M18 6 6 18" />
-              <path d="m6 6 12 12" />
-            </svg>
-          </button>
-        </span>
+        <Chip
+          key={v}
+          className="combobox-chip"
+          disabled={disabled}
+          onRemove={(e) => {
+            e.stopPropagation()
+            removeValue(v)
+            inputRef.current?.focus()
+          }}
+        >
+          {getLabel(v) ?? v}
+        </Chip>
       ))}
       <input
         ref={inputRef}

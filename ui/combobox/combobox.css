@@ -2,6 +2,10 @@
    (popover recipe: transitions + @starting-style + allow-discrete).
    Focus stays in the input; options carry data-highlighted, not :focus. */
 
+/* Chips in `multiple` mode are `Chip` from ui/badge — one chip
+   implementation for the kit. Only the in-field layout stays here. */
+@import "../badge/badge.css";
+
 .combobox-input-group {
   display: inline-flex;
   align-items: center;
@@ -199,52 +203,9 @@
   pointer-events: none;
 }
 
-/* Chips — inline badges for selected values in multiple mode. */
-
-.combobox-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  block-size: 1.5rem;
-  padding-inline: 0.5rem 0.25rem;
-  border-radius: var(--radius-sm);
-  background-color: var(--secondary);
-  color: var(--secondary-foreground);
-  font-size: 0.75rem;
-  line-height: 1;
-  white-space: nowrap;
-  user-select: none;
-}
-
-.combobox-chip-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-inline-size: 10rem;
-}
-
-.combobox-chip-remove {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  inline-size: 0.875rem;
-  block-size: 0.875rem;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--muted-foreground);
-  cursor: default;
-}
-
-.combobox-chip-remove:hover {
-  color: var(--foreground);
-}
-
-.combobox-chip-remove svg {
-  inline-size: 0.75rem;
-  block-size: 0.75rem;
-  pointer-events: none;
-}
+/* Chips — `Chip` from ui/badge, styled there. `.combobox-chip` stays as the
+   in-field hook (and the selector the tests use); everything visual is
+   `.badge--chip`. */
 
 .combobox-empty {
   padding-block: 1.5rem;

@@ -91,9 +91,20 @@ Each is verified, not speculative:
     field changes the a11y tree. That is a real decision, not a refactor
     side-effect — it needs its own call, and the contract here forbids DOM
     changes.
-- [ ] 3. Consolidate chips: one implementation, `ui/combobox` consumes it.
-  Decide explicitly whether it lives in `ui/badge` or its own slug and write the
-  reason down.
+- [x] 3. Consolidate chips: one implementation, `ui/combobox` consumes it.
+  **It lives in `ui/badge` as a `Chip` export**, not its own slug: a chip *is* a
+  badge with a dismiss affordance, so `Chip` renders
+  `<Badge variant="secondary" className="badge--chip">` and inherits the base
+  geometry, focus ring and icon sizing; only the pill deltas are new CSS. A new
+  slug would also have needed a `playground/registry.js` entry, which task 59
+  owns this batch. Only two implementations existed, not three — `grep -rn chip
+  ui lib playground` finds `ui/combobox` and nothing else; the third was
+  `ui/badge` itself. `.combobox-chip` survives as the in-field hook and the
+  selector `tests/combobox.test.mjs` uses, so no combobox test changed.
+  `combobox.css` now `@import`s `badge.css` (the `alert-dialog` → `dialog`
+  precedent). One deliberate change: the old chip's literal `0.25rem`/`0.5rem`
+  padding became `--space-1`/`--space-2`, so chips now scale with
+  `--density-scale` like the input group they sit in.
 - [ ] 4. `ui/data-table` → `ui/scroll-area`, with column pinning intact.
 - [ ] 5. Wire `lib/use-highlight.js` into `ui/data-table` search matches.
 - [x] 6. Write the rule into `docs/HANDOFF.md` conventions so the next fan-out

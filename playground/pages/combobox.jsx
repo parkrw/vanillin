@@ -73,6 +73,13 @@ export default function ComboboxPage() {
           the last chip. The listbox carries{" "}
           <code>aria-multiselectable</code>.
         </p>
+        <p className="pg-prose">
+          The chips are <code>Chip</code> from <code>ui/badge</code> — combobox
+          used to carry its own copy. Copying <code>combobox.jsx</code> now
+          brings <code>badge.jsx</code> with it; that is the trade, and a chip
+          genuinely is a badge. <code>.combobox-chip</code> survives as the
+          in-field hook, so per-instance styling still works.
+        </p>
         <Combobox multiple value={multiVal} onValueChange={setMultiVal} showClear>
           <ComboboxInput placeholder="Pick languages" data-pg="cbx-multi-input" />
           <ComboboxContent data-pg="cbx-multi-content">

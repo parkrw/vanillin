@@ -1,7 +1,14 @@
-import { Badge } from "../../ui/badge/badge.jsx"
+import { useState } from "react"
+import { Badge, Chip } from "../../ui/badge/badge.jsx"
+import { Button } from "../../ui/button/button.jsx"
 import "../../ui/badge/badge.css"
+import "../../ui/button/button.css"
+
+const initialChips = ["Design", "Engineering", "Ops"]
 
 export default function BadgePage() {
+  const [chips, setChips] = useState(initialChips)
+
   return (
     <>
       <h2>Badge</h2>
@@ -47,6 +54,47 @@ export default function BadgePage() {
           <Badge variant="warning">Warning</Badge>
           <Badge variant="info">Info</Badge>
           <Badge variant="destructive-soft">Destructive soft</Badge>
+        </div>
+      </section>
+
+      <section className="pg-section">
+        <h3>Chip</h3>
+        <p>
+          <code>Chip</code> is a badge with a dismiss affordance: it renders{" "}
+          <code>&lt;Badge variant="secondary" className="badge--chip"&gt;</code>{" "}
+          plus a truncating label and an optional remove button. It lives here
+          rather than in its own slug because a chip <em>is</em> a badge — same
+          primitive, same meaning — and the kit had drifted into two
+          implementations of it (<code>ui/combobox</code> had its own).{" "}
+          <code>ui/combobox</code> now imports this one.
+        </p>
+        <p>
+          Pass <code>onRemove</code> for the button; omit it for a static chip.
+          The button is <code>tabIndex={"{-1}"}</code> on purpose — Tab must not
+          walk eight chips to reach the control they sit in, so pair it with a
+          Backspace shortcut the way combobox does. Its accessible name
+          defaults to <code>Remove &lt;label&gt;</code>; override with{" "}
+          <code>removeLabel</code> when the child is not a plain string. Long
+          labels ellipsis at <code>10rem</code>.
+        </p>
+        <div className="pg-row" data-pg="badge-chips">
+          <Chip>Static</Chip>
+          {chips.map((c) => (
+            <Chip key={c} onRemove={() => setChips(chips.filter((x) => x !== c))}>
+              {c}
+            </Chip>
+          ))}
+          <Chip onRemove={() => {}} disabled>
+            Disabled
+          </Chip>
+          <Chip onRemove={() => {}}>
+            A label long enough to be truncated by the chip
+          </Chip>
+        </div>
+        <div className="pg-row">
+          <Button variant="outline" size="sm" onClick={() => setChips(initialChips)}>
+            Reset chips
+          </Button>
         </div>
       </section>
 
