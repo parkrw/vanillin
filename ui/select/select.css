@@ -1,6 +1,7 @@
 /* Select — combobox trigger + listbox on the native Popover API
    (popover recipe: transitions + @starting-style + allow-discrete).
-   Popper placement only; no scroll buttons — the listbox scrolls. */
+   Supports popper placement (default) and item-aligned positioning
+   with scroll buttons for overflow. */
 
 .select-trigger {
   display: inline-flex;
@@ -170,4 +171,69 @@
   margin-inline: -0.25rem;
   block-size: 1px;
   background-color: var(--border);
+}
+
+/* ===================================================================
+   Sentinels — 1px elements at the scroll extremes, observed by
+   IntersectionObserver to drive scroll-button visibility.
+   =================================================================== */
+
+.select-sentinel {
+  block-size: 1px;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* ===================================================================
+   Scroll buttons — sticky at the content edges, decorative.
+   opacity hides them without layout shifts (display:none would cause
+   content to jump when the button mounts/unmounts).
+   =================================================================== */
+
+.select-scroll-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: sticky;
+  z-index: 1;
+  background-color: var(--popover);
+  cursor: default;
+  padding-block: 0.25rem;
+}
+
+.select-scroll-button[data-state="hidden"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.select-scroll-up-button {
+  top: 0;
+}
+
+.select-scroll-down-button {
+  bottom: 0;
+}
+
+.select-scroll-button svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+  color: var(--muted-foreground);
+}
+
+/* ===================================================================
+   Hidden native <select> — participates in constraint validation
+   and form submission.  clip-rect keeps it in the layout tree
+   (display:none would exclude it from validation entirely).
+   =================================================================== */
+
+.select-native-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
