@@ -36,3 +36,15 @@
 .textarea[aria-invalid="true"]:focus-visible {
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--destructive) 40%, transparent);
 }
+
+/* Auto-resize: grows with content via field-sizing: content.
+   Progressive enhancement — where unsupported, textarea keeps its
+   normal fixed-height + manual-resize behaviour. */
+@supports (field-sizing: content) {
+  .textarea--auto-resize {
+    field-sizing: content;
+    resize: none;
+    overflow: auto;
+    max-height: 20rem;
+  }
+}
