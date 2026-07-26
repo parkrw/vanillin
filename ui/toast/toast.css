@@ -364,7 +364,7 @@
 .toast-buttons {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: var(--space-1-5);
   align-self: center;
   margin-inline-start: auto;
 }
