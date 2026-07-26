@@ -189,4 +189,170 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     const end = await thumb("sa-rtl", "horizontal").boundingBox()
     near(end.x - track.x, 1, 1.5, "scrolled to the end, thumb sits at the left edge")
   })
+
+  // ── Overflow edge detection ───────────────────────────────
+
+  await test("data-overflow-y-* attributes track vertical scroll position", async () => {
+    await scrollTo("sa-vertical", { scrollTop: 0 })
+    await page.waitForTimeout(120)
+
+    const root = el("sa-vertical")
+    eq(await root.getAttribute("data-overflow-y-start"), null, "no start overflow at top")
+    eq(await root.getAttribute("data-overflow-y-end"), "", "end overflow at top")
+    eq(await root.getAttribute("data-overflow-end"), "", "summary end at top")
+    eq(await root.getAttribute("data-overflow-start"), null, "no summary start at top")
+
+    await scrollTo("sa-vertical", { scrollTop: 100000 })
+    await page.waitForTimeout(120)
+
+    eq(await root.getAttribute("data-overflow-y-start"), "", "start overflow at bottom")
+    eq(await root.getAttribute("data-overflow-y-end"), null, "no end overflow at bottom")
+
+    await scrollTo("sa-vertical", { scrollTop: 100 })
+    await page.waitForTimeout(120)
+
+    eq(await root.getAttribute("data-overflow-y-start"), "", "start overflow in middle")
+    eq(await root.getAttribute("data-overflow-y-end"), "", "end overflow in middle")
+  })
+
+  await test("overflowEdgeThreshold delays attribute until scrolled past threshold", async () => {
+    await scrollTo("sa-threshold", { scrollTop: 0 })
+    await page.waitForTimeout(120)
+    eq(await el("sa-threshold").getAttribute("data-overflow-y-start"), null, "at top, no start")
+
+    await scrollTo("sa-threshold", { scrollTop: 10 })
+    await page.waitForTimeout(120)
+    eq(await el("sa-threshold").getAttribute("data-overflow-y-start"), null, "10px < 20px threshold")
+
+    await scrollTo("sa-threshold", { scrollTop: 25 })
+    await page.waitForTimeout(120)
+    eq(await el("sa-threshold").getAttribute("data-overflow-y-start"), "", "25px > 20px threshold")
+  })
+
+  await test("both-axis scroll area tracks overflow on each edge independently", async () => {
+    await scrollTo("sa-both", { scrollTop: 0, scrollLeft: 0 })
+    await page.waitForTimeout(120)
+
+    const root = el("sa-both")
+    eq(await root.getAttribute("data-overflow-y-start"), null, "no y-start at origin")
+    eq(await root.getAttribute("data-overflow-y-end"), "", "y-end at origin")
+    eq(await root.getAttribute("data-overflow-x-start"), null, "no x-start at origin")
+    eq(await root.getAttribute("data-overflow-x-end"), "", "x-end at origin")
+
+    await scrollTo("sa-both", { scrollTop: 100000, scrollLeft: 100000 })
+    await page.waitForTimeout(120)
+
+    eq(await root.getAttribute("data-overflow-y-start"), "", "y-start at end")
+    eq(await root.getAttribute("data-overflow-y-end"), null, "no y-end at end")
+    eq(await root.getAttribute("data-overflow-x-start"), "", "x-start at end")
+    eq(await root.getAttribute("data-overflow-x-end"), null, "no x-end at end")
+  })
+
+  await test("overflow attributes clear when content shrinks to fit", async () => {
+    await scrollTo("sa-fade", { scrollTop: 0 })
+    await page.waitForTimeout(120)
+    eq(await el("sa-fade").getAttribute("data-overflow-y-end"), "", "has end overflow initially")
+
+    await page.evaluate(() => {
+      const userDiv = document.querySelector(
+        '[data-pg="sa-fade"] .scroll-area-content > :not(.scroll-area-sentinel):not(.scroll-area-sentinel-track)'
+      )
+      if (userDiv) while (userDiv.children.length > 2) userDiv.lastElementChild.remove()
+    })
+    await page.waitForTimeout(250)
+
+    eq(await el("sa-fade").getAttribute("data-overflow-y-end"), null, "end overflow gone after shrink")
+    eq(await el("sa-fade").getAttribute("data-overflow-y-start"), null, "start overflow gone too")
+  })
+
+  // ── Snap suspension ───────────────────────────────────────
+
+  await test("scroll-snap-type is none during a thumb drag and restored after", async () => {
+    await page.evaluate(() => {
+      const viewport = document.querySelector('[data-pg="sa-vertical"] .scroll-area-viewport')
+      viewport.style.scrollSnapType = "y mandatory"
+    })
+    await scrollTo("sa-vertical", { scrollTop: 0 })
+
+    const thumbBox = await thumb("sa-vertical").boundingBox()
+    const x = thumbBox.x + thumbBox.width / 2
+    const y = thumbBox.y + thumbBox.height / 2
+
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.move(x, y + 20, { steps: 3 })
+
+    const duringDrag = await page.evaluate(
+      () => document.querySelector('[data-pg="sa-vertical"] .scroll-area-viewport').style.scrollSnapType
+    )
+
+    await page.mouse.up()
+    eq(duringDrag, "none", "snap type is none during drag")
+
+    await page.waitForTimeout(1200)
+
+    const afterDrag = await page.evaluate(
+      () => document.querySelector('[data-pg="sa-vertical"] .scroll-area-viewport').style.scrollSnapType
+    )
+    eq(afterDrag, "y mandatory", "snap type restored after drag settles")
+
+    // Clean up
+    await page.evaluate(() => {
+      document.querySelector('[data-pg="sa-vertical"] .scroll-area-viewport').style.scrollSnapType = ""
+    })
+  })
+
+  // ── Overscroll squish guards ──────────────────────────────
+
+  await test("overscroll squish does not engage for a mouse pointer", async () => {
+    await scrollTo("sa-squish", { scrollTop: 0 })
+
+    const area = await el("sa-squish").boundingBox()
+    const x = area.x + area.width / 2
+    const y = area.y + 20
+
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.move(x, y + 40, { steps: 8 })
+
+    const transform = await page.evaluate(
+      () => getComputedStyle(document.querySelector('[data-pg="sa-squish"] .scroll-area-content')).transform
+    )
+    await page.mouse.up()
+
+    eq(transform, "none", "no transform applied for mouse pointer")
+  })
+
+  await test("overscroll squish does not engage under prefers-reduced-motion", async () => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await scrollTo("sa-squish", { scrollTop: 0 })
+
+    const client = await page.context().newCDPSession(page)
+    const area = await el("sa-squish").boundingBox()
+    const x = Math.round(area.x + area.width / 2)
+    const y = Math.round(area.y + 20)
+
+    await client.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ x, y }],
+    })
+    await client.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x, y: y + 40 }],
+    })
+    await page.waitForTimeout(50)
+
+    const transform = await page.evaluate(
+      () => getComputedStyle(document.querySelector('[data-pg="sa-squish"] .scroll-area-content')).transform
+    )
+
+    await client.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    })
+    await client.detach()
+    await page.emulateMedia({ reducedMotion: "no-preference" })
+
+    eq(transform, "none", "no transform under reduced motion")
+  })
 }

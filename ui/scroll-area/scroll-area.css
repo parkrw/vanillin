@@ -35,25 +35,6 @@
   block-size: 0;
 }
 
-.scroll-area-sentinel-track {
-  position: relative;
-  block-size: 0;
-  pointer-events: none;
-}
-
-.scroll-area-sentinel-track > .scroll-area-sentinel {
-  position: absolute;
-  inset-block: 0;
-  inline-size: 0;
-}
-
-.scroll-area-sentinel-track > .scroll-area-sentinel[data-edge="x-start"] {
-  inset-inline-start: 0;
-}
-
-.scroll-area-sentinel-track > .scroll-area-sentinel[data-edge="x-end"] {
-  inset-inline-end: 0;
-}
 
 .scroll-area-scrollbar {
   position: absolute;
