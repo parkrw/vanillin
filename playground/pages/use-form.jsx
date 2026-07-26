@@ -595,14 +595,21 @@ function Docs() {
         <code>{"{"} type, message {"}"}</code>.
       </p>
       <p>
-        <b>Verified:</b> <code>@hookform/resolvers</code>{" "}
-        <code>zodResolver</code> runs unmodified against this contract. Zod
-        coercion (e.g. <code>z.coerce.number()</code>) works, nested error
-        paths resolve correctly. Note: <code>@hookform/resolvers</code> imports{" "}
-        <code>appendErrors</code> from <code>react-hook-form</code> (used only
-        for <code>criteriaMode: "all"</code>, which is out of scope), so{" "}
-        <code>react-hook-form</code> must be installed as a devDependency
-        alongside the resolver package.
+        <b>Verified once, on 2026-07-26:</b> <code>@hookform/resolvers</code>{" "}
+        <code>zodResolver</code> ran unmodified against this contract
+        (<code>@hookform/resolvers</code> 5.5.3, <code>zod</code> 4.4.3). Zod
+        coercion (e.g. <code>z.coerce.number()</code>) works and nested error
+        paths resolve correctly. Neither package is a dependency of this repo —
+        vanillin stays zero-dependency, and our own tests exercise the contract
+        with a hand-written resolver.
+      </p>
+      <p>
+        If you want zod validation, install{" "}
+        <code>@hookform/resolvers</code> and <code>zod</code> in{" "}
+        <i>your</i> app. You will also need <code>react-hook-form</code>{" "}
+        present, because <code>@hookform/resolvers</code> imports{" "}
+        <code>appendErrors</code> from it at module level (used only for{" "}
+        <code>criteriaMode: "all"</code>, which is out of scope here).
       </p>
 
       <h3>useFieldArray</h3>
