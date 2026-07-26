@@ -274,3 +274,13 @@ select,
 [role="link"] {
   cursor: pointer;
 }
+
+/* CSS Custom Highlight API — search-match paint.
+   ::highlight() supports only color, background-color, text-decoration,
+   and text-shadow — no padding, no border-radius. Progressive enhancement:
+   browsers without CSS.highlights see no highlight; filtering still works. */
+
+::highlight(vanillin-search) {
+  background-color: color-mix(in oklab, var(--primary) 25%, transparent);
+  color: var(--foreground);
+}
