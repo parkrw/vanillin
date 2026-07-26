@@ -1,0 +1,6 @@
+.format-relative,
+.format-bytes,
+.format-duration,
+.format-cost {
+  font-variant-numeric: tabular-nums;
+}
