@@ -84,4 +84,5 @@ export const registry = {
   tooltip: { title: "Tooltip", page: lazy(() => import("./pages/tooltip.jsx")) },
   "use-form": { title: "useForm", page: lazy(() => import("./pages/use-form.jsx")) },
   typography: { title: "Typography", page: lazy(() => import("./pages/typography.jsx")) },
+  "view-transitions": { title: "View Transitions", page: lazy(() => import("./pages/view-transitions.jsx")) },
 }

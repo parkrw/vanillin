@@ -156,3 +156,54 @@
   animation-duration: var(--motion-medium);
   animation-timing-function: var(--motion-ease);
 }
+
+/* View Transitions demo page — list/detail cards */
+
+.pg-vt-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+  gap: 0.75rem;
+}
+
+.pg-vt-card {
+  padding: 1.25rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--card-foreground);
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color var(--motion-fast) var(--motion-ease);
+}
+
+.pg-vt-card:hover {
+  border-color: var(--pg-accent);
+}
+
+.pg-vt-detail {
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--card-foreground);
+}
+
+.pg-vt-detail > h3 {
+  margin-top: 0.5rem;
+}
+
+.pg-vt-back {
+  font-size: 0.8125rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.pg-vt-back:hover {
+  border-color: var(--pg-accent);
+  color: var(--pg-accent);
+}
