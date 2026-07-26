@@ -271,3 +271,21 @@
   block-size: 1px;
   background-color: var(--border);
 }
+
+/* ===================================================================
+   Visually-hidden native <select> for constraint validation
+   and form submission.  clip-rect keeps it in the layout tree
+   (display:none would exclude it from validation entirely).
+   =================================================================== */
+
+.combobox-native-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

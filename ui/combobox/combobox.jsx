@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useId,
+  useImperativeHandle,
   useLayoutEffect,
   useRef,
   useState,
@@ -48,7 +49,10 @@ export function Combobox({
   multiple = false,
   showClear = false,
   name,
+  required,
+  form,
   disabled = false,
+  ref,
   children,
 }) {
   const effectiveDefault = defaultValue !== undefined ? defaultValue : (multiple ? [] : "")
@@ -152,6 +156,15 @@ export function Combobox({
     revertInput()
   }, [isOpen, revertInput])
 
+  // Visually-hidden native <select> for constraint validation + form
+  // submission. Not display:none — that excludes it from validation.
+  const nativeSelectRef = useRef(null)
+  useImperativeHandle(ref, () => ({
+    setCustomValidity: (msg) => nativeSelectRef.current?.setCustomValidity(msg),
+  }), [])
+
+  const hasFormBinding = name != null || required
+
   return (
     <ComboboxContext.Provider
       value={{
@@ -185,8 +198,31 @@ export function Combobox({
       }}
     >
       {children}
-      {name != null && (
-        <input type="hidden" name={name} value={currentValue} disabled={disabled} />
+      {hasFormBinding && (
+        <select
+          ref={nativeSelectRef}
+          aria-hidden="true"
+          tabIndex={-1}
+          className="combobox-native-hidden"
+          name={name}
+          required={required || undefined}
+          form={form}
+          disabled={disabled || undefined}
+          multiple={multiple || undefined}
+          value={multiple ? currentValue : currentValue}
+          onChange={() => {}}
+        >
+          <option value="" />
+          {Object.entries(labels).map(([v, l]) => (
+            <option key={v} value={v}>{l}</option>
+          ))}
+          {/* Emit options for values with no matching registered item */}
+          {(multiple ? currentValue : [currentValue])
+            .filter((v) => v !== "" && labels[v] == null)
+            .map((v) => (
+              <option key={v} value={v}>{v}</option>
+            ))}
+        </select>
       )}
     </ComboboxContext.Provider>
   )
