@@ -159,4 +159,114 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.keyboard.press("Escape")
     await page.waitForSelector('[data-pg="cmd-dialog"]', { state: "detached" })
   })
+
+  // --- fuzzy scoring + re-sort ---
+
+  const fuzzyInput = page.locator('[data-pg="cmd-fuzzy-input"]')
+
+  /** Visible items in the fuzzy demo, sorted by computed CSS order (visual). */
+  const fuzzyVisual = () =>
+    page.evaluate(() => {
+      const els = document.querySelectorAll(
+        '[data-pg="cmd-fuzzy-list"] [role="option"]:not([hidden])'
+      )
+      return [...els]
+        .sort(
+          (a, b) =>
+            (parseInt(getComputedStyle(a).order, 10) || 0) -
+            (parseInt(getComputedStyle(b).order, 10) || 0)
+        )
+        .map((el) => el.dataset.value)
+    })
+
+  await test("fuzzy: 'gp' ranks Git Push first", async () => {
+    await fuzzyInput.fill("gp")
+    await page.waitForFunction(() => {
+      const el = document.querySelector('[data-pg="cmd-fuzzy-list"] [role="option"]:not([hidden])')
+      return el && el.dataset.value
+    })
+    const items = await fuzzyVisual()
+    eq(items[0], "Git Push", "Git Push is the top result for 'gp'")
+    eq(items.includes("Grep"), true, "Grep also matches")
+  })
+
+  await test("fuzzy: groups re-order by best member score", async () => {
+    // "gp" -> Git group has Git Push (word boundary), Tools has Grep (prefix).
+    // Git Push scores higher, so its parent group should appear first visually.
+    const groupOrder = await page.evaluate(() => {
+      const groups = document.querySelectorAll('[data-pg="cmd-fuzzy-list"] [role="group"]')
+      return [...groups]
+        .filter((g) => g.querySelector('[role="option"]:not([hidden])'))
+        .sort(
+          (a, b) =>
+            (parseInt(getComputedStyle(a).order, 10) || 0) -
+            (parseInt(getComputedStyle(b).order, 10) || 0)
+        )
+        .map((g) => g.getAttribute("aria-labelledby"))
+        .map((id) => document.getElementById(id)?.textContent)
+    })
+    eq(groupOrder[0], "Git", "Git group appears first for 'gp'")
+  })
+
+  await test("fuzzy: ties keep authored (DOM) order", async () => {
+    await fuzzyInput.fill("")
+    await page.waitForFunction(() => {
+      const els = document.querySelectorAll(
+        '[data-pg="cmd-fuzzy-list"] [role="option"]:not([hidden])'
+      )
+      return els.length === 6
+    })
+    const items = await fuzzyVisual()
+    eq(items[0], "Git Status", "first authored item stays first with empty search")
+    eq(items[5], "Generate Report", "last authored item stays last")
+  })
+
+  await test("fuzzy: arrow keys traverse visual order after re-sort", async () => {
+    await fuzzyInput.fill("gp")
+    await page.waitForFunction(() => {
+      const els = document.querySelectorAll(
+        '[data-pg="cmd-fuzzy-list"] [role="option"]:not([hidden])'
+      )
+      return els.length > 0
+    })
+    await fuzzyInput.click()
+    // First highlight should be the visually-first item (Git Push).
+    const firstHighlight = await page.evaluate(() => {
+      const id = document.activeElement?.getAttribute("aria-activedescendant")
+      return id ? document.getElementById(id)?.dataset.value : null
+    })
+    eq(firstHighlight, "Git Push", "highlight starts on the top-scored item")
+    // ArrowDown should move to the next in visual order.
+    await page.keyboard.press("ArrowDown")
+    const secondHighlight = await page.evaluate(() => {
+      const id = document.activeElement?.getAttribute("aria-activedescendant")
+      return id ? document.getElementById(id)?.dataset.value : null
+    })
+    const visual = await fuzzyVisual()
+    eq(secondHighlight, visual[1], "ArrowDown moves to the next in visual order")
+    await fuzzyInput.fill("")
+  })
+
+  await test("shouldFilter={false} does not reorder items", async () => {
+    const nofilter = page.locator('[data-pg="cmd-nofilter-input"]')
+    await nofilter.fill("zzz")
+    await page.waitForTimeout(50)
+    eq((await visibleItems("cmd-nofilter-list")).join(","), "alpha,beta", "nothing filtered or reordered")
+    await nofilter.fill("")
+  })
+
+  await test("CommandLoading: announces and does not trigger CommandEmpty", async () => {
+    const asyncInput = page.locator('[data-pg="cmd-async-input"]')
+    await asyncInput.fill("xyz")
+    // Loading should appear before the fake fetch resolves.
+    await page.waitForSelector('[data-pg="cmd-async-loading"]')
+    const role = await page.locator('[data-pg="cmd-async-loading"]').getAttribute("role")
+    eq(role, "status", "loading has role=status")
+    const live = await page.locator('[data-pg="cmd-async-loading"]').getAttribute("aria-live")
+    eq(live, "polite", "loading has aria-live=polite")
+    // Empty state must NOT show while loading is mounted.
+    const emptyCount = await page.locator('[data-pg="cmd-async-empty"]').count()
+    eq(emptyCount, 0, "CommandEmpty suppressed while loading")
+    await asyncInput.fill("")
+  })
 }
