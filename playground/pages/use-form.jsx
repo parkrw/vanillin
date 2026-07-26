@@ -393,7 +393,100 @@ function NestedPaths() {
 }
 
 /* ================================================================== */
-/*  Section 9 — Validation modes                                       */
+/*  Section 9 — Resolver (hand-written, same shape as zodResolver)     */
+/* ================================================================== */
+
+/**
+ * Hand-written resolver in the exact @hookform/resolvers output shape.
+ * Validates email (required + format), age (required, coerced to number),
+ * and address.city (required, nested path).
+ * Stashes the options it receives so the test can inspect them.
+ */
+let lastResolverOptions = null
+
+async function demoResolver(values, _context, options) {
+  lastResolverOptions = options
+  const errors = {}
+  // email: required + basic format
+  if (!values.email) {
+    errors.email = { type: "required", message: "Email required" }
+  } else if (!/\S+@\S+\.\S+/.test(values.email)) {
+    errors.email = { type: "format", message: "Invalid email" }
+  }
+  // age: required, coerce to number
+  if (values.age === "" || values.age == null) {
+    errors.age = { type: "required", message: "Age required" }
+  } else if (isNaN(Number(values.age)) || Number(values.age) < 1) {
+    errors.age = { type: "min", message: "Min 1" }
+  }
+  // address.city: required (nested path)
+  const city = values.address?.city
+  if (!city) {
+    if (!errors.address) errors.address = {}
+    errors.address.city = { type: "required", message: "City required" }
+  }
+
+  const hasErrors = Object.keys(errors).length > 0
+  if (hasErrors) return { values: {}, errors }
+  // Coerce age to number in returned values (like zod coerce would)
+  return {
+    values: { ...values, age: Number(values.age) },
+    errors: {},
+  }
+}
+
+function ResolverDemo() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    defaultValues: { email: "", age: "", address: { city: "" } },
+    resolver: demoResolver,
+  })
+  const [result, setResult] = useState(null)
+  return (
+    <section data-pg="uf-resolver">
+      <h3>Resolver</h3>
+      <form
+        onSubmit={handleSubmit(
+          (data) => setResult("ok:" + JSON.stringify(data)),
+          (errs) => setResult("invalid:" + JSON.stringify(errs))
+        )}
+      >
+        <input data-pg="uf-resolver-email" placeholder="email" {...register("email")} />
+        {errors.email && (
+          <span data-pg="uf-resolver-err-email">{errors.email.message}</span>
+        )}
+        <input data-pg="uf-resolver-age" placeholder="age" {...register("age")} />
+        {errors.age && (
+          <span data-pg="uf-resolver-err-age">{errors.age.message}</span>
+        )}
+        <input
+          data-pg="uf-resolver-city"
+          placeholder="city"
+          {...register("address.city")}
+        />
+        {errors.address?.city && (
+          <span data-pg="uf-resolver-err-city">{errors.address.city.message}</span>
+        )}
+        <button type="submit" data-pg="uf-resolver-submit">Submit</button>
+      </form>
+      {result && <pre data-pg="uf-resolver-result">{result}</pre>}
+      <pre data-pg="uf-resolver-opts" style={{ display: "none" }}>
+        {lastResolverOptions ? JSON.stringify({
+          hasFields: typeof lastResolverOptions.fields === "object",
+          hasNames: Array.isArray(lastResolverOptions.names),
+          criteriaMode: lastResolverOptions.criteriaMode,
+          shouldUseNativeValidation: lastResolverOptions.shouldUseNativeValidation,
+        }) : ""}
+      </pre>
+    </section>
+  )
+}
+
+/* ================================================================== */
+/*  Section 10 — Validation modes                                      */
 /* ================================================================== */
 
 function ValidationModes() {
@@ -538,6 +631,7 @@ export default function UseFormPage() {
       <ContextDemo />
       <FieldArrayDemo />
       <NestedPaths />
+      <ResolverDemo />
       <ValidationModes />
     </div>
   )

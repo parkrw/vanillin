@@ -327,6 +327,75 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(data.user.address.zip, "97201", "sibling nested value preserved")
   })
 
+  // ── Resolver ───────────────────────────────────────────────────────
+
+  await test("resolver errors surface into formState.errors at nested paths", async () => {
+    // Submit empty form — resolver should reject with errors
+    await page.locator('[data-pg="uf-resolver-submit"]').click()
+    await page.waitForTimeout(100)
+
+    const errEmail = await page
+      .locator('[data-pg="uf-resolver-err-email"]')
+      .textContent()
+    eq(errEmail, "Email required", "resolver email error surfaced")
+
+    const errAge = await page
+      .locator('[data-pg="uf-resolver-err-age"]')
+      .textContent()
+    eq(errAge, "Age required", "resolver age error surfaced")
+
+    const errCity = await page
+      .locator('[data-pg="uf-resolver-err-city"]')
+      .textContent()
+    eq(errCity, "City required", "resolver nested address.city error surfaced")
+  })
+
+  await test("resolver blocks submit when errors exist", async () => {
+    // The previous test submitted with errors; result should show "invalid:"
+    const result = await page
+      .locator('[data-pg="uf-resolver-result"]')
+      .textContent()
+    eq(result.startsWith("invalid:"), true, "submit blocked — onInvalid called")
+  })
+
+  await test("resolver submits returned values (coercion)", async () => {
+    // Fill valid data — age as string "30", resolver coerces to number
+    await page.locator('[data-pg="uf-resolver-email"]').fill("a@b.com")
+    await page.locator('[data-pg="uf-resolver-age"]').fill("30")
+    await page.locator('[data-pg="uf-resolver-city"]').fill("Portland")
+    await page.locator('[data-pg="uf-resolver-submit"]').click()
+    await page.waitForTimeout(100)
+
+    const result = await page
+      .locator('[data-pg="uf-resolver-result"]')
+      .textContent()
+    eq(result.startsWith("ok:"), true, "valid submit succeeded")
+    const data = JSON.parse(result.replace("ok:", ""))
+    eq(data.age, 30, "age coerced from string to number by resolver")
+    eq(data.email, "a@b.com", "email passed through")
+    eq(data.address.city, "Portland", "nested city passed through")
+  })
+
+  await test("resolver clears errors when values become valid", async () => {
+    // Errors from the first submit should be gone after valid submit
+    const errCount = await page.locator('[data-pg="uf-resolver-err-email"]').count()
+    eq(errCount, 0, "email error cleared after valid submit")
+    const cityErrCount = await page.locator('[data-pg="uf-resolver-err-city"]').count()
+    eq(cityErrCount, 0, "city error cleared after valid submit")
+  })
+
+  await test("resolver receives documented options argument", async () => {
+    // The hidden pre contains the stashed options from the last resolver call
+    const optsText = await page
+      .locator('[data-pg="uf-resolver-opts"]')
+      .textContent()
+    const opts = JSON.parse(optsText.trim())
+    eq(opts.hasFields, true, "options.fields is an object")
+    eq(opts.hasNames, true, "options.names is an array")
+    eq(opts.criteriaMode, "firstError", "options.criteriaMode is firstError")
+    eq(opts.shouldUseNativeValidation, false, "options.shouldUseNativeValidation is false")
+  })
+
   // ── Validation modes ──────────────────────────────────────────────
 
   await test("onBlur mode validates on blur", async () => {
