@@ -492,3 +492,15 @@ agents and cherry-picked onto `feat/phase-2`. Suite 406/406, build clean.
   pointer input (toast, not being modal, is fine with `dispatchEvent`); and
   `mouse.move({ steps: N })` varies 20–50ms run to run, so velocity assertions
   need wide margins.
+- 2026-07-26 — task 54 done on `feat/view-transitions`. Browser support
+  confirmed in Chrome 150 headless: `document.startViewTransition` and
+  `view-transition-name` CSS both available. Cross-document transitions
+  (`@view-transition { navigation: auto }`) exist in Chrome 126+ but are
+  not relevant for SPA usage. Three call sites, all `withViewTransition`:
+  theme toggle (circular clip-path wipe from button center), hash-route
+  changes (default crossfade), list-detail shared-element demo. Duration
+  and easing read from `--motion-medium`/`--motion-ease`; reduced motion
+  skips the transition entirely. `setTransitionName` guarantees uniqueness
+  by setting the name only on the active element at click time and clearing
+  after. Pre-existing flakes: 2 resizable tests fail on the base commit
+  (hover state timing, strict `>` where values are equal).
