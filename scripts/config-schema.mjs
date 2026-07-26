@@ -34,6 +34,8 @@ export const DENSITY_RANGE = [0.75, 1.5]
 export const MOTION_SCALE_RANGE = [0, 3]
 
 const THEME_KEYS = new Set(["brand", "radius", "density", "motion", "font", "light", "dark"])
+/** Keys allowed in the object form of theme.brand. */
+export const BRAND_KEYS = new Set(["primary", "secondary", "accent", "neutral"])
 const MOTION_KEYS = new Set(["scale", "ease"])
 const FONT_KEYS = new Set(["sans", "mono"])
 const COMPONENT_SECTION_KEYS = new Set(["tokens", "variants", "sizes"])
@@ -107,6 +109,20 @@ function validatePropertyMap(map, path, errors) {
   return out
 }
 
+/** Validate one brand colour value; returns it, or undefined after pushing an error. */
+function validateBrandColor(value, path, errors) {
+  if (typeof value !== "string") {
+    errors.push(`${path} must be a string`)
+  } else if (!parseOklch(value)) {
+    errors.push(`${path} must be a simple oklch() colour, e.g. "oklch(0.55 0.2 265)"`)
+  } else if (!isSafeCSSValue(value)) {
+    errors.push(`${path} contains unsafe characters`)
+  } else {
+    return value
+  }
+  return undefined
+}
+
 // ---------------------------------------------------------------------------
 // Main validator
 // ---------------------------------------------------------------------------
@@ -152,16 +168,29 @@ export function validate(config, { colorTokens, knownComponents } = {}) {
         if (!THEME_KEYS.has(k)) errors.push(`unknown theme key "${k}"`)
       }
 
-      // brand
+      // brand: a single oklch string (sugar for { primary }) or an object
+      // keyed by BRAND_KEYS. Every value runs the same oklch + safety path.
       if (t.brand !== undefined) {
-        if (typeof t.brand !== "string") {
-          errors.push("theme.brand must be a string")
-        } else if (!parseOklch(t.brand)) {
-          errors.push('theme.brand must be a simple oklch() colour, e.g. "oklch(0.55 0.2 265)"')
-        } else if (!isSafeCSSValue(t.brand)) {
-          errors.push("theme.brand contains unsafe characters")
+        if (typeof t.brand === "string") {
+          const v = validateBrandColor(t.brand, "theme.brand", errors)
+          if (v !== undefined) out.theme.brand = v
+        } else if (isPlainObject(t.brand)) {
+          const keys = Object.keys(t.brand)
+          if (keys.length === 0) {
+            errors.push("theme.brand object must set at least one key")
+          }
+          const brand = {}
+          for (const k of keys) {
+            if (!BRAND_KEYS.has(k)) {
+              errors.push(`theme.brand: unknown key "${k}", expected: ${[...BRAND_KEYS].join(", ")}`)
+              continue
+            }
+            const v = validateBrandColor(t.brand[k], `theme.brand.${k}`, errors)
+            if (v !== undefined) brand[k] = v
+          }
+          out.theme.brand = brand
         } else {
-          out.theme.brand = t.brand
+          errors.push("theme.brand must be a string or an object")
         }
       }
 

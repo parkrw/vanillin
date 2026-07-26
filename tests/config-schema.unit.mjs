@@ -254,6 +254,63 @@ test("validate: brand injection", () => {
   assert.ok(!r.ok)
 })
 
+test("validate: brand object with all keys", () => {
+  const r = validate({
+    theme: {
+      brand: {
+        primary: "oklch(0.55 0.2 265)",
+        secondary: "oklch(0.65 0.14 190)",
+        accent: "oklch(0.7 0.15 320)",
+        neutral: "oklch(0.55 0.01 265)",
+      },
+    },
+  })
+  assert.ok(r.ok)
+  assert.equal(r.config.theme.brand.secondary, "oklch(0.65 0.14 190)")
+  assert.equal(r.config.theme.brand.neutral, "oklch(0.55 0.01 265)")
+})
+
+test("validate: brand object with a subset of keys", () => {
+  const r = validate({ theme: { brand: { secondary: "oklch(0.65 0.14 190)" } } })
+  assert.ok(r.ok)
+  assert.deepEqual(r.config.theme.brand, { secondary: "oklch(0.65 0.14 190)" })
+})
+
+test("validate: brand object unknown key errors", () => {
+  const r = validate({ theme: { brand: { primary: "oklch(0.55 0.2 265)", tertiary: "oklch(0.6 0.1 100)" } } })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes('"tertiary"')))
+})
+
+test("validate: empty brand object errors", () => {
+  const r = validate({ theme: { brand: {} } })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes("at least one key")))
+})
+
+test("validate: brand object key must be oklch", () => {
+  const r = validate({ theme: { brand: { secondary: "#00ffcc" } } })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes("theme.brand.secondary") && e.includes("oklch()")))
+})
+
+test("validate: brand object key injection blocked", () => {
+  const r = validate({ theme: { brand: { accent: "oklch(0.7 0.15 320); --evil: red" } } })
+  assert.ok(!r.ok)
+})
+
+test("validate: brand object non-string value errors", () => {
+  const r = validate({ theme: { brand: { primary: 42 } } })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes("theme.brand.primary must be a string")))
+})
+
+test("validate: brand neither string nor object errors", () => {
+  const r = validate({ theme: { brand: 42 } })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes("string or an object")))
+})
+
 // ---------------------------------------------------------------------------
 // validate: density
 // ---------------------------------------------------------------------------
