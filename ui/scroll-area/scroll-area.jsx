@@ -27,7 +27,9 @@ const trackSize = (bar, vertical) => {
  * shifts. Thumb geometry is written to the DOM directly (CSS vars + a
  * transform) — scrolling re-renders nothing.
  */
-export function ScrollArea({ className, children, ...props }) {
+const EDGES = ["y-start", "y-end", "x-start", "x-end"]
+
+export function ScrollArea({ className, children, overflowEdgeThreshold = 0, ...props }) {
   const rootRef = useRef(null)
   const viewportRef = useRef(null)
   const contentRef = useRef(null)
@@ -98,6 +100,7 @@ export function ScrollArea({ className, children, ...props }) {
 
   useLayoutEffect(() => {
     const viewport = viewportRef.current
+    const root = rootRef.current
     const timers = timersRef.current
     let lastTop = viewport.scrollTop
     let lastLeft = viewport.scrollLeft
@@ -116,13 +119,45 @@ export function ScrollArea({ className, children, ...props }) {
     if (contentRef.current) resizes.observe(contentRef.current)
     sync()
 
+    // Edge overflow detection via IntersectionObserver on zero-size sentinels
+    const edgeState = { "y-start": false, "y-end": false, "x-start": false, "x-end": false }
+    const edgeMap = new Map()
+    const edgeObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const edge = edgeMap.get(entry.target)
+          if (edge) edgeState[edge] = !entry.isIntersecting
+        }
+        if (root) {
+          root.toggleAttribute("data-overflow-y-start", edgeState["y-start"])
+          root.toggleAttribute("data-overflow-y-end", edgeState["y-end"])
+          root.toggleAttribute("data-overflow-x-start", edgeState["x-start"])
+          root.toggleAttribute("data-overflow-x-end", edgeState["x-end"])
+          root.toggleAttribute("data-overflow-start", edgeState["y-start"] || edgeState["x-start"])
+          root.toggleAttribute("data-overflow-end", edgeState["y-end"] || edgeState["x-end"])
+        }
+      },
+      { root: viewport, rootMargin: `${overflowEdgeThreshold}px` }
+    )
+    const content = contentRef.current
+    if (content) {
+      for (const el of content.querySelectorAll(".scroll-area-sentinel")) {
+        const edge = el.dataset.edge
+        if (edge) {
+          edgeMap.set(el, edge)
+          edgeObserver.observe(el)
+        }
+      }
+    }
+
     return () => {
       viewport.removeEventListener("scroll", onScroll)
       resizes.disconnect()
+      edgeObserver.disconnect()
       clearTimeout(timers.x)
       clearTimeout(timers.y)
     }
-  }, [markScrolling, sync])
+  }, [markScrolling, sync, overflowEdgeThreshold])
 
   const startDrag = useCallback((event, orientation) => {
     const viewport = viewportRef.current
@@ -250,7 +285,13 @@ export function ScrollArea({ className, children, ...props }) {
           className="scroll-area-viewport"
         >
           <div ref={contentRef} role="presentation" className="scroll-area-content">
+            <div data-edge="y-start" className="scroll-area-sentinel" />
+            <div className="scroll-area-sentinel-track">
+              <div data-edge="x-start" className="scroll-area-sentinel" />
+              <div data-edge="x-end" className="scroll-area-sentinel" />
+            </div>
             {children}
+            <div data-edge="y-end" className="scroll-area-sentinel" />
           </div>
         </div>
         <ScrollBar />
