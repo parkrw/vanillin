@@ -286,3 +286,58 @@ select,
   background-color: color-mix(in oklab, var(--primary) 25%, transparent);
   color: var(--foreground);
 }
+
+/* ---- Density modes ---- */
+
+/*
+ * Three named presets over the --density-scale / --space-* ramp.
+ * Scoped: a [data-density] inside another one wins because --density-scale
+ * is registered with inherits: true and --space-* tokens are unregistered
+ * custom properties (inherited as token streams, resolved at use-time with
+ * the element's own --density-scale).
+ *
+ * Font size is never scaled — density is spacing, not typography.
+ */
+
+[data-density="compact"]     { --density-scale: 0.875; }
+[data-density="comfortable"] { --density-scale: 1; }
+[data-density="spacious"]    { --density-scale: 1.25; }
+
+/*
+ * Re-declare the --space-* ramp inside [data-density].
+ *
+ * --space-* is set at :root, so descendants inherit already-resolved values
+ * (custom properties substitute var() at computed-value time on the declaring
+ * element). Setting --density-scale on a subtree alone would not re-resolve
+ * the ramp. This block re-declares them so they recompute using the
+ * element's own --density-scale.
+ */
+[data-density] {
+  --space-1: calc(0.25rem * var(--density-scale));
+  --space-1-5: calc(0.375rem * var(--density-scale));
+  --space-2: calc(0.5rem * var(--density-scale));
+  --space-2-5: calc(0.625rem * var(--density-scale));
+  --space-3: calc(0.75rem * var(--density-scale));
+  --space-4: calc(1rem * var(--density-scale));
+  --space-6: calc(1.5rem * var(--density-scale));
+  --space-8: calc(2rem * var(--density-scale));
+}
+
+/*
+ * Touch-target safety — WCAG 2.5.8.
+ * Interactive elements must not shrink below 24px in any density mode.
+ * This is a floor, not a preferred size; it is invisible at normal scales.
+ */
+[data-density] :is(
+  button,
+  [role="button"],
+  [role="switch"],
+  [role="checkbox"],
+  [role="radio"],
+  input:not([type="hidden"]),
+  select,
+  textarea
+) {
+  min-height: 24px;
+  min-width: 24px;
+}
