@@ -1,14 +1,14 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
   width: 100%;
 }
 
 .field--horizontal {
   flex-direction: row;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .field--horizontal > .field-content {
@@ -24,7 +24,7 @@
   .field--responsive {
     flex-direction: row;
     align-items: center;
-    gap: 0.75rem;
+    gap: var(--space-3);
   }
 
   .field--responsive > .field-content {
@@ -42,7 +42,7 @@
 .field-group {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-6);
   width: 100%;
 }
 
@@ -51,7 +51,7 @@
 .field-set {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-6);
   margin: 0;
   padding: 0;
   border: none;
@@ -60,7 +60,7 @@
 
 .field-legend {
   padding: 0;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-3);
   font-size: 1rem;
   font-weight: 500;
   line-height: 1.5rem;
@@ -70,7 +70,7 @@
 .field-legend--label {
   font-size: 0.875rem;
   line-height: 1;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
 }
 
 /* Content / text */
@@ -78,7 +78,7 @@
 .field-content {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -106,10 +106,10 @@
 
 .field-error-list {
   margin: 0;
-  padding-inline-start: 1rem;
+  padding-inline-start: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--space-1);
 }
 
 /* Separator */
@@ -117,7 +117,7 @@
 .field-separator {
   position: relative;
   height: 1px;
-  margin-block: 0.25rem;
+  margin-block: var(--space-1);
   background-color: var(--border);
   flex-shrink: 0;
 }
@@ -127,7 +127,7 @@
   inset-block-start: 50%;
   inset-inline-start: 50%;
   translate: -50% -50%;
-  padding-inline: 0.5rem;
+  padding-inline: var(--space-2);
   background-color: var(--background);
   font-size: 0.875rem;
   color: var(--muted-foreground);
