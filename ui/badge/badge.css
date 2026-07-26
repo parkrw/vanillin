@@ -43,3 +43,36 @@
   color: var(--foreground);
   border-color: var(--border);
 }
+
+/*
+ * Status variants — soft treatment (tinted background, coloured text,
+ * tinted border). Contrast-safe in both light and dark modes.
+ *
+ * The existing `destructive` variant is the solid red badge (shadcn parity).
+ * `destructive-soft` is the soft equivalent; callers who want the softer
+ * look in a status context should use it instead.
+ */
+
+.badge--success {
+  background-color: var(--success-background);
+  color: var(--success-foreground);
+  border-color: var(--success-border);
+}
+
+.badge--warning {
+  background-color: var(--warning-background);
+  color: var(--warning-foreground);
+  border-color: var(--warning-border);
+}
+
+.badge--info {
+  background-color: var(--info-background);
+  color: var(--info-foreground);
+  border-color: var(--info-border);
+}
+
+.badge--destructive-soft {
+  background-color: var(--destructive-background);
+  color: var(--destructive-foreground);
+  border-color: var(--destructive-border);
+}
