@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import {
   useForm,
   Controller,
@@ -546,6 +547,139 @@ function Docs() {
 }
 
 /* ================================================================== */
+/*  Engine-agnostic proof — hand-rolled RHF-shaped context             */
+/* ================================================================== */
+
+function EngineAgnosticDemo() {
+  const [errors, setErrors] = useState({})
+
+  // Hand-rolled "form" object matching the RHF shape — no useForm call
+  const fakeForm = { formState: { errors } }
+
+  return (
+    <section className="pg-section">
+      <h3>Engine-agnostic proof</h3>
+      <p className="pg-description">
+        This section uses a hand-rolled form context (no{" "}
+        <code>useForm</code>). The same <code>Form</code> /{" "}
+        <code>FormField</code> / <code>FormItem</code> anatomy works
+        identically because the components only read{" "}
+        <code>formState.errors</code> from context.
+      </p>
+
+      <div style={{ maxWidth: "28rem" }}>
+        <Form form={fakeForm} data-pg="form-agnostic">
+          <FormField name="email">
+            <FormItem>
+              <FormLabel data-pg="form-agnostic-label">Email</FormLabel>
+              <FormControl>
+                <input
+                  className="input"
+                  data-pg="form-agnostic-input"
+                  placeholder="you@example.com"
+                />
+              </FormControl>
+              <FormDescription data-pg="form-agnostic-desc">
+                Hand-rolled context, no engine.
+              </FormDescription>
+              <FormMessage data-pg="form-agnostic-msg" />
+            </FormItem>
+          </FormField>
+
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button
+              type="button"
+              className="button button--destructive"
+              data-pg="form-agnostic-trigger-error"
+              onClick={() =>
+                setErrors({
+                  email: { type: "manual", message: "Injected error" },
+                })
+              }
+            >
+              Inject error
+            </button>
+            <button
+              type="button"
+              className="button button--outline"
+              data-pg="form-agnostic-clear"
+              onClick={() => setErrors({})}
+            >
+              Clear
+            </button>
+          </div>
+        </Form>
+      </div>
+    </section>
+  )
+}
+
+/* ================================================================== */
+/*  Portalled FormSubmit — useFormStatus boundary test                  */
+/* ================================================================== */
+
+function PortalledSubmitDemo() {
+  const portalRef = useRef(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => { setMounted(true) }, [])
+
+  return (
+    <section className="pg-section">
+      <h3>Portalled submit (boundary test)</h3>
+      <p className="pg-description">
+        <code>FormSubmit</code> rendered via <code>createPortal</code>{" "}
+        outside the <code>&lt;form&gt;</code> always reads{" "}
+        <code>pending: false</code> because <code>useFormStatus</code>{" "}
+        only sees the nearest ancestor form.
+      </p>
+
+      <div style={{ maxWidth: "28rem" }}>
+        <Form
+          action={async (prev, fd) => {
+            await new Promise((r) => setTimeout(r, 1000))
+            return { errors: {} }
+          }}
+          data-pg="form-portal"
+        >
+          <FormField name="test">
+            <FormItem>
+              <FormLabel>Test field</FormLabel>
+              <FormControl as={Input} name="test" defaultValue="hello" />
+            </FormItem>
+          </FormField>
+
+          {/* In-form submit — reads pending correctly */}
+          <FormSubmit
+            className="button"
+            pending="Submitting..."
+            data-pg="form-portal-inner"
+          >
+            Submit (inside form)
+          </FormSubmit>
+        </Form>
+
+        {/* Portal target */}
+        <div ref={portalRef} data-pg="form-portal-target" style={{ marginTop: "0.5rem" }} />
+
+        {/* Portalled submit — always reads pending: false */}
+        {mounted && portalRef.current &&
+          createPortal(
+            <FormSubmit
+              className="button button--outline"
+              pending="Submitting..."
+              data-pg="form-portal-outer"
+            >
+              Submit (portalled)
+            </FormSubmit>,
+            portalRef.current
+          )}
+      </div>
+    </section>
+  )
+}
+
+/* ================================================================== */
 /*  Page                                                               */
 /* ================================================================== */
 
@@ -557,6 +691,8 @@ export default function FormPage() {
       <EnginePathDemo />
       <FieldArrayDemo />
       <ActionsPathDemo />
+      <EngineAgnosticDemo />
+      <PortalledSubmitDemo />
     </>
   )
 }
