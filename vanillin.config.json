@@ -1,0 +1,39 @@
+{
+  "theme": {
+    "brand": "oklch(0.55 0.2 265)",
+    "radius": "0.5rem",
+    "density": "comfortable",
+    "motion": {
+      "scale": 1,
+      "ease": "ease-out"
+    },
+    "font": {
+      "sans": "Inter, ui-sans-serif, system-ui, sans-serif",
+      "mono": "JetBrains Mono, ui-monospace, monospace"
+    },
+    "light": {
+      "accent": "oklch(0.93 0.05 265)"
+    },
+    "dark": {
+      "accent": "oklch(0.3 0.05 265)"
+    }
+  },
+  "components": {
+    "button": {
+      "variants": {
+        "brand": {
+          "bg": "color-mix(in oklab, var(--primary) 15%, var(--background))",
+          "fg": "var(--primary)",
+          "border-radius": "9999px"
+        }
+      },
+      "sizes": {
+        "xs": {
+          "height": "1.75rem",
+          "padding-inline": "0.5rem",
+          "font-size": "0.75rem"
+        }
+      }
+    }
+  }
+}
