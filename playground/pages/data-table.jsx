@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react"
 import {
   Table,
   TableHeader,
@@ -23,6 +24,7 @@ import {
   DataTableColumnHeader,
   DataTableFacetedFilter,
   DataTableColumnResizer,
+  DataTableGroupRow,
 } from "../../ui/data-table/data-table.jsx"
 
 import "../../ui/table/table.css"
@@ -67,26 +69,26 @@ function MoreHorizontal() {
 // ── Sample data (a payments table) ───────────────────────────────────
 
 const payments = [
-  { id: "728ed52f", amount: 100, status: "pending", email: "m@example.com" },
-  { id: "489e1d42", amount: 125, status: "processing", email: "example@gmail.com" },
-  { id: "a1b2c3d4", amount: 250, status: "success", email: "john@example.com" },
-  { id: "e5f6g7h8", amount: 75, status: "failed", email: "jane@example.com" },
-  { id: "i9j0k1l2", amount: 300, status: "success", email: "bob@example.com" },
-  { id: "m3n4o5p6", amount: 50, status: "pending", email: "alice@example.com" },
-  { id: "q7r8s9t0", amount: 200, status: "processing", email: "charlie@example.com" },
-  { id: "u1v2w3x4", amount: 150, status: "success", email: "diana@example.com" },
-  { id: "y5z6a7b8", amount: 175, status: "failed", email: "eve@example.com" },
-  { id: "c9d0e1f2", amount: 225, status: "pending", email: "frank@example.com" },
-  { id: "g3h4i5j6", amount: 350, status: "success", email: "grace@example.com" },
-  { id: "k7l8m9n0", amount: 400, status: "processing", email: "heidi@example.com" },
-  { id: "o1p2q3r4", amount: 450, status: "success", email: "ivan@example.com" },
-  { id: "s5t6u7v8", amount: 500, status: "failed", email: "judy@example.com" },
-  { id: "w9x0y1z2", amount: 275, status: "pending", email: "karl@example.com" },
-  { id: "a3b4c5d6", amount: 325, status: "success", email: "laura@example.com" },
-  { id: "e7f8g9h0", amount: 550, status: "processing", email: "mike@example.com" },
-  { id: "i1j2k3l4", amount: 600, status: "success", email: "nancy@example.com" },
-  { id: "m5n6o7p8", amount: 425, status: "pending", email: "oscar@example.com" },
-  { id: "q9r0s1t2", amount: 375, status: "failed", email: "paula@example.com" },
+  { id: "728ed52f", amount: 100, status: "pending", method: "card", email: "m@example.com" },
+  { id: "489e1d42", amount: 125, status: "processing", method: "card", email: "example@gmail.com" },
+  { id: "a1b2c3d4", amount: 250, status: "success", method: "card", email: "john@example.com" },
+  { id: "e5f6g7h8", amount: 75, status: "failed", method: "paypal", email: "jane@example.com" },
+  { id: "i9j0k1l2", amount: 300, status: "success", method: "paypal", email: "bob@example.com" },
+  { id: "m3n4o5p6", amount: 50, status: "pending", method: "card", email: "alice@example.com" },
+  { id: "q7r8s9t0", amount: 200, status: "processing", method: "bank", email: "charlie@example.com" },
+  { id: "u1v2w3x4", amount: 150, status: "success", method: "card", email: "diana@example.com" },
+  { id: "y5z6a7b8", amount: 175, status: "failed", method: "card", email: "eve@example.com" },
+  { id: "c9d0e1f2", amount: 225, status: "pending", method: "paypal", email: "frank@example.com" },
+  { id: "g3h4i5j6", amount: 350, status: "success", method: "bank", email: "grace@example.com" },
+  { id: "k7l8m9n0", amount: 400, status: "processing", method: "bank", email: "heidi@example.com" },
+  { id: "o1p2q3r4", amount: 450, status: "success", method: "paypal", email: "ivan@example.com" },
+  { id: "s5t6u7v8", amount: 500, status: "failed", method: "paypal", email: "judy@example.com" },
+  { id: "w9x0y1z2", amount: 275, status: "pending", method: "paypal", email: "karl@example.com" },
+  { id: "a3b4c5d6", amount: 325, status: "success", method: "card", email: "laura@example.com" },
+  { id: "e7f8g9h0", amount: 550, status: "processing", method: "card", email: "mike@example.com" },
+  { id: "i1j2k3l4", amount: 600, status: "success", method: "bank", email: "nancy@example.com" },
+  { id: "m5n6o7p8", amount: 425, status: "pending", method: "card", email: "oscar@example.com" },
+  { id: "q9r0s1t2", amount: 375, status: "failed", method: "card", email: "paula@example.com" },
 ]
 
 const currencyFmt = new Intl.NumberFormat("en-US", {
@@ -404,6 +406,464 @@ function SizedPinnedDemo() {
   )
 }
 
+// ── Grouped demo ─────────────────────────────────────────────────────
+
+const groupedColumns = [
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => (
+      <span style={{ textTransform: "capitalize" }}>{row.getValue("status")}</span>
+    ),
+  },
+  {
+    accessorKey: "method",
+    header: "Method",
+    cell: ({ row }) => (
+      <span style={{ textTransform: "capitalize" }}>{row.getValue("method")}</span>
+    ),
+  },
+  {
+    accessorKey: "email",
+    header: "Email",
+    cell: ({ row }) => row.getValue("email"),
+  },
+  {
+    accessorKey: "amount",
+    header: ({ column }) => (
+      <div style={{ textAlign: "end" }}>
+        <DataTableColumnHeader column={column} title="Amount" />
+      </div>
+    ),
+    cell: ({ row }) => (
+      <div style={{ textAlign: "end", fontWeight: 500 }}>
+        {currencyFmt.format(row.getValue("amount"))}
+      </div>
+    ),
+  },
+]
+
+function GroupedDemo() {
+  const table = useDataTable({
+    data: payments,
+    columns: groupedColumns,
+    initialPageSize: 30,
+    initialGrouping: ["status"],
+  })
+  const { pagination, grouping } = table.getState()
+  const nested = grouping.length > 1
+  const visibleColCount = table.getHeaderGroups()[0].headers.length
+
+  return (
+    <section className="pg-section" data-pg="dt-grouped">
+      <h3>Grouping</h3>
+      <p>
+        Pass <code>initialGrouping</code> (an array of column ids) or call{" "}
+        <code>table.setGrouping([...])</code>. The pipeline becomes{" "}
+        <code>filter → group → sort → flatten → paginate</code>: group header
+        rows are interleaved with data rows, sorting applies <em>within</em>{" "}
+        each group, and pagination slices the flattened result. Group rows
+        have a stable id (<code>group:&lt;colId&gt;:&lt;value&gt;</code>) so
+        expand state survives re-renders. Nesting is capped at two levels —
+        entries beyond index 1 are ignored. There is no aggregation API;
+        compute aggregates in your data if you need them.
+      </p>
+
+      <div className="data-table-toolbar">
+        <div className="data-table-toolbar-filters">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.toggleAllExpanded()}
+            data-pg="dt-grouped-expand-all"
+          >
+            {table.getIsAllExpanded() ? "Collapse all" : "Expand all"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            aria-pressed={nested}
+            onClick={() =>
+              table.setGrouping(nested ? ["status"] : ["status", "method"])
+            }
+            data-pg="dt-grouped-nested"
+          >
+            {nested ? "Grouped by status + method" : "Group by method too"}
+          </Button>
+        </div>
+      </div>
+
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((hg) => (
+            <TableRow key={hg.id}>
+              {hg.headers.map((header) => {
+                const sorted = header.column.getIsSorted()
+                const isPrimary = sorted && header.column.getSortIndex() === 0
+                return (
+                  <TableHead
+                    key={header.id}
+                    {...(isPrimary
+                      ? { "aria-sort": sorted === "asc" ? "ascending" : "descending" }
+                      : {})}
+                  >
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                )
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) =>
+            row.isGrouped ? (
+              <DataTableGroupRow key={row.id} row={row} colSpan={visibleColCount} />
+            ) : (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            )
+          )}
+        </TableBody>
+      </Table>
+
+      <div className="data-table-pagination">
+        <div className="data-table-selection-count" />
+        <div className="data-table-page-controls">
+          <div className="data-table-page-size">
+            <span>Rows per page</span>
+            <select
+              value={pagination.pageSize}
+              onChange={(e) => table.setPageSize(Number(e.target.value))}
+              data-pg="dt-grouped-page-size"
+            >
+              {[10, 30].map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="data-table-page-info" data-pg="dt-grouped-page-info">
+            Page {pagination.pageIndex + 1} of {table.getPageCount()}
+          </div>
+          <div className="data-table-page-nav">
+            <Button
+              variant="outline"
+              size="icon"
+              className="btn--sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              aria-label="Previous page"
+              data-pg="dt-grouped-prev"
+            >
+              <ChevronLeft />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="btn--sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              aria-label="Next page"
+              data-pg="dt-grouped-next"
+            >
+              <ChevronRight />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── Manual sorting passthrough demo ──────────────────────────────────
+
+const inventory = [
+  { sku: "KB-201", product: "Keyboard", price: 89 },
+  { sku: "MS-014", product: "Mouse", price: 49 },
+  { sku: "HD-330", product: "Headset", price: 129 },
+  { sku: "CB-007", product: "Cable", price: 9 },
+  { sku: "DK-550", product: "Dock", price: 199 },
+]
+
+const inventoryColumns = [
+  {
+    accessorKey: "sku",
+    header: "SKU",
+    cell: ({ row }) => <code style={{ fontSize: "0.8125rem" }}>{row.getValue("sku")}</code>,
+  },
+  {
+    accessorKey: "product",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Product" />,
+    cell: ({ row }) => row.getValue("product"),
+  },
+  {
+    accessorKey: "price",
+    header: "Price",
+    cell: ({ row }) => currencyFmt.format(row.getValue("price")),
+  },
+]
+
+function ManualSortingDemo() {
+  const [fireCount, setFireCount] = useState(0)
+  const table = useDataTable({
+    data: inventory,
+    columns: inventoryColumns,
+    manualSorting: true,
+    onSortingChange: () => setFireCount((n) => n + 1),
+  })
+
+  return (
+    <section className="pg-section" data-pg="dt-manual">
+      <h3>Manual modes: the contract</h3>
+      <p>
+        <code>manualSorting</code>, <code>manualFiltering</code>, and{" "}
+        <code>manualPagination</code> each disable the corresponding engine
+        stage. The engine still tracks the state — controls render, indicators
+        update, and the change callbacks fire — but the data you pass in is
+        shown as-is. This table has <code>manualSorting: true</code> and a
+        static <code>data</code> prop: clicking the Product header updates the
+        sort indicator and fires <code>onSortingChange</code>, but the rows do
+        not move. Your server is expected to do the sorting.
+      </p>
+
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((hg) => (
+            <TableRow key={hg.id}>
+              {hg.headers.map((header) => {
+                const sorted = header.column.getIsSorted()
+                const isPrimary = sorted && header.column.getSortIndex() === 0
+                return (
+                  <TableHead
+                    key={header.id}
+                    {...(isPrimary
+                      ? { "aria-sort": sorted === "asc" ? "ascending" : "descending" }
+                      : {})}
+                  >
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                )
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      <p data-pg="dt-manual-fires">onSortingChange fired {fireCount} time(s).</p>
+    </section>
+  )
+}
+
+// ── Server-side demo ─────────────────────────────────────────────────
+
+const SERVER_ROWS = 500
+
+const serverDb = Array.from({ length: SERVER_ROWS }, (_, i) => ({
+  order: i + 1,
+  customer: `customer-${String(i + 1).padStart(3, "0")}@example.com`,
+  amount: ((i * 137) % 900) + 25,
+  status: ["pending", "processing", "success", "failed"][i % 4],
+}))
+
+// Fake server: sorts and slices the full dataset after a short delay
+function fetchOrders({ pageIndex, pageSize, sorting }) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const rows = [...serverDb]
+      for (const { id, desc } of [...sorting].reverse()) {
+        rows.sort(
+          (a, b) => (a[id] < b[id] ? -1 : a[id] > b[id] ? 1 : 0) * (desc ? -1 : 1)
+        )
+      }
+      resolve(rows.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize))
+    }, 400)
+  })
+}
+
+const serverColumns = [
+  {
+    accessorKey: "order",
+    header: "Order",
+    cell: ({ row }) => row.getValue("order"),
+  },
+  {
+    accessorKey: "customer",
+    header: "Customer",
+    cell: ({ row }) => row.getValue("customer"),
+  },
+  {
+    accessorKey: "amount",
+    header: ({ column }) => (
+      <div style={{ textAlign: "end" }}>
+        <DataTableColumnHeader column={column} title="Amount" />
+      </div>
+    ),
+    cell: ({ row }) => (
+      <div style={{ textAlign: "end", fontWeight: 500 }}>
+        {currencyFmt.format(row.getValue("amount"))}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => (
+      <span style={{ textTransform: "capitalize" }}>{row.getValue("status")}</span>
+    ),
+  },
+]
+
+function ServerSideDemo() {
+  const [rows, setRows] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState({ pageIndex: 0, pageSize: 10, sorting: [] })
+
+  const table = useDataTable({
+    data: rows,
+    columns: serverColumns,
+    manualSorting: true,
+    manualPagination: true,
+    rowCount: SERVER_ROWS,
+    onSortingChange: (sorting) => setQuery((q) => ({ ...q, sorting })),
+    onPaginationChange: ({ pageIndex, pageSize }) =>
+      setQuery((q) => ({ ...q, pageIndex, pageSize })),
+  })
+  const { pagination } = table.getState()
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    fetchOrders(query).then((rows) => {
+      if (cancelled) return
+      setRows(rows)
+      setLoading(false)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [query])
+
+  return (
+    <section className="pg-section" data-pg="dt-server">
+      <h3>Server-side data</h3>
+      <p>
+        The full loop: <code>manualSorting</code> +{" "}
+        <code>manualPagination</code> with <code>rowCount</code> supplied so
+        the engine can derive the page count it cannot compute from one page
+        of data (<code>pageCount</code> is accepted as an alternative; at
+        least one is required). <code>onSortingChange</code> and{" "}
+        <code>onPaginationChange</code> update a query object, an effect
+        re-fetches, and the table shows whatever the "server" (here a{" "}
+        <code>setTimeout</code> over 500 in-memory rows) returns. This is the
+        answer to large datasets: the DOM never holds more than one page.
+      </p>
+
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((hg) => (
+            <TableRow key={hg.id}>
+              {hg.headers.map((header) => {
+                const sorted = header.column.getIsSorted()
+                const isPrimary = sorted && header.column.getSortIndex() === 0
+                return (
+                  <TableHead
+                    key={header.id}
+                    {...(isPrimary
+                      ? { "aria-sort": sorted === "asc" ? "ascending" : "descending" }
+                      : {})}
+                  >
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                )
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.length > 0 ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell
+                colSpan={serverColumns.length}
+                style={{ height: "6rem", textAlign: "center" }}
+              >
+                Loading…
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+
+      <div className="data-table-pagination">
+        <div
+          className="data-table-selection-count"
+          data-pg="dt-server-status"
+          data-loading={loading ? "true" : "false"}
+        >
+          {loading
+            ? "Loading…"
+            : `Showing ${rows.length} of ${SERVER_ROWS} orders.`}
+        </div>
+        <div className="data-table-page-controls">
+          <div className="data-table-page-info" data-pg="dt-server-page-info">
+            Page {pagination.pageIndex + 1} of {table.getPageCount()}
+          </div>
+          <div className="data-table-page-nav">
+            <Button
+              variant="outline"
+              size="icon"
+              className="btn--sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              aria-label="Previous page"
+              data-pg="dt-server-prev"
+            >
+              <ChevronLeft />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="btn--sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              aria-label="Next page"
+              data-pg="dt-server-next"
+            >
+              <ChevronRight />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ── Page ─────────────────────────────────────────────────────────────
 
 export default function DataTablePage() {
@@ -651,6 +1111,35 @@ export default function DataTablePage() {
           order (left, center, right), and <code>position:&nbsp;sticky</code>{" "}
           does the visual work with far less machinery. The ordered column list
           is computed once per render as a <code>useMemo</code>.
+        </p>
+      </section>
+
+      <GroupedDemo />
+      <ManualSortingDemo />
+      <ServerSideDemo />
+
+      <section className="pg-section">
+        <h3>Why there is no windowing</h3>
+        <p>
+          Virtualization was measured (Chrome, playwright-driven, plain{" "}
+          <code>&lt;table&gt;</code> with 8 columns, <code>table-layout:
+          fixed</code>, sticky first column) and rejected. At paginated sizes
+          the DOM is already small and there is nothing to win. At 10K+ rows{" "}
+          <code>content-visibility: auto</code> made scroll jank{" "}
+          <em>worse</em> — the per-frame cost of toggling visibility state
+          during scroll exceeds the paint savings (80 jank frames per 120 vs
+          21 without it). At 50K rows the bottleneck is DOM construction and
+          layout, which only removing nodes solves.
+        </p>
+        <p>
+          A windowing layer does remove nodes, but it breaks{" "}
+          <code>Ctrl+F</code>, breaks <code>aria-rowcount</code> /{" "}
+          <code>aria-rowindex</code> unless maintained by hand, and breaks
+          sticky column pinning because off-screen pinned cells disappear —
+          hundreds of lines of bug surface for a need that pagination already
+          eliminates. If your dataset does not fit in memory, that is what{" "}
+          <code>manualPagination</code> is for: push the work to the server
+          and keep the DOM at page size.
         </p>
       </section>
     </>
