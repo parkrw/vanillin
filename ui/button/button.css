@@ -48,8 +48,11 @@
   color: var(--destructive-foreground);
 }
 
+/* mix toward --foreground, not transparent: fading to transparent lightens the
+   red over a light page and drops white-on-red under 4.5:1. --foreground moves
+   the surface away from --destructive-foreground in both themes. */
 .btn--destructive:hover {
-  background-color: color-mix(in oklab, var(--destructive) 90%, transparent);
+  background-color: color-mix(in oklab, var(--destructive) 90%, var(--foreground));
 }
 
 .btn--destructive:focus-visible {

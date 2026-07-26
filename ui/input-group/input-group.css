@@ -180,14 +180,20 @@
   color: var(--destructive-foreground);
 }
 
+/* see .btn--destructive:hover — mixing toward transparent fails AA in light */
 .input-group-btn--destructive:hover {
-  background-color: color-mix(in oklab, var(--destructive) 90%, transparent);
+  background-color: color-mix(in oklab, var(--destructive) 90%, var(--foreground));
 }
 
 .input-group-btn--outline {
   border: 1px solid var(--input);
   background-color: var(--background);
   color: var(--foreground);
+}
+
+/* match .btn--outline's dark lift so the two read identically side by side */
+.dark .input-group-btn--outline {
+  background-color: var(--input-background);
 }
 
 .input-group-btn--outline:hover {

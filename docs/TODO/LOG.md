@@ -395,3 +395,21 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
 - 2026-07-25 — **this log split out of `README.md`.** It had grown to ~370 of
   485 lines and buried the task index. Append landed-task notes here, not to
   the README.
+- 2026-07-25 — review follow-up to task 28, on
+  `fix/popover-rtl-anchoring-and-dark-fill-gaps`. Four fixes: (1) **all**
+  anchored layers snapped to the viewport edge under `dir="rtl"` on
+  `<html>`/`<body>` — the `[popover]` UA `inset: 0` left `right: 0` in place,
+  which over-constrains a definite-width box, and CSS 2.1 §10.3.7 then drops
+  `left` under RTL. `positionAnchored` now clears `right`/`bottom`, fixing all 8
+  consumers at once. Pre-existing for `width: 18rem` popovers; task 28's
+  `fit-content` only made the date-picker join them. Only reachable via `dir` on
+  the root — `DirectionProvider`'s inner wrapper never triggered it, which is
+  why nothing caught it. Guarded by a popover test asserting `offsetLeft` tracks
+  the inline `left` (not `getBoundingClientRect` — the enter transition's
+  `scale()` skews it). (2) `.input-group-btn--outline` and (3)
+  `.data-table-page-size > select` were the two controls the `--input-background`
+  sweep missed. (4) destructive `:hover` mixed toward `transparent`, which
+  *lightens* the red over a light page — white-on-red fell to 4.32:1. Mixing
+  toward `--foreground` instead moves the surface away from
+  `--destructive-foreground` in both themes: light 4.32 → 5.54:1, dark 5.20 →
+  6.92:1. axe only samples rest state, so it never flagged this.
