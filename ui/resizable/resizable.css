@@ -82,6 +82,35 @@
   background-color: color-mix(in oklab, var(--border) 50%, var(--foreground));
 }
 
+/* ——— Hit area overlay ——— */
+
+/*
+ * Enlarged pointer hit area via a ::before pseudo-element. Uses a CSS custom
+ * property --hit-margin set by JS based on pointer: coarse/fine. The overlay
+ * sits on top of the separator's own box but doesn't swallow clicks on
+ * adjacent panel content — it only extends the separator's hit region.
+ */
+.resizable-handle[data-hit-area]::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  pointer-events: auto;
+}
+
+.resizable-group[data-direction="horizontal"]
+  > .resizable-handle[data-hit-area]::before {
+  inset-block: 0;
+  inset-inline-start: calc(-1 * var(--hit-margin, 5px));
+  inset-inline-end: calc(-1 * var(--hit-margin, 5px));
+}
+
+.resizable-group[data-direction="vertical"]
+  > .resizable-handle[data-hit-area]::before {
+  inset-inline: 0;
+  inset-block-start: calc(-1 * var(--hit-margin, 5px));
+  inset-block-end: calc(-1 * var(--hit-margin, 5px));
+}
+
 /* ——— Grip icon (withHandle) ——— */
 
 .resizable-handle-icon {

@@ -2,7 +2,9 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useId,
+  useImperativeHandle,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -13,6 +15,12 @@ import { useDirection } from "../../lib/direction.jsx"
 
 /** Keyboard resize step in percentage points. */
 const STEP = 5
+
+/** Debounce interval for storage writes (ms). */
+const SAVE_DEBOUNCE = 100
+
+/** Storage format version — bump on schema change to invalidate old payloads. */
+const STORAGE_VERSION = 1
 
 const GroupContext = createContext(null)
 
@@ -53,6 +61,40 @@ function resolveDelta(idx, raw, sizes, cs) {
   return nA - a
 }
 
+// ——— Storage helpers ———
+
+/**
+ * Build a storage key from autoSaveId and panel metadata so that a saved layout
+ * for a 3-panel group is never applied to a 2-panel group.
+ */
+function storageKey(autoSaveId, panelIds) {
+  return `vanillin:resizable:${autoSaveId}:${panelIds.join(",")}`
+}
+
+function readStorage(storage, key) {
+  try {
+    const raw = storage.getItem(key)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed || parsed.v !== STORAGE_VERSION) return null
+    if (!Array.isArray(parsed.sizes)) return null
+    // Validate every entry is a finite number
+    if (!parsed.sizes.every((s) => typeof s === "number" && isFinite(s)))
+      return null
+    return parsed.sizes
+  } catch {
+    return null
+  }
+}
+
+function writeStorage(storage, key, sizes) {
+  try {
+    storage.setItem(key, JSON.stringify({ v: STORAGE_VERSION, sizes }))
+  } catch {
+    // Storage full or unavailable — silently degrade.
+  }
+}
+
 // ——— ResizablePanelGroup ———
 
 /**
@@ -65,9 +107,12 @@ function resolveDelta(idx, raw, sizes, cs) {
  */
 export function ResizablePanelGroup({
   direction = "horizontal",
+  autoSaveId,
+  storage: storageProp,
   onLayout,
   className,
   children,
+  ref,
   ...props
 }) {
   /** el → { id, defaultSize, minSize, maxSize, collapsible, collapsedSize } */
@@ -84,6 +129,18 @@ export function ResizablePanelGroup({
   const dir = useDirection()
   /** Bumped on every committed layout change; forces children to re-read. */
   const [version, setVersion] = useState(0)
+  /** Track whether this is the initial mount (suppress onResize on mount). */
+  const mountedRef = useRef(false)
+  /** Debounce timer for storage writes. */
+  const saveTimerRef = useRef(null)
+
+  // Resolve storage lazily — never touch localStorage at module scope.
+  const getStorage = useCallback(() => {
+    if (storageProp) return storageProp
+    if (typeof window !== "undefined" && window.localStorage)
+      return window.localStorage
+    return null
+  }, [storageProp])
 
   // Sort registered panels by DOM position.
   const reorder = useCallback(() => {
@@ -124,12 +181,65 @@ export function ResizablePanelGroup({
     }
   }, [])
 
+  // Persist layout to storage (debounced).
+  const persistLayout = useCallback(
+    (sizes) => {
+      if (!autoSaveId) return
+      const s = getStorage()
+      if (!s) return
+      const ids = orderRef.current.map(
+        (el) => panelsRef.current.get(el)?.id
+      )
+      if (ids.some((id) => id == null)) return
+      clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = setTimeout(() => {
+        writeStorage(s, storageKey(autoSaveId, ids), sizes)
+      }, SAVE_DEBOUNCE)
+    },
+    [autoSaveId, getStorage]
+  )
+
   // Commit sizes to React state and fire callbacks.
-  const commitSizes = useCallback((sizes) => {
-    sizesRef.current = sizes
-    setVersion((v) => v + 1)
-    onLayoutRef.current?.(sizes)
-  }, [])
+  const commitSizes = useCallback(
+    (sizes, { isMount = false } = {}) => {
+      const prevSizes = sizesRef.current
+      sizesRef.current = sizes
+      setVersion((v) => v + 1)
+      onLayoutRef.current?.(sizes)
+
+      // Fire per-panel callbacks (onResize, onCollapse, onExpand) but not on mount.
+      if (!isMount && prevSizes) {
+        const order = orderRef.current
+        const cs = order.map((el) => panelsRef.current.get(el) || {})
+        for (let i = 0; i < order.length; i++) {
+          const info = cs[i]
+          const prev = prevSizes[i]
+          const cur = sizes[i]
+          if (prev == null || cur == null) continue
+
+          // onResize: fire when size actually changed
+          if (Math.abs(cur - prev) > 0.001) {
+            info._onResize?.(cur)
+          }
+
+          // onCollapse / onExpand: fire on transition across the collapsed boundary
+          if (info.collapsible) {
+            const col = info.collapsedSize ?? 0
+            const wasCollapsed = prev <= col + 0.01
+            const isCollapsed = cur <= col + 0.01
+            if (!wasCollapsed && isCollapsed) {
+              info._onCollapse?.()
+            } else if (wasCollapsed && !isCollapsed) {
+              info._onExpand?.()
+            }
+          }
+        }
+      }
+
+      if (!isMount) persistLayout(sizes)
+    },
+    [persistLayout]
+  )
 
   // Keyboard / committed resize.
   const adjustLayout = useCallback(
@@ -162,6 +272,37 @@ export function ResizablePanelGroup({
     [getConstraints, writeSizes]
   )
 
+  // Programmatic setLayout: set all panel sizes at once.
+  const setLayout = useCallback(
+    (newSizes) => {
+      if (!Array.isArray(newSizes)) return
+      const order = orderRef.current
+      if (newSizes.length !== order.length) return
+      const cs = getConstraints()
+      // Clamp each size individually
+      const clamped = newSizes.map((s, i) => {
+        const prev = sizesRef.current?.[i] ?? s
+        return clampSize(s, cs[i], prev)
+      })
+      commitSizes(clamped)
+    },
+    [getConstraints, commitSizes]
+  )
+
+  const getLayout = useCallback(() => {
+    return sizesRef.current ? [...sizesRef.current] : []
+  }, [])
+
+  // Expose imperative handle on group ref.
+  useImperativeHandle(
+    ref,
+    () => ({
+      setLayout,
+      getLayout,
+    }),
+    [setLayout, getLayout]
+  )
+
   const registerPanel = useCallback((el, info) => {
     const existing = panelsRef.current.get(el)
     if (existing) Object.assign(existing, info)
@@ -175,18 +316,40 @@ export function ResizablePanelGroup({
     if (sizesRef.current) return
     if (panelsRef.current.size === 0) return
     const entries = reorder()
-    let total = 0
-    let unset = 0
-    entries.forEach(([, c]) => {
-      if (c.defaultSize != null) total += c.defaultSize
-      else unset++
-    })
-    const share = unset > 0 ? Math.max(0, 100 - total) / unset : 0
-    const sizes = entries.map(([, c]) => c.defaultSize ?? share)
-    sizesRef.current = sizes
-    setVersion((v) => v + 1)
-    onLayoutRef.current?.(sizes)
+
+    // Try to restore from storage before computing defaults.
+    let sizes = null
+    if (autoSaveId) {
+      const s = getStorage()
+      if (s) {
+        const ids = entries.map(([, c]) => c.id)
+        if (ids.every((id) => id != null)) {
+          const saved = readStorage(s, storageKey(autoSaveId, ids))
+          if (saved && saved.length === entries.length) {
+            sizes = saved
+          }
+        }
+      }
+    }
+
+    if (!sizes) {
+      let total = 0
+      let unset = 0
+      entries.forEach(([, c]) => {
+        if (c.defaultSize != null) total += c.defaultSize
+        else unset++
+      })
+      const share = unset > 0 ? Math.max(0, 100 - total) / unset : 0
+      sizes = entries.map(([, c]) => c.defaultSize ?? share)
+    }
+
+    // Mark as mount — commitSizes will skip per-panel callbacks.
+    commitSizes(sizes, { isMount: true })
+    mountedRef.current = true
   })
+
+  // Clean up debounce timer on unmount.
+  useEffect(() => () => clearTimeout(saveTimerRef.current), [])
 
   const ctx = useMemo(
     () => ({
@@ -249,12 +412,20 @@ export function ResizablePanel({
   className,
   children,
   style,
+  ref,
   ...props
 }) {
   const autoId = useId()
   const id = idProp || autoId
   const elRef = useRef(null)
   const ctx = useContext(GroupContext)
+  // Keep callback refs stable across renders so the registered info stays current.
+  const onResizeRef = useRef(onResize)
+  const onCollapseRef = useRef(onCollapse)
+  const onExpandRef = useRef(onExpand)
+  onResizeRef.current = onResize
+  onCollapseRef.current = onCollapse
+  onExpandRef.current = onExpand
 
   useLayoutEffect(() => {
     if (!elRef.current || !ctx) return
@@ -265,19 +436,90 @@ export function ResizablePanel({
       maxSize,
       collapsible,
       collapsedSize,
+      // Wrap callbacks so the group can fire them without stale closures.
+      _onResize: (size) => onResizeRef.current?.(size),
+      _onCollapse: () => onCollapseRef.current?.(),
+      _onExpand: () => onExpandRef.current?.(),
     })
   }, [ctx, id, defaultSize, minSize, maxSize, collapsible, collapsedSize])
 
   // Read current size — recalculated on every committed layout change.
   let size
+  let panelIndex = -1
   if (ctx?.sizesRef.current && elRef.current) {
-    const idx = ctx.orderRef.current.indexOf(elRef.current)
-    if (idx >= 0) size = ctx.sizesRef.current[idx]
+    panelIndex = ctx.orderRef.current.indexOf(elRef.current)
+    if (panelIndex >= 0) size = ctx.sizesRef.current[panelIndex]
   }
   void ctx?.version // subscribe to layout commits
 
   const isCollapsed =
     collapsible && size != null && size <= collapsedSize + 0.01
+
+  // Imperative handle for panel.
+  useImperativeHandle(
+    ref,
+    () => ({
+      collapse: () => {
+        if (!ctx || !collapsible) return
+        const idx = ctx.orderRef.current.indexOf(elRef.current)
+        if (idx < 0) return
+        const sizes = ctx.sizesRef.current
+        if (!sizes) return
+        const cur = sizes[idx]
+        const col = collapsedSize ?? 0
+        if (Math.abs(cur - col) < 0.01) return // already collapsed
+        // Save expanded size for restore.
+        const info = ctx.panelsRef.current.get(elRef.current)
+        if (info) ctx.expandedRef.current[info.id] = cur
+        // Find the handle index — the panel could be on either side.
+        // Collapse by adjusting the handle to the panel's side.
+        const hIdx = idx > 0 ? idx - 1 : 0
+        const delta = idx === hIdx ? col - cur : cur - col
+        ctx.adjustLayout(hIdx, idx === hIdx ? delta : -delta)
+      },
+      expand: () => {
+        if (!ctx || !collapsible) return
+        const idx = ctx.orderRef.current.indexOf(elRef.current)
+        if (idx < 0) return
+        const sizes = ctx.sizesRef.current
+        if (!sizes) return
+        const cur = sizes[idx]
+        const col = collapsedSize ?? 0
+        if (cur > col + 0.01) return // already expanded
+        const info = ctx.panelsRef.current.get(elRef.current)
+        const target =
+          (info && ctx.expandedRef.current[info.id]) ?? minSize ?? STEP
+        const hIdx = idx > 0 ? idx - 1 : 0
+        const delta = target - col
+        ctx.adjustLayout(hIdx, idx === hIdx ? delta : -delta)
+      },
+      resize: (pct) => {
+        if (!ctx) return
+        const idx = ctx.orderRef.current.indexOf(elRef.current)
+        if (idx < 0) return
+        const sizes = ctx.sizesRef.current
+        if (!sizes) return
+        const cur = sizes[idx]
+        const delta = pct - cur
+        const hIdx = idx > 0 ? idx - 1 : 0
+        ctx.adjustLayout(hIdx, idx === hIdx ? delta : -delta)
+      },
+      getSize: () => {
+        if (!ctx) return 0
+        const idx = ctx.orderRef.current.indexOf(elRef.current)
+        if (idx < 0 || !ctx.sizesRef.current) return 0
+        return ctx.sizesRef.current[idx]
+      },
+      isCollapsed: () => {
+        if (!ctx || !collapsible) return false
+        const idx = ctx.orderRef.current.indexOf(elRef.current)
+        if (idx < 0 || !ctx.sizesRef.current) return false
+        const col = collapsedSize ?? 0
+        return ctx.sizesRef.current[idx] <= col + 0.01
+      },
+    }),
+    [ctx, collapsible, collapsedSize, minSize]
+  )
 
   return (
     <Comp
@@ -305,9 +547,12 @@ export function ResizablePanel({
 
 // ——— ResizableHandle ———
 
+const DEFAULT_HIT_MARGINS = { coarse: 15, fine: 5 }
+
 export function ResizableHandle({
   withHandle,
   disabled,
+  hitAreaMargins: hitAreaMarginsProp,
   className,
   children,
   ...props
@@ -317,6 +562,30 @@ export function ResizableHandle({
   const [dragState, setDragState] = useState("inactive")
   const [focused, setFocused] = useState(false)
   const dragRef = useRef(null)
+
+  // Resolve hit area margins with defaults.
+  const margins = useMemo(
+    () => ({ ...DEFAULT_HIT_MARGINS, ...hitAreaMarginsProp }),
+    [hitAreaMarginsProp]
+  )
+
+  // Track pointer type for hit area margin selection.
+  const [isCoarse, setIsCoarse] = useState(() => {
+    if (typeof window === "undefined") return false
+    return window.matchMedia?.("(pointer: coarse)")?.matches ?? false
+  })
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const mql = window.matchMedia?.("(pointer: coarse)")
+    if (!mql) return
+    setIsCoarse(mql.matches)
+    const handler = (e) => setIsCoarse(e.matches)
+    mql.addEventListener("change", handler)
+    return () => mql.removeEventListener("change", handler)
+  }, [])
+
+  const hitMargin = isCoarse ? margins.coarse : margins.fine
 
   void ctx?.version // re-derive ARIA on layout commits
 
@@ -476,12 +745,39 @@ export function ResizableHandle({
           ctx.adjustLayout(idx, target - cur)
           break
         }
+        case "F6": {
+          // F6 / Shift+F6: cycle focus between separators within this group.
+          const groupEl = ctx.groupRef.current
+          if (!groupEl) break
+          event.preventDefault()
+          const separators = [
+            ...groupEl.querySelectorAll(":scope > .resizable-handle"),
+          ].filter((h) => h.getAttribute("aria-disabled") == null)
+          if (separators.length === 0) break
+          const currentIdx = separators.indexOf(elRef.current)
+          let nextIdx
+          if (event.shiftKey) {
+            nextIdx =
+              currentIdx <= 0 ? separators.length - 1 : currentIdx - 1
+          } else {
+            nextIdx =
+              currentIdx >= separators.length - 1 ? 0 : currentIdx + 1
+          }
+          separators[nextIdx]?.focus()
+          break
+        }
         default:
           return // don't stop propagation for unhandled keys
       }
     },
     [ctx, disabled]
   )
+
+  // Build CSS custom properties for the hit area overlay.
+  const hitStyle = useMemo(() => {
+    if (hitMargin <= 0) return undefined
+    return { "--hit-margin": `${hitMargin}px` }
+  }, [hitMargin])
 
   return (
     <div
@@ -495,7 +791,9 @@ export function ResizableHandle({
       aria-disabled={disabled || undefined}
       tabIndex={disabled ? undefined : 0}
       data-separator={separatorState}
+      data-hit-area={hitMargin > 0 ? "" : undefined}
       className={cn("resizable-handle", className)}
+      style={hitStyle}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
