@@ -13,3 +13,14 @@
   background-color: var(--primary);
   transition: transform var(--motion-fast) var(--motion-ease);
 }
+
+/* forced-color-adjust: none — the fill-vs-track colour distinction
+ * communicates progress level.  Without it both become Canvas and
+ * the bar is invisible.  The non-colour cue is the indicator's width
+ * (set by translateX), which survives forced-colors unchanged. */
+@media (forced-colors: active) {
+  .progress {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+}

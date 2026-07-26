@@ -98,3 +98,39 @@
 .status-dot--ring[data-status="pending"] {
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--muted-foreground) 20%, transparent);
 }
+
+/* ── Forced-colors: non-colour cues ──
+ * In forced-colors mode the browser overrides author colours, so each
+ * status must be distinguishable by shape alone:
+ *   success  → circle (default, complete/positive)
+ *   warning  → diamond (rotated square, attention)
+ *   error    → square (breaks the circle convention, alarm)
+ *   info     → circle + ring outline (information)
+ *   neutral  → circle (default)
+ *   pending  → circle (animation already provides the cue)
+ *
+ * forced-color-adjust: none preserves the author palette so the colours
+ * remain as a first-order signal for users who can perceive them. */
+
+@media (forced-colors: active) {
+  .status-dot {
+    forced-color-adjust: none;
+  }
+
+  /* warning → diamond */
+  .status-dot[data-status="warning"] {
+    border-radius: 1px;
+    transform: rotate(45deg);
+  }
+
+  /* error → square */
+  .status-dot[data-status="error"] {
+    border-radius: 1px;
+  }
+
+  /* info → circle with ring */
+  .status-dot[data-status="info"] {
+    outline: 2px solid LinkText;
+    outline-offset: 1px;
+  }
+}

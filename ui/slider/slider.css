@@ -90,3 +90,24 @@
 .slider[data-disabled] .slider-thumb {
   pointer-events: none;
 }
+
+/* forced-color-adjust: none — the filled range vs empty track colour
+ * distinction shows the current value.  Without it both become Canvas.
+ * The non-colour cue is the thumb position, which survives forced-colors.
+ * A border on the track ensures the element is visible against Canvas. */
+@media (forced-colors: active) {
+  .slider-track {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+
+  .slider-thumb {
+    border-color: CanvasText;
+    background-color: Canvas;
+  }
+
+  .slider-thumb:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
