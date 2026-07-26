@@ -124,6 +124,128 @@ test("enum requires a non-empty array at build time", () => {
 })
 
 // ---------------------------------------------------------------------------
+// object — nested paths, stripping, missing keys
+// ---------------------------------------------------------------------------
+
+test("object validates and returns a clean copy", () => {
+  const user = s.object({ name: s.string(), age: s.number() })
+  const r = user.safeParse({ name: "Ada", age: 36 })
+  assert.ok(r.success)
+  assert.deepEqual(r.data, { name: "Ada", age: 36 })
+})
+
+test("object strips unknown keys", () => {
+  const r = s.object({ name: s.string() }).safeParse({ name: "Ada", extra: 1 })
+  assert.deepEqual(r.data, { name: "Ada" })
+})
+
+test("object reports dotted paths for nested failures", () => {
+  const schema = s.object({ address: s.object({ city: s.string() }) })
+  const r = schema.safeParse({ address: { city: 5 } })
+  assert.equal(r.error.issues[0].path, "address.city")
+})
+
+test("object reports missing required keys at their path", () => {
+  const r = s.object({ name: s.string() }).safeParse({})
+  assert.equal(r.error.issues[0].path, "name")
+  assert.equal(r.error.issues[0].code, "invalid_type")
+})
+
+test("object rejects non-objects", () => {
+  assert.equal(s.object({ a: s.string() }).safeParse(null).success, false)
+  assert.equal(s.object({ a: s.string() }).safeParse([1]).success, false)
+  assert.equal(s.object({ a: s.string() }).safeParse("x").success, false)
+})
+
+test("object collects every failing field, not just the first", () => {
+  const schema = s.object({ a: s.string(), b: s.number() })
+  const r = schema.safeParse({ a: 1, b: "x" })
+  assert.deepEqual(
+    r.error.issues.map((i) => i.path),
+    ["a", "b"]
+  )
+})
+
+// ---------------------------------------------------------------------------
+// array — index paths
+// ---------------------------------------------------------------------------
+
+test("array validates elements and reports index paths", () => {
+  const r = s.array(s.number()).safeParse([1, "two", 3])
+  assert.equal(r.error.issues[0].path, "1")
+})
+
+test("array of objects reports dotted paths through indices", () => {
+  const schema = s.array(s.object({ name: s.string() }))
+  const r = schema.safeParse([{ name: "ok" }, { name: 7 }])
+  assert.equal(r.error.issues[0].path, "1.name")
+})
+
+test("array rejects non-arrays", () => {
+  assert.equal(s.array(s.string()).safeParse("abc").success, false)
+})
+
+test("deeply nested useFieldArray shape — dotted paths through arrays", () => {
+  const schema = s.object({
+    users: s.array(
+      s.object({
+        name: s.string(),
+        pets: s.array(s.object({ tag: s.string() })),
+      })
+    ),
+  })
+  const r = schema.safeParse({
+    users: [
+      { name: "Ada", pets: [{ tag: "ok" }, { tag: 3 }] },
+      { name: 9, pets: [] },
+    ],
+  })
+  assert.deepEqual(
+    r.error.issues.map((i) => i.path),
+    ["users.0.pets.1.tag", "users.1.name"]
+  )
+})
+
+// ---------------------------------------------------------------------------
+// optional / nullable / union
+// ---------------------------------------------------------------------------
+
+test("optional admits undefined, still validates present values", () => {
+  const schema = s.string().optional()
+  assert.ok(schema.safeParse(undefined).success)
+  assert.equal(schema.safeParse(null).success, false)
+  assert.equal(schema.safeParse(5).success, false)
+})
+
+test("nullable admits null only", () => {
+  const schema = s.nullable(s.string())
+  assert.ok(schema.safeParse(null).success)
+  assert.equal(schema.safeParse(undefined).success, false)
+})
+
+test("optional object key may be omitted and stays omitted", () => {
+  const schema = s.object({ name: s.string(), nick: s.string().optional() })
+  const r = schema.safeParse({ name: "Ada" })
+  assert.ok(r.success)
+  assert.equal("nick" in r.data, false)
+})
+
+test("union passes the first matching option and rejects the rest", () => {
+  const schema = s.union([s.string(), s.number()])
+  assert.ok(schema.safeParse("x").success)
+  assert.ok(schema.safeParse(1).success)
+  const r = schema.safeParse(true)
+  assert.equal(r.error.issues[0].code, "invalid_union")
+  assert.equal(r.error.issues[0].path, "")
+})
+
+test("union failure inside an object keeps the field path", () => {
+  const schema = s.object({ id: s.union([s.string(), s.number()]) })
+  const r = schema.safeParse({ id: true })
+  assert.equal(r.error.issues[0].path, "id")
+})
+
+// ---------------------------------------------------------------------------
 // Run
 // ---------------------------------------------------------------------------
 
