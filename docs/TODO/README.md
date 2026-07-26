@@ -57,7 +57,7 @@ written; it is a final consistency and gap pass.
 | 33  | token-foundation         | ~M  | [ ]    | `@property`, `light-dark()`, relative-color brand derivation, density scaffold |
 | 34  | tokenize-core-a          | ~M  | [ ]    | deps: 33; form controls — button, badge, input, textarea, checkbox, radio, switch, label, field, native-select |
 | 35  | tokenize-core-b          | ~M  | [ ]    | deps: 33; surfaces — card, dialog, alert, popover, tooltip, toast, table, avatar, separator, progress, slider, tabs |
-| 36  | density-modes            | ~S  | [ ]    | deps: 34, 35; `compact \| comfortable \| spacious` over tokenized components |
+| 36  | density-modes            | ~S  | [ ]    | deps: 34, 35; `compact`, `comfortable`, `spacious` over tokenized components |
 | 37  | config-generator         | ~L  | [ ]    | deps: 34, 35; `vanillin.config.json` schema + zero-dep generator → `vanillin.css` |
 | 38  | cli                      | ~L  | [ ]    | deps: 37; `bin/vanillin.mjs` init/add/build/list + `registry.json`; **git-sourced, stays `private: true`** |
 | 39  | container-queries        | ~M  | [ ]    | deps: 34, 35; components size to container, not viewport (console panels)    |
