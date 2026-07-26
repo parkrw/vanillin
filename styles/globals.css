@@ -62,6 +62,13 @@
 @property --sidebar-border { syntax: "<color>"; inherits: true; initial-value: oklch(0.922 0 0); }
 @property --sidebar-ring { syntax: "<color>"; inherits: true; initial-value: oklch(0.708 0 0); }
 
+/* Derived interaction-state colours */
+@property --primary-hover { syntax: "<color>"; inherits: true; initial-value: oklch(0.155 0 0); }
+@property --secondary-hover { syntax: "<color>"; inherits: true; initial-value: oklch(0.92 0 0); }
+@property --accent-hover { syntax: "<color>"; inherits: true; initial-value: oklch(0.92 0 0); }
+@property --destructive-hover { syntax: "<color>"; inherits: true; initial-value: oklch(0.527 0.245 27.325); }
+@property --muted-hover { syntax: "<color>"; inherits: true; initial-value: oklch(0.92 0 0); }
+
 /* ---- @property: length tokens ---- */
 
 @property --radius { syntax: "<length>"; inherits: true; initial-value: 10px; }
@@ -170,6 +177,29 @@
   --motion-ease: ease-out;
   --motion-fast: calc(150ms * var(--motion-scale));
   --motion-medium: calc(200ms * var(--motion-scale));
+
+  /* Derived interaction states — relative color syntax.
+     These shift lightness by a fixed amount; because var(--primary) etc.
+     are already resolved per-mode by @property + light-dark(), the shift
+     works in both light and dark without separate declarations.
+     Tasks 34/35 migrate components to use these instead of the current
+     color-mix(in oklab, … 90%, transparent) hover pattern. */
+  --primary-hover: oklch(from var(--primary) calc(l - 0.05) c h);
+  --secondary-hover: oklch(from var(--secondary) calc(l - 0.05) c h);
+  --accent-hover: oklch(from var(--accent) calc(l - 0.05) c h);
+  --destructive-hover: oklch(from var(--destructive) calc(l - 0.05) c h);
+  --muted-hover: oklch(from var(--muted) calc(l - 0.05) c h);
+
+  /* Density scaffold — task 36 applies these to component spacing.
+     Override --density-scale at :root to tighten (0.875) or loosen (1.25)
+     all spacing uniformly. */
+  --density-scale: 1;
+  --space-1: calc(0.25rem * var(--density-scale));
+  --space-2: calc(0.5rem * var(--density-scale));
+  --space-3: calc(0.75rem * var(--density-scale));
+  --space-4: calc(1rem * var(--density-scale));
+  --space-6: calc(1.5rem * var(--density-scale));
+  --space-8: calc(2rem * var(--density-scale));
 }
 
 /* .dark flips color-scheme so every light-dark() token resolves to its
