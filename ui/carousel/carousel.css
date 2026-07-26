@@ -24,6 +24,10 @@
   user-select: none;
 }
 
+.carousel-content[data-dragging] {
+  cursor: grabbing;
+}
+
 .carousel-content::-webkit-scrollbar {
   display: none;
 }

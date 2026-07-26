@@ -61,6 +61,11 @@
   background-color: var(--background);
   box-shadow: var(--shadow-sm);
   transition: box-shadow var(--motion-fast) var(--motion-ease);
+  cursor: grab;
+}
+
+.slider[data-dragging] .slider-thumb {
+  cursor: grabbing;
 }
 
 .slider-thumb[data-orientation="horizontal"] {

@@ -1,4 +1,4 @@
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { cn } from "../../lib/cn.js"
 import { useControllableState } from "../../lib/use-controllable-state.js"
 import { useDirection } from "../../lib/direction.jsx"
@@ -42,6 +42,7 @@ export function Slider({
   const rootRef = useRef(null)
   const thumbRefs = useRef([])
   const dragIndexRef = useRef(-1)
+  const [dragging, setDragging] = useState(false)
   const valuesRef = useRef(values)
   valuesRef.current = values
 
@@ -82,6 +83,7 @@ export function Slider({
       0,
     )
     dragIndexRef.current = index
+    setDragging(true)
     rootRef.current.setPointerCapture(event.pointerId)
     thumbRefs.current[index]?.focus()
     setThumbValue(index, next)
@@ -95,6 +97,7 @@ export function Slider({
   function handlePointerUp(event) {
     if (dragIndexRef.current < 0) return
     dragIndexRef.current = -1
+    setDragging(false)
     rootRef.current.releasePointerCapture(event.pointerId)
     onValueCommit?.(valuesRef.current)
   }
@@ -135,6 +138,7 @@ export function Slider({
     <span
       ref={rootRef}
       data-orientation={orientation}
+      {...(dragging ? { "data-dragging": "" } : {})}
       {...disabledAttrs}
       className={cn("slider", className)}
       onPointerDown={handlePointerDown}

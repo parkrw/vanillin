@@ -254,6 +254,7 @@ export function CarouselContent({ className, ...props }) {
       // pointerup never reached us, so drop the stale drag or a later
       // hover move would start scrolling with no button held.
       if (e.buttons === 0) {
+        if (d.active) delete contentRef.current?.dataset.dragging
         dragRef.current = null
         return
       }
@@ -267,6 +268,7 @@ export function CarouselContent({ className, ...props }) {
         d.active = true
         el.setPointerCapture(d.pointerId)
         el.style.scrollSnapType = "none"
+        el.dataset.dragging = ""
       }
 
       if (vertical) el.scrollTop = d.scroll - (e.clientY - d.y)
@@ -285,6 +287,7 @@ export function CarouselContent({ className, ...props }) {
 
       if (!drag.active) return // plain click — let it through
 
+      delete el.dataset.dragging
       el.style.scrollSnapType = ""
       if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId)
 
