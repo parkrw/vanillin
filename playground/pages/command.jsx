@@ -259,6 +259,39 @@ export default function CommandPage() {
       </section>
 
       <section className="pg-section">
+        <h3>Search-match highlighting (CSS Custom Highlight API)</h3>
+        <p>
+          When <code>shouldFilter</code> is on (the default), the command
+          palette highlights substring matches via the{" "}
+          <a href="https://developer.mozilla.org/en-US/docs/Web/API/CSS_Custom_Highlight_API">
+            CSS Custom Highlight API
+          </a>
+          . No <code>&lt;mark&gt;</code> injection, no DOM mutation — the
+          browser paints ranges directly over existing text nodes.
+        </p>
+        <p>
+          Try typing <strong>"cal"</strong> in the default demo above — the
+          matching substring is painted. For non-contiguous fuzzy matches
+          (e.g. <strong>"gp"</strong> → "Git Push"), no highlight appears
+          because there is no contiguous substring; the fuzzy scorer surfaced
+          the item, but exact highlighting would mislead.
+        </p>
+        <p>
+          <code>::highlight()</code> supports only{" "}
+          <code>color</code>, <code>background-color</code>,{" "}
+          <code>text-decoration</code>, and <code>text-shadow</code> — no
+          padding, no border-radius. The visual is a translucent background
+          tinted with <code>var(--primary)</code>.
+        </p>
+        <p>
+          Progressive enhancement: in browsers without{" "}
+          <code>CSS.highlights</code> the feature is simply absent —
+          filtering still works, only the paint is missing. Supported in
+          Chrome 105+, Edge 105+, Safari 17.2+, and Firefox 132+.
+        </p>
+      </section>
+
+      <section className="pg-section">
         <h3>Async / loading</h3>
         <p>
           <code>CommandLoading</code> renders while an async filter is in
