@@ -5,6 +5,11 @@ import { useDirection } from "../../lib/direction.jsx"
 /** Quiet period after the last scroll before `data-scrolling` drops. */
 const SCROLL_TIMEOUT = 500
 const MIN_THUMB_SIZE = 16
+/** Safety ceiling for the scrollend-based snap restore. */
+const SNAP_SETTLE_TIMEOUT = 1000
+/** Fallback delay when scrollend is not available. */
+const SNAP_FALLBACK_DELAY = 150
+const HAS_SCROLL_END = typeof window !== "undefined" && "onscrollend" in window
 
 const ScrollAreaContext = createContext(null)
 
@@ -37,6 +42,7 @@ export function ScrollArea({ className, children, overflowEdgeThreshold = 0, ...
   const thumbRefs = useRef({ vertical: null, horizontal: null })
   const timersRef = useRef({ x: 0, y: 0 })
   const dragRef = useRef(null)
+  const snapRef = useRef({ original: null, suspended: false, timer: 0, handler: null })
   const direction = useDirection()
 
   const [overflow, setOverflow] = useState({ x: false, y: false })
@@ -98,6 +104,55 @@ export function ScrollArea({ className, children, overflowEdgeThreshold = 0, ...
     )
   }, [])
 
+  /** Disable scroll-snap-type so thumb drags and track clicks don't re-snap. */
+  const suspendSnap = useCallback(() => {
+    const viewport = viewportRef.current
+    if (!viewport) return
+    const snap = snapRef.current
+    // Cancel any pending settle from a previous interaction
+    clearTimeout(snap.timer)
+    if (snap.handler) {
+      viewport.removeEventListener("scrollend", snap.handler)
+      snap.handler = null
+    }
+    if (!snap.suspended) {
+      snap.original = viewport.style.scrollSnapType || ""
+      snap.suspended = true
+      viewport.style.scrollSnapType = "none"
+    }
+  }, [])
+
+  const restoreSnap = useCallback(() => {
+    const viewport = viewportRef.current
+    if (!viewport || !snapRef.current.suspended) return
+    const snap = snapRef.current
+    snap.suspended = false
+    viewport.style.scrollSnapType = snap.original
+    snap.original = null
+    clearTimeout(snap.timer)
+    if (snap.handler) {
+      viewport.removeEventListener("scrollend", snap.handler)
+      snap.handler = null
+    }
+  }, [])
+
+  /** Restore snap after scrolling settles (scrollend or timeout fallback). */
+  const settleSnap = useCallback(() => {
+    const viewport = viewportRef.current
+    if (!viewport || !snapRef.current.suspended) return
+    const snap = snapRef.current
+    if (HAS_SCROLL_END) {
+      snap.timer = setTimeout(restoreSnap, SNAP_SETTLE_TIMEOUT)
+      snap.handler = () => {
+        clearTimeout(snap.timer)
+        restoreSnap()
+      }
+      viewport.addEventListener("scrollend", snap.handler, { once: true })
+    } else {
+      snap.timer = setTimeout(restoreSnap, SNAP_FALLBACK_DELAY)
+    }
+  }, [restoreSnap])
+
   useLayoutEffect(() => {
     const viewport = viewportRef.current
     const root = rootRef.current
@@ -156,6 +211,10 @@ export function ScrollArea({ className, children, overflowEdgeThreshold = 0, ...
       edgeObserver.disconnect()
       clearTimeout(timers.x)
       clearTimeout(timers.y)
+      // Clean up any pending snap restoration
+      const snap = snapRef.current
+      clearTimeout(snap.timer)
+      if (snap.handler) viewport.removeEventListener("scrollend", snap.handler)
     }
   }, [markScrolling, sync, overflowEdgeThreshold])
 
@@ -163,13 +222,14 @@ export function ScrollArea({ className, children, overflowEdgeThreshold = 0, ...
     const viewport = viewportRef.current
     const thumb = thumbRefs.current[orientation]
     if (event.button !== 0 || !viewport || !thumb) return
+    suspendSnap()
     dragRef.current = {
       orientation,
       pointer: orientation === "vertical" ? event.clientY : event.clientX,
       scroll: orientation === "vertical" ? viewport.scrollTop : viewport.scrollLeft,
     }
     thumb.setPointerCapture(event.pointerId)
-  }, [])
+  }, [suspendSnap])
 
   const moveDrag = useCallback(
     (event) => {
@@ -210,7 +270,8 @@ export function ScrollArea({ className, children, overflowEdgeThreshold = 0, ...
     const thumb = thumbRefs.current[drag.orientation]
     // pointercancel releases capture implicitly — releasing twice throws.
     if (thumb?.hasPointerCapture(event.pointerId)) thumb.releasePointerCapture(event.pointerId)
-  }, [])
+    settleSnap()
+  }, [settleSnap])
 
   /** Track click: centre the thumb on the pointer. */
   const jumpTo = useCallback(
@@ -224,6 +285,8 @@ export function ScrollArea({ className, children, overflowEdgeThreshold = 0, ...
       const size = vertical ? thumb.offsetHeight : thumb.offsetWidth
       const maxThumbOffset = trackSize(bar, vertical) - size
       if (maxThumbOffset <= 0) return
+
+      suspendSnap()
 
       const rect = bar.getBoundingClientRect()
       const [padStart] = paddings(bar, vertical)
@@ -240,7 +303,7 @@ export function ScrollArea({ className, children, overflowEdgeThreshold = 0, ...
       }
       markScrolling(vertical ? "y" : "x")
     },
-    [direction, markScrolling]
+    [direction, markScrolling, suspendSnap]
   )
 
   const context = useMemo(
