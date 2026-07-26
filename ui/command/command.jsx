@@ -10,6 +10,7 @@ import {
 import { cn } from "../../lib/cn.js"
 import { commandScore } from "../../lib/command-score.js"
 import { useControllableState } from "../../lib/use-controllable-state.js"
+import { useHighlight } from "../../lib/use-highlight.js"
 import {
   Dialog,
   DialogContent,
@@ -126,6 +127,11 @@ export function Command({
   // Loading indicator count — CommandEmpty checks this to avoid
   // showing "no results" while loading.
   const [loadingCount, setLoadingCount] = useState(0)
+
+  // Paint substring matches via the CSS Custom Highlight API.
+  // Only active when shouldFilter is true — when the consumer owns
+  // filtering (shouldFilter={false}), they own highlighting too.
+  useHighlight(listRef, shouldFilter ? search : "")
 
   return (
     <CommandContext.Provider
