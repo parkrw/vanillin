@@ -1,4 +1,4 @@
-# Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–58)
+# Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–61)
 
 Plan: `~/.claude/plans/vanillin-zero-dep-shadcn-ui-recreation.md`. 31 of 64
 components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
@@ -42,8 +42,12 @@ platform features shadcn cannot adopt (Tailwind/Radix/React-18 bound).
 
 ## Phase 2 — config, form, parity, platform
 
-Sequence: 28 → 29 (thin) → 31…58 → 30. Rationale in the 2026-07-25 log entry.
+Sequence: 28 → 29 (thin) → 31…61 → 30. Rationale in the 2026-07-25 log entry.
 Tasks are detailed just-in-time; only the rows below are durable.
+
+59–61 were added 2026-07-26, after 31–58 landed: 59 from the user directly, 60
+and 61 from reviewing what task 37 actually shipped. **61 before 60** — the
+default config in 60 can only express a one-colour brand until 61 lands.
 
 **Every task writes its own docs** (2026-07-26) — prose lands in the same PR as
 the code, on the component's playground page or the relevant
@@ -55,33 +59,34 @@ written; it is a final consistency and gap pass.
 | 31  | cursor-affordance        | ~S  | [x]    | global interactive-cursor rule + per-component sweep (grab, resize)                                |
 | 32  | status-colors            | ~M  | [x]    | badge success/warning/info/destructive + new `ui/status-dot`                                         |
 | 33  | token-foundation         | ~M  | [x]    | `@property`, `light-dark()`, relative-color brand derivation, density scaffold                         |
-| 34  | tokenize-core-a          | ~M  | [ ]    | deps: 33; form controls — button, badge, input, textarea, checkbox, radio, switch, label, field,\  |
-|     |                          |     |      | native-select                                                                                                   |
-
-| 35  | tokenize-core-b          | ~M  | [ ]    | deps: 33; surfaces — card, dialog, alert, popover, tooltip, toast, table, avatar, separator, progress, slider, tabs |
-| 36  | density-modes            | ~S  | [ ]    | deps: 34, 35; `compact`, `comfortable`, `spacious` over tokenized components |
-| 37  | config-generator         | ~L  | [ ]    | deps: 34, 35; `vanillin.config.json` schema + zero-dep generator → `vanillin.css` |
+| 34  | tokenize-core-a          | ~M  | [x]    | deps: 33; form controls — button, badge, input, textarea, checkbox, radio, switch, label, field, native-select |
+| 35  | tokenize-core-b          | ~M  | [x]    | deps: 33; surfaces — card, dialog, alert, popover, tooltip, toast, table, avatar, separator, progress, slider, tabs |
+| 36  | density-modes            | ~S  | [x]    | deps: 34, 35; `compact`, `comfortable`, `spacious` over tokenized components |
+| 37  | config-generator         | ~L  | [x]    | deps: 34, 35; `vanillin.config.json` schema + zero-dep generator → `vanillin.css`; **output not wired into the playground — see 60** |
 | 38  | cli                      | ~L  | [ ]    | deps: 37; `bin/vanillin.mjs` init/add/build/list + `registry.json`; **git-sourced, stays `private: true`** |
 | 39  | container-queries        | ~M  | [ ]    | deps: 34, 35; components size to container, not viewport (console panels)    |
 | 40  | use-form-core            | ~L  | [x]    | zero-dep `lib/use-form.js`, RHF-shaped; resolver contract = `@hookform/resolvers` compatible |
-| 41  | form-component           | ~M  | [ ]    | deps: 40; `ui/form/` engine-agnostic (context, never imports the engine) + React 19 Actions path |
+| 41  | form-component           | ~M  | [x]    | deps: 40; `ui/form/` engine-agnostic (context, never imports the engine) + React 19 Actions path |
 | 42  | format-intl              | ~M  | [x]    | `lib/format.js` + `<RelativeTime>` `<Bytes>` `<Duration>` `<Cost>`; pure Intl |
 | 43  | select-parity            | ~M  | [x]    | `alignItemWithTrigger`, scroll buttons, constraint validation                |
-| 44  | combobox-multi           | ~M  | [ ]    | deps: 43; `multiple` + chips + `showClear`                                   |
+| 44  | combobox-multi           | ~M  | [x]    | deps: 43; `multiple` + chips + `showClear`                                   |
 | 45  | command-fuzzy            | ~S  | [x]    | port cmdk `command-score`, re-sort items + groups, `Command.Loading`         |
-| 46  | navigation-menu-viewport | ~L  | [ ]    | shared morphing viewport + sliding Indicator (drops the 15 no-ops); **under-specified — expect to split into viewport + indicator on approach** |
+| 46  | navigation-menu-viewport | ~L  | [x]    | shared morphing viewport + sliding Indicator (drops the 15 no-ops); **under-specified — expect to split into viewport + indicator on approach** |
 | 47  | data-table-filtering     | ~M  | [x]    | global filter, faceted filter, multi-sort                                    |
-| 48  | data-table-columns       | ~M  | [ ]    | deps: 47; column pinning + resizing                                          |
+| 48  | data-table-columns       | ~M  | [x]    | deps: 47; column pinning + resizing                                          |
 | 49  | data-table-scale         | ~L  | [ ]    | deps: 48; grouping, virtualization, `manual*` server-side modes; **unresolved: `content-visibility` may cover virtualization outright — measure before building a windowing layer** |
-| 50  | resizable-parity         | ~M  | [ ]    | `autoSaveId`/storage, `onResize`/`onCollapse`, F6 cycling, `hitAreaMargins`  |
-| 51  | scroll-area-parity       | ~M  | [ ]    | `overflowEdgeThreshold` + `data-overflow-*`, overscroll squish, snap suspension |
+| 50  | resizable-parity         | ~M  | [x]    | `autoSaveId`/storage, `onResize`/`onCollapse`, F6 cycling, `hitAreaMargins`  |
+| 51  | scroll-area-parity       | ~M  | [x]    | `overflowEdgeThreshold` + `data-overflow-*`, overscroll squish, snap suspension |
 | 52  | swipe-velocity           | ~S  | [x]    | flick dismiss for toast + drawer — `useSwipe` already returns velocity       |
 | 53  | date-picker-parity       | ~M  | [x]    | natural-language input parsing (zero-dep chrono subset) + time picker        |
-| 54  | view-transitions         | ~M  | [ ]    | `startViewTransition` for route/detail/theme-toggle; reduced-motion guard    |
-| 55  | highlight-api            | ~S  | [ ]    | CSS Custom Highlight for search matches (table, command, log) — no DOM mutation |
-| 56  | forced-colors            | ~M  | [ ]    | `forced-colors`, `prefers-contrast`, `prefers-reduced-transparency` sweep    |
+| 54  | view-transitions         | ~M  | [x]    | `startViewTransition` for route/detail/theme-toggle; reduced-motion guard    |
+| 55  | highlight-api            | ~S  | [x]    | CSS Custom Highlight for search matches (table, command, log) — no DOM mutation |
+| 56  | forced-colors            | ~M  | [x]    | `forced-colors`, `prefers-contrast`, `prefers-reduced-transparency` sweep    |
 | 57  | platform-polish          | ~S  | [x]    | Speculation Rules prefetch, `field-sizing: content` on textarea              |
-| 58  | carousel-parity          | ~S  | [ ]    | nice-to-have; `plugins`, `opts.loop`, `opts.align` (currently stubbed)       |
+| 58  | carousel-parity          | ~S  | [x]    | nice-to-have; `plugins`, `opts.loop`, `opts.align` (currently stubbed)       |
+| 59  | form-bindings            | ~M  | [ ]    | deps: 40, 41; user-requested. Third layer composing `use-form` + `ui/form` + controls into one import; `ui/form` must still never import the engine. Also where `ui/form` stops reimplementing label/description/message |
+| 60  | generated-defaults       | ~L  | [ ]    | deps: 37, 61; kit's own theme generated from a default config — one authoritative `:root`. Resolves task 37's spec contradiction (import the output vs. stay pixel-identical) |
+| 61  | brand-multicolor         | ~M  | [ ]    | deps: 37; `brand` as string-or-object (primary/secondary/accent/neutral); **sub-task 1 is an a11y fix — foregrounds picked by measured contrast, not a lightness threshold — and ships independently** |
 
 **Browser-support gate:** 33, 39, 54, 55, 57 depend on features that were
 partially supported at plan time (relative color syntax, `light-dark()`,
@@ -111,9 +116,9 @@ detail just-in-time after 58 lands. Rough order of usefulness:
 - **Per-task decisions, deviations and gotchas: `docs/TODO/LOG.md`.** Append
   there when a task lands — not to this file. This index stays scannable.
 - Planning is **just-in-time**: the rows above are durable, task files are
-  written when a task is picked up. Task files exist for the architectural
-  ones (31, 32, 33, 37, 38, 40, 41); the rest get detailed on approach, since
-  37/38's outcomes reshape 39–58.
+  written when a task is picked up. Task files now exist for every task except
+  22–29 (landed before the convention) and 59 (still to be written).
+  Unstarted-but-specified and ready to dispatch: 30, 38, 39, 49, 60, 61.
 - Test: `node tests/run.mjs` — boots its own vite on :5199, drives local Chrome;
   one `tests/<slug>.test.mjs` per interactive component. (Dev server on :5173
   only needed for manual/screenshot QA.)
