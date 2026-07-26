@@ -14,7 +14,7 @@ export default async function run({ page, baseUrl, test, eq }) {
   await test("nav is grouped into get started + components", async () => {
     const labels = await page.locator(".pg-nav-group > .pg-nav-label").allTextContents()
     eq(labels.join("|"), "Get started|Components")
-    eq(await page.locator(".pg-nav-group").first().locator(".pg-nav-link").count(), 3)
+    eq(await page.locator(".pg-nav-group").first().locator(".pg-nav-link").count(), 4)
   })
 
   await test("docs links route to the stub pages", async () => {
@@ -26,7 +26,11 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.waitForFunction(
       () => document.querySelector(".pg-main > h2")?.textContent === "Theming"
     )
-    eq(await page.locator('.pg-nav-link[data-active="true"]').textContent(), "Theming")
+    await page.click('a[href="#schema"]')
+    await page.waitForFunction(
+      () => document.querySelector(".pg-main > h2")?.textContent === "Schema"
+    )
+    eq(await page.locator('.pg-nav-link[data-active="true"]').textContent(), "Schema")
   })
 
   await test("component routes still resolve", async () => {
