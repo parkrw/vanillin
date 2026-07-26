@@ -504,3 +504,19 @@ agents and cherry-picked onto `feat/phase-2`. Suite 406/406, build clean.
   by setting the name only on the active element at click time and clearing
   after. Pre-existing flakes: 2 resizable tests fail on the base commit
   (hover state timing, strict `>` where values are equal).
+- 2026-07-26 — batch 49/61/62 landed via three concurrent worktrees,
+  cherry-picked onto `feat/batch-49-61-62` with zero conflicts (written
+  disjoint file lists held; 62 was sole owner of `registry.js`). One
+  cross-task integration miss, fixed at the head: 62's Schema docs page made
+  four docs-nav entries where `docs-shell.test.mjs` asserted three — workers
+  correctly run only their own test files, so only the integrated suite
+  caught it. Task 49: grouping + `manual*` modes; no windowing, no
+  `content-visibility: auto`, per the measurements in the task file. Task 61:
+  foregrounds now picked by measured WCAG contrast; object `brand` validates
+  every key through `parseOklch` + `isSafeCSSValue`, unknown keys are errors;
+  a primary-less object derives only the keys given (kit defaults fill the
+  rest); string brand proven byte-identical to pre-61 output. Task 62:
+  `lib/schema.js` + `schemaResolver`; zero new deps in either dependency
+  block; pure-node tests correctly named `schema.unit.mjs`. Task file for 61
+  named `tests/config-schema.test.mjs`; real file is `config-schema.unit.mjs`
+  — caught at detail time, brief corrected it.

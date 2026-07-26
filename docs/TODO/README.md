@@ -86,7 +86,7 @@ written; it is a final consistency and gap pass.
 | 46  | navigation-menu-viewport | ~L  | [x]    | shared morphing viewport + sliding Indicator [^46]                     |
 | 47  | data-table-filtering     | ~M  | [x]    | global filter, faceted filter, multi-sort                              |
 | 48  | data-table-columns       | ~M  | [x]    | deps: 47; column pinning + resizing                                    |
-| 49  | data-table-scale         | ~L  | [ ]    | deps: 48; grouping, virtualization, `manual*` modes [^49]              |
+| 49  | data-table-scale         | ~L  | [x]    | deps: 48; grouping + `manual*` modes; windowing rejected [^49]         |
 | 50  | resizable-parity         | ~M  | [x]    | `autoSaveId`, `onResize`/`onCollapse`, F6, `hitAreaMargins` [^50]      |
 | 51  | scroll-area-parity       | ~M  | [x]    | `overflowEdgeThreshold`, overscroll squish, snap suspension [^51]      |
 | 52  | swipe-velocity           | ~S  | [x]    | flick dismiss for toast + drawer — `useSwipe` already returns velocity |
@@ -98,8 +98,8 @@ written; it is a final consistency and gap pass.
 | 58  | carousel-parity          | ~S  | [x]    | nice-to-have; `plugins`, `opts.loop`, `opts.align` (currently stubbed) |
 | 59  | form-bindings            | ~M  | [ ]    | deps: 40, 41; third layer over engine + `ui/form` [^59]                |
 | 60  | generated-defaults       | ~L  | [ ]    | deps: 37, 61; kit theme from a default config [^60]                    |
-| 61  | brand-multicolor         | ~M  | [ ]    | deps: 37; `brand` as string-or-object [^61]                            |
-| 62  | schema-core              | ~L  | [ ]    | `lib/schema.js` — zod-shaped validation + resolver [^62]               |
+| 61  | brand-multicolor         | ~M  | [x]    | deps: 37; `brand` as string-or-object [^61]                            |
+| 62  | schema-core              | ~L  | [x]    | `lib/schema.js` — zod-shaped validation + resolver [^62]               |
 | 63  | composition-pass         | ~M  | [~]    | reuse only where the relationship is **semantic** [^63]                |
 | 64  | component-contracts      | ~L  | [ ]    | per-copy `.van.json` manifest + conformance suite [^64]                |
 | 65  | component-update         | ~L  | [ ]    | deps: 64, 38; `van update` with 3-way merge [^65]                      |
@@ -219,7 +219,7 @@ detail just-in-time after 58 lands. Rough order of usefulness:
 - Planning is **just-in-time**: the rows above are durable, task files are
   written when a task is picked up. Task files now exist for every task except
   22–29 (landed before the convention) and 59 (still to be written).
-  Unstarted-but-specified and ready to dispatch: 30, 38, 39, 49, 60, 61.
+  Unstarted-but-specified and ready to dispatch: 39, 60, 64 (then 38); 30 last.
 - Test: `node tests/run.mjs` — boots its own vite on :5199, drives local Chrome;
   one `tests/<slug>.test.mjs` per interactive component. (Dev server on :5173
   only needed for manual/screenshot QA.)
