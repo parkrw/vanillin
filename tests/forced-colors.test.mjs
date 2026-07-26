@@ -240,6 +240,15 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(width >= 3, true, `outline-width is ${width}px (want >= 3)`)
   })
 
-  // ── Reset media for downstream tests ──
-  await page.emulateMedia({ contrast: "no-preference", forcedColors: "none" })
+  // ── Reset all media emulation for downstream tests ──
+  await page.emulateMedia({
+    forcedColors: null,
+    contrast: null,
+    reducedTransparency: null,
+    reducedMotion: null,
+    colorScheme: null,
+  })
+  // Navigate to a blank page + reload to flush any stale layout state
+  // left by forcedColors emulation.
+  await page.goto("about:blank")
 }
