@@ -1,4 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useRef } from "react"
+import {
+  createContext, useCallback, useContext, useEffect, useId,
+  useLayoutEffect, useMemo, useRef, useState,
+} from "react"
+import { createPortal } from "react-dom"
 import { cn } from "../../lib/cn.js"
 import { useControllableState } from "../../lib/use-controllable-state.js"
 import { useAnchorPosition } from "../../lib/use-anchor-position.js"
@@ -8,12 +12,16 @@ const NavigationMenuContext = createContext(null)
 const NavigationMenuItemContext = createContext(null)
 
 /**
- * Horizontal nav of hover/click triggers, each with an anchored links panel
- * (popover recipe). Root state is the open item's value ("" = all closed);
- * open/close timers live here so trigger and content share them — the pointer
- * may travel into the panel (hover-card precedent). Panels are per-item
- * (shadcn's viewport={false} mode); the shared morphing viewport is a
- * non-goal, so `viewport` is swallowed and Viewport/Indicator are no-ops.
+ * Horizontal nav of hover/click triggers with content panels.
+ *
+ * Two rendering modes:
+ * - **Viewport mode (default, matching shadcn):** one shared panel morphs
+ *   between menu contents. Place `<NavigationMenuViewport />` after the list.
+ * - **Per-item mode (`viewport={false}`):** each item gets its own anchored
+ *   popover panel (the original task-15 behaviour).
+ *
+ * Root state is the open item's value ("" = all closed); open/close timers
+ * live here so trigger and content share them.
  */
 export function NavigationMenu({
   value,
@@ -22,11 +30,14 @@ export function NavigationMenu({
   delayDuration = 200,
   skipDelayDuration = 300,
   closeDelay = 150,
-  viewport: _viewport,
+  viewport,
   className,
   children,
   ...props
 }) {
+  const useViewport = viewport !== false
+  const dir = useDirection()
+
   const [current, setValue] = useControllableState({
     value,
     defaultValue,
@@ -34,20 +45,62 @@ export function NavigationMenu({
   })
   const timerRef = useRef(null)
   const closedAtRef = useRef(0)
+  const navRef = useRef(null)
 
   const valueRef = useRef(current)
   valueRef.current = current
   const setValueRef = useRef(setValue)
   setValueRef.current = setValue
 
-  // Timestamp real open->closed transitions for the skip window (re-hover
-  // soon after a close opens instantly, tooltip precedent). Mount stamps
-  // nothing — value starts "" without anything having closed.
+  // --- Viewport element registration (state so Content re-renders) ---
+  const [viewportEl, setViewportEl] = useState(null)
+
+  // --- Trigger registration for direction detection ---
+  const triggerMapRef = useRef(new Map())
+  const registerTrigger = useCallback((itemValue, el) => {
+    if (el) triggerMapRef.current.set(itemValue, el)
+    else triggerMapRef.current.delete(itemValue)
+  }, [])
+
+  // --- Direction tracking for data-motion ---
+  // prevValueRef holds the PREVIOUS render's value (updated in effect).
+  // Reading it during render gives the stale (= previous) value, which
+  // is exactly what we need for direction computation.
   const prevValueRef = useRef(current)
+  const motionDirection = useMemo(() => {
+    const prev = prevValueRef.current
+    if (!useViewport || prev === "" || current === "" || prev === current) return null
+    const prevEl = triggerMapRef.current.get(prev)
+    const nextEl = triggerMapRef.current.get(current)
+    if (!prevEl || !nextEl) return null
+    const isAfterInDom = !!(
+      prevEl.compareDocumentPosition(nextEl) & Node.DOCUMENT_POSITION_FOLLOWING
+    )
+    // In RTL the visual order is reversed: "after in DOM" = left visually,
+    // so we invert the direction. This makes data-motion values invert
+    // under RTL, matching Radix's behaviour.
+    const forward = dir === "rtl" ? !isAfterInDom : isAfterInDom
+    return forward ? 1 : -1
+  }, [current, useViewport, dir])
+
+  // Keep the previous-value ref stable for direction + closedAt tracking.
   useEffect(() => {
     if (prevValueRef.current !== "" && current === "") closedAtRef.current = Date.now()
     prevValueRef.current = current
   }, [current])
+
+  // --- Light-dismiss for viewport mode (no popover = no native dismiss) ---
+  useEffect(() => {
+    if (!useViewport || current === "") return
+    const handler = (e) => {
+      if (!navRef.current?.contains(e.target)) {
+        clearTimeout(timerRef.current)
+        setValueRef.current("")
+      }
+    }
+    document.addEventListener("pointerdown", handler)
+    return () => document.removeEventListener("pointerdown", handler)
+  }, [useViewport, current])
 
   const cancelSchedule = useCallback(() => {
     clearTimeout(timerRef.current)
@@ -56,7 +109,6 @@ export function NavigationMenu({
   const scheduleOpen = useCallback(
     (itemValue) => {
       clearTimeout(timerRef.current)
-      // Already open: hovering another trigger switches immediately.
       const skip =
         valueRef.current !== "" ||
         Date.now() - closedAtRef.current < skipDelayDuration
@@ -78,11 +130,31 @@ export function NavigationMenu({
 
   useEffect(() => () => clearTimeout(timerRef.current), [])
 
+  const ctx = useMemo(
+    () => ({
+      value: current,
+      setValue,
+      scheduleOpen,
+      scheduleClose,
+      cancelSchedule,
+      closeNow,
+      useViewport,
+      viewportEl,
+      setViewportEl,
+      registerTrigger,
+      motionDirection,
+      dir,
+    }),
+    [
+      current, setValue, scheduleOpen, scheduleClose, cancelSchedule,
+      closeNow, useViewport, viewportEl, setViewportEl, registerTrigger,
+      motionDirection, dir,
+    ]
+  )
+
   return (
-    <NavigationMenuContext.Provider
-      value={{ value: current, setValue, scheduleOpen, scheduleClose, cancelSchedule, closeNow }}
-    >
-      <nav className={cn("navigation-menu", className)} {...props}>
+    <NavigationMenuContext.Provider value={ctx}>
+      <nav ref={navRef} className={cn("navigation-menu", className)} data-viewport={useViewport ? "" : undefined} {...props}>
         {children}
       </nav>
     </NavigationMenuContext.Provider>
@@ -95,9 +167,6 @@ export function NavigationMenuList({ onKeyDown, className, ...props }) {
   const nextKey = dir === "rtl" ? "ArrowLeft" : "ArrowRight"
   const prevKey = dir === "rtl" ? "ArrowRight" : "ArrowLeft"
 
-  // Triggers and top-level links are all natively tabbable (no roving —
-  // that's tabs/radio/toolbars only); arrows are a convenience on top.
-  // Panel-internal keys never move list focus.
   const handleKeyDown = (event) => {
     onKeyDown?.(event)
     if (event.defaultPrevented) return
@@ -154,15 +223,21 @@ export function NavigationMenuTrigger({
   children,
   ...props
 }) {
-  const { value, setValue, scheduleOpen, scheduleClose, cancelSchedule, closeNow } =
+  const { value, setValue, scheduleOpen, scheduleClose, cancelSchedule, closeNow, registerTrigger } =
     useContext(NavigationMenuContext)
   const { itemValue, triggerRef, contentId, focusFirstRef } =
     useContext(NavigationMenuItemContext)
   const open = value === itemValue
 
-  // Pointerdown light-dismisses the auto popover; the queued toggle may sync
-  // state to closed before the click arrives. Snapshot "was open" so the
-  // click always means close then (task-14 gotcha).
+  // Register trigger element for direction detection.
+  const callbackRef = useCallback(
+    (el) => {
+      triggerRef.current = el
+      registerTrigger(itemValue, el)
+    },
+    [triggerRef, registerTrigger, itemValue]
+  )
+
   const wasOpenRef = useRef(false)
 
   const handlePointerDown = (event) => {
@@ -196,7 +271,6 @@ export function NavigationMenuTrigger({
 
   const handlePointerEnter = (event) => {
     onPointerEnter?.(event)
-    // Hover is a mouse affordance — never open for touch.
     if (event.defaultPrevented || event.pointerType === "touch") return
     scheduleOpen(itemValue)
   }
@@ -210,7 +284,7 @@ export function NavigationMenuTrigger({
 
   return (
     <Comp
-      ref={triggerRef}
+      ref={callbackRef}
       type={Comp === "button" ? "button" : undefined}
       aria-expanded={open ? "true" : "false"}
       aria-controls={contentId}
@@ -249,20 +323,127 @@ export function NavigationMenuContent({
   children,
   ...props
 }) {
-  const { value, setValue, scheduleClose, cancelSchedule, closeNow } =
-    useContext(NavigationMenuContext)
+  const {
+    value, setValue, scheduleClose, cancelSchedule, closeNow,
+    useViewport, viewportEl, motionDirection,
+  } = useContext(NavigationMenuContext)
   const { itemValue, triggerRef, contentRef, contentId, focusFirstRef } =
     useContext(NavigationMenuItemContext)
   const open = value === itemValue
 
+  // ------ Viewport-less (popover) mode — original task-15 behaviour ------
+  if (!useViewport) {
+    return (
+      <NavigationMenuContentPopover
+        side={side}
+        align={align}
+        sideOffset={sideOffset}
+        onKeyDown={onKeyDown}
+        className={className}
+        open={open}
+        itemValue={itemValue}
+        triggerRef={triggerRef}
+        contentRef={contentRef}
+        contentId={contentId}
+        focusFirstRef={focusFirstRef}
+        setValue={setValue}
+        scheduleClose={scheduleClose}
+        cancelSchedule={cancelSchedule}
+        closeNow={closeNow}
+        {...props}
+      >
+        {children}
+      </NavigationMenuContentPopover>
+    )
+  }
+
+  // ------ Viewport mode — content portals into the shared viewport ------
+
+  // Compute data-motion for directional slide.
+  const motionAttr = (() => {
+    if (motionDirection === null) return undefined
+    if (open) return motionDirection === 1 ? "from-end" : "from-start"
+    // Exiting panel (was open last render, now closing).
+    return motionDirection === 1 ? "to-start" : "to-end"
+  })()
+
+  // Focus first link when ArrowDown opened the panel.
+  useEffect(() => {
+    if (!open || !focusFirstRef.current) return
+    focusFirstRef.current = false
+    // Content is portaled — wait a frame for DOM insertion.
+    requestAnimationFrame(() => {
+      contentRef.current?.querySelector(".navigation-menu-link")?.focus()
+    })
+  }, [open, contentRef, focusFirstRef])
+
+  const handleKeyDown = (event) => {
+    onKeyDown?.(event)
+    if (event.defaultPrevented) return
+    if (event.key === "Escape") {
+      closeNow()
+      triggerRef.current?.focus()
+    } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault()
+      const links = [...event.currentTarget.querySelectorAll(".navigation-menu-link")]
+      if (links.length === 0) return
+      const index = links.indexOf(document.activeElement)
+      const delta = event.key === "ArrowDown" ? 1 : -1
+      links[(index + delta + links.length) % links.length]?.focus()
+    }
+  }
+
+  const panel = (
+    <div
+      ref={contentRef}
+      id={contentId}
+      data-state={open ? "open" : "closed"}
+      data-motion={motionAttr}
+      className={cn("navigation-menu-content", className)}
+      onKeyDown={handleKeyDown}
+      onPointerEnter={cancelSchedule}
+      onPointerLeave={scheduleClose}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+
+  // Portal into the viewport element. If the viewport hasn't mounted yet
+  // (viewportEl is null), hold off — the Portal component's deferred
+  // mount ensures the viewport ref is set by the time createPortal fires.
+  if (!viewportEl) return null
+  return createPortal(panel, viewportEl)
+}
+
+/**
+ * The original per-item popover content panel (viewport={false}).
+ * Extracted to keep the branching in NavigationMenuContent clean.
+ */
+function NavigationMenuContentPopover({
+  side,
+  align,
+  sideOffset,
+  onKeyDown,
+  className,
+  open,
+  itemValue,
+  triggerRef,
+  contentRef,
+  contentId,
+  focusFirstRef,
+  setValue,
+  scheduleClose,
+  cancelSchedule,
+  closeNow,
+  children,
+  ...props
+}) {
   useAnchorPosition(open, triggerRef, contentRef, { side, align, sideOffset })
 
   const setValueRef = useRef(setValue)
   setValueRef.current = setValue
 
-  // Sync native dismissal (outside click, Esc) back into state. A close only
-  // clears the root value if this item still owns it — a hover switch has
-  // already handed it to the next item (menubar precedent).
   useLayoutEffect(() => {
     const el = contentRef.current
     if (!el) return
@@ -275,8 +456,6 @@ export function NavigationMenuContent({
     return () => el.removeEventListener("toggle", handler)
   }, [contentRef, itemValue])
 
-  // State -> native popover, gated on live :popover-open (a shadow flag
-  // drifts after native light dismiss — task-13 gotcha).
   useEffect(() => {
     const el = contentRef.current
     if (!el) return
@@ -294,8 +473,6 @@ export function NavigationMenuContent({
     onKeyDown?.(event)
     if (event.defaultPrevented) return
     if (event.key === "Escape") {
-      // Native light dismiss also fires; close through state and put focus
-      // back on the trigger ourselves.
       closeNow()
       triggerRef.current?.focus()
     } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
@@ -335,7 +512,6 @@ export function NavigationMenuLink({ as: Comp = "a", active, onClick, className,
       className={cn("navigation-menu-link", className)}
       onClick={(event) => {
         onClick?.(event)
-        // Navigating away closes the menu (Radix parity).
         if (!event.defaultPrevented) closeNow()
       }}
       {...props}
@@ -348,12 +524,156 @@ export function navigationMenuTriggerStyle() {
   return "navigation-menu-trigger"
 }
 
-/** Compat no-op — panels are per-item, there is no shared morphing viewport. */
-export function NavigationMenuViewport() {
-  return null
+/**
+ * Shared morphing viewport — one element that all content panels portal into.
+ * Place after NavigationMenuList inside NavigationMenu.
+ *
+ * Measures the active content's dimensions and drives CSS custom properties
+ * `--viewport-width` / `--viewport-height` on the viewport element; the CSS
+ * transitions those for the morph. First open fades/scales in; subsequent
+ * switches morph size with directional content slides.
+ */
+export function NavigationMenuViewport({ className, ...props }) {
+  const { value, setViewportEl } = useContext(NavigationMenuContext)
+  const innerRef = useRef(null)
+  const open = value !== ""
+
+  // Register the viewport element in context so Content can portal into it.
+  const callbackRef = useCallback(
+    (el) => {
+      innerRef.current = el
+      setViewportEl(el)
+    },
+    [setViewportEl]
+  )
+
+  // --- Size measurement: drive --viewport-width/--viewport-height ---
+  const prevSizeRef = useRef(null) // tracks whether we've ever measured
+  useLayoutEffect(() => {
+    const vp = innerRef.current
+    if (!vp) return
+
+    const measure = () => {
+      // The active content panel has data-state="open".
+      const active = vp.querySelector('.navigation-menu-content[data-state="open"]')
+      if (!active) return
+      const w = active.offsetWidth
+      const h = active.offsetHeight
+      if (w === 0 && h === 0) return
+
+      // First measurement: set dimensions without transition so the
+      // viewport appears at the correct size (no morph from 0).
+      if (prevSizeRef.current === null) {
+        vp.style.transition = "none"
+        vp.style.setProperty("--viewport-width", w + "px")
+        vp.style.setProperty("--viewport-height", h + "px")
+        // Force a style flush, then re-enable transitions.
+        vp.offsetHeight // eslint-disable-line no-unused-expressions
+        vp.style.transition = ""
+      } else {
+        vp.style.setProperty("--viewport-width", w + "px")
+        vp.style.setProperty("--viewport-height", h + "px")
+      }
+      prevSizeRef.current = { w, h }
+    }
+
+    measure()
+
+    const ro = new ResizeObserver(measure)
+    // Observe all content panels (active and inactive) — when the active
+    // panel changes, its new size triggers the observer.
+    vp.querySelectorAll(".navigation-menu-content").forEach((el) => ro.observe(el))
+
+    // Also observe newly-added panels via MutationObserver (portaled in
+    // after this effect runs).
+    const mo = new MutationObserver(() => {
+      ro.disconnect()
+      vp.querySelectorAll(".navigation-menu-content").forEach((el) => ro.observe(el))
+      measure()
+    })
+    mo.observe(vp, { childList: true })
+
+    return () => {
+      ro.disconnect()
+      mo.disconnect()
+    }
+  }, [value])
+
+  // Reset prevSize when the viewport closes so the next open starts fresh.
+  useEffect(() => {
+    if (!open) prevSizeRef.current = null
+  }, [open])
+
+  return (
+    <div className="navigation-menu-viewport-wrapper" data-state={open ? "open" : "closed"}>
+      <div
+        ref={callbackRef}
+        data-state={open ? "open" : "closed"}
+        className={cn("navigation-menu-viewport", className)}
+        {...props}
+      />
+    </div>
+  )
 }
 
-/** Compat no-op — the sliding active-trigger arrow needs the shared viewport. */
-export function NavigationMenuIndicator() {
-  return null
+/**
+ * Sliding indicator that follows the active trigger. Renders as a
+ * decorative `<li>` inside NavigationMenuList.
+ *
+ * The default child is a small downward-pointing arrow. Pass children
+ * to customise.
+ */
+export function NavigationMenuIndicator({ className, children, ...props }) {
+  const { value, dir } = useContext(NavigationMenuContext)
+  const ref = useRef(null)
+  const open = value !== ""
+
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el || !open) return
+    const list = el.closest(".navigation-menu-list")
+    if (!list) return
+    const trigger = list.querySelector('.navigation-menu-trigger[data-state="open"]')
+    if (!trigger) return
+
+    const isRtl = dir === "rtl"
+    const inlineOffset = isRtl
+      ? list.clientWidth - trigger.offsetLeft - trigger.offsetWidth
+      : trigger.offsetLeft
+    el.style.setProperty("--indicator-offset", inlineOffset + "px")
+    el.style.setProperty("--indicator-width", trigger.offsetWidth + "px")
+  }, [value, open, dir])
+
+  // Reposition on window resize (trigger may have moved).
+  useEffect(() => {
+    if (!open) return
+    const reposition = () => {
+      const el = ref.current
+      if (!el) return
+      const list = el.closest(".navigation-menu-list")
+      if (!list) return
+      const trigger = list.querySelector('.navigation-menu-trigger[data-state="open"]')
+      if (!trigger) return
+      const isRtl = dir === "rtl"
+      const inlineOffset = isRtl
+        ? list.clientWidth - trigger.offsetLeft - trigger.offsetWidth
+        : trigger.offsetLeft
+      el.style.setProperty("--indicator-offset", inlineOffset + "px")
+      el.style.setProperty("--indicator-width", trigger.offsetWidth + "px")
+    }
+    window.addEventListener("resize", reposition)
+    return () => window.removeEventListener("resize", reposition)
+  }, [open, dir])
+
+  return (
+    <li
+      ref={ref}
+      aria-hidden="true"
+      data-state={open ? "open" : "closed"}
+      className={cn("navigation-menu-indicator", className)}
+      {...props}
+    >
+      {children ?? <div className="navigation-menu-indicator-arrow" />}
+    </li>
+  )
 }

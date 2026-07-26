@@ -1,6 +1,8 @@
-/* Navigation Menu — per-item anchored panels on the native Popover API
-   (viewport-less mode). Enter/exit via transitions + @starting-style +
-   allow-discrete, popover recipe. */
+/* Navigation Menu
+   Two modes: viewport (default) and per-item popover (viewport={false}).
+   Per-item mode uses transitions + @starting-style + allow-discrete.
+   Viewport mode uses CSS custom properties for the morph and keyframe
+   animations for directional content slides. */
 
 .navigation-menu {
   position: relative;
@@ -10,6 +12,7 @@
 }
 
 .navigation-menu-list {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -73,7 +76,11 @@
   transform: rotate(180deg);
 }
 
-.navigation-menu-content {
+/* ================================================================== */
+/*  Per-item popover mode (viewport={false})                          */
+/* ================================================================== */
+
+.navigation-menu:not([data-viewport]) .navigation-menu-content {
   /* Reset UA popover defaults */
   position: fixed;
   margin: 0;
@@ -87,8 +94,6 @@
   max-inline-size: calc(100vw - 2rem);
   overflow: auto;
 
-  /* overlay keeps the element in the top layer during the exit fade;
-     without it hidePopover yanks it out immediately. */
   opacity: 1;
   transform: scale(1);
   transition:
@@ -99,24 +104,192 @@
 }
 
 @starting-style {
-  .navigation-menu-content:popover-open {
+  .navigation-menu:not([data-viewport]) .navigation-menu-content:popover-open {
     opacity: 0;
     transform: scale(0.96);
   }
 }
 
-.navigation-menu-content:not(:popover-open) {
+.navigation-menu:not([data-viewport]) .navigation-menu-content:not(:popover-open) {
   opacity: 0;
   transform: scale(0.96);
 }
 
-.navigation-menu-content[data-side="bottom"] {
+.navigation-menu:not([data-viewport]) .navigation-menu-content[data-side="bottom"] {
   transform-origin: top center;
 }
 
-.navigation-menu-content[data-side="top"] {
+.navigation-menu:not([data-viewport]) .navigation-menu-content[data-side="top"] {
   transform-origin: bottom center;
 }
+
+/* ================================================================== */
+/*  Viewport mode (default)                                           */
+/* ================================================================== */
+
+/* Wrapper: positioned below the nav list, full width, centered. */
+.navigation-menu-viewport-wrapper {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 100%;
+  display: flex;
+  justify-content: center;
+  inline-size: 100%;
+  pointer-events: none;
+  perspective: 62.5rem;
+}
+
+.navigation-menu-viewport-wrapper[data-state="open"] {
+  pointer-events: auto;
+}
+
+/* The viewport itself — dimensions driven by JS custom properties. */
+.navigation-menu-viewport {
+  position: relative;
+  overflow: hidden;
+  margin-block-start: 0.375rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: var(--shadow-md);
+
+  inline-size: var(--viewport-width);
+  block-size: var(--viewport-height);
+
+  transform-origin: top center;
+  opacity: 1;
+  transform: scale(1);
+
+  transition:
+    inline-size var(--motion-medium) var(--motion-ease),
+    block-size var(--motion-medium) var(--motion-ease),
+    opacity var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease);
+}
+
+.navigation-menu-viewport[data-state="closed"] {
+  opacity: 0;
+  transform: scale(0.96);
+  pointer-events: none;
+  display: none;
+  transition:
+    inline-size var(--motion-medium) var(--motion-ease),
+    block-size var(--motion-medium) var(--motion-ease),
+    opacity var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease),
+    display var(--motion-fast) var(--motion-ease) allow-discrete;
+}
+
+@starting-style {
+  .navigation-menu-viewport[data-state="open"] {
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Content panels inside the viewport                                */
+/* ------------------------------------------------------------------ */
+
+.navigation-menu[data-viewport] .navigation-menu-content {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  padding: 0.5rem;
+  inline-size: max-content;
+  max-inline-size: calc(100vw - 2rem);
+}
+
+.navigation-menu[data-viewport] .navigation-menu-content[data-state="closed"] {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.navigation-menu[data-viewport] .navigation-menu-content[data-state="open"] {
+  pointer-events: auto;
+  visibility: visible;
+}
+
+/* First open — no data-motion, scale in. */
+.navigation-menu[data-viewport] .navigation-menu-content[data-state="open"]:not([data-motion]) {
+  animation: nm-content-enter var(--motion-fast) var(--motion-ease);
+}
+
+/* Directional enter */
+.navigation-menu[data-viewport] .navigation-menu-content[data-motion="from-end"] {
+  animation: nm-slide-in-from-end var(--motion-fast) var(--motion-ease);
+}
+
+.navigation-menu[data-viewport] .navigation-menu-content[data-motion="from-start"] {
+  animation: nm-slide-in-from-start var(--motion-fast) var(--motion-ease);
+}
+
+/* Directional exit — forwards so the panel stays at the final keyframe
+   until visibility:hidden kicks in. */
+.navigation-menu[data-viewport] .navigation-menu-content[data-motion="to-end"] {
+  animation: nm-slide-to-end var(--motion-fast) var(--motion-ease) forwards;
+}
+
+.navigation-menu[data-viewport] .navigation-menu-content[data-motion="to-start"] {
+  animation: nm-slide-to-start var(--motion-fast) var(--motion-ease) forwards;
+}
+
+@keyframes nm-content-enter {
+  from { opacity: 0; transform: scale(0.96); }
+}
+
+@keyframes nm-slide-in-from-end {
+  from { opacity: 0; transform: translateX(50%); }
+}
+
+@keyframes nm-slide-in-from-start {
+  from { opacity: 0; transform: translateX(-50%); }
+}
+
+@keyframes nm-slide-to-end {
+  to { opacity: 0; transform: translateX(50%); }
+}
+
+@keyframes nm-slide-to-start {
+  to { opacity: 0; transform: translateX(-50%); }
+}
+
+/* ================================================================== */
+/*  Indicator                                                         */
+/* ================================================================== */
+
+.navigation-menu-indicator {
+  position: absolute;
+  inset-block-end: -0.375rem;
+  inset-inline-start: var(--indicator-offset, 0);
+  inline-size: var(--indicator-width, 0);
+  display: flex;
+  justify-content: center;
+  z-index: 1;
+
+  transition:
+    inset-inline-start var(--motion-fast) var(--motion-ease),
+    inline-size var(--motion-fast) var(--motion-ease),
+    opacity var(--motion-fast) var(--motion-ease);
+  opacity: 1;
+}
+
+.navigation-menu-indicator[data-state="closed"] {
+  opacity: 0;
+}
+
+.navigation-menu-indicator-arrow {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  background-color: var(--border);
+  transform: rotate(45deg);
+  border-start-start-radius: 2px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ================================================================== */
+/*  Links                                                             */
+/* ================================================================== */
 
 .navigation-menu-link {
   display: block;
@@ -158,4 +331,23 @@
 .navigation-menu-link:hover > p,
 .navigation-menu-link:focus-visible > p {
   color: inherit;
+}
+
+/* ================================================================== */
+/*  Reduced motion                                                    */
+/* ================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .navigation-menu-viewport {
+    transition: none;
+  }
+
+  .navigation-menu[data-viewport] .navigation-menu-content,
+  .navigation-menu[data-viewport] .navigation-menu-content[data-motion] {
+    animation: none;
+  }
+
+  .navigation-menu-indicator {
+    transition: none;
+  }
 }
