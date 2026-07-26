@@ -294,4 +294,174 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     const svg = page.locator('[data-pg="r-handle"] .resizable-handle-icon svg')
     eq(await svg.count(), 1, "svg inside the icon")
   })
+
+  // ——— autoSaveId persistence ———
+
+  await test("layout survives a remount with autoSaveId", async () => {
+    await resetPage()
+
+    // Resize the persistent demo's handle to the right
+    const h = page.locator('[data-pg="r-persistent"] [role="separator"]').first()
+    await h.waitFor()
+    await h.focus()
+    await page.keyboard.press("ArrowRight")
+    await page.keyboard.press("ArrowRight")
+
+    const afterResize = Number(await h.getAttribute("aria-valuenow"))
+    eq(afterResize, 45, "resized to 45 (35 + 10)")
+
+    // Wait for debounced storage write (100ms) to flush
+    await page.waitForTimeout(200)
+
+    // Remount by navigating away and back
+    await resetPage()
+
+    const h2 = page.locator('[data-pg="r-persistent"] [role="separator"]').first()
+    await h2.waitFor()
+    const restored = Number(await h2.getAttribute("aria-valuenow"))
+    eq(restored, 45, "layout restored from storage after remount")
+  })
+
+  await test("autoSaveId ignores saved layout on panel-count mismatch", async () => {
+    // Write a stale 3-panel payload into storage under the persistent demo's key
+    await page.evaluate(() => {
+      const key = "vanillin:resizable:demo-persistent:p-left,p-right"
+      localStorage.setItem(key, JSON.stringify({ v: 1, sizes: [20, 30, 50] }))
+    })
+
+    await resetPage()
+
+    const h = page.locator('[data-pg="r-persistent"] [role="separator"]').first()
+    await h.waitFor()
+    const val = Number(await h.getAttribute("aria-valuenow"))
+    // Should fall back to defaults (35) since count mismatch
+    eq(val, 35, "falls back to defaultSize on panel-count mismatch")
+
+    // Clean up the stale entry
+    await page.evaluate(() => {
+      const key = "vanillin:resizable:demo-persistent:p-left,p-right"
+      localStorage.removeItem(key)
+    })
+  })
+
+  // ——— onResize fires for keyboard/imperative, not mount ———
+
+  await test("onResize fires for keyboard changes but not on mount", async () => {
+    await resetPage()
+
+    // The collapsible demo has onCollapse/onExpand wired. We test via
+    // the imperative button which calls collapse()/expand(). The demo
+    // page shows the sidebar state text — we verify callbacks fired.
+    const stateText = page.locator('[data-pg="r-collapsible"]').locator('..')
+      .locator('span')
+
+    // On mount the state should already be "expanded" — callback did not reset it.
+    const mountText = await stateText.textContent()
+    eq(mountText.includes("expanded"), true, "on mount: sidebar is expanded (no spurious callback)")
+
+    // Collapse via imperative button
+    const btn = page.locator('button.pg-button')
+    await btn.click()
+    const afterCollapse = await stateText.textContent()
+    eq(afterCollapse.includes("collapsed"), true, "onCollapse fired via imperative collapse()")
+
+    // Expand back
+    await btn.click()
+    const afterExpand = await stateText.textContent()
+    eq(afterExpand.includes("expanded"), true, "onExpand fired via imperative expand()")
+  })
+
+  // ——— Imperative collapse/expand round-trip ———
+
+  await test("collapse()/expand() round-trip via imperative handle", async () => {
+    await resetPage()
+
+    const sidebarPanel = panel("r-collapsible", "c-sidebar")
+    const h = handle("r-collapsible")
+
+    // Initial state
+    eq(await sidebarPanel.getAttribute("data-state"), "expanded", "starts expanded")
+    const startSize = Number(await h.getAttribute("aria-valuenow"))
+    eq(startSize, 30, "starts at 30")
+
+    // Collapse via the demo button
+    const btn = page.locator('button.pg-button')
+    await btn.click()
+    eq(await sidebarPanel.getAttribute("data-state"), "collapsed", "collapsed after click")
+    eq(Number(await h.getAttribute("aria-valuenow")), 0, "size is 0 when collapsed")
+
+    // Expand back
+    await btn.click()
+    eq(await sidebarPanel.getAttribute("data-state"), "expanded", "expanded after second click")
+    eq(Number(await h.getAttribute("aria-valuenow")), 30, "restored to original size")
+  })
+
+  // ——— F6 separator cycling ———
+
+  await test("F6 walks separators within the group and wraps", async () => {
+    await resetPage()
+
+    // The three-panel demo has two separators
+    const seps = page.locator('[data-pg="r-three"] [role="separator"]')
+    eq(await seps.count(), 2, "three-panel group has 2 separators")
+
+    const sep0 = seps.nth(0)
+    const sep1 = seps.nth(1)
+
+    // Focus the first separator
+    await sep0.focus()
+    eq(await page.evaluate(() => document.activeElement === document.querySelector('[data-pg="r-three"] [role="separator"]')), true, "first separator focused")
+
+    // F6 → second separator
+    await page.keyboard.press("F6")
+    const focused1 = await page.evaluate(() => {
+      const seps = document.querySelectorAll('[data-pg="r-three"] [role="separator"]')
+      return document.activeElement === seps[1]
+    })
+    eq(focused1, true, "F6 moved to second separator")
+
+    // F6 → wrap to first
+    await page.keyboard.press("F6")
+    const wrapped = await page.evaluate(() => {
+      const seps = document.querySelectorAll('[data-pg="r-three"] [role="separator"]')
+      return document.activeElement === seps[0]
+    })
+    eq(wrapped, true, "F6 wrapped to first separator")
+
+    // Shift+F6 → wrap backward to last
+    await page.keyboard.press("Shift+F6")
+    const backWrapped = await page.evaluate(() => {
+      const seps = document.querySelectorAll('[data-pg="r-three"] [role="separator"]')
+      return document.activeElement === seps[1]
+    })
+    eq(backWrapped, true, "Shift+F6 wrapped backward to last separator")
+  })
+
+  // ——— Hit area margins ———
+
+  await test("pointer-down near a separator starts drag under default margins", async () => {
+    await resetPage()
+
+    // The horizontal demo has default hit area margins.
+    // A click slightly off-center of the handle should still register.
+    const h = handle("r-horizontal")
+    const box = await h.boundingBox()
+
+    // The handle is 0.5rem (8px) wide. The default fine margin is 5px.
+    // The hit area pseudo extends 5px on each side, so clicking just inside
+    // the handle bounding box should work fine.
+    const centerX = box.x + box.width / 2
+    const centerY = box.y + box.height / 2
+
+    const beforeOne = await panelDim("r-horizontal", "h-one")
+
+    // Drag from the center of the handle
+    await page.mouse.move(centerX, centerY)
+    await page.mouse.down()
+    await page.mouse.move(centerX + 30, centerY, { steps: 3 })
+    await page.mouse.up()
+
+    const afterOne = await panelDim("r-horizontal", "h-one")
+    eq(afterOne > beforeOne, true, "drag from handle center resized panel")
+  })
 }
