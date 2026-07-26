@@ -219,15 +219,15 @@ function pickForeground(bg, label) {
 }
 
 /**
- * From a single brand oklch colour, derive primary, primary-foreground,
- * and ring tokens for both light and dark modes.
+ * From one brand oklch colour, derive the token and its -foreground for both
+ * modes (plus ring for primary).
  *
- * --primary-hover is NOT emitted here because globals.css already defines it
- * as `oklch(from var(--primary) calc(l - 0.05) c h)`, which auto-derives
- * from whatever --primary resolves to.
+ * -hover tokens are NOT emitted here because globals.css already defines
+ * them as `oklch(from var(--<key>) calc(l - 0.05) c h)`, which auto-derives
+ * from whatever the base token resolves to.
  */
-function deriveBrand(brandStr) {
-  const { l, c, h } = parseOklch(brandStr)
+function deriveBrandColor(key, colorStr) {
+  const { l, c, h } = parseOklch(colorStr)
 
   // Dark mode: boost lightness, slightly reduce chroma for legibility.
   // The boost is a starting point, not a contract — this colour is derived,
@@ -239,14 +239,28 @@ function deriveBrand(brandStr) {
   }
 
   // Foreground: measured contrast against the respective background
-  const lightFg = pickForeground({ l, c, h }, "theme.brand (light)")
-  const darkFg = pickForeground(dark, "theme.brand (dark)")
+  const lightFg = pickForeground({ l, c, h }, `theme.brand.${key} (light)`)
+  const darkFg = pickForeground(dark, `theme.brand.${key} (dark)`)
 
-  return {
-    primary: `light-dark(${fmtOklch(l, c, h)}, ${fmtOklch(dark.l, dark.c, dark.h)})`,
-    "primary-foreground": `light-dark(${lightFg}, ${darkFg})`,
-    ring: `light-dark(${fmtOklch(l, c, h)}, ${fmtOklch(dark.l, dark.c, dark.h)})`,
+  const base = `light-dark(${fmtOklch(l, c, h)}, ${fmtOklch(dark.l, dark.c, dark.h)})`
+  const tokens = {
+    [key]: base,
+    [`${key}-foreground`]: `light-dark(${lightFg}, ${darkFg})`,
   }
+  if (key === "primary") tokens.ring = base
+  return tokens
+}
+
+/**
+ * Derive tokens from theme.brand. A string is sugar for { primary }.
+ */
+function deriveBrand(brand) {
+  if (typeof brand === "string") brand = { primary: brand }
+  const tokens = {}
+  for (const key of ["primary", "secondary", "accent"]) {
+    if (brand[key]) Object.assign(tokens, deriveBrandColor(key, brand[key]))
+  }
+  return tokens
 }
 
 // ---------------------------------------------------------------------------

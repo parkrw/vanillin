@@ -106,6 +106,55 @@ export default async function ({ page, baseUrl, repoRoot, test, eq, near }) {
     })
   }
 
+  // -------------------------------------------------------------------------
+  // Object brand: per-key derivation
+  // -------------------------------------------------------------------------
+
+  await test("object brand: string is sugar for { primary }", async () => {
+    const asString = generate({ theme: { brand: "oklch(0.55 0.2 265)" } }, { root: repoRoot })
+    const asObject = generate({ theme: { brand: { primary: "oklch(0.55 0.2 265)" } } }, { root: repoRoot })
+    eq(asObject, asString, "object form differs from string sugar")
+  })
+
+  await test("object brand: secondary and accent derive their families", async () => {
+    const css = generate(
+      {
+        theme: {
+          brand: {
+            primary: "oklch(0.55 0.2 265)",
+            secondary: "oklch(0.65 0.14 190)",
+            accent: "oklch(0.7 0.15 320)",
+          },
+        },
+      },
+      { root: repoRoot },
+    )
+    for (const key of ["primary", "secondary", "accent"]) {
+      const bg = tokenModes(css, key)
+      const fg = tokenModes(css, `${key}-foreground`)
+      for (const mode of ["light", "dark"]) {
+        const ratio = contrastRatio(fg[mode], bg[mode])
+        eq(ratio >= 4.5, true, `${key} ${mode}: ${fg[mode]} on ${bg[mode]} measures ${ratio.toFixed(2)}:1`)
+      }
+    }
+    eq(tokenModes(css, "secondary").light, "oklch(0.65 0.14 190)", "secondary light should be the brand value")
+    eq(css.includes("--ring: light-dark(oklch(0.55 0.2 265)"), true, "ring derives from primary only")
+  })
+
+  await test("object brand: literal light/dark override still wins", async () => {
+    const css = generate(
+      {
+        theme: {
+          brand: { secondary: "oklch(0.65 0.14 190)" },
+          light: { secondary: "oklch(0.9 0.02 190)" },
+        },
+      },
+      { root: repoRoot },
+    )
+    const { light } = tokenModes(css, "secondary")
+    eq(light, "oklch(0.9 0.02 190)", "literal override lost to derivation")
+  })
+
   await test("contrast: mid-range brand with no passing foreground throws", async () => {
     // oklch(0.58 0 0) fails both candidates (best measures ~4.18:1);
     // the old threshold silently picked white here.
