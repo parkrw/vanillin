@@ -22,17 +22,14 @@
 
 /* ── form-description ─────────────────────────────────────────────── */
 
-.form-description {
-  font-size: 0.875rem;
-  color: var(--muted-foreground);
-}
+/* Sizing and colour come from .field-description (ui/field). */
 
 /* ── form-message ─────────────────────────────────────────────────── */
 
+/* Sizing and colour come from .field-error (ui/field); this adds only the
+   heavier weight and the entrance animation. */
 .form-message {
-  font-size: 0.875rem;
   font-weight: 500;
-  color: var(--destructive);
   animation: form-message-in var(--motion-fast) var(--motion-ease);
 }
 

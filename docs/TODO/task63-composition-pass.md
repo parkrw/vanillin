@@ -66,8 +66,31 @@ Each is verified, not speculative:
   not touched. `CalendarIcon` stayed a per-page local — that is the existing
   playground convention (`command.jsx` has its own copy) and an icon in a demo
   page is incidental, not semantic.
-- [ ] 2. `ui/form` composes `ui/field` + `ui/label`. Public export names and
+- [x] 2. `ui/form` composes `ui/field` + `ui/label`. Public export names and
   rendered DOM must not change — the existing form tests are the contract.
+  `FormLabel` → `Label`, `FormDescription` → `FieldDescription`,
+  `FormMessage` → `FieldError`. No test changed; verified against the live page
+  that tag, `id`, `role`, `for` and `data-error` are byte-identical and each
+  element gained exactly one class (`field-description` / `field-error`).
+  Three notes:
+  - **`FieldError` gained an `as` prop** (default `div`). `FormMessage` is a
+    `<p>`, and `as` is the kit's polymorphism convention, so this was the way to
+    compose without changing form's tag.
+  - **Precedence differs and is resolved in `form.jsx`.** `FormMessage` lets the
+    engine's error win over `children`; `FieldError` prefers `children`. Form
+    resolves the body itself and passes one child, so `FieldError` keeps its own
+    contract.
+  - **One deliberate rendering change:** `.form-description` / `.form-message`
+    never set `margin: 0`, and globals.css has no `p` reset, so both carried UA
+    `margin-block: 1em` *on top of* `.form-item`'s `gap: 0.5rem` — 14px of
+    unintended spacing (flex items don't collapse margins). `field-description`
+    already sets `margin: 0`; `margin: 0` added to `.field-error` to match (a
+    no-op for its default `div`). Verified by screenshot.
+  - **`FormItem` was left alone.** It duplicates `.field`'s flex column, but
+    `Field` renders `role="group"` + `data-orientation`, and adding a group per
+    field changes the a11y tree. That is a real decision, not a refactor
+    side-effect — it needs its own call, and the contract here forbids DOM
+    changes.
 - [ ] 3. Consolidate chips: one implementation, `ui/combobox` consumes it.
   Decide explicitly whether it lives in `ui/badge` or its own slug and write the
   reason down.

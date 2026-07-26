@@ -9,6 +9,8 @@ import {
 } from "react"
 import { useFormStatus } from "react-dom"
 import { cn } from "../../lib/cn.js"
+import { FieldDescription, FieldError } from "../field/field.jsx"
+import { Label } from "../label/label.jsx"
 
 /* ── path helper (inlined — ui/form must never import lib/use-form) ── */
 
@@ -113,9 +115,9 @@ export function FormItem({ className, ...props }) {
 export function FormLabel({ className, ...props }) {
   const { formItemId, error } = useFormField()
   return (
-    <label
+    <Label
       htmlFor={formItemId}
-      className={cn("label", "form-label", error && "form-label--error", className)}
+      className={cn("form-label", error && "form-label--error", className)}
       data-error={error ? "" : undefined}
       {...props}
     />
@@ -151,7 +153,7 @@ export function FormControl({ as: Component, children, ...props }) {
 export function FormDescription({ className, ...props }) {
   const { formDescriptionId } = useFormField()
   return (
-    <p
+    <FieldDescription
       id={formDescriptionId}
       className={cn("form-description", className)}
       {...props}
@@ -163,19 +165,20 @@ export function FormDescription({ className, ...props }) {
 
 export function FormMessage({ className, children, ...props }) {
   const { error, formMessageId } = useFormField()
+  // The engine's error wins over children — the opposite of FieldError's own
+  // precedence, so resolve here and hand it a single body. FieldError renders
+  // nothing when the body is empty.
   const body = error?.message || children
 
-  if (!body) return null
-
   return (
-    <p
+    <FieldError
+      as="p"
       id={formMessageId}
-      role="alert"
       className={cn("form-message", className)}
       {...props}
     >
       {body}
-    </p>
+    </FieldError>
   )
 }
 

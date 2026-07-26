@@ -27,6 +27,7 @@ import {
 } from "../../ui/select/select.jsx"
 
 import "../../ui/form/form.css"
+import "../../ui/field/field.css"
 import "../../ui/input/input.css"
 import "../../ui/label/label.css"
 import "../../ui/checkbox/checkbox.css"
@@ -447,6 +448,19 @@ function Docs() {
           <code>aria-describedby</code> / <code>aria-invalid</code> to each
           field's error state. <strong>It never imports the form engine</strong>{" "}
           (<code>lib/use-form.js</code>), making it engine-agnostic.
+        </p>
+
+        <h4>Composition</h4>
+        <p>
+          A form field <em>is</em> a field, so <code>FormLabel</code> renders{" "}
+          <code>Label</code> (<code>ui/label</code>) and{" "}
+          <code>FormDescription</code> / <code>FormMessage</code> render{" "}
+          <code>FieldDescription</code> / <code>FieldError</code>{" "}
+          (<code>ui/field</code>). Sizing and colour live there; only the error
+          weight and its entrance animation are <code>form.css</code>. Copying{" "}
+          <code>ui/form/</code> therefore means copying{" "}
+          <code>ui/field/</code> and <code>ui/label/</code> too, and importing
+          both stylesheets.
         </p>
 
         <h4>Engine-agnostic contract</h4>

@@ -128,6 +128,17 @@ export default function FieldPage() {
       </section>
 
       <section className="pg-section">
+        <h3>FieldError as a paragraph</h3>
+        <p>
+          <code>FieldError</code> renders a <code>&lt;div role="alert"&gt;</code>{" "}
+          by default. Pass <code>as="p"</code> where the surrounding markup is
+          prose — <code>ui/form</code>'s <code>FormMessage</code> does exactly
+          that. <code>children</code> take precedence over{" "}
+          <code>errors</code>, and nothing renders when there is neither.
+        </p>
+      </section>
+
+      <section className="pg-section">
         <h3>Density</h3>
         <p>
           All gaps, margins, and padding scale with{" "}

@@ -63,8 +63,15 @@ export function FieldDescription({ className, ...props }) {
 /**
  * errors: array of { message } (falsy entries skipped); children take
  * precedence. Renders nothing when there is nothing to show.
+ * as: element to render — `p` for prose-shaped errors (ui/form uses this).
  */
-export function FieldError({ errors, children, className, ...props }) {
+export function FieldError({
+  as: Component = "div",
+  errors,
+  children,
+  className,
+  ...props
+}) {
   let content = children
   if (!content && errors) {
     const messages = errors.filter(Boolean).map((e) => e.message)
@@ -80,9 +87,9 @@ export function FieldError({ errors, children, className, ...props }) {
   }
   if (!content) return null
   return (
-    <div role="alert" className={cn("field-error", className)} {...props}>
+    <Component role="alert" className={cn("field-error", className)} {...props}>
       {content}
-    </div>
+    </Component>
   )
 }
 
