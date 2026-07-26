@@ -213,6 +213,16 @@ rule — use `git diff a...b` instead.
 
 ## Conventions (must match)
 
+- **Composition: compose when the relationship is semantic, duplicate when it's
+  incidental.** A form field genuinely *is* a field, so `ui/form` must use
+  `ui/field` and `ui/label`. A carousel arrow merely *looks like* a button, so it
+  should not import `ui/button`. The test: would a consumer copying this one file
+  be surprised by what came with it? Copy-paste independence is a real property
+  we are protecting — "components must use each other everywhere" would destroy
+  it, and shadcn duplicates some things deliberately for the same reason.
+  **Brief agents to reuse named components**, and give any shared file exactly
+  one owner with the others reporting requests. Task 63 tracks the outstanding
+  debt.
 - `ui/<slug>/<slug>.jsx` + `.css`; block class = component name, variants
   `block--modifier`, subparts `.block-part`. Tokens only (`var(--…)` from
   globals.css), `color-mix(in oklab, …)` for opacity, no hex. No `--shadow-xs`

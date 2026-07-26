@@ -73,9 +73,10 @@ Each is verified, not speculative:
   reason down.
 - [ ] 4. `ui/data-table` → `ui/scroll-area`, with column pinning intact.
 - [ ] 5. Wire `lib/use-highlight.js` into `ui/data-table` search matches.
-- [ ] 6. Write the rule into `docs/HANDOFF.md` conventions so the next fan-out
+- [x] 6. Write the rule into `docs/HANDOFF.md` conventions so the next fan-out
   briefs agents to *reuse named components*, and assigns any shared file to
-  exactly one owner with the others reporting requests.
+  exactly one owner with the others reporting requests. Landed as the first
+  bullet of "Conventions (must match)".
 
 ## Verify / done
 
