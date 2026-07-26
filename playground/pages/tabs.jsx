@@ -87,6 +87,14 @@ export default function TabsPage() {
           </TabsContent>
         </Tabs>
       </section>
+
+      <section className="pg-section">
+        <h3>Density</h3>
+        <p>
+          Trigger padding and the root gap between the tab bar and content are
+          density-scalable via <code>--density-scale</code>.
+        </p>
+      </section>
     </>
   )
 }

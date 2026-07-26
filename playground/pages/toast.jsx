@@ -127,6 +127,14 @@ export default function ToastPage() {
           </Button>
         </div>
       </section>
+
+      <section className="pg-section">
+        <h3>Density</h3>
+        <p>
+          Toast padding, button padding, and close-button inset are
+          density-scalable via <code>--density-scale</code>.
+        </p>
+      </section>
     </>
   )
 }

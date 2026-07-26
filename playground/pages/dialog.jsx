@@ -68,6 +68,15 @@ export default function DialogPage() {
           state: <span data-pg="controlled-state">{open ? "open" : "closed"}</span>
         </p>
       </section>
+
+      <section className="pg-section">
+        <h3>Density</h3>
+        <p>
+          Dialog padding, internal gaps, and close-button inset are
+          density-scalable via <code>--density-scale</code>. Sheet inherits the
+          same spacing through its dialog import.
+        </p>
+      </section>
     </>
   )
 }

@@ -55,6 +55,17 @@ export default function TablePage() {
           </TableFooter>
         </Table>
       </section>
+
+      <section className="pg-section">
+        <h3>Density</h3>
+        <p>
+          Cell and header padding resolve through the <code>--space-*</code>{" "}
+          density ramp. Set <code>--density-scale</code> on <code>:root</code>{" "}
+          to tighten (<code>0.875</code>) or loosen (<code>1.25</code>) row
+          height uniformly — this is the primary lever for fitting more rows on
+          screen in data-dense views.
+        </p>
+      </section>
     </>
   )
 }

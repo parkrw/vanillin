@@ -56,6 +56,16 @@ export default function CardPage() {
           </Card>
         </div>
       </section>
+
+      <section className="pg-section">
+        <h3>Density</h3>
+        <p>
+          Card padding and section gaps resolve through the{" "}
+          <code>--space-*</code> density ramp. Adjusting{" "}
+          <code>--density-scale</code> on <code>:root</code> tightens or
+          loosens all card spacing uniformly.
+        </p>
+      </section>
     </>
   )
 }
