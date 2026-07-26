@@ -232,7 +232,7 @@ rule — use `git diff a...b` instead.
   should not import `ui/button`. The test: would a consumer copying this one file
   be surprised by what came with it? Copy-paste independence is a real property
   we are protecting — "components must use each other everywhere" would destroy
-  it, and shadcn duplicates some things deliberately for the same reason.
+  it, and upstream duplicates some things deliberately for the same reason.
   **Brief agents to reuse named components**, and give any shared file exactly
   one owner with the others reporting requests. Task 63 tracks the outstanding
   debt.
@@ -244,7 +244,7 @@ rule — use `git diff a...b` instead.
   `var(--motion-medium)` + `var(--motion-ease)`, reduced-motion guard on
   keyframes. **Indeterminate loops are the exception: fixed literal, never a
   motion token** (they must not track `--motion-scale`).
-- `cn()` from `lib/cn.js`; `as` prop instead of asChild; shadcn's exact export
+- `cn()` from `lib/cn.js`; `as` prop instead of asChild; upstream's exact export
   names.
 - Stateful: `useControllableState` + `data-state` (`ui/toggle/`, `ui/tabs/`).
   Disclosure: `usePresence` + measured-height keyframes + `fill-mode: forwards`

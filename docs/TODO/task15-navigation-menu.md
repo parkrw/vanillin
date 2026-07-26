@@ -6,12 +6,12 @@ anchored links panel, on the task-10 popover recipe.
 
 ## Design decisions
 
-- **Live anatomy verified 2026-07-23 (shadcn registry, Radix + Base UI
+- **Live anatomy verified 2026-07-23 (upstream registry, Radix + Base UI
   variants agree on parts):** NavigationMenu, NavigationMenuList,
   NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent,
   NavigationMenuLink, NavigationMenuIndicator, NavigationMenuViewport,
   `navigationMenuTriggerStyle()`. Trigger ships a rotating chevron.
-- **Viewport-less model (documented deviation):** shadcn's root takes
+- **Viewport-less model (documented deviation):** upstream's root takes
   `viewport={false}` to render each Content as its own panel under its item —
   we implement exactly that mode. The shared morphing viewport + sliding
   Indicator arrow are non-goals; NavigationMenuViewport/NavigationMenuIndicator
@@ -61,4 +61,4 @@ anchored links panel, on the task-10 popover recipe.
 
 - `node tests/run.mjs` green; `npm run build` clean.
 - Manual :5173 `#navigation-menu` light/dark: chevron rotates, panel
-  enter/exit fades play, hover feel (delay/grace/skip window) matches shadcn.
+  enter/exit fades play, hover feel (delay/grace/skip window) matches upstream.

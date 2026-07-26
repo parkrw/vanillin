@@ -15,7 +15,7 @@ new roles (combobox/listbox/option).
   `items` (value→label pairs) for value display; trigger has `size`.
 - **Popper placement only (documented deviation):** Base UI's
   `alignItemWithTrigger` (selected item overlays the trigger, macOS-style) is
-  a non-goal — content anchors below the trigger (shadcn Radix's
+  a non-goal — content anchors below the trigger (upstream Radix's
   `position="popper"` default look). Prop accepted and swallowed.
 - **Roles, not menu re-exports:** trigger is `role="combobox"`
   (aria-expanded/controls/haspopup=listbox), content `role="listbox"`,

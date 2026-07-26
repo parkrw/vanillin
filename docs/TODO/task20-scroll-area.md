@@ -6,7 +6,7 @@
 
 ## Design decisions
 
-- **Live anatomy verified 2026-07-25:** shadcn's scroll-area is **Base UI**
+- **Live anatomy verified 2026-07-25:** upstream's scroll-area is **Base UI**
   (`ScrollArea.Root/Viewport/Scrollbar/Thumb/Corner`) and exports exactly
   two components: `ScrollArea` (root + viewport + a default vertical
   `ScrollBar` + corner) and `ScrollBar` (`orientation`, default

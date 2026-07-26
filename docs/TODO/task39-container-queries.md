@@ -11,7 +11,7 @@ verify `cqi` units specifically).
 
 A console puts a card in a 320px side panel and the same card in a 1200px main
 region. Viewport media queries cannot tell those apart, so the component looks
-wrong in one of them. This is a capability shadcn cannot adopt — Tailwind's
+wrong in one of them. This is a capability upstream cannot adopt — Tailwind's
 responsive prefixes are viewport-bound by default — so it is a genuine
 differentiator, not parity work.
 

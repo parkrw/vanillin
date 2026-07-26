@@ -9,7 +9,7 @@
   composite classes (`dialog alert-dialog`, `dialog sheet sheet--right`);
   their CSS overrides the centered dialog look via the higher-specificity
   `.dialog.sheet` / `.dialog.alert-dialog` compound.
-- **DialogContent grows two internal props** (shadcn export names stay
+- **DialogContent grows two internal props** (upstream export names stay
   exact): `role` passthrough (alertdialog) and `dismissible` (default true;
   false = backdrop click ignored — alert-dialog must be answered).
 - Esc still closes both (matches Radix). AlertDialog hides the X

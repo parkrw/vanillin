@@ -50,7 +50,7 @@
   queued toggle event syncs the old menu's state to closed. Esc/outside
   click/select close via the existing dropdown paths and clear the root
   value through `onOpenChange`.
-- **Content placement:** shadcn defaults — `align="start" alignOffset={-4}
+- **Content placement:** upstream defaults — `align="start" alignOffset={-4}
   sideOffset={8}`, side bottom.
 - **CSS:** `.menubar` = flex row, border, `--radius-md`, `--shadow-sm`
   (never xs), 0.25rem padding, gap 0.25rem; `.menubar-trigger` px 0.5rem /

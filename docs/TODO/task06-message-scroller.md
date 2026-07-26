@@ -1,8 +1,8 @@
 # task06: message-scroller
-**Goal:** Add shadcn chat set part 3 — `ui/message-scroller/` stateful stick-to-bottom transcript scroller with hooks, demo page, and test.
+**Goal:** Add upstream chat set part 3 — `ui/message-scroller/` stateful stick-to-bottom transcript scroller with hooks, demo page, and test.
 **Branch:** `feat/message-scroller`  **Deps:** 04 (done)
 
-Anatomy re-verified against live shadcn docs 2026-07-22:
+Anatomy re-verified against live upstream docs 2026-07-22:
 `MessageScrollerProvider` (headless root; props `autoScroll`,
 `defaultScrollPosition: "start" | "end" | "last-anchor"`,
 `scrollPreviousItemPeek`), `MessageScroller` (styled frame),

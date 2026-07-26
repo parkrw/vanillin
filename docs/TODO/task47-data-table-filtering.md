@@ -8,7 +8,7 @@
 ## Why
 
 `lib/use-data-table.js`'s own header lists what it skipped: multi-sort, global
-filter, faceted filters. Those three are what turn the shadcn payments demo
+filter, faceted filters. Those three are what turn the upstream payments demo
 into something a console can actually put a resource list in.
 
 ## Design decisions
@@ -27,7 +27,7 @@ into something a console can actually put a resource list in.
     the raw value is not what a human is searching (a timestamp, an enum code).
   - Column filters and the global filter are **AND**ed.
 - **Faceted filters are the multi-select "Status: Active, Failed" popovers**
-  from the shadcn toolbar example.
+  from the upstream toolbar example.
   - Engine side: `getFacetedUniqueValues(columnId)` returning a
     `Map<value, count>`, computed from the rows that pass *every other* filter
     but not this one — that is what makes the counts update usefully instead
@@ -36,7 +36,7 @@ into something a console can actually put a resource list in.
   - Column filter values become `string | string[]`; an array means "value is
     in this set". Keep the existing string behaviour for back-compat.
   - UI: a new `DataTableFacetedFilter` built from `ui/popover` + `ui/command`
-    + `ui/checkbox` (shadcn's exact composition), showing counts and a
+    + `ui/checkbox` (upstream's exact composition), showing counts and a
     "Clear filters" affordance.
 - **Multi-sort:** `sorting` becomes an array of `{ id, desc }`, applied in
   order. Shift-click a header appends; plain click resets to that one column.

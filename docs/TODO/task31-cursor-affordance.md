@@ -7,8 +7,8 @@ shows the right drag cursor.
 
 ## Why
 
-Tailwind v4's preflight sets `cursor: default` on `button`, and shadcn never
-overrides it — so shadcn buttons show an arrow, not a hand. We inherited the
+Tailwind v4's preflight sets `cursor: default` on `button`, and upstream never
+overrides it — so upstream buttons show an arrow, not a hand. We inherited the
 gap unevenly: only 18 of 61 components declare `cursor: pointer` today. The
 other 43 either don't need it or are missing it, and there is no rule saying
 which.

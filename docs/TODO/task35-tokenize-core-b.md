@@ -27,7 +27,7 @@ Surface-specific concerns:
 - **`table` is the density-sensitive one.** Row padding drives how many rows
   fit on screen, which is the whole reason a console wants compact mode. Make
   sure `th`/`td` padding goes through the ramp.
-- **`progress` and `slider` fills** are intentional shadcn inversions (see the
+- **`progress` and `slider` fills** are intentional upstream inversions (see the
   2026-07-25 log entry — subagents have repeatedly "fixed" these by mistake).
   Verify against that entry before changing any fill colour.
 - **`toast` brought its own `--success`/`--warning`/`--info` families** in task

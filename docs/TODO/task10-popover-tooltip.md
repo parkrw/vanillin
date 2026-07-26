@@ -8,9 +8,9 @@
 - **Live anatomy verified 2026-07-22 (Base UI, not Radix):**
   - Popover: Popover, PopoverTrigger, PopoverContent, PopoverHeader,
     PopoverTitle, PopoverDescription. No PopoverAnchor/Portal in the Base UI
-    variant. shadcn's `render` prop → our `as`.
+    variant. Upstream's `render` prop → our `as`.
   - Tooltip: TooltipProvider (app-level, shared delay), Tooltip,
-    TooltipTrigger, TooltipContent. shadcn's provider sets `delayDuration=0`;
+    TooltipTrigger, TooltipContent. Upstream's provider sets `delayDuration=0`;
     keep that default, prop-configurable.
 - **Top layer via Popover API, not `<dialog>`:** non-modal — no focus trap, no
   inert background. Popover uses `popover="auto"` → native light dismiss

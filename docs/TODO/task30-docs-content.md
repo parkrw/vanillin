@@ -91,7 +91,7 @@ is clean; `date-input`/`time-picker` alias `date-picker.jsx`.
   installation should already reflect it. If 38 is still open, write proper
   manual-copy steps and mark the CLI as forthcoming.
 
-- **Flesh out the introduction page.** Feature list, "vanillin vs. shadcn"
+- **Flesh out the introduction page.** Feature list, "vanillin vs. upstream"
   blurb, pointer to theming. Under 300 words.
 
 ## Sub-tasks

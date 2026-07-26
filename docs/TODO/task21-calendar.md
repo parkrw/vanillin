@@ -6,7 +6,7 @@
 
 ## Design decisions
 
-- **Live anatomy verified 2026-07-25:** shadcn wraps **react-day-picker v9**
+- **Live anatomy verified 2026-07-25:** upstream wraps **react-day-picker v9**
   and exports `Calendar` + `CalendarDayButton`. Root props it forwards:
   `mode`, `selected`/`onSelect`, `month`/`defaultMonth`/`onMonthChange`,
   `numberOfMonths`, `showOutsideDays` (default true), `showWeekNumber`,
@@ -42,7 +42,7 @@
 - **`captionLayout="dropdown"`** uses native `<select>`s (our
   `ui/native-select`) for month and year, bounded by
   `startMonth`/`endMonth` (defaulting to ±10 years around the displayed
-  month). shadcn overlays a transparent native select on a styled label; we
+  month). Upstream overlays a transparent native select on a styled label; we
   show the select itself — same behaviour, less machinery.
 - **Deviations:** no custom `modifiers`/`modifiersClassNames`, no `min`/`max`
   range limits, no `required`, no `hidden` matcher, no week-number clicking,

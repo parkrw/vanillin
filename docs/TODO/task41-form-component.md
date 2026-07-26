@@ -1,6 +1,6 @@
 # task41: form-component
 
-**Goal:** `ui/form/` — shadcn's Form anatomy, engine-agnostic, plus a
+**Goal:** `ui/form/` — upstream's Form anatomy, engine-agnostic, plus a
 first-class React 19 Actions path.
 **Branch:** feat/form-component
 **Deps:** 40 (`lib/use-form.js`)
@@ -8,7 +8,7 @@ first-class React 19 Actions path.
 ## Design decisions
 
 - **`ui/form/` must never import `lib/use-form.js`.** This is the load-bearing
-  decision. shadcn's `form.tsx` is mostly wiring — it provides a field-name
+  decision. Upstream's `form.tsx` is mostly wiring — it provides a field-name
   context, generates ids, and hooks `aria-describedby` / `aria-invalid` to the
   field's error. The state arrives via `useFormContext()`. If our components
   read a **context** rather than the engine, then:
@@ -19,18 +19,18 @@ first-class React 19 Actions path.
   One code path, two engines. If a component reaches for the engine directly,
   that property is gone.
 
-- **Anatomy (shadcn names exactly):** `Form` (provider passthrough),
+- **Anatomy (upstream names exactly):** `Form` (provider passthrough),
   `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormDescription`,
   `FormMessage`, `useFormField`.
 
-- **Accessibility is the actual product here.** The wiring shadcn's Form does
+- **Accessibility is the actual product here.** The wiring upstream's Form does
   is the reason to use it at all:
   - `FormItem` mints one id; label/control/description/message derive from it
   - `FormControl` sets `aria-describedby` to description **and** message,
     `aria-invalid` when errored
   - `FormLabel` gets `htmlFor` and an error state
   - `FormMessage` renders nothing when there is no error, and must be a live
-    region so validation failures are announced — shadcn does not do this, and
+    region so validation failures are announced — upstream does not do this, and
     it is a real gap worth closing
   - `FormControl` uses our `as` prop, not Radix `asChild`
 

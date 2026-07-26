@@ -24,7 +24,7 @@ overflows, and participating in `<form>` validation.
   **Default stays popper** — the current behaviour must not change for
   existing callers.
 - **Scroll buttons are `SelectScrollUpButton` / `SelectScrollDownButton`** —
-  shadcn's exact names. They are not buttons in the a11y sense: `aria-hidden`,
+  upstream's exact names. They are not buttons in the a11y sense: `aria-hidden`,
   not focusable, and they scroll on *hover* (Radix's behaviour) as well as
   pointer-down-and-hold. Keyboard users never need them because arrow keys
   already scroll the active option into view.

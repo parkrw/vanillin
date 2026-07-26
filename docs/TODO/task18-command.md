@@ -8,7 +8,7 @@ persisted value or a popup.
 
 ## Design decisions
 
-- **Live anatomy verified 2026-07-25:** shadcn's command is still **cmdk**
+- **Live anatomy verified 2026-07-25:** upstream's command is still **cmdk**
   (not Base UI): Command, CommandDialog, CommandInput, CommandList,
   CommandEmpty, CommandGroup, CommandItem, CommandSeparator,
   CommandShortcut. cmdk props: root `value`/`onValueChange` (the
@@ -16,7 +16,7 @@ persisted value or a popup.
   `shouldFilter`, `loop`, `label`, `vimBindings`, `disablePointerSelection`;
   item `value`/`keywords`/`onSelect`/`disabled`/`forceMount`; group
   `heading`/`forceMount`; separator `alwaysRender`; input
-  `value`/`onValueChange`. cmdk's `Command.Loading` is not a shadcn export —
+  `value`/`onValueChange`. cmdk's `Command.Loading` is not an upstream export —
   skipped.
 - **Value is the highlight, not a selection** (delta vs combobox-17): no
   check indicator, `aria-selected` marks the highlighted option, activation
@@ -28,7 +28,7 @@ persisted value or a popup.
   (`showModal()` recipe, task-07) wrapping a Command; `command.css`
   `@import`s dialog.css so pages stay single-import (task-08 precedent).
   CommandDialog defaults: `showCloseButton={false}`, sr-only
-  title/description (shadcn parity).
+  title/description (upstream parity).
 - **Filtering (documented deviation):** cmdk's default filter is a fuzzy
   `command-score` that also **re-sorts** items and groups by score. Ours is
   case-insensitive substring over value + keywords + text content, DOM order

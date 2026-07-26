@@ -9,7 +9,7 @@
 
 Task 22 shipped date-picker as a composition pattern only: `ui/popover` +
 `ui/calendar`, no root component. Picking a date three months out by clicking
-through a calendar is slow, and every serious date field lets you type. shadcn
+through a calendar is slow, and every serious date field lets you type. Upstream
 demonstrates this with `chrono-node` (~40kB); we need a subset, zero-dep.
 
 ## Design decisions
@@ -49,7 +49,7 @@ demonstrates this with `chrono-node` (~40kB); we need a subset, zero-dep.
   - 12h vs 24h comes from the locale (`Intl.DateTimeFormat(locale).resolvedOptions().hour12`),
     overridable by prop.
   - Do **not** use `<input type="time">` — its UI is unstyleable and diverges
-    per browser, which is the whole reason shadcn users reach for a component.
+    per browser, which is the whole reason upstream users reach for a component.
   - Expose `step` (minutes) and clamp with `min`/`max`.
 - **Timezones are out of scope and must be stated.** Everything is local-time
   `Date`. A timezone-aware picker needs `Temporal`; note it as a future task

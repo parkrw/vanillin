@@ -1,7 +1,7 @@
 # task11: hover-card
 **Goal:** HoverCard/HoverCardTrigger/HoverCardContent — rich link-preview popup on hover/focus, reusing the task-10 manual-popover recipe.  **Branch:** feat/hover-card  **Deps:** 10
 
-Live shadcn anatomy (verified 2026-07-22): `HoverCard`, `HoverCardTrigger`,
+Live upstream anatomy (verified 2026-07-22): `HoverCard`, `HoverCardTrigger`,
 `HoverCardContent` only — no Portal/Positioner/Arrow. Open/close delays;
 content props side/align/sideOffset. Radix defaults: openDelay 700,
 closeDelay 300, sideOffset 4, side bottom.

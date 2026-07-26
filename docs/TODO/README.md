@@ -3,9 +3,9 @@
 Plan: `~/.claude/plans/vanillin-zero-dep-shadcn-ui-recreation.md`. 31 of 64
 components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 
-Phase 1 (01–28) is component parity with shadcn/ui. Phase 2 (31–58) is the
+Phase 1 (01–28) is component parity with upstream. Phase 2 (31–58) is the
 consumer story: config-driven theming, Form, the deferred parity gaps, and
-platform features shadcn cannot adopt (Tailwind/Radix/React-18 bound).
+platform features upstream cannot adopt (Tailwind/Radix/React-18 bound).
 
 | #            | Slug                | Est | Status | Notes                                                                                             |
 | ------------ | ------------------- | --- | ------ | ------------------------------------------------------------------------------------------------- |
@@ -185,7 +185,7 @@ written; it is a final consistency and gap pass.
     `kitVersion`.
 
 [^65]: deps: 64, 38; `van update` with 3-way merge (base = recorded
-    `kitVersion`). Biggest payoff — shadcn cannot take upstream fixes into an
+    `kitVersion`). Biggest payoff — the original kit cannot take upstream fixes into an
     edited component — and the easiest to make destructive. Own task, own
     tests.
 
@@ -197,7 +197,7 @@ progressive enhancement, never a hard requirement.
 
 ## Backlog — console kit
 
-Components a cloud console needs that shadcn has no answer for. Not scheduled;
+Components a cloud console needs that upstream has no answer for. Not scheduled;
 detail just-in-time after 58 lands. Rough order of usefulness:
 
 - `copy-field` — resource IDs, ARNs, connection strings (~S)

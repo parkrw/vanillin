@@ -40,7 +40,7 @@ component covers the "green/amber/red pip" pattern every console needs.
     transparent)`) — the "live" look consoles use for running instances.
 - **`error` vs `destructive`:** status-dot uses `error` because that is what
   the state is called in a console; it maps to the `--destructive` tokens.
-  Badge keeps `destructive` for shadcn parity. Intentional divergence — note
+  Badge keeps `destructive` for upstream parity. Intentional divergence — note
   it in both doc comments.
 
 ## Sub-tasks

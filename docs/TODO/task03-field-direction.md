@@ -1,5 +1,5 @@
 # task03: field-direction
-**Goal:** Add the shadcn Field family (`ui/field/`) and surface RTL support — Direction demo page + logical-property sweep — as one PR.
+**Goal:** Add the upstream Field family (`ui/field/`) and surface RTL support — Direction demo page + logical-property sweep — as one PR.
 **Branch:** `feat/field-direction`  **Deps:** none
 
 ## Sub-tasks

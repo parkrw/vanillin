@@ -17,10 +17,10 @@ reused another's work (HANDOFF, "The composition problem").
 
 **Compose when the relationship is semantic; duplicate when it's incidental.**
 
-This matters because shadcn's core property — and ours — is copy-paste
+This matters because upstream's core property — and ours — is copy-paste
 independence: one file, copied, works. A blanket "components must use each other
 everywhere" mandate destroys that. If `ui/button` imports `ui/tooltip` which
-imports `ui/popover`, copying Button drags in a third of the kit. shadcn
+imports `ui/popover`, copying Button drags in a third of the kit. Upstream
 duplicates some things deliberately for exactly this reason.
 
 Applying the rule:

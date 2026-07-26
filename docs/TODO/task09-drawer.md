@@ -5,12 +5,12 @@
 
 ## Design decisions
 
-- **Live anatomy verified 2026-07-22:** shadcn drawer now uses Base UI, not
+- **Live anatomy verified 2026-07-22:** upstream drawer now uses Base UI, not
   vaul. Exports: Drawer, DrawerTrigger, DrawerPortal, DrawerOverlay,
   DrawerContent, DrawerHeader, DrawerFooter, DrawerTitle, DrawerDescription,
   DrawerClose, DrawerSwipeHandle. `swipeDirection` (up|right|down|left,
   default down = bottom drawer) lives on the Drawer root; `showSwipeHandle`
-  (default true) renders the handle bar in DrawerContent. shadcn's `render`
+  (default true) renders the handle bar in DrawerContent. Upstream's `render`
   prop → our `as`.
 - **Non-goals (~M):** snap points, nested drawers, `modal="trap-focus"`,
   background bleed/scaling.

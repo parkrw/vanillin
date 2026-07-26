@@ -126,6 +126,6 @@ what to do is worse than no check.
 ## Follow-on (not this task)
 
 `van update` with 3-way merge (base = recorded `kitVersion`, ours = local,
-theirs = upstream). It is the biggest payoff — shadcn cannot take upstream fixes
+theirs = upstream). It is the biggest payoff — the original kit cannot take upstream fixes
 into an edited component at all — and the easiest to make destructive. It needs
 its own task and its own tests, after this manifest lands.

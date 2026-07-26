@@ -10,7 +10,7 @@
   DropdownMenuLabel, DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuCheckboxItem, DropdownMenuRadioGroup, DropdownMenuRadioItem,
   DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
-  DropdownMenuShortcut. shadcn's `render` prop → our `as`.
+  DropdownMenuShortcut. Upstream's `render` prop → our `as`.
 - **Overlay = task 10 recipe verbatim:** content is `popover="auto"` +
   `useAnchorPosition`; always mounted; state ↔ native sync via `toggle` event;
   exit motion via `@starting-style` + `allow-discrete` transitions (incl.

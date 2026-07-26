@@ -20,13 +20,13 @@ together means debugging two coordinate systems at once.
 
 `ui/navigation-menu`'s header says it plainly: per-item panels only,
 `viewport` swallowed, `NavigationMenuViewport` and `NavigationMenuIndicator`
-are no-ops (lines ~15, ~351, ~357). shadcn's default is the *viewport* mode —
+are no-ops (lines ~15, ~351, ~357). Upstream's default is the *viewport* mode —
 one shared panel that morphs between menu contents. Consumers who copy
-shadcn's markup get a silently different look today.
+upstream's markup get a silently different look today.
 
 ## Design decisions
 
-- **Viewport mode is the default, matching shadcn, but the existing
+- **Viewport mode is the default, matching upstream, but the existing
   viewport-less mode must survive untouched** behind `viewport={false}`. Task
   15's per-item panels are the better pattern for wide menus and the demo
   should keep showing both. Flipping the default is the only behaviour change
@@ -53,7 +53,7 @@ shadcn's markup get a silently different look today.
 - **Directional awareness.** Moving from a left trigger to a right one should
   slide content in from the right. Track the previous active index and set
   `data-motion="from-start" | "from-end" | "to-start" | "to-end"` — Radix's
-  exact attribute and values, so shadcn's CSS ports over.
+  exact attribute and values, so upstream's CSS ports over.
 - **The indicator is an arrow/underline that slides to the active trigger.**
   - Position from the trigger's `offsetLeft`/`offsetWidth` (logical
     properties under RTL — see the popover RTL gotcha in the log; do not

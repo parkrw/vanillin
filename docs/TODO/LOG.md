@@ -16,15 +16,15 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   Slider already handled RTL fully. New components: use logical properties
   (`inline-start`/`margin-inline`/`text-align: start`) from the start.
 - 2026-07-22 — task 04 done on `feat/chat-message-bubble` (~490 net lines):
-  shadcn anatomy verified against live docs — Bubble/BubbleContent/
+  upstream anatomy verified against live docs — Bubble/BubbleContent/
   BubbleReactions/BubbleGroup,
   Message/MessageGroup/MessageAvatar/MessageContent/
-  MessageHeader/MessageFooter. Both CSS-only, no tests. shadcn's `render` prop →
+  MessageHeader/MessageFooter. Both CSS-only, no tests. Upstream's `render` prop →
   our `as`. Task 05 (attachment + message-scroller) will need scroll/state logic
   — verify its live anatomy the same way.
 - 2026-07-22 — split task 05 into 05 attachment (CSS-only) + 06 message-scroller
   (stateful: Provider/Viewport/Content/Item/Button, stick-to-bottom autoscroll
-  released on user scroll, 3 hooks — verified against live shadcn docs); both in
+  released on user scroll, 3 hooks — verified against live upstream docs); both in
   one PR would blow the 500-line cap given task 04 landed ~490 for two CSS-only
   components. Renumbered 06→29 to 07→30, dep refs shifted.
 - 2026-07-22 — task 05 done on `feat/attachment` (~446 net lines). Gotcha:
@@ -51,7 +51,7 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   (padding clicks stay inside).
 - 2026-07-22 — task 09 done on `feat/drawer` (~440 net lines excl. docs),
   stacked on `feat/alert-dialog-sheet` (shares registry.js/dialog.jsx edits +
-  the message-scroller test fix). Live shadcn drawer is now **Base UI, not
+  the message-scroller test fix). Live upstream drawer is now **Base UI, not
   vaul**: `swipeDirection` (up|right|down|left) + `DrawerSwipeHandle` — verify
   live anatomy before every task. Velocity/flick dismiss dropped —
   nondeterministic under synthetic pointer timing; threshold-only (25%).
@@ -70,7 +70,7 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   transitions (keyframes can't play after `hidePopover`); transition `overlay`
   too or the element leaves the top layer before the exit fade. Tooltip:
   provider delay + 300ms skip window; focus opens instantly (hover delay never
-  applies). shadcn anatomy is Base UI: popover has Header/Title/Description, no
+  applies). Upstream anatomy is Base UI: popover has Header/Title/Description, no
   Anchor/Portal.
 - 2026-07-22 — task 11 done on `feat/hover-card` (~432 net lines). Delta vs
   tooltip: open/close timers live in the root context so trigger _and_ content
@@ -140,7 +140,7 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   pointerdown. dropdown-menu's own trigger has the same latent race
   (click-to-close untested there); fix it when touched, e.g. select (16).
 - 2026-07-23 — task 15 done on `feat/navigation-menu` (~860 net lines — size
-  hook is advisory). Per-item anchored panels = shadcn's `viewport={false}`
+  hook is advisory). Per-item anchored panels = upstream's `viewport={false}`
   mode (documented deviation): shared morphing viewport + sliding Indicator
   are non-goals, exported as compat no-ops. Content = task-10 popover recipe
   (auto light dismiss, toggle sync with menubar's ownership guard); hover =
@@ -165,7 +165,7 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   regression test — Playwright's instant click can't reproduce it.
   Message-scroller button test flaked once again (passed on rerun).
 - 2026-07-25 — task 17 done on `feat/combobox` (~1010 net lines — size hook is
-  advisory), stacked on feat/select. Live shadcn combobox is **Base UI, not
+  advisory), stacked on feat/select. Live upstream combobox is **Base UI, not
   Popover+Command** — new ui/combobox on select-16 mechanics with the combobox
   delta: focus never leaves the input (aria-activedescendant +
   data-highlighted root state, no real focus on options); `query` separate
@@ -182,7 +182,7 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   guaranteed; the runner's `eq` is strict `===` — array assertions must
   join/measure first (two "equal-looking" failures were reference compares).
 - 2026-07-25 — task 18 done on `feat/command` (~700 net lines), stacked on
-  feat/combobox. Live shadcn command is **still cmdk** (not Base UI) — ported
+  feat/combobox. Live upstream command is **still cmdk** (not Base UI) — ported
   its API onto combobox-17 highlight mechanics, inline (no popover) with
   CommandDialog = ui/dialog. Deltas from combobox: root `value` is the
   _highlighted_ item (activation calls the item's `onSelect`, nothing
@@ -193,14 +193,14 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   activates by calling `el.click()` on the highlighted option, so there is no
   callback registry. Deviations: substring filter over value + keywords +
   label, DOM order preserved (cmdk's fuzzy `command-score` also re-sorts
-  items and groups); `Command.Loading` not exported (not a shadcn export).
+  items and groups); `Command.Loading` not exported (not an upstream export).
   Gotchas: an item with no `value` derives it from `textContent`, so it lands
   in the DOM one render late — the auto-highlight/empty pass must depend on
   the item registration map, not just search/children, or the first paint
   keeps a stale highlight; combobox's `[hidden] { display: none }` restatement
   applies here too.
 - 2026-07-25 — task 19 done on `feat/input-otp` (~480 net lines), stacked on
-  feat/command. shadcn still wraps `input-otp` (guilhermerodz): one
+  feat/command. Upstream still wraps `input-otp` (guilhermerodz): one
   transparent real `<input>` over div slots, so native caret/selection/IME
   and `autocomplete="one-time-code"` autofill come free and arrows/Backspace
   need no code — the slot render just mirrors `value[index]` plus the input's
@@ -215,7 +215,7 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   values under the playground's 2.5× motion scale — wait for the transition
   before asserting computed colors.
 - 2026-07-25 — task 20 done on `feat/scroll-area` (~700 net lines), stacked on
-  feat/input-otp. shadcn is Base UI here and exports only ScrollArea +
+  feat/input-otp. Upstream is Base UI here and exports only ScrollArea +
   ScrollBar; horizontal usage passes `<ScrollBar orientation="horizontal" />`
   as a **child**, so it renders inside the viewport — it stays put only
   because it is absolutely positioned against the root, which sits outside
@@ -238,7 +238,7 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   overscroll thumb squish, no thumb-margin compensation, no scroll-snap
   suspension during drag.
 - 2026-07-25 — task 21 done on `feat/calendar` (~920 net lines, two commits),
-  stacked on feat/scroll-area. shadcn still wraps **react-day-picker v9** and
+  stacked on feat/scroll-area. Upstream still wraps **react-day-picker v9** and
   exports only `Calendar` + `CalendarDayButton`, so the whole day-picker core
   is ours: `Date`/`Intl` only, weeks built from the locale's first day
   (`Intl.Locale#getWeekInfo()`, Sunday fallback), a `<table role="grid">` per
@@ -270,13 +270,13 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   tests/run.mjs PORT edit). Every branch got: convention greps, coordinator
   suite reruns, and an independent review pass; review findings fixed on the
   branch before sign-off.
-- 2026-07-25 — task 22 done on `feat/date-picker` (~358 net): live shadcn
+- 2026-07-25 — task 22 done on `feat/date-picker` (~358 net): live upstream
   date-picker is a composition pattern only (Popover + Calendar + Button —
   no DatePicker root). Pattern CSS `@import`s popover+calendar; demo covers
   single/range/dropdown-caption; 6 tests. chrono-node input + time-picker
   variants omitted (external deps).
 - 2026-07-25 — task 23 done on `feat/toast` (~1359 net, 5 commits): live
-  shadcn toast page now wraps **Base UI Toast**, but the plan's
+  upstream toast page now wraps **Base UI Toast**, but the plan's
   "toast+sonner = one slug" kept the sonner-shaped API — module-level store,
   imperative `toast()`/`.success`/`.error`/`.warning`/`.info`/`.loading`/
   `.promise`/`.dismiss`/`.custom`, `<Toaster />` with position/visibleToasts/
@@ -319,7 +319,7 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   Filter/pageSize changes reset pageIndex (review-verified no out-of-range).
   Skipped: multi-sort, global/faceted filter, pinning, resizing, grouping,
   virtualization, server-side.
-- 2026-07-25 — task 27 done on `feat/sidebar` (~1786 net): all 24 shadcn
+- 2026-07-25 — task 27 done on `feat/sidebar` (~1786 net): all 24 upstream
   exports implemented (no compat no-ops); `sidebar_state` cookie (7d),
   Cmd/Ctrl+B, variants sidebar/floating/inset × offcanvas/icon/none, mobile
   = ui/sheet, collapsed-icon tooltips via ui/tooltip; `--sidebar-*` tokens
@@ -358,14 +358,14 @@ Decisions, deviations and gotchas from each task, newest last. Split out of
   pass with 16 overlays open. Fixes: (1) dark `--destructive-foreground` is
   now dark-on-light-red (white failed 2.76:1 on button/badge/input-group —
   same flip as dark `--primary`); (2) new `--input-background` token
-  (transparent light, `color-mix(--input 30%)` dark = shadcn `dark:bg-input/30`)
+  (transparent light, `color-mix(--input 30%)` dark = upstream `dark:bg-input/30`)
   applied to input, textarea, native-select, select trigger, checkbox, radio,
   otp slot, input-group, combobox group, and `.dark .btn--outline` — unchecked
   checkbox/radio were near-invisible on near-black; (3) date-picker popover
   `inline-size: auto` stretched to the viewport edge ([popover] UA `inset: 0`
   is masked by popover.css's fixed 18rem width until overridden) → fit-content.
   QA notes: near-white surfaces in dark (primary buttons, tooltip, own chat
-  bubbles, progress/slider fills) are intentional shadcn inversion — subagents
+  bubbles, progress/slider fills) are intentional upstream inversion — subagents
   reviewing screenshots repeatedly flagged them; verify flags yourself before
   fixing.
 - 2026-07-25 — **task 38 distribution decided: git-sourced, `private: true`

@@ -1,6 +1,6 @@
 # task07: dialog
 
-**Goal:** Native-`<dialog>` modal with shadcn's exact API — the pattern-setter for all overlays (08 alert-dialog-sheet, 09 drawer).
+**Goal:** Native-`<dialog>` modal with upstream's exact API — the pattern-setter for all overlays (08 alert-dialog-sheet, 09 drawer).
 **Branch:** feat/dialog  **Deps:** none
 
 ## Design decisions
@@ -20,7 +20,7 @@
   `.dialog::backdrop`.
 - **Scroll lock:** `useScrollLock` (native dialog doesn't lock body scroll).
   **Focus return:** `useReturnFocus` (deterministic despite delayed `close()`).
-- **Exports (shadcn):** Dialog, DialogTrigger, DialogPortal, DialogOverlay,
+- **Exports (upstream):** Dialog, DialogTrigger, DialogPortal, DialogOverlay,
   DialogContent (with `showCloseButton` default true), DialogHeader,
   DialogFooter, DialogTitle, DialogDescription, DialogClose.
 

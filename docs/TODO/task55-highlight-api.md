@@ -11,7 +11,7 @@ Every "highlight the matching text" implementation splits text nodes and
 injects `<mark>` elements. That breaks React's reconciliation, breaks text
 selection across the boundary, and re-renders the world on every keystroke.
 The Custom Highlight API paints ranges without touching the DOM — the right
-tool, and one shadcn cannot use because it needs the imperative layer.
+tool, and one upstream cannot use because it needs the imperative layer.
 
 ## Design decisions
 

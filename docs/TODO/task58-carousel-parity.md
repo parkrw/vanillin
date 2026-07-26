@@ -10,7 +10,7 @@ and ignores: `opts.loop`, `opts.align`, and `plugins`.
 `ui/carousel/carousel.jsx` says it in its own header (lines ~19–20):
 `plugins` is stubbed, `opts.loop` is accepted but not implemented. Accepting
 an option and silently ignoring it is worse than not accepting it — a
-consumer copying the shadcn example gets no loop and no error. This is the
+consumer copying the upstream example gets no loop and no error. This is the
 last row in phase 2 and is explicitly nice-to-have; if it fights the
 scroll-snap architecture, **cut scope and document the deviation** rather than
 rebuilding the carousel.

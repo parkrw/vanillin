@@ -6,7 +6,7 @@
 
 ## Design decisions
 
-- **Live anatomy verified 2026-07-25:** shadcn wraps `input-otp`
+- **Live anatomy verified 2026-07-25:** upstream wraps `input-otp`
   (guilhermerodz): InputOTP, InputOTPGroup, InputOTPSlot,
   InputOTPSeparator. Root props `maxLength`, `value`/`onChange` (the string,
   not an event), `pattern`, `disabled`, plus upstream's `onComplete`,

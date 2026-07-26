@@ -10,7 +10,7 @@ console needs, built on `Intl` alone.
 Every console renders the same four things badly: "3 minutes ago", "1.4 GB",
 "2h 14m", "$12.40". Each is a one-liner in `Intl` and a bug farm by hand
 (pluralisation, locale decimal separators, binary vs decimal bytes, negative
-durations). shadcn has no answer, so this is net-new surface.
+durations). Upstream has no answer, so this is net-new surface.
 
 ## Design decisions
 

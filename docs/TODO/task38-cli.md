@@ -83,7 +83,7 @@ Tag releases (`v0.1.0`, …) so consumers have something stable to pin. Untagged
   allowlist slugs against the registry rather than sanitising strings.
 
 - **Detect the project layout instead of assuming.** Read the consumer's
-  `components.json` if present (shadcn users have one, and honouring its
+  `components.json` if present (upstream users have one, and honouring its
   `aliases` is a cheap migration story); otherwise ask, defaulting to
   `./components/ui`. Persist the answer in `van.config.json` so later
   `add` calls are non-interactive.
