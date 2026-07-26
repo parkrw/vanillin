@@ -513,10 +513,105 @@ function ValidationModes() {
 /*  Page root                                                          */
 /* ================================================================== */
 
+function Docs() {
+  return (
+    <section style={{ maxWidth: 720, lineHeight: 1.6 }}>
+      <p>
+        <code>lib/use-form.js</code> is a zero-dependency form engine shaped
+        like <b>react-hook-form</b>. It replaces RHF the same way{" "}
+        <code>lib/use-data-table.js</code> replaces <code>@tanstack/react-table</code>:
+        matching the public API so consumers can swap in either engine without
+        changing their form components.
+      </p>
+
+      <h3>Supported API surface</h3>
+      <p>
+        <code>useForm({"{"} defaultValues, mode, reValidateMode, resolver {"}"})</code>{" "}
+        returns: <code>register</code>, <code>handleSubmit</code>,{" "}
+        <code>watch</code>, <code>getValues</code>, <code>setValue</code>,{" "}
+        <code>reset</code>, <code>setError</code>, <code>clearErrors</code>,{" "}
+        <code>trigger</code>, <code>control</code>, <code>formState</code>.
+      </p>
+      <p>
+        <code>formState</code> exposes: <code>errors</code>,{" "}
+        <code>isDirty</code>, <code>dirtyFields</code>,{" "}
+        <code>touchedFields</code>, <code>isSubmitting</code>,{" "}
+        <code>isSubmitted</code>, <code>isValid</code>,{" "}
+        <code>submitCount</code>.
+      </p>
+      <p>
+        Additional exports: <code>Controller</code>, <code>FormProvider</code>,{" "}
+        <code>useFormContext</code>, <code>useFieldArray</code>.
+      </p>
+      <p>
+        Path helpers <code>getByPath</code>, <code>setByPath</code>,{" "}
+        <code>unsetByPath</code> are exported for reuse (dotted paths like{" "}
+        <code>user.address.city</code> and array indices like{" "}
+        <code>items.2.name</code>).
+      </p>
+
+      <h3>Out of scope (deviations from RHF)</h3>
+      <p>
+        <code>shouldUnregister</code>, <code>criteriaMode: "all"</code>,{" "}
+        <code>setFocus</code>, <code>getFieldState</code> subscriptions,{" "}
+        <code>delayError</code>, devtools integration, native validation mode.
+        These are documented deviations; consumers using any of these features
+        must keep the real RHF.
+      </p>
+
+      <h3>register vs Controller</h3>
+      <p>
+        <code>register</code> returns <code>{"{"} name, ref, onChange, onBlur {"}"}</code>{" "}
+        and reads values from the DOM element. This is the performance
+        property: typing in one registered field does <b>not</b> re-render
+        siblings (values live in a mutable ref, not React state).
+      </p>
+      <p>
+        <code>Controller</code> is the escape hatch for controlled components
+        that own their state and don't expose a DOM node for{" "}
+        <code>register</code> to read. Our <code>Select</code>,{" "}
+        <code>Combobox</code>, <code>Calendar</code>, and <code>Checkbox</code>{" "}
+        (all <code>useControllableState</code>-based) need{" "}
+        <code>Controller</code>.
+      </p>
+
+      <h3>Resolver contract</h3>
+      <p>
+        <code>async (values, context, options) =&gt; {"{"} values, errors {"}"}</code>.{" "}
+        <code>options</code> includes <code>fields</code>, <code>names</code>,{" "}
+        <code>criteriaMode</code>, <code>shouldUseNativeValidation</code>.
+        Errors are nested objects keyed by dotted path, each{" "}
+        <code>{"{"} type, message {"}"}</code>.
+      </p>
+      <p>
+        <b>Verified:</b> <code>@hookform/resolvers</code>{" "}
+        <code>zodResolver</code> runs unmodified against this contract. Zod
+        coercion (e.g. <code>z.coerce.number()</code>) works, nested error
+        paths resolve correctly. Note: <code>@hookform/resolvers</code> imports{" "}
+        <code>appendErrors</code> from <code>react-hook-form</code> (used only
+        for <code>criteriaMode: "all"</code>, which is out of scope), so{" "}
+        <code>react-hook-form</code> must be installed as a devDependency
+        alongside the resolver package.
+      </p>
+
+      <h3>useFieldArray</h3>
+      <p>
+        <code>useFieldArray({"{"} control, name {"}"} )</code> returns{" "}
+        <code>fields</code> (array with auto-generated <code>id</code> keys),{" "}
+        <code>append</code>, <code>prepend</code>, <code>remove</code>,{" "}
+        <code>insert</code>, <code>swap</code>, <code>move</code>,{" "}
+        <code>update</code>, <code>replace</code>. Register nested fields
+        with dotted paths: <code>register(`items.${"{"}i{"}"}.name`)</code>.
+      </p>
+    </section>
+  )
+}
+
 export default function UseFormPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, padding: 16 }}>
       <h2>useForm</h2>
+      <Docs />
       <RenderIsolation />
       <BuiltInValidation />
       <WatchDemo />
