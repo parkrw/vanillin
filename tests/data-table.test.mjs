@@ -469,4 +469,252 @@ export default async function run({ page, baseUrl, test, eq }) {
     const emailSortBtn = dt.locator(".data-table-sort-btn").first()
     eq(await emailSortBtn.getAttribute("aria-label"), null, "email button has no aria-label")
   })
+
+  // ── Column sizing ─────────────────────────────────────────────────
+
+  const dtSized = page.locator('[data-pg="dt-sized"]')
+
+  await test("un-sized table keeps table-layout auto", async () => {
+    // The first demo table (dt) must NOT have table-layout: fixed
+    const tableStyle = await dt.locator(".table").evaluate(
+      (el) => getComputedStyle(el).tableLayout
+    )
+    eq(tableStyle, "auto", "original table has table-layout: auto")
+  })
+
+  await test("sized table uses table-layout fixed", async () => {
+    await dtSized.waitFor()
+    const tableStyle = await dtSized.locator(".table").evaluate(
+      (el) => getComputedStyle(el).tableLayout
+    )
+    eq(tableStyle, "fixed", "sized table has table-layout: fixed")
+  })
+
+  await test("drag resizer changes column width, survives re-sort", async () => {
+    await dtSized.waitFor()
+    const resizer = dtSized.locator(".data-table-resizer").first()
+
+    // Read initial width from the CSS var
+    const initialWidth = await dtSized.locator(".table").evaluate(
+      (el) => parseInt(getComputedStyle(el).getPropertyValue("--dt-size-id"), 10)
+    )
+
+    // hover() scrolls into view and positions the mouse on the element
+    await resizer.hover()
+    const box = await resizer.boundingBox()
+    await page.mouse.down()
+    await page.mouse.move(box.x + box.width / 2 + 60, box.y + box.height / 2, { steps: 5 })
+    await page.mouse.up()
+    await page.waitForTimeout(100)
+
+    const afterWidth = await dtSized.locator(".table").evaluate(
+      (el) => parseInt(getComputedStyle(el).getPropertyValue("--dt-size-id"), 10)
+    )
+    eq(afterWidth > initialWidth, true, `width grew from ${initialWidth} to ${afterWidth}`)
+
+    // Sort the email column, then check width survived
+    const emailSortBtn = dtSized.locator(".data-table-sort-btn").first()
+    await emailSortBtn.click()
+    await page.waitForTimeout(50)
+
+    const afterSort = await dtSized.locator(".table").evaluate(
+      (el) => parseInt(getComputedStyle(el).getPropertyValue("--dt-size-id"), 10)
+    )
+    eq(afterSort, afterWidth, "width survives re-sort")
+  })
+
+  await test("resize clamps to minSize and maxSize", async () => {
+    await dtSized.waitFor()
+    // Email column has minSize: 100. Drag its resizer far left.
+    // select has enableResizing: false, so resizers: id(0), status(1), email(2), amount(3)
+    const resizer = dtSized.locator(".data-table-resizer").nth(2) // email
+    await resizer.hover()
+    const box = await resizer.boundingBox()
+
+    // Drag far left — should clamp to minSize 100
+    await page.mouse.down()
+    await page.mouse.move(box.x - 500, box.y + box.height / 2, { steps: 5 })
+    await page.mouse.up()
+    await page.waitForTimeout(100)
+
+    const clampedWidth = await dtSized.locator(".table").evaluate(
+      (el) => parseInt(getComputedStyle(el).getPropertyValue("--dt-size-email"), 10)
+    )
+    eq(clampedWidth, 100, "email clamped to minSize 100")
+  })
+
+  await test("arrow-key resize and double-click reset", async () => {
+    await dtSized.waitFor()
+    // Focus the email resizer
+    const resizer = dtSized.locator(".data-table-resizer").nth(2)
+    await resizer.focus()
+
+    // Read current size
+    const before = await dtSized.locator(".table").evaluate(
+      (el) => parseInt(getComputedStyle(el).getPropertyValue("--dt-size-email"), 10)
+    )
+
+    // Press ArrowRight twice = +16
+    await page.keyboard.press("ArrowRight")
+    await page.keyboard.press("ArrowRight")
+    await page.waitForTimeout(50)
+
+    const after = await dtSized.locator(".table").evaluate(
+      (el) => parseInt(getComputedStyle(el).getPropertyValue("--dt-size-email"), 10)
+    )
+    eq(after, before + 16, "ArrowRight twice adds 16px")
+
+    // Double-click resets to column def size (260)
+    await resizer.dblclick()
+    await page.waitForTimeout(50)
+
+    const reset = await dtSized.locator(".table").evaluate(
+      (el) => parseInt(getComputedStyle(el).getPropertyValue("--dt-size-email"), 10)
+    )
+    eq(reset, 260, "double-click resets to column def size")
+  })
+
+  // ── Column pinning ────────────────────────────────────────────────
+
+  await test("pin left: column stays at inset-inline-start 0 after horizontal scroll", async () => {
+    await dtSized.waitFor()
+    // Pin the "id" column left via the Columns dropdown
+    const colsBtn = page.locator('[data-pg="dt-sized-columns-btn"]')
+    await colsBtn.click()
+    await page.waitForSelector('.dropdown-menu[role="menu"]:popover-open')
+
+    // Click the pin item for "id" (first click pins left)
+    const pinItem = page.locator(
+      '.dropdown-menu[role="menu"]:popover-open [role="menuitem"]',
+      { hasText: /^id:/ }
+    )
+    await pinItem.click()
+    await page.waitForTimeout(100)
+
+    // Close dropdown if still open
+    await page.keyboard.press("Escape")
+    await page.waitForTimeout(50)
+
+    // The id header cell should have the pinned class
+    const idTh = dtSized.locator(".table-head.data-table-pinned").first()
+    await idTh.waitFor()
+
+    // Scroll the table container to the right
+    const container = dtSized.locator(".table-container")
+    await container.evaluate((el) => { el.scrollLeft = 200 })
+    await page.waitForTimeout(50)
+
+    // The pinned column should still be at inset-inline-start: 0
+    const insetStart = await idTh.evaluate(
+      (el) => getComputedStyle(el).insetInlineStart
+    )
+    eq(insetStart, "0px", "pinned column stays at inset-inline-start: 0")
+  })
+
+  await test("pinned cell background is opaque", async () => {
+    // The id column is still pinned from the previous test
+    const pinnedCell = dtSized.locator(
+      ".table-body .table-row:first-child .data-table-pinned"
+    ).first()
+    await pinnedCell.waitFor()
+
+    const bg = await pinnedCell.evaluate((el) => {
+      const style = getComputedStyle(el)
+      return style.backgroundColor
+    })
+    // Background must be opaque — no "/ 0" or "transparent" or alpha < 1
+    const isOpaque =
+      !bg.includes("transparent") &&
+      !bg.includes("/ 0") &&
+      !bg.match(/rgba?\([^)]+,\s*0\s*\)/)
+    eq(isOpaque, true, `pinned cell bg is opaque: ${bg}`)
+  })
+
+  await test("pinned cell tracks row hover background", async () => {
+    const row = dtSized.locator(".table-body .table-row").first()
+    const pinnedCell = row.locator(".data-table-pinned").first()
+
+    // Get background before hover
+    const bgBefore = await pinnedCell.evaluate(
+      (el) => getComputedStyle(el).backgroundColor
+    )
+
+    // Hover the row
+    await row.hover()
+    await page.waitForTimeout(100)
+
+    const bgHover = await pinnedCell.evaluate(
+      (el) => getComputedStyle(el).backgroundColor
+    )
+    eq(bgHover !== bgBefore, true, `bg changed on hover: ${bgBefore} → ${bgHover}`)
+
+    // The hovered bg must still be opaque
+    const isOpaque =
+      !bgHover.includes("transparent") &&
+      !bgHover.includes("/ 0") &&
+      !bgHover.match(/rgba?\([^)]+,\s*0\s*\)/)
+    eq(isOpaque, true, `hovered pinned bg is opaque: ${bgHover}`)
+
+    // Move mouse away
+    await page.mouse.move(0, 0)
+    await page.waitForTimeout(50)
+  })
+
+  await test("pinned cell tracks row selection background", async () => {
+    // Select the first row
+    const checkbox = dtSized.locator(
+      ".table-body .table-row:first-child .checkbox"
+    ).first()
+    await checkbox.click()
+    await page.waitForTimeout(50)
+
+    const pinnedCell = dtSized.locator(
+      ".table-body .table-row:first-child .data-table-pinned"
+    ).first()
+    const bgSel = await pinnedCell.evaluate(
+      (el) => getComputedStyle(el).backgroundColor
+    )
+
+    // Should not be the default var(--background); it should match --accent
+    const bgDefault = await page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue("--background").trim()
+    )
+    eq(bgSel !== bgDefault, true, `selected pinned bg differs from default`)
+
+    // Deselect
+    await checkbox.click()
+    await page.waitForTimeout(50)
+  })
+
+  await test("unpin restores normal cell", async () => {
+    // Unpin the "id" column: click pin item again (left → right), then again (right → unpin)
+    const colsBtn = page.locator('[data-pg="dt-sized-columns-btn"]')
+    await colsBtn.click()
+    await page.waitForSelector('.dropdown-menu[role="menu"]:popover-open')
+
+    const pinItem = page.locator(
+      '.dropdown-menu[role="menu"]:popover-open [role="menuitem"]',
+      { hasText: /^id:/ }
+    )
+    // Currently "pinned left" → click → "pinned right"
+    await pinItem.click()
+    await page.waitForTimeout(50)
+
+    // Reopen
+    await colsBtn.click()
+    await page.waitForSelector('.dropdown-menu[role="menu"]:popover-open')
+    const pinItem2 = page.locator(
+      '.dropdown-menu[role="menu"]:popover-open [role="menuitem"]',
+      { hasText: /^id:/ }
+    )
+    // Currently "pinned right" → click → "unpinned"
+    await pinItem2.click()
+    await page.waitForTimeout(100)
+    await page.keyboard.press("Escape")
+    await page.waitForTimeout(50)
+
+    // No pinned cells should remain
+    const pinnedCount = await dtSized.locator(".data-table-pinned").count()
+    eq(pinnedCount, 0, "no pinned cells after unpin")
+  })
 }

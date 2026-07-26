@@ -228,7 +228,6 @@ export function DataTableColumnResizer({ column }) {
     const startX = e.clientX
     const startSize = column.getSize()
 
-    el.setPointerCapture(e.pointerId)
     el.setAttribute("data-resizing", "")
 
     const onMove = (ev) => {
@@ -239,16 +238,14 @@ export function DataTableColumnResizer({ column }) {
 
     const onUp = (ev) => {
       el.removeAttribute("data-resizing")
-      el.removeEventListener("pointermove", onMove)
-      el.removeEventListener("pointerup", onUp)
-      el.removeEventListener("lostpointercapture", onUp)
+      document.removeEventListener("pointermove", onMove)
+      document.removeEventListener("pointerup", onUp)
       const delta = (ev.clientX - startX) * (isRtl ? -1 : 1)
       column.setSize(Math.min(max, Math.max(min, startSize + delta)))
     }
 
-    el.addEventListener("pointermove", onMove)
-    el.addEventListener("pointerup", onUp)
-    el.addEventListener("lostpointercapture", onUp)
+    document.addEventListener("pointermove", onMove)
+    document.addEventListener("pointerup", onUp)
   }
 
   const onKeyDown = (e) => {
