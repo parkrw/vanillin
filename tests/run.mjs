@@ -53,8 +53,16 @@ try {
         results.push(["FAIL", `${label}: ${name} — ${err.message.split("\n")[0]}`])
       }
     }
-    const { default: run } = await import(`./${file}`)
-    await run({ page, baseUrl, repoRoot, test, eq, near })
+    // A file that throws outside a test() (bad import, blank page, missing
+    // default export) must not abort the remaining suites.
+    try {
+      const { default: run } = await import(`./${file}`)
+      if (typeof run !== "function")
+        throw new Error("no default export — pure-node tests belong in *.unit.mjs")
+      await run({ page, baseUrl, repoRoot, test, eq, near })
+    } catch (err) {
+      results.push(["FAIL", `${label}: suite aborted — ${err.message.split("\n")[0]}`])
+    }
   }
 } finally {
   await browser?.close()
