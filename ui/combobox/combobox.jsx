@@ -46,6 +46,7 @@ export function Combobox({
   items,
   autoHighlight = false,
   multiple = false,
+  showClear = false,
   name,
   disabled = false,
   children,
@@ -120,6 +121,13 @@ export function Combobox({
     [setValue]
   )
 
+  const clearValue = useCallback(() => {
+    setValue(multiple ? [] : "")
+    setInputValue("")
+    setQuery("")
+    inputRef.current?.focus()
+  }, [multiple, setValue, setInputValue, setQuery])
+
   // Close resets the filter and highlight, and reverts the input to the
   // selected label — typed text that selected nothing doesn't stick.
   // In multiple mode there is no display label; just clear the query.
@@ -165,12 +173,14 @@ export function Combobox({
         items,
         autoHighlight,
         multiple,
+        showClear,
         disabled,
         registerLabel,
         getLabel,
         matches,
         selectValue,
         removeValue,
+        clearValue,
         revertInput,
       }}
     >
@@ -205,10 +215,12 @@ export function ComboboxInput({
     contentRef,
     listId,
     multiple,
+    showClear,
     disabled,
     getLabel,
     selectValue,
     removeValue,
+    clearValue,
     revertInput,
   } = useContext(ComboboxContext)
 
@@ -384,6 +396,32 @@ export function ComboboxInput({
         onPointerDown={handlePointerDown}
         {...props}
       />
+      {showClear && (multiple ? chips.length > 0 : value !== "") && (
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-label="Clear selection"
+          className="combobox-clear"
+          disabled={disabled || undefined}
+          onClick={(e) => {
+            e.stopPropagation()
+            clearValue()
+          }}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+      )}
       <ComboboxChevron />
     </div>
   )
