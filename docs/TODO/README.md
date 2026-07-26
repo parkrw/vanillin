@@ -75,7 +75,7 @@ written; it is a final consistency and gap pass.
 | 35  | tokenize-core-b          | ~M  | [x]    | deps: 33; surfaces — card, dialog, alert, popover, tooltip, toast, table, avatar, separator, progress, slider, tabs |
 | 36  | density-modes            | ~S  | [x]    | deps: 34, 35; `compact`, `comfortable`, `spacious` over tokenized components |
 | 37  | config-generator         | ~L  | [x]    | deps: 34, 35; `vanillin.config.json` schema + zero-dep generator → `vanillin.css`; **output not wired into the playground — see 60** |
-| 38  | cli                      | ~L  | [ ]    | deps: 37; `bin/vanillin.mjs` init/add/build/list + `registry.json`; **git-sourced, stays `private: true`** |
+| 38  | cli                      | ~L  | [ ]    | deps: 37, **64** (manifest format — `add` writes the sidecar); `bin/vanillin.mjs` init/add/build/list + `registry.json`; **git-sourced, stays `private: true`** |
 | 39  | container-queries        | ~M  | [ ]    | deps: 34, 35; components size to container, not viewport (console panels)    |
 | 40  | use-form-core            | ~L  | [x]    | zero-dep `lib/use-form.js`, RHF-shaped; resolver contract = `@hookform/resolvers` compatible |
 | 41  | form-component           | ~M  | [x]    | deps: 40; `ui/form/` engine-agnostic (context, never imports the engine) + React 19 Actions path |
@@ -101,6 +101,8 @@ written; it is a final consistency and gap pass.
 | 61  | brand-multicolor         | ~M  | [ ]    | deps: 37; `brand` as string-or-object (primary/secondary/accent/neutral); **sub-task 1 is an a11y fix — foregrounds picked by measured contrast, not a lightness threshold — and ships independently** |
 | 62  | schema-core              | ~L  | [ ]    | `lib/schema.js` — zero-dep zod-shaped validation + `schemaResolver` adapter. Pairs with 59; neither blocks the other, the resolver contract is already the seam. Runtime only — no TS inference story |
 | 63  | composition-pass         | ~M  | [~]    | components reuse each other where the relationship is **semantic**, not everywhere — a blanket rule would destroy copy-paste independence. Sub-task 1 (date demo split) landed `0f48e2fe84de` |
+| 64  | component-contracts      | ~L  | [ ]    | per-copy `ui/<slug>/.vanillin.json` manifest (provenance + `requires` + file hashes) **+** a conformance suite that keeps it true. **Do before 38** — `add` consumes the format. Independent release windows, one monotonic `kitVersion` |
+| 65  | component-update         | ~L  | [ ]    | deps: 64, 38; `vanillin update` with 3-way merge (base = recorded `kitVersion`). Biggest payoff — shadcn cannot take upstream fixes into an edited component — and the easiest to make destructive. Own task, own tests |
 
 **Browser-support gate:** 33, 39, 54, 55, 57 depend on features that were
 partially supported at plan time (relative color syntax, `light-dark()`,

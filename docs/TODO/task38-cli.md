@@ -62,6 +62,22 @@ Tag releases (`v0.1.0`, …) so consumers have something stable to pin. Untagged
   overwrites their edits is the fastest way to lose trust in the tool.
   `--force` exists and says what it destroyed.
 
+- **Compare against the recorded hash, not against current upstream** (added
+  2026-07-26, see task 64). Diffing a local file against the *current* registry
+  version cannot tell "the consumer edited this" from "upstream moved on" — both
+  read as "differs". Only a hash recorded at install time separates them, and the
+  two cases deserve opposite behaviour: upstream-moved is a safe update,
+  consumer-edited must not be overwritten. So `add` **writes a
+  `ui/<slug>/.vanillin.json` sidecar** per task 64 — `kitVersion`, `source`,
+  `requires`, and a `files` map of sha256 hashes — and later runs compare against
+  it. Build the manifest format in 64 before implementing `add`, or `add` will
+  bake in its own incompatible assumptions.
+
+- **`registry.json`'s `dependsOn` and the manifest's `requires` must agree.** The
+  registry is the upstream graph, the manifest is what a given copy actually got.
+  Task 64's conformance suite checks the derivation against the real import graph;
+  do not derive it twice with two parsers.
+
 - **Path safety.** Slugs come from argv and become filesystem paths. Resolve
   every write against the project root and reject anything that escapes it;
   allowlist slugs against the registry rather than sanitising strings.
