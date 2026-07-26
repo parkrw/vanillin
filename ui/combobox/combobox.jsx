@@ -113,6 +113,13 @@ export function Combobox({
     [multiple, setValue, setInputValue, getLabel, setOpen, setQuery]
   )
 
+  const removeValue = useCallback(
+    (itemValue) => {
+      setValue((prev) => (prev ?? []).filter((v) => v !== itemValue))
+    },
+    [setValue]
+  )
+
   // Close resets the filter and highlight, and reverts the input to the
   // selected label — typed text that selected nothing doesn't stick.
   // In multiple mode there is no display label; just clear the query.
@@ -163,6 +170,7 @@ export function Combobox({
         getLabel,
         matches,
         selectValue,
+        removeValue,
         revertInput,
       }}
     >
@@ -184,6 +192,7 @@ export function ComboboxInput({
   ...props
 }) {
   const {
+    value,
     open,
     setOpen,
     inputValue,
@@ -195,8 +204,11 @@ export function ComboboxInput({
     inputRef,
     contentRef,
     listId,
+    multiple,
     disabled,
+    getLabel,
     selectValue,
+    removeValue,
     revertInput,
   } = useContext(ComboboxContext)
 
@@ -298,6 +310,12 @@ export function ComboboxInput({
         revertInput()
         break
       }
+      case "Backspace": {
+        if (multiple && inputValue === "" && Array.isArray(value) && value.length > 0) {
+          removeValue(value[value.length - 1])
+        }
+        break
+      }
       case "Tab": {
         // Close and let focus move on (no blur handler — see task file).
         if (open) setOpen(false)
@@ -306,6 +324,8 @@ export function ComboboxInput({
     }
   }
 
+  const chips = multiple && Array.isArray(value) ? value : []
+
   return (
     <div
       ref={anchorRef}
@@ -313,6 +333,36 @@ export function ComboboxInput({
       data-disabled={disabled ? "" : undefined}
       className={cn("combobox-input-group", className)}
     >
+      {chips.map((v) => (
+        <span key={v} className="combobox-chip">
+          <span className="combobox-chip-text">{getLabel(v) ?? v}</span>
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label={`Remove ${getLabel(v) ?? v}`}
+            className="combobox-chip-remove"
+            onClick={(e) => {
+              e.stopPropagation()
+              removeValue(v)
+              inputRef.current?.focus()
+            }}
+            disabled={disabled || undefined}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+        </span>
+      ))}
       <input
         ref={inputRef}
         type="text"
@@ -324,7 +374,7 @@ export function ComboboxInput({
         aria-activedescendant={open ? highlightedId ?? undefined : undefined}
         autoComplete="off"
         spellCheck="false"
-        placeholder={placeholder}
+        placeholder={chips.length === 0 ? placeholder : undefined}
         value={inputValue}
         disabled={disabled || undefined}
         className="combobox-input"
