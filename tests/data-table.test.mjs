@@ -305,4 +305,168 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.keyboard.press("Escape")
     await page.waitForTimeout(100)
   })
+
+  // ── Global filter ──────────────────────────────────────────────────
+
+  await test("global filter matches across columns", async () => {
+    const globalInput = page.locator('[data-pg="dt-global-filter"]')
+    await globalInput.fill("pending")
+    await page.waitForTimeout(50)
+
+    const statuses = await cellTexts(1) // col 0=select, 1=status
+    eq(statuses.every((s) => s.toLowerCase() === "pending"), true, "all rows are pending")
+    eq(statuses.length, 5, "5 pending rows")
+
+    // Search by email substring
+    await globalInput.fill("alice")
+    await page.waitForTimeout(50)
+    const emails = await cellTexts(2)
+    eq(emails.length, 1, "global filter finds alice")
+    eq(emails[0], "alice@example.com", "matched alice email")
+
+    await globalInput.fill("")
+    await page.waitForTimeout(50)
+  })
+
+  await test("global + column filters AND together", async () => {
+    const globalInput = page.locator('[data-pg="dt-global-filter"]')
+    const emailInput = page.locator('[data-pg="dt-filter"]')
+
+    // Global: "example.com" matches all 20 rows
+    await globalInput.fill("example.com")
+    await page.waitForTimeout(50)
+    // Column: "alice" narrows to 1
+    await emailInput.fill("alice")
+    await page.waitForTimeout(50)
+
+    const emails = await cellTexts(2)
+    eq(emails.length, 1, "AND of global + column filter gives 1 row")
+    eq(emails[0], "alice@example.com", "alice row survives both filters")
+
+    await globalInput.fill("")
+    await emailInput.fill("")
+    await page.waitForTimeout(50)
+  })
+
+  // ── Faceted filter ─────────────────────────────────────────────────
+
+  await test("faceted counts reflect other filters, not own selection", async () => {
+    // Open the status facet
+    const facetBtn = dt.locator(".data-table-facet-trigger")
+    await facetBtn.click()
+    await page.waitForTimeout(100)
+
+    // Read initial counts — should sum to 20 (all rows)
+    const countEls = page.locator(".data-table-facet-count")
+    const initialCounts = await countEls.allTextContents()
+    const initialSum = initialCounts.reduce((s, c) => s + Number(c), 0)
+    eq(initialSum, 20, "facet counts sum to total rows before any filter")
+
+    // Select "pending" — counts must NOT collapse; they should still
+    // reflect rows passing everything except the status filter
+    const pendingItem = page.locator('[role="option"]', { hasText: "pending" })
+    await pendingItem.click()
+    await page.waitForTimeout(100)
+
+    const afterCounts = await countEls.allTextContents()
+    const afterSum = afterCounts.reduce((s, c) => s + Number(c), 0)
+    eq(afterSum, 20, "facet counts still sum to 20 after selecting pending")
+
+    // Table should show only pending rows
+    const statuses = await cellTexts(1)
+    eq(statuses.every((s) => s.toLowerCase() === "pending"), true, "table shows only pending")
+
+    // Clear
+    const clearItem = page.locator(".data-table-facet-clear")
+    await clearItem.click()
+    await page.waitForTimeout(100)
+
+    // Close popover
+    await page.keyboard.press("Escape")
+    await page.waitForTimeout(100)
+  })
+
+  await test("multi-value facet filter", async () => {
+    const facetBtn = dt.locator(".data-table-facet-trigger")
+    await facetBtn.click()
+    await page.waitForTimeout(100)
+
+    // Select "pending" and "failed"
+    const pendingItem = page.locator('[role="option"]', { hasText: "pending" })
+    await pendingItem.click()
+    await page.waitForTimeout(50)
+    const failedItem = page.locator('[role="option"]', { hasText: "failed" })
+    await failedItem.click()
+    await page.waitForTimeout(100)
+
+    // Close popover
+    await page.keyboard.press("Escape")
+    await page.waitForTimeout(100)
+
+    // Table should show pending + failed rows
+    const statuses = await cellTexts(1)
+    const validStatuses = statuses.every(
+      (s) => s.toLowerCase() === "pending" || s.toLowerCase() === "failed"
+    )
+    eq(validStatuses, true, "table shows only pending and failed")
+    eq(statuses.length, 9, "5 pending + 4 failed = 9 rows")
+
+    // Clear: reopen, clear
+    await facetBtn.click()
+    await page.waitForTimeout(100)
+    const clearItem = page.locator(".data-table-facet-clear")
+    await clearItem.click()
+    await page.waitForTimeout(100)
+    await page.keyboard.press("Escape")
+    await page.waitForTimeout(100)
+  })
+
+  // ── Multi-sort ─────────────────────────────────────────────────────
+
+  await test("shift-click builds two-key sort and secondary orders ties", async () => {
+    // Plain click email to make it the sole sort key (direction depends
+    // on prior state — we only care that it becomes the primary)
+    const emailSortBtn = dt.locator(".data-table-sort-btn").first()
+    await emailSortBtn.click()
+    await page.waitForTimeout(50)
+
+    const emailTh = dt.locator(".table-head").nth(2) // select=0, status=1, email=2
+    const emailDir = await emailTh.getAttribute("aria-sort")
+    eq(emailDir !== null, true, "email th has aria-sort after plain click")
+
+    // Shift-click amount to add secondary sort
+    const amountSortBtn = dt.locator(".data-table-sort-btn").nth(1)
+    await amountSortBtn.click({ modifiers: ["Shift"] })
+    await page.waitForTimeout(50)
+
+    // aria-sort stays on email (primary) only
+    const amountTh = dt.locator(".table-head").nth(3)
+    eq(await emailTh.getAttribute("aria-sort"), emailDir, "primary email keeps aria-sort")
+    eq(await amountTh.getAttribute("aria-sort"), null, "secondary amount has no aria-sort")
+
+    // Amount sort button should have an aria-label mentioning "sort 2"
+    const amountLabel = await amountSortBtn.getAttribute("aria-label")
+    eq(
+      amountLabel != null && amountLabel.includes("sort 2"),
+      true,
+      "amount button aria-label mentions sort 2"
+    )
+  })
+
+  await test("plain click resets multi-sort to single column", async () => {
+    // Plain click amount — should reset to single sort on amount only
+    const amountSortBtn = dt.locator(".data-table-sort-btn").nth(1)
+    await amountSortBtn.click()
+    await page.waitForTimeout(50)
+
+    // aria-sort on amount, not email
+    const emailTh = dt.locator(".table-head").nth(2)
+    const amountTh = dt.locator(".table-head").nth(3)
+    eq(await emailTh.getAttribute("aria-sort"), null, "email th no aria-sort after reset")
+    eq(await amountTh.getAttribute("aria-sort") !== null, true, "amount th has aria-sort")
+
+    // Email sort button should not have a secondary sort aria-label
+    const emailSortBtn = dt.locator(".data-table-sort-btn").first()
+    eq(await emailSortBtn.getAttribute("aria-label"), null, "email button has no aria-label")
+  })
 }
