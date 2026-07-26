@@ -104,6 +104,69 @@ export default function ThemingPage() {
         dark without separate declarations.
       </p>
 
+      <h3>Brand colours from van.config.json</h3>
+
+      <p>
+        The generator derives token families from <code>theme.brand</code>.
+        A string is shorthand for <code>{"{ primary: … }"}</code>; the object
+        form takes up to four keys:
+      </p>
+
+      <pre>
+{`"brand": {
+  "primary":   "oklch(0.55 0.2 265)",
+  "secondary": "oklch(0.65 0.14 190)",
+  "accent":    "oklch(0.7 0.15 320)",
+  "neutral":   "oklch(0.55 0.02 265)"
+}`}
+      </pre>
+
+      <ul>
+        <li>
+          <strong><code>primary</code></strong> drives{" "}
+          <code>--primary</code>, <code>--primary-foreground</code>, and{" "}
+          <code>--ring</code>.
+        </li>
+        <li>
+          <strong><code>secondary</code></strong> and{" "}
+          <strong><code>accent</code></strong> each drive their token and{" "}
+          <code>-foreground</code> pair.
+        </li>
+        <li>
+          <strong><code>neutral</code></strong> tints the greys: its hue
+          (chroma capped at 0.03, lightness ignored) threads through{" "}
+          <code>--secondary</code>, <code>--muted</code>,{" "}
+          <code>--accent</code> and their <code>-foreground</code> pairs at
+          the kit&apos;s existing lightness ramp. This is what stops a themed
+          kit from still reading as grey. An explicit{" "}
+          <code>secondary</code> or <code>accent</code> key wins over the
+          tint.
+        </li>
+      </ul>
+
+      <p>
+        Every key gets a dark-mode variant (lightness boosted, chroma
+        slightly reduced) and a foreground picked by <em>measured</em> WCAG
+        contrast — the candidate with the higher ratio wins, and generation
+        fails if neither reaches 4.5:1. Mid-lightness colours (around
+        oklch&nbsp;L&nbsp;0.58) support no accessible foreground; nudge the
+        lightness either way. Values must be the simple{" "}
+        <code>oklch(L C H)</code> form; unknown keys are validation errors.
+      </p>
+
+      <p>
+        <strong>Deliberately not derived:</strong> the status families
+        (<code>--success</code>, <code>--warning</code>, <code>--info</code>,{" "}
+        <code>--destructive</code>) keep their defaults regardless of brand —
+        a red &ldquo;success&rdquo; because the brand is red would be worse
+        than an off-palette green. Override them token by token in{" "}
+        <code>theme.light</code> / <code>theme.dark</code> if needed; those
+        literal overrides also win over any derived token. The{" "}
+        <code>-hover</code> tokens are never emitted either — they
+        auto-derive in <code>globals.css</code> from whatever the base
+        tokens resolve to.
+      </p>
+
       <h3>Density modes</h3>
 
       <p>
