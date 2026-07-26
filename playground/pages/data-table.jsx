@@ -19,13 +19,20 @@ import {
   DropdownMenuSeparator,
 } from "../../ui/dropdown-menu/dropdown-menu.jsx"
 import { useDataTable, flexRender } from "../../lib/use-data-table.js"
-import { DataTableColumnHeader } from "../../ui/data-table/data-table.jsx"
+import {
+  DataTableColumnHeader,
+  DataTableFacetedFilter,
+} from "../../ui/data-table/data-table.jsx"
 
 import "../../ui/table/table.css"
 import "../../ui/checkbox/checkbox.css"
 import "../../ui/button/button.css"
 import "../../ui/input/input.css"
 import "../../ui/dropdown-menu/dropdown-menu.css"
+import "../../ui/popover/popover.css"
+import "../../ui/command/command.css"
+import "../../ui/badge/badge.css"
+import "../../ui/separator/separator.css"
 import "../../ui/data-table/data-table.css"
 
 // ── Inline SVG icons (zero-dep, no lucide) ───────────────────────────
@@ -178,17 +185,30 @@ export default function DataTablePage() {
       <section className="pg-section" data-pg="dt">
         <h3>Payments</h3>
 
-        {/* Toolbar: filter + column visibility */}
+        {/* Toolbar: global filter + faceted filter + column filter + visibility */}
         <div className="data-table-toolbar">
-          <Input
-            className="data-table-filter"
-            placeholder="Filter emails..."
-            value={table.getColumn("email")?.getFilterValue() ?? ""}
-            onChange={(e) =>
-              table.getColumn("email")?.setFilterValue(e.target.value)
-            }
-            data-pg="dt-filter"
-          />
+          <div className="data-table-toolbar-filters">
+            <Input
+              className="data-table-filter"
+              placeholder="Search all columns..."
+              value={table.getState().globalFilter}
+              onChange={(e) => table.setGlobalFilter(e.target.value)}
+              data-pg="dt-global-filter"
+            />
+            <DataTableFacetedFilter
+              column={table.getColumn("status")}
+              title="Status"
+            />
+            <Input
+              className="data-table-filter"
+              placeholder="Filter emails..."
+              value={table.getColumn("email")?.getFilterValue() ?? ""}
+              onChange={(e) =>
+                table.getColumn("email")?.setFilterValue(e.target.value)
+              }
+              data-pg="dt-filter"
+            />
+          </div>
           <div className="data-table-toolbar-actions">
             <DropdownMenu>
               <DropdownMenuTrigger as={Button} variant="outline" size="sm" data-pg="dt-columns-btn">
