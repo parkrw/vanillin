@@ -483,3 +483,12 @@ agents and cherry-picked onto `feat/phase-2`. Suite 406/406, build clean.
 - **`@starting-style { transform: scale(0.96) }` corrupts
   `getBoundingClientRect`** taken right after `showPopover()` (task 43).
   Item-aligned select sets `transform: none` to measure, popper clears it.
+- 2026-07-26 — task 52 landed (velocity threshold **1.0 px/ms**, not the
+  spec's 0.5: Playwright's `mouse.move` produces ~0.65 px/ms for a short drag,
+  which is indistinguishable from a slow deliberate swipe). Added a 16ms
+  minimum-dt guard — velocity over a sub-frame interval is noise. Two testing
+  gotchas: `dispatchEvent` on a modal `<dialog>` fires natively but React's
+  delegated handlers never run, so drawer tests must use real Playwright
+  pointer input (toast, not being modal, is fine with `dispatchEvent`); and
+  `mouse.move({ steps: N })` varies 20–50ms run to run, so velocity assertions
+  need wide margins.

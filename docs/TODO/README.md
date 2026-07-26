@@ -75,7 +75,7 @@ written; it is a final consistency and gap pass.
 | 49  | data-table-scale         | ~L  | [ ]    | deps: 48; grouping, virtualization, `manual*` server-side modes; **unresolved: `content-visibility` may cover virtualization outright — measure before building a windowing layer** |
 | 50  | resizable-parity         | ~M  | [ ]    | `autoSaveId`/storage, `onResize`/`onCollapse`, F6 cycling, `hitAreaMargins`  |
 | 51  | scroll-area-parity       | ~M  | [ ]    | `overflowEdgeThreshold` + `data-overflow-*`, overscroll squish, snap suspension |
-| 52  | swipe-velocity           | ~S  | [ ]    | flick dismiss for toast + drawer — `useSwipe` already returns velocity       |
+| 52  | swipe-velocity           | ~S  | [x]    | flick dismiss for toast + drawer — `useSwipe` already returns velocity       |
 | 53  | date-picker-parity       | ~M  | [x]    | natural-language input parsing (zero-dep chrono subset) + time picker        |
 | 54  | view-transitions         | ~M  | [ ]    | `startViewTransition` for route/detail/theme-toggle; reduced-motion guard    |
 | 55  | highlight-api            | ~S  | [ ]    | CSS Custom Highlight for search matches (table, command, log) — no DOM mutation |
