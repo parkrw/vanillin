@@ -1,0 +1,430 @@
+/**
+ * Pure-node tests for config-schema.mjs.
+ * Named .unit.mjs so the browser test runner ignores it.
+ */
+
+import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
+import { resolve, dirname } from "node:path"
+import { fileURLToPath } from "node:url"
+import {
+  validate,
+  isSafeCSSValue,
+  parseOklch,
+  parseColorTokens,
+  expandProperty,
+  DENSITY_PRESETS,
+} from "../scripts/config-schema.mjs"
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const ROOT = resolve(__dirname, "..")
+
+let passed = 0
+let failed = 0
+
+function test(name, fn) {
+  try {
+    fn()
+    passed++
+  } catch (e) {
+    failed++
+    console.error(`FAIL: ${name}`)
+    console.error("  ", e.message)
+  }
+}
+
+// Load known colour tokens from globals.css for context-aware tests
+const globalsCss = readFileSync(resolve(ROOT, "styles/globals.css"), "utf-8")
+const colorTokens = parseColorTokens(globalsCss)
+
+// ---------------------------------------------------------------------------
+// isSafeCSSValue
+// ---------------------------------------------------------------------------
+
+test("safe: plain value", () => {
+  assert.ok(isSafeCSSValue("0.5rem"))
+})
+
+test("safe: oklch colour", () => {
+  assert.ok(isSafeCSSValue("oklch(0.55 0.2 265)"))
+})
+
+test("safe: var() reference", () => {
+  assert.ok(isSafeCSSValue("var(--primary)"))
+})
+
+test("safe: calc()", () => {
+  assert.ok(isSafeCSSValue("calc(100% - 2rem)"))
+})
+
+test("safe: color-mix()", () => {
+  assert.ok(isSafeCSSValue("color-mix(in oklab, var(--primary) 50%, transparent)"))
+})
+
+test("safe: light-dark()", () => {
+  assert.ok(isSafeCSSValue("light-dark(oklch(0.55 0.2 265), oklch(0.85 0.17 265))"))
+})
+
+test("unsafe: semicolon", () => {
+  assert.ok(!isSafeCSSValue("red; background: url(evil)"))
+})
+
+test("unsafe: opening brace", () => {
+  assert.ok(!isSafeCSSValue("red } .x { color: red"))
+})
+
+test("unsafe: closing brace", () => {
+  assert.ok(!isSafeCSSValue("red }"))
+})
+
+test("unsafe: angle bracket", () => {
+  assert.ok(!isSafeCSSValue("<script>"))
+})
+
+test("unsafe: at-rule", () => {
+  assert.ok(!isSafeCSSValue("@import 'evil.css'"))
+})
+
+test("unsafe: comment open", () => {
+  assert.ok(!isSafeCSSValue("/* comment"))
+})
+
+test("unsafe: comment close", () => {
+  assert.ok(!isSafeCSSValue("value */"))
+})
+
+test("unsafe: url()", () => {
+  assert.ok(!isSafeCSSValue("url(https://evil.com/exfil)"))
+})
+
+test("unsafe: url() case-insensitive", () => {
+  assert.ok(!isSafeCSSValue("URL(data:text/css,body{})"))
+})
+
+test("unsafe: non-string", () => {
+  assert.ok(!isSafeCSSValue(42))
+})
+
+test("unsafe: null", () => {
+  assert.ok(!isSafeCSSValue(null))
+})
+
+// ---------------------------------------------------------------------------
+// parseOklch
+// ---------------------------------------------------------------------------
+
+test("parseOklch: valid", () => {
+  const c = parseOklch("oklch(0.55 0.2 265)")
+  assert.deepEqual(c, { l: 0.55, c: 0.2, h: 265 })
+})
+
+test("parseOklch: with whitespace", () => {
+  const c = parseOklch("  oklch( 0.55   0.2   265 )  ")
+  assert.deepEqual(c, { l: 0.55, c: 0.2, h: 265 })
+})
+
+test("parseOklch: rejects hex", () => {
+  assert.equal(parseOklch("#ff0000"), null)
+})
+
+test("parseOklch: rejects rgb", () => {
+  assert.equal(parseOklch("rgb(255, 0, 0)"), null)
+})
+
+test("parseOklch: rejects alpha form", () => {
+  assert.equal(parseOklch("oklch(0.55 0.2 265 / 0.5)"), null)
+})
+
+test("parseOklch: rejects non-string", () => {
+  assert.equal(parseOklch(42), null)
+})
+
+// ---------------------------------------------------------------------------
+// parseColorTokens
+// ---------------------------------------------------------------------------
+
+test("parseColorTokens: finds colour tokens from globals.css", () => {
+  assert.ok(colorTokens.has("primary"))
+  assert.ok(colorTokens.has("destructive"))
+  assert.ok(colorTokens.has("ring"))
+  assert.ok(colorTokens.has("primary-hover"))
+  assert.ok(colorTokens.has("sidebar-accent-foreground"))
+})
+
+test("parseColorTokens: excludes non-colour tokens", () => {
+  assert.ok(!colorTokens.has("radius"))
+  assert.ok(!colorTokens.has("motion-scale"))
+  assert.ok(!colorTokens.has("density-scale"))
+})
+
+// ---------------------------------------------------------------------------
+// expandProperty
+// ---------------------------------------------------------------------------
+
+test("expandProperty: bg -> background-color", () => {
+  assert.equal(expandProperty("bg"), "background-color")
+})
+
+test("expandProperty: fg -> color", () => {
+  assert.equal(expandProperty("fg"), "color")
+})
+
+test("expandProperty: radius -> border-radius", () => {
+  assert.equal(expandProperty("radius"), "border-radius")
+})
+
+test("expandProperty: passthrough CSS property", () => {
+  assert.equal(expandProperty("padding-inline"), "padding-inline")
+})
+
+// ---------------------------------------------------------------------------
+// validate: structure
+// ---------------------------------------------------------------------------
+
+test("validate: empty config passes", () => {
+  const r = validate({})
+  assert.ok(r.ok)
+  assert.equal(r.errors.length, 0)
+})
+
+test("validate: non-object fails", () => {
+  const r = validate("not an object")
+  assert.ok(!r.ok)
+  assert.ok(r.errors[0].includes("plain object"))
+})
+
+test("validate: array fails", () => {
+  const r = validate([1, 2, 3])
+  assert.ok(!r.ok)
+})
+
+test("validate: null fails", () => {
+  const r = validate(null)
+  assert.ok(!r.ok)
+})
+
+test("validate: unknown top-level key errors", () => {
+  const r = validate({ bogus: true })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes('"bogus"')))
+})
+
+test("validate: unknown theme key errors", () => {
+  const r = validate({ theme: { bogus: true } })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes('"bogus"')))
+})
+
+test("validate: unknown motion key errors", () => {
+  const r = validate({ theme: { motion: { bogus: 1 } } })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes('"bogus"')))
+})
+
+test("validate: unknown font key errors", () => {
+  const r = validate({ theme: { font: { bogus: "x" } } })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes('"bogus"')))
+})
+
+test("validate: unknown component key errors", () => {
+  const r = validate({ components: { button: { bogus: {} } } })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes('"bogus"')))
+})
+
+// ---------------------------------------------------------------------------
+// validate: brand
+// ---------------------------------------------------------------------------
+
+test("validate: valid brand", () => {
+  const r = validate({ theme: { brand: "oklch(0.55 0.2 265)" } })
+  assert.ok(r.ok)
+  assert.equal(r.config.theme.brand, "oklch(0.55 0.2 265)")
+})
+
+test("validate: brand must be oklch", () => {
+  const r = validate({ theme: { brand: "#ff0000" } })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes("oklch()")))
+})
+
+test("validate: brand injection", () => {
+  const r = validate({ theme: { brand: "oklch(0.55 0.2 265); --evil: red" } })
+  assert.ok(!r.ok)
+})
+
+// ---------------------------------------------------------------------------
+// validate: density
+// ---------------------------------------------------------------------------
+
+test("validate: density preset", () => {
+  const r = validate({ theme: { density: "compact" } })
+  assert.ok(r.ok)
+  assert.equal(r.config.theme.density, DENSITY_PRESETS.compact)
+})
+
+test("validate: density number", () => {
+  const r = validate({ theme: { density: 0.9 } })
+  assert.ok(r.ok)
+  assert.equal(r.config.theme.density, 0.9)
+})
+
+test("validate: density clamps low", () => {
+  const r = validate({ theme: { density: 0.1 } })
+  assert.ok(r.ok)
+  assert.equal(r.config.theme.density, 0.75)
+})
+
+test("validate: density clamps high", () => {
+  const r = validate({ theme: { density: 5 } })
+  assert.ok(r.ok)
+  assert.equal(r.config.theme.density, 1.5)
+})
+
+test("validate: density unknown preset errors", () => {
+  const r = validate({ theme: { density: "tiny" } })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes('"tiny"')))
+})
+
+// ---------------------------------------------------------------------------
+// validate: motion
+// ---------------------------------------------------------------------------
+
+test("validate: motion scale", () => {
+  const r = validate({ theme: { motion: { scale: 1.5 } } })
+  assert.ok(r.ok)
+  assert.equal(r.config.theme.motion.scale, 1.5)
+})
+
+test("validate: motion scale clamps to 0", () => {
+  const r = validate({ theme: { motion: { scale: -1 } } })
+  assert.ok(r.ok)
+  assert.equal(r.config.theme.motion.scale, 0)
+})
+
+test("validate: motion scale clamps to 3", () => {
+  const r = validate({ theme: { motion: { scale: 10 } } })
+  assert.ok(r.ok)
+  assert.equal(r.config.theme.motion.scale, 3)
+})
+
+test("validate: motion ease", () => {
+  const r = validate({ theme: { motion: { ease: "cubic-bezier(0.22, 1, 0.36, 1)" } } })
+  assert.ok(r.ok)
+  assert.equal(r.config.theme.motion.ease, "cubic-bezier(0.22, 1, 0.36, 1)")
+})
+
+// ---------------------------------------------------------------------------
+// validate: light/dark overrides
+// ---------------------------------------------------------------------------
+
+test("validate: known colour token passes", () => {
+  const r = validate({ theme: { light: { primary: "oklch(0.5 0.2 260)" } } }, { colorTokens })
+  assert.ok(r.ok)
+})
+
+test("validate: unknown colour token errors", () => {
+  const r = validate({ theme: { light: { bogus: "red" } } }, { colorTokens })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes('"bogus"')))
+})
+
+test("validate: colour token injection blocked", () => {
+  const r = validate({ theme: { dark: { primary: "red; --x: evil" } } }, { colorTokens })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes("unsafe")))
+})
+
+// ---------------------------------------------------------------------------
+// validate: components
+// ---------------------------------------------------------------------------
+
+test("validate: component unknown slug errors when knownComponents set", () => {
+  const known = new Set(["button", "badge"])
+  const r = validate({ components: { nonexistent: { tokens: {} } } }, { knownComponents: known })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes('"nonexistent"')))
+})
+
+test("validate: component slug allowed when knownComponents not set", () => {
+  const r = validate({ components: { anything: { tokens: {} } } })
+  assert.ok(r.ok)
+})
+
+test("validate: component tokens expand shorthands", () => {
+  const r = validate({ components: { button: { tokens: { bg: "red" } } } })
+  assert.ok(r.ok)
+  assert.ok("background-color" in r.config.components.button.tokens)
+  assert.ok(!("bg" in r.config.components.button.tokens))
+})
+
+test("validate: component variant property expansion", () => {
+  const r = validate({
+    components: { button: { variants: { x: { fg: "white", radius: "8px" } } } },
+  })
+  assert.ok(r.ok)
+  const v = r.config.components.button.variants.x
+  assert.equal(v.color, "white")
+  assert.equal(v["border-radius"], "8px")
+})
+
+test("validate: component size property expansion", () => {
+  const r = validate({
+    components: { button: { sizes: { xs: { "padding-inline": "0.5rem" } } } },
+  })
+  assert.ok(r.ok)
+  assert.equal(r.config.components.button.sizes.xs["padding-inline"], "0.5rem")
+})
+
+test("validate: component token injection blocked", () => {
+  const r = validate({
+    components: { button: { tokens: { bg: "red; --evil: 1" } } },
+  })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes("unsafe")))
+})
+
+test("validate: component variant injection blocked", () => {
+  const r = validate({
+    components: { button: { variants: { x: { bg: "url(https://evil.com)" } } } },
+  })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes("unsafe")))
+})
+
+test("validate: invalid CSS property name errors", () => {
+  const r = validate({
+    components: { button: { tokens: { "123invalid": "red" } } },
+  })
+  assert.ok(!r.ok)
+  assert.ok(r.errors.some((e) => e.includes("invalid CSS property")))
+})
+
+// ---------------------------------------------------------------------------
+// validate: derivation-vs-literal precedence
+// ---------------------------------------------------------------------------
+
+test("validate: both brand and light.primary pass (generator handles precedence)", () => {
+  const r = validate(
+    {
+      theme: {
+        brand: "oklch(0.55 0.2 265)",
+        light: { primary: "oklch(0.4 0.1 200)" },
+      },
+    },
+    { colorTokens },
+  )
+  assert.ok(r.ok)
+  // Both are present in normalised config -- generator applies literals last
+  assert.ok(r.config.theme.brand)
+  assert.ok(r.config.theme.light.primary)
+})
+
+// ---------------------------------------------------------------------------
+// Summary
+// ---------------------------------------------------------------------------
+
+console.log(`\nconfig-schema: ${passed}/${passed + failed} passed`)
+if (failed) process.exit(1)

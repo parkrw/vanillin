@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client"
 import "../styles/globals.css"
+import "../styles/vanillin.css"
 import "./playground.css"
 import { App } from "./app.jsx"
 
