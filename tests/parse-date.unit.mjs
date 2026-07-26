@@ -2,7 +2,9 @@ import { parseDate } from "../lib/parse-date.js"
 
 /**
  * Table-driven tests for lib/parse-date.js.
- * Run with plain `node tests/parse-date.test.mjs` — no browser needed.
+ * Run with plain `node tests/parse-date.unit.mjs` — no browser needed.
+ * The `.unit.mjs` suffix keeps it out of tests/run.mjs, which imports every
+ * `*.test.mjs` and calls its default export.
  */
 
 // Fixed reference: Wednesday 2026-03-04 (March 4, a Wednesday)
