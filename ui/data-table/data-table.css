@@ -244,6 +244,69 @@
   background-color: var(--ring);
 }
 
+/* ── Group rows ──────────────────────────────────────────────────── */
+
+.data-table-group-row {
+  background-color: color-mix(in oklab, var(--muted) 60%, transparent);
+}
+
+/* Visual separator between groups */
+.table-body .data-table-group-row:not(:first-child) {
+  border-block-start: 1px solid var(--border);
+}
+
+.data-table-group-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 500;
+  color: var(--foreground);
+  cursor: pointer;
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  /* Nested groups indent by depth */
+  margin-inline-start: calc(var(--dt-group-depth, 0) * 1.25rem);
+}
+
+.data-table-group-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+.data-table-group-toggle > svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+  transition: rotate var(--motion-fast) var(--motion-ease);
+}
+
+.data-table-group-toggle[aria-expanded="true"] > svg {
+  rotate: 90deg;
+}
+
+/* RTL: collapsed chevron points into the reading direction */
+.data-table-group-toggle > svg:dir(rtl) {
+  scale: -1 1;
+}
+
+.data-table-group-label {
+  text-transform: capitalize;
+}
+
+.data-table-group-count {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+  background-color: var(--muted);
+  border-radius: var(--radius-sm);
+  padding-inline: 0.375rem;
+}
+
 /* ── Pinned columns ──────────────────────────────────────────────── */
 
 .data-table-pinned {

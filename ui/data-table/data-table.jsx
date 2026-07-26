@@ -1,5 +1,6 @@
 import { useState, useRef } from "react"
 import { cn } from "../../lib/cn.js"
+import { TableRow, TableCell } from "../table/table.jsx"
 import { Popover, PopoverTrigger, PopoverContent } from "../popover/popover.jsx"
 import {
   Command,
@@ -200,6 +201,48 @@ export function DataTableFacetedFilter({ column, title, options: optionsProp }) 
         </Command>
       </PopoverContent>
     </Popover>
+  )
+}
+
+// ── Group row ──────────────────────────────────────────────────────
+
+function ChevronRightIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  )
+}
+
+/**
+ * Full-width group header row for a grouped table. Renders one cell
+ * spanning every visible column with an expand/collapse chevron, the group
+ * value, and the leaf-row count. Nested groups indent by `row.depth`.
+ *
+ * Props:
+ *   row      – group row from the engine (`row.isGrouped === true`)
+ *   colSpan  – number of visible columns (span the full table width)
+ *   label    – optional display label; defaults to the group value
+ */
+export function DataTableGroupRow({ row, colSpan, label, className }) {
+  const isExpanded = row.getIsExpanded()
+  return (
+    <TableRow className={cn("data-table-group-row", className)} data-depth={row.depth}>
+      <TableCell colSpan={colSpan} className="data-table-group-cell">
+        <button
+          className="data-table-group-toggle"
+          style={{ "--dt-group-depth": row.depth }}
+          aria-expanded={isExpanded}
+          onClick={() => row.toggleExpanded()}
+        >
+          <ChevronRightIcon />
+          <span className="data-table-group-label">
+            {label ?? String(row.groupValue)}
+          </span>
+          <span className="data-table-group-count">{row.leafCount}</span>
+        </button>
+      </TableCell>
+    </TableRow>
   )
 }
 
