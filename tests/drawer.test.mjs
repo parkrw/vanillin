@@ -115,4 +115,116 @@ export default async function run({ page, baseUrl, test, eq, near }) {
       await page.waitForSelector(".drawer", { state: "detached" })
     }
   })
+
+  // ── Swipe velocity tests ──────────────────────────────────────────
+  // The drawer is a modal <dialog> whose React handlers are unreachable
+  // via dispatchEvent, so these tests use Playwright's mouse API.
+  // Fast swipes use few large steps; slow swipes use small steps with
+  // explicit delays between them.
+
+  await test("fast short swipe (velocity) dismisses drawer", async () => {
+    await page.locator('button:has-text("Open down")').click()
+    await page.waitForSelector('.drawer[data-state="open"]')
+    await settle(drawer)
+    const box = await drawer.boundingBox()
+    const x = box.x + box.width / 2
+    const y = box.y + 10
+
+    // 50px downward in 3 fast steps (~2.5 px/ms, above 1.0 threshold)
+    // but under 25% of drawer height (~58px)
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.move(x, y + 50, { steps: 3 })
+    await page.mouse.up()
+
+    await page.waitForSelector(".drawer", { state: "detached" })
+  })
+
+  await test("same distance dragged slowly keeps drawer open", async () => {
+    await page.locator('button:has-text("Open down")').click()
+    await page.waitForSelector('.drawer[data-state="open"]')
+    await settle(drawer)
+    const box = await drawer.boundingBox()
+    const x = box.x + box.width / 2
+    const y = box.y + 10
+
+    // 50px downward over ~300ms (~0.17 px/ms, well below threshold)
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    for (let i = 1; i <= 10; i++) {
+      await page.mouse.move(x, y + i * 5, { steps: 1 })
+      await page.waitForTimeout(30)
+    }
+    await page.mouse.up()
+
+    await page.waitForTimeout(200)
+    eq(await drawer.getAttribute("data-state"), "open", "stays open")
+    await page.keyboard.press("Escape")
+    await page.waitForSelector(".drawer", { state: "detached" })
+  })
+
+  await test("fast swipe in wrong direction keeps drawer open", async () => {
+    await page.locator('button:has-text("Open down")').click()
+    await page.waitForSelector('.drawer[data-state="open"]')
+    await settle(drawer)
+    const box = await drawer.boundingBox()
+    const x = box.x + box.width / 2
+    const y = box.y + 40
+
+    // 50px upward (wrong direction for down drawer) — fast
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.move(x, y - 50, { steps: 3 })
+    await page.mouse.up()
+
+    await page.waitForTimeout(200)
+    eq(await drawer.getAttribute("data-state"), "open", "stays open")
+    await page.keyboard.press("Escape")
+    await page.waitForSelector(".drawer", { state: "detached" })
+  })
+
+  await test("long slow drag ending in flick dismisses drawer", async () => {
+    await page.locator('button:has-text("Open down")').click()
+    await page.waitForSelector('.drawer[data-state="open"]')
+    await settle(drawer)
+    const box = await drawer.boundingBox()
+    const x = box.x + box.width / 2
+    const y = box.y + 10
+
+    // Slow phase: 20px over ~400ms
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    for (let i = 1; i <= 4; i++) {
+      await page.mouse.move(x, y + i * 5, { steps: 1 })
+      await page.waitForTimeout(100)
+    }
+    // Pause so slow samples fall outside the 100ms velocity window
+    await page.waitForTimeout(120)
+    // Fast phase: 30px in 3 rapid steps (~1.5+ px/ms)
+    await page.mouse.move(x, y + 50, { steps: 3 })
+    await page.mouse.up()
+
+    await page.waitForSelector(".drawer", { state: "detached" })
+  })
+
+  await test("held still before lift does not dismiss drawer", async () => {
+    await page.locator('button:has-text("Open down")').click()
+    await page.waitForSelector('.drawer[data-state="open"]')
+    await settle(drawer)
+    const box = await drawer.boundingBox()
+    const x = box.x + box.width / 2
+    const y = box.y + 10
+
+    // Move 20px quickly, then hold still for 200ms (> 100ms window)
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.move(x, y + 20, { steps: 2 })
+    await page.waitForTimeout(200)
+    await page.mouse.up()
+
+    await page.waitForTimeout(200)
+    eq(await drawer.getAttribute("data-state"), "open", "stays open")
+    await page.keyboard.press("Escape")
+    await page.waitForSelector(".drawer", { state: "detached" })
+  })
 }

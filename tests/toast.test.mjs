@@ -249,4 +249,154 @@ export default async function run({ page, baseUrl, test, eq }) {
     await waitFor(async () => (await allToasts().count()) === 0, 8000)
     eq(await allToasts().count(), 0, "dismissed after full duration")
   })
+
+  // ── Swipe velocity tests ──────────────────────────────────────────
+
+  /**
+   * Dispatch a pointer sequence on a toast with explicit timeStamp
+   * overrides so velocity is deterministic.  Each entry in `moves` is
+   * { dx, dt } — delta-X from the previous position, delta-time in ms.
+   */
+  const pointerSequence = async (el, startX, startY, moves) => {
+    await page.evaluate(
+      ({ startX, startY, moves }) => {
+        const toast = document.querySelector(".toast")
+        if (!toast) throw new Error("no toast")
+
+        const fire = (type, x, y, time) => {
+          const e = new PointerEvent(type, {
+            clientX: x,
+            clientY: y,
+            pointerId: 1,
+            pointerType: "mouse",
+            bubbles: true,
+            cancelable: true,
+          })
+          Object.defineProperty(e, "timeStamp", { value: time })
+          toast.dispatchEvent(e)
+        }
+
+        // Prevent setPointerCapture from throwing on synthetic pointerId
+        const orig = Element.prototype.setPointerCapture
+        Element.prototype.setPointerCapture = function (id) {
+          try { orig.call(this, id) } catch {}
+        }
+
+        let x = startX
+        let t = 1000
+        fire("pointerdown", x, startY, t)
+        for (const { dx, dt } of moves) {
+          x += dx
+          t += dt
+          fire("pointermove", x, startY, t)
+        }
+        fire("pointerup", x, startY, t + 1)
+
+        Element.prototype.setPointerCapture = orig
+      },
+      { startX, startY, moves }
+    )
+  }
+
+  await test("fast short swipe (velocity) dismisses", async () => {
+    await page.mouse.move(0, 0)
+    await page.locator('button:has-text("Default")').click()
+    await waitFor(async () => (await allToasts().count()) > 0)
+    const t = firstToast()
+    await settle(t)
+    const box = await t.boundingBox()
+
+    // 30px in 20ms = 1.5 px/ms — above 1.0 threshold, under 25% distance
+    await pointerSequence(t, box.x + 20, box.y + box.height / 2, [
+      { dx: 15, dt: 20 },
+      { dx: 15, dt: 20 },
+    ])
+
+    await waitFor(async () => (await allToasts().count()) === 0, 5000)
+    eq(await allToasts().count(), 0, "dismissed by velocity")
+  })
+
+  await test("same distance dragged slowly does not dismiss", async () => {
+    await page.mouse.move(0, 0)
+    await page.locator('button:has-text("Default")').click()
+    await waitFor(async () => (await allToasts().count()) > 0)
+    const t = firstToast()
+    await settle(t)
+    const box = await t.boundingBox()
+
+    // 30px in 200ms = 0.15 px/ms — well below threshold, under 25% distance
+    await pointerSequence(t, box.x + 20, box.y + box.height / 2, [
+      { dx: 15, dt: 100 },
+      { dx: 15, dt: 100 },
+    ])
+
+    await page.waitForTimeout(200)
+    eq(await allToasts().count() > 0, true, "not dismissed")
+    await clearAll()
+  })
+
+  await test("fast swipe in wrong direction does not dismiss", async () => {
+    await page.mouse.move(0, 0)
+    await page.locator('button:has-text("Default")').click()
+    await waitFor(async () => (await allToasts().count()) > 0)
+    const t = firstToast()
+    await settle(t)
+    const box = await t.boundingBox()
+
+    // -30px (left, wrong direction) in 20ms = -1.5 px/ms
+    // swipeSign = 1 for bottom-right, so velocity * swipeSign < 0
+    await pointerSequence(t, box.x + 60, box.y + box.height / 2, [
+      { dx: -15, dt: 20 },
+      { dx: -15, dt: 20 },
+    ])
+
+    await page.waitForTimeout(200)
+    eq(await allToasts().count() > 0, true, "not dismissed")
+    await clearAll()
+  })
+
+  await test("long slow drag ending in flick dismisses", async () => {
+    await page.mouse.move(0, 0)
+    await page.locator('button:has-text("Default")').click()
+    await waitFor(async () => (await allToasts().count()) > 0)
+    const t = firstToast()
+    await settle(t)
+    const box = await t.boundingBox()
+
+    // Slow drag (20px over 800ms), then a fast flick (30px in 20ms).
+    // Whole-gesture average: 50px / 860ms = 0.058 px/ms — useless.
+    // Windowed (last 100ms): 30px / 20ms = 1.5 px/ms — above threshold.
+    await pointerSequence(t, box.x + 20, box.y + box.height / 2, [
+      { dx: 5, dt: 200 },
+      { dx: 5, dt: 200 },
+      { dx: 5, dt: 200 },
+      { dx: 5, dt: 200 },
+      { dx: 15, dt: 20 },
+      { dx: 15, dt: 20 },
+    ])
+
+    await waitFor(async () => (await allToasts().count()) === 0, 5000)
+    eq(await allToasts().count(), 0, "dismissed by flick at end")
+  })
+
+  await test("held still before lift does not dismiss by velocity", async () => {
+    await page.mouse.move(0, 0)
+    await page.locator('button:has-text("Default")').click()
+    await waitFor(async () => (await allToasts().count()) > 0)
+    const t = firstToast()
+    await settle(t)
+    const box = await t.boundingBox()
+
+    // Move 20px quickly, then hold still for 200ms (> 100ms window).
+    // The old samples are pruned; only the still-position remains.
+    await pointerSequence(t, box.x + 20, box.y + box.height / 2, [
+      { dx: 10, dt: 20 },
+      { dx: 10, dt: 20 },
+      { dx: 0, dt: 200 },
+    ])
+
+    await page.waitForTimeout(200)
+    eq(await allToasts().count() > 0, true, "not dismissed")
+    await clearAll()
+  })
 }
