@@ -102,7 +102,7 @@ written; it is a final consistency and gap pass.
 | 62  | schema-core              | ~L  | [x]    | `lib/schema.js` — zod-shaped validation + resolver [^62]               |
 | 63  | composition-pass         | ~M  | [~]    | reuse only where the relationship is **semantic** [^63]                |
 | 64  | component-contracts      | ~L  | [ ]    | per-copy `.van.json` manifest + conformance suite [^64]                |
-| 65  | component-update         | ~L  | [ ]    | deps: 64, 38; `van update` with 3-way merge [^65]                      |
+| 65  | component-update          | ~L  | [ ]    | deps: 64, 38; `van update` this can wait  [^65]                      |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -218,8 +218,10 @@ detail just-in-time after 58 lands. Rough order of usefulness:
   there when a task lands — not to this file. This index stays scannable.
 - Planning is **just-in-time**: the rows above are durable, task files are
   written when a task is picked up. Task files now exist for every task except
-  22–29 (landed before the convention) and 59 (still to be written).
-  Unstarted-but-specified and ready to dispatch: 39, 60, 64 (then 38); 30 last.
+  22–29 (landed before the convention).
+  Unstarted-but-specified and ready to dispatch: 64 (then 38), 39; 30 last.
+  **64 and 39 each run alone** — 64 hashes every component file, 39 rewrites
+  every component's CSS, so neither can share a batch with component work.
 - Test: `node tests/run.mjs` — boots its own vite on :5199, drives local Chrome;
   one `tests/<slug>.test.mjs` per interactive component. (Dev server on :5173
   only needed for manual/screenshot QA.)

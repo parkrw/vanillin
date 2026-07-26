@@ -109,3 +109,15 @@ Each is verified, not speculative:
 - Every registry slug resolves to its own page — no two slugs sharing a module.
 - Grep for the composition you just added and confirm no cycle: `ui/field` must
   not import `ui/form`.
+
+## File ownership (batch 59/60/63)
+
+Sub-tasks 1, 2 and 6 are **done** — do not redo them. Remaining: 3 (chips),
+4 (`ui/data-table` → `ui/scroll-area`), 5 (wire `lib/use-highlight.js`).
+
+You own `ui/badge/`, `ui/combobox/`, `ui/data-table/`, `ui/scroll-area/` and
+`lib/use-highlight.js`. Do **not** touch `playground/registry.js` (task 59 owns
+it this batch — if sub-task 3 needs a new slug registered, report the exact line
+you want added and leave it out of your branch), `styles/globals.css` (task 60
+owns it — report missing tokens, do not add them), or `ui/form/` and
+`lib/use-form.js` (task 59).

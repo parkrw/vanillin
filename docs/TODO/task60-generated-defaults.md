@@ -87,3 +87,12 @@ collide with, and the demo and the defaults are the same artifact.
 - Setting `data-density` on `<html>` still changes spacing — this is the
   regression that the old double-`:root` broke, and it only fails at the root
   element, so test there specifically.
+
+## File ownership (batch 59/60/63)
+
+You are the **sole owner of `styles/globals.css`**, `van.config.json`,
+`scripts/build-theme.mjs`, `scripts/config-schema.mjs` and
+`playground/pages/docs/theming.jsx`. Do **not** touch `playground/registry.js`
+(task 59 owns it — you need no new entry, theming is already registered) or any
+`ui/*` component file. If a component needs a token you are removing or renaming,
+report it rather than editing the component.

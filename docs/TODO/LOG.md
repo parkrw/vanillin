@@ -520,3 +520,15 @@ agents and cherry-picked onto `feat/phase-2`. Suite 406/406, build clean.
   block; pure-node tests correctly named `schema.unit.mjs`. Task file for 61
   named `tests/config-schema.test.mjs`; real file is `config-schema.unit.mjs`
   — caught at detail time, brief corrected it.
+- 2026-07-26 — batch **59/60/63** dispatched to three worktrees. Chosen over
+  64-first (HANDOFF's suggestion) because 64 records file hashes for every
+  component and 39 rewrites every component's CSS: both conflict with 63's
+  component edits and with each other, so each now runs alone after this batch.
+  Task file for 59 written at detail time (it was the last unwritten one);
+  design call recorded there — the bindings layer gets **its own slug**
+  (`ui/form-fields/`) rather than a file inside `ui/form/`, because it imports
+  `lib/use-form.js` and `ui/form` must stay copyable without the engine.
+  File ownership assigned in writing, one owner per shared file:
+  59 owns `playground/registry.js`, 60 owns `styles/globals.css` + the theme
+  scripts, 63 owns `ui/badge` / `ui/combobox` / `ui/data-table` /
+  `lib/use-highlight.js`. Base commit suite: 583/583.
