@@ -321,8 +321,9 @@ export function ScrollArea({ className, children, overflowEdgeThreshold = 0, ...
   )
 
   // Overscroll squish — touch/pen only, reduced-motion guarded.
-  // useSwipe cannot support this: its unconditional setPointerCapture hijacks
-  // native scrolling, violating the "must not hijack a real scroll" rule.
+  // useSwipe now defers capture until axis-aligned movement exceeds a
+  // threshold, but squish still needs direction-sensitive activation at
+  // scroll boundaries — a migration is tracked as a follow-up.
   useEffect(() => {
     const viewport = viewportRef.current
     const content = contentRef.current
