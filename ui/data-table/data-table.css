@@ -106,6 +106,77 @@
   opacity: 1;
 }
 
+/* Faceted filter trigger */
+.data-table-facet-trigger {
+  gap: 0.375rem;
+}
+
+.data-table-facet-trigger > svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.data-table-facet-sep {
+  height: 1rem;
+  margin-inline: 0.125rem;
+}
+
+.data-table-facet-badge {
+  font-weight: 400;
+  padding: 0.125rem 0.375rem;
+}
+
+.data-table-facet-content {
+  min-inline-size: 12rem;
+  padding: 0;
+}
+
+.data-table-facet-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--primary);
+  margin-inline-end: 0.5rem;
+  opacity: 0.5;
+}
+
+.data-table-facet-check[data-selected] {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  opacity: 1;
+}
+
+.data-table-facet-check > svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.data-table-facet-count {
+  margin-inline-start: auto;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+}
+
+.data-table-facet-clear {
+  justify-content: center;
+  font-size: 0.8125rem;
+}
+
+/* Global filter in toolbar */
+.data-table-toolbar-filters {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 /* Actions cell — keep the trigger compact */
 .data-table-actions-trigger {
   display: inline-flex;
