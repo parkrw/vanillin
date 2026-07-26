@@ -204,7 +204,7 @@
 /* ------------------------------------------------------------------ */
 
 .toast--exit {
-  animation: toast-exit var(--motion-fast) var(--motion-ease) forwards;
+  animation: toast-exit calc(var(--motion-fast) * var(--exit-scale, 1)) var(--motion-ease) forwards;
   pointer-events: none;
 }
 

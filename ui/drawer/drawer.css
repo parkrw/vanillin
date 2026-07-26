@@ -167,6 +167,11 @@
   }
 }
 
+/* Velocity-scaled exit: a flick shortens the close animation. */
+.dialog.drawer[data-state="closed"] {
+  animation-duration: calc(var(--motion-fast) * var(--exit-scale, 1));
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dialog.drawer[data-state="open"],
   .dialog.drawer[data-state="closed"] {

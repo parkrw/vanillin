@@ -263,6 +263,9 @@ export function Toaster({
   )
 }
 
+const VELOCITY_THRESHOLD = 1.0 // px/ms — a deliberate flick (~1000 px/s)
+const VELOCITY_WINDOW = 100 // ms — trailing sample window
+
 /* ------------------------------------------------------------------ */
 /*  Individual toast                                                  */
 /* ------------------------------------------------------------------ */
@@ -392,10 +395,12 @@ function ToastItem({
     const el = ref.current
     if (!el) return
     const rect = el.getBoundingClientRect()
+    const pos = swipeAxis === "x" ? event.clientX : event.clientY
     drag.current = {
-      start: swipeAxis === "x" ? event.clientX : event.clientY,
+      start: pos,
       offset: 0,
       size: swipeAxis === "x" ? rect.width : rect.height,
+      samples: [{ time: event.timeStamp, position: pos }],
     }
     el.setPointerCapture(event.pointerId)
   }
@@ -407,6 +412,11 @@ function ToastItem({
     const raw = (pos - drag.current.start) * swipeSign
     const offset = Math.max(0, raw)
     drag.current.offset = offset
+    const now = event.timeStamp
+    drag.current.samples.push({ time: now, position: pos })
+    while (drag.current.samples.length > 1 && drag.current.samples[0].time < now - VELOCITY_WINDOW) {
+      drag.current.samples.shift()
+    }
     el.setAttribute("data-swiping", "")
     el.style.transform =
       swipeAxis === "x"
@@ -414,13 +424,37 @@ function ToastItem({
         : `translateY(${offset}px)`
   }
 
-  const onPointerUp = () => {
+  const onPointerUp = (event) => {
     if (!drag.current) return
     const el = ref.current
-    const { offset, size } = drag.current
+    const { offset, size, samples } = drag.current
     drag.current = null
     el.removeAttribute("data-swiping")
-    if (offset > size * 0.25) {
+
+    // Add the final sample and prune the window
+    const pos = swipeAxis === "x" ? event.clientX : event.clientY
+    const now = event.timeStamp
+    samples.push({ time: now, position: pos })
+    while (samples.length > 1 && samples[0].time < now - VELOCITY_WINDOW) {
+      samples.shift()
+    }
+
+    // Windowed velocity (px/ms) — direction must agree with dismiss edge.
+    // Require dt >= 16ms (one frame); sub-frame intervals are unreliable.
+    let velocity = 0
+    if (samples.length >= 2) {
+      const first = samples[0]
+      const last = samples[samples.length - 1]
+      const dt = last.time - first.time
+      if (dt >= 16) velocity = (last.position - first.position) / dt
+    }
+    const velocityDismiss = velocity * swipeSign > VELOCITY_THRESHOLD
+
+    if (offset > size * 0.25 || velocityDismiss) {
+      if (velocityDismiss) {
+        const scale = Math.max(0.3, VELOCITY_THRESHOLD / Math.abs(velocity))
+        el.style.setProperty("--exit-scale", scale.toFixed(2))
+      }
       onDismiss()
     } else {
       el.style.transform = ""

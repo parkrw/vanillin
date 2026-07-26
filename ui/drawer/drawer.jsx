@@ -39,6 +39,9 @@ export function DrawerSwipeHandle({ className, ...props }) {
   return <div aria-hidden="true" className={cn("drawer-handle", className)} {...props} />
 }
 
+const VELOCITY_THRESHOLD = 1.0 // px/ms — a deliberate flick (~1000 px/s)
+const VELOCITY_WINDOW = 100 // ms — trailing sample window
+
 // Positive swipe offset = toward the dismiss edge; the opposite way clamps
 // to zero so the drawer can't be dragged into the viewport.
 const SWIPE = {
@@ -75,28 +78,60 @@ export function DrawerContent({ className, children, ...props }) {
           return
         }
         if (event.target.closest("button, a, input, select, textarea, [contenteditable]")) return
+        const pos = pointerPosition(event)
         drag.current = {
-          start: pointerPosition(event),
+          start: pos,
           offset: 0,
           size: axis === "x" ? rect.width : rect.height,
+          samples: [{ time: event.timeStamp, position: pos }],
         }
         el.setPointerCapture(event.pointerId)
       }}
       onPointerMove={(event) => {
         if (!drag.current) return
         const el = event.currentTarget
-        const offset = Math.max(0, (pointerPosition(event) - drag.current.start) * sign)
+        const pos = pointerPosition(event)
+        const offset = Math.max(0, (pos - drag.current.start) * sign)
         drag.current.offset = offset
+        const now = event.timeStamp
+        drag.current.samples.push({ time: now, position: pos })
+        while (drag.current.samples.length > 1 && drag.current.samples[0].time < now - VELOCITY_WINDOW) {
+          drag.current.samples.shift()
+        }
         el.setAttribute("data-swiping", "")
         el.style.transform = axis === "x" ? `translateX(${offset * sign}px)` : `translateY(${offset * sign}px)`
       }}
       onPointerUp={(event) => {
         if (!drag.current) return
         const el = event.currentTarget
-        const { offset, size } = drag.current
+        const { offset, size, samples } = drag.current
         drag.current = null
         el.removeAttribute("data-swiping")
-        if (offset > size * 0.25) {
+
+        // Add the final sample and prune the window
+        const pos = pointerPosition(event)
+        const now = event.timeStamp
+        samples.push({ time: now, position: pos })
+        while (samples.length > 1 && samples[0].time < now - VELOCITY_WINDOW) {
+          samples.shift()
+        }
+
+        // Windowed velocity (px/ms) — direction must agree with dismiss edge.
+        // Require dt >= 16ms (one frame); sub-frame intervals are unreliable.
+        let velocity = 0
+        if (samples.length >= 2) {
+          const first = samples[0]
+          const last = samples[samples.length - 1]
+          const dt = last.time - first.time
+          if (dt >= 16) velocity = (last.position - first.position) / dt
+        }
+        const velocityDismiss = velocity * sign > VELOCITY_THRESHOLD
+
+        if (offset > size * 0.25 || velocityDismiss) {
+          if (velocityDismiss) {
+            const scale = Math.max(0.3, VELOCITY_THRESHOLD / Math.abs(velocity))
+            el.style.setProperty("--exit-scale", scale.toFixed(2))
+          }
           // Keep the inline transform: the exit keyframe has no `from`, so
           // the close animation starts from the dragged position.
           setOpen(false)
