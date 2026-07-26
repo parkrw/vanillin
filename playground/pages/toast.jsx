@@ -98,6 +98,17 @@ export default function ToastPage() {
       </section>
 
       <section className="pg-section">
+        <h3>Swipe to dismiss</h3>
+        <p>
+          A toast dismisses on <strong>drag distance</strong> (past 25% of its
+          width) <em>or</em> <strong>flick velocity</strong> (above 1 px/ms in
+          the dismiss direction). The two gates are independent — a fast short
+          flick dismisses the same as a slow long drag. Under reduced motion the
+          toast still dismisses; only the exit animation is suppressed.
+        </p>
+      </section>
+
+      <section className="pg-section">
         <h3>Short duration (test helpers)</h3>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           <Button

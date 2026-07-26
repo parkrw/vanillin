@@ -18,6 +18,18 @@ export default function DrawerPage() {
       <h2>Drawer</h2>
 
       <section className="pg-section">
+        <h3>Swipe to dismiss</h3>
+        <p>
+          The drawer dismisses on <strong>drag distance</strong> (past 25% of
+          its size) <em>or</em> <strong>flick velocity</strong> (above 1 px/ms
+          in the dismiss direction). The two gates are independent — a fast
+          short flick dismisses the same as a slow long drag. Under reduced
+          motion the drawer still dismisses; only the slide animation is
+          suppressed.
+        </p>
+      </section>
+
+      <section className="pg-section">
         <h3>Swipe directions</h3>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           {["down", "up", "left", "right"].map((direction) => (
