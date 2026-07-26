@@ -8,6 +8,7 @@ export const docs = {
   introduction: { title: "Introduction", page: lazy(() => import("./pages/docs/introduction.jsx")) },
   installation: { title: "Installation", page: lazy(() => import("./pages/docs/installation.jsx")) },
   theming: { title: "Theming", page: lazy(() => import("./pages/docs/theming.jsx")) },
+  schema: { title: "Schema", page: lazy(() => import("./pages/docs/schema.jsx")) },
 }
 
 /**
