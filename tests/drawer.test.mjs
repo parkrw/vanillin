@@ -191,17 +191,18 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     const x = box.x + box.width / 2
     const y = box.y + 10
 
-    // Slow phase: 20px over ~400ms
+    // Slow phase: 10px over ~200ms
     await page.mouse.move(x, y)
     await page.mouse.down()
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= 2; i++) {
       await page.mouse.move(x, y + i * 5, { steps: 1 })
       await page.waitForTimeout(100)
     }
-    // Pause so slow samples fall outside the 100ms velocity window
-    await page.waitForTimeout(120)
-    // Fast phase: 30px in 3 rapid steps (~1.5+ px/ms)
-    await page.mouse.move(x, y + 50, { steps: 3 })
+    // Pause so slow samples fall well outside the 100ms velocity window
+    await page.waitForTimeout(200)
+    // Fast phase: 40px in 4 rapid steps — velocity ~2+ px/ms,
+    // total gesture distance (50px) stays under 25% of drawer height
+    await page.mouse.move(x, y + 50, { steps: 4 })
     await page.mouse.up()
 
     await page.waitForSelector(".drawer", { state: "detached" })
