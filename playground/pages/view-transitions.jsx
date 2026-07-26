@@ -99,11 +99,15 @@ export default function ViewTransitionsPage() {
       <section className="pg-section">
         <h3>Route transitions</h3>
         <p>
-          Every hash-route change in the playground is wrapped in{" "}
-          <code>withViewTransition</code>. Navigate between pages to see the
-          default crossfade. This is the browser's built-in morphing of the
-          old and new root snapshots — no custom CSS needed beyond disabling
-          animation under reduced motion.
+          Route changes <em>can</em> be wrapped in{" "}
+          <code>withViewTransition</code> for a crossfade between pages, but
+          this playground does not do so globally. The reason: during a view
+          transition the browser overlays snapshot pseudo-elements on top of
+          the page, blocking pointer input for the animation's duration. A
+          user who clicks immediately after navigating would hit a dead zone.
+          The theme toggle and shared-element demo below are scoped to
+          explicit user actions where the brief non-interactive window is
+          expected; a blanket route crossfade is not.
         </p>
       </section>
 

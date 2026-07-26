@@ -10,10 +10,7 @@ const sections = [
 function useHashRoute() {
   const [hash, setHash] = useState(() => window.location.hash.slice(1))
   useEffect(() => {
-    const onChange = () => {
-      const next = window.location.hash.slice(1)
-      withViewTransition(() => setHash(next))
-    }
+    const onChange = () => setHash(window.location.hash.slice(1))
     window.addEventListener("hashchange", onChange)
     return () => window.removeEventListener("hashchange", onChange)
   }, [])
