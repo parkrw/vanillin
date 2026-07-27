@@ -11,7 +11,6 @@ import {
   CommandItem,
   CommandSeparator,
 } from "../command/command.jsx"
-import { Checkbox } from "../checkbox/checkbox.jsx"
 import { Badge } from "../badge/badge.jsx"
 import { Separator } from "../separator/separator.jsx"
 import { Button } from "../button/button.jsx"
@@ -60,8 +59,8 @@ function SortIcon({ sorted }) {
  * get an `aria-label` describing their position ("Email, sorted ascending,
  * sort 2").
  */
-export function DataTableColumnHeader({ column, title, className }) {
-  if (!column.getCanSort()) return <span className={className}>{title}</span>
+export function DataTableColumnHeader({ column, title, className, ...props }) {
+  if (!column.getCanSort()) return <span className={className} {...props}>{title}</span>
 
   const sorted = column.getIsSorted()
   const sortIndex = column.getSortIndex()
@@ -78,6 +77,7 @@ export function DataTableColumnHeader({ column, title, className }) {
       onClick={(e) => column.toggleSorting(sorted === "asc", e.shiftKey)}
       aria-label={ariaLabel}
       {...(sorted ? { "data-sorted": sorted } : {})}
+      {...props}
     >
       {title}
       <SortIcon sorted={sorted} />
@@ -118,7 +118,7 @@ function CheckIcon() {
  *   options  – optional `{ label, value, icon }[]`; when omitted the faceted
  *              values are used directly
  */
-export function DataTableFacetedFilter({ column, title, options: optionsProp }) {
+export function DataTableFacetedFilter({ column, title, options: optionsProp, ...props }) {
   const [open, setOpen] = useState(false)
 
   const facets = column.getFacetedUniqueValues()
@@ -138,7 +138,8 @@ export function DataTableFacetedFilter({ column, title, options: optionsProp }) 
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger as={Button} variant="outline" size="sm" className="data-table-facet-trigger">
+      {/* Rest lands on the trigger — the root Popover renders no DOM node. */}
+      <PopoverTrigger as={Button} variant="outline" size="sm" className="data-table-facet-trigger" {...props}>
         <PlusCircle />
         {title}
         {selected.size > 0 && (
@@ -226,10 +227,10 @@ function ChevronRightIcon() {
  *   colSpan  – number of visible columns (span the full table width)
  *   label    – optional display label; defaults to the group value
  */
-export function DataTableGroupRow({ row, colSpan, label, className }) {
+export function DataTableGroupRow({ row, colSpan, label, className, ...props }) {
   const isExpanded = row.getIsExpanded()
   return (
-    <TableRow className={cn("data-table-group-row", className)} data-depth={row.depth}>
+    <TableRow className={cn("data-table-group-row", className)} data-depth={row.depth} {...props}>
       <TableCell colSpan={colSpan} className="data-table-group-cell">
         <button
           className="data-table-group-toggle"
@@ -318,7 +319,7 @@ export function DataTableScroller({ className, children, ...props }) {
  * React state on pointerup. Double-click resets to the column def's
  * default `size`. Keyboard: arrows ±8 px, Home/End to min/max.
  */
-export function DataTableColumnResizer({ column }) {
+export function DataTableColumnResizer({ column, ...props }) {
   const handleRef = useRef(null)
 
   const min = column.columnDef?.minSize ?? 40
@@ -382,6 +383,7 @@ export function DataTableColumnResizer({ column }) {
       onPointerDown={onPointerDown}
       onDoubleClick={() => column.resetSize()}
       onKeyDown={onKeyDown}
+      {...props}
     />
   )
 }

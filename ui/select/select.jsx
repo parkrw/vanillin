@@ -52,6 +52,9 @@ export function Select({
   disabled = false,
   ref,
   children,
+  // Leftover props (id, aria-*, …) forward to the trigger — the root renders
+  // no DOM node of its own, and dropping them silently broke FormControl.
+  ...rootProps
 }) {
   const [currentValue, setValue] = useControllableState({
     value,
@@ -134,6 +137,7 @@ export function Select({
         selectValue,
         typeaheadRef,
         appendTypeahead,
+        rootProps,
       }}
     >
       {children}
@@ -180,6 +184,7 @@ export function SelectTrigger({
     disabled,
     selectValue,
     appendTypeahead,
+    rootProps,
   } = useContext(SelectContext)
 
   // Pointerdown light-dismisses the open popover; the queued toggle may sync
@@ -229,6 +234,7 @@ export function SelectTrigger({
 
   return (
     <Comp
+      {...rootProps}
       ref={triggerRef}
       type={Comp === "button" ? "button" : undefined}
       role="combobox"

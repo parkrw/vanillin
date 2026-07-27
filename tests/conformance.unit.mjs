@@ -94,19 +94,24 @@ const INDETERMINATE_LOOPS = {
   toast: [{ selector: ".toast-loading-spinner", duration: "1s" }],
 }
 
-// Interactive components known to be missing browser tests (backlog for sub-task 5).
-const MISSING_TESTS_BACKLOG = {
-  accordion: "useControllableState + usePresence disclosure — needs keyboard/expand tests",
-  checkbox: "useControllableState toggle — needs click/keyboard/indeterminate tests",
-  collapsible: "useControllableState + usePresence disclosure — needs open/close tests",
-  "radio-group": "useControllableState + roving focus — needs keyboard navigation tests",
-  switch: "useControllableState toggle — needs click/keyboard tests",
-  tabs: "useControllableState + roving focus — needs keyboard/panel-switch tests",
-  toggle: "useControllableState toggle — needs click/aria-pressed tests",
+// Exported components that render only a context provider — no DOM node of
+// their own, so there is nothing to spread rest props onto. Select and
+// Combobox are NOT here: they forward leftover props to their trigger/input.
+// Keyed "slug/ComponentName".
+const PROVIDER_COMPONENTS = {
+  "context-menu/ContextMenu": "renders DropdownMenu + context; the trigger is a child part",
+  "dialog/Dialog": "context provider; DialogContent renders the <dialog>",
+  "dialog/DialogPortal": "portal wrapper, renders children elsewhere",
+  "dropdown-menu/DropdownMenu": "context provider; trigger/content are child parts",
+  "dropdown-menu/DropdownMenuSub": "nested-menu context provider",
+  "form/FormField": "context provider around Controller — FormControl targets the control",
+  "hover-card/HoverCard": "context provider; trigger/content are child parts",
+  "menubar/MenubarMenu": "per-menu context provider inside Menubar",
+  "message-scroller/MessageScrollerProvider": "context provider by name and contract",
+  "popover/Popover": "context provider; trigger/content are child parts",
+  "tooltip/Tooltip": "context provider; trigger/content are child parts",
+  "tooltip/TooltipProvider": "shared-timer context provider by name and contract",
 }
-
-// Props-rest enforcement — disabled until the backlog is worked (sub-task 5).
-const ENFORCE_PROPS_REST = false
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -500,25 +505,15 @@ test("demo-page: no two registry entries resolve to the same page module", () =>
 
 test("test-presence: interactive components have tests/<slug>.test.mjs", () => {
   const errors = []
-  const backlog = []
   for (const slug of listUiSlugs()) {
     if (slug in STATIC_COMPONENTS) continue
     const testFile = join(testsDir, `${slug}.test.mjs`)
     if (!existsSync(testFile)) {
-      if (slug in MISSING_TESTS_BACKLOG) {
-        backlog.push(`${slug} — ${MISSING_TESTS_BACKLOG[slug]}`)
-      } else {
-        errors.push(
-          `${slug} — interactive component missing tests/${slug}.test.mjs. ` +
-            `Add browser tests, or add to STATIC_COMPONENTS if purely presentational.`
-        )
-      }
+      errors.push(
+        `${slug} — interactive component missing tests/${slug}.test.mjs. ` +
+          `Add browser tests, or add to STATIC_COMPONENTS if purely presentational.`
+      )
     }
-  }
-  if (backlog.length) {
-    console.log("\n--- missing-test backlog (known, tracked for sub-task 5) ---")
-    for (const b of backlog) console.log("  " + b)
-    console.log(`--- ${backlog.length} total ---\n`)
   }
   assert.equal(errors.length, 0, "test-presence (missing):\n  " + errors.join("\n  "))
 })
@@ -691,7 +686,7 @@ test("manifest: no cycles in the requires graph", () => {
   )
 })
 
-// ── Rule 7: Props-rest — behind ENFORCE_PROPS_REST flag ─────────────
+// ── Rule 7: Props-rest ──────────────────────────────────────────────
 
 test("props-rest: exported function components destructure with ...rest", () => {
   const errors = []
@@ -706,27 +701,21 @@ test("props-rest: exported function components destructure with ...rest", () => 
       while ((m = re.exec(content)) !== null) {
         const name = m[1]
         const params = m[2]
-        if (!params.includes("...")) {
-          // Find the line number.
-          const upTo = content.slice(0, m.index)
-          const lineNum = upTo.split("\n").length
-          errors.push(
-            `${slug}/${file}:${lineNum}:${name} — destructures props without a ...rest element. ` +
-              `ARIA/id props passed to <${name}> will be silently dropped. ` +
-              `Add ...props to the destructure and spread onto the root element.`
-          )
-        }
+        if (params.includes("...")) continue
+        if (`${slug}/${name}` in PROVIDER_COMPONENTS) continue
+        // Find the line number.
+        const upTo = content.slice(0, m.index)
+        const lineNum = upTo.split("\n").length
+        errors.push(
+          `${slug}/${file}:${lineNum}:${name} — destructures props without a ...rest element. ` +
+            `ARIA/id props passed to <${name}> will be silently dropped. ` +
+            `Spread a rest onto the root element (or forward it to the interactive part, ` +
+            `like Select/Combobox), or add to PROVIDER_COMPONENTS if it renders no DOM node.`
+        )
       }
     }
   }
-
-  if (ENFORCE_PROPS_REST) {
-    assert.equal(errors.length, 0, "props-rest:\n  " + errors.join("\n  "))
-  } else if (errors.length > 0) {
-    console.log("\n--- props-rest violations (not enforced, ENFORCE_PROPS_REST = false) ---")
-    for (const e of errors) console.log("  " + e)
-    console.log(`--- ${errors.length} total ---\n`)
-  }
+  assert.equal(errors.length, 0, "props-rest:\n  " + errors.join("\n  "))
 })
 
 // ── Run ─────────────────────────────────────────────────────────────

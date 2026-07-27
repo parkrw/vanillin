@@ -55,6 +55,9 @@ export function Combobox({
   disabled = false,
   ref,
   children,
+  // Leftover props (id, aria-*, …) forward to the input — the root renders
+  // no DOM node of its own, and dropping them silently breaks FormControl.
+  ...rootProps
 }) {
   const effectiveDefault = defaultValue !== undefined ? defaultValue : (multiple ? [] : "")
   const [currentValue, setValue] = useControllableState({
@@ -196,6 +199,7 @@ export function Combobox({
         removeValue,
         clearValue,
         revertInput,
+        rootProps,
       }}
     >
       {children}
@@ -259,6 +263,7 @@ export function ComboboxInput({
     removeValue,
     clearValue,
     revertInput,
+    rootProps,
   } = useContext(ComboboxContext)
 
   // Pointerdown on the input light-dismisses the open popup natively; the
@@ -397,6 +402,7 @@ export function ComboboxInput({
         </Chip>
       ))}
       <input
+        {...rootProps}
         ref={inputRef}
         type="text"
         role="combobox"

@@ -263,4 +263,22 @@ export default async function run({ page, baseUrl, test, eq }) {
       return btn?.disabled === false
     }, { timeout: 5000 })
   })
+
+  await test("FormControl props forward through Select to the trigger", async () => {
+    // FormControl clones id/aria-describedby onto <Select>, which renders no
+    // DOM node; Select forwards leftovers to the trigger. They used to vanish.
+    await page.goto(`${baseUrl}/#form`)
+    const trigger = page.locator('[data-pg="form-role-trigger"]')
+    const id = await trigger.getAttribute("id")
+    if (!id) throw new Error("trigger has no id — Select dropped the cloned FormControl props")
+    eq(await page.locator(`label[for="${id}"]`).count(), 1, "FormLabel htmlFor resolves to the trigger")
+    const describedBy = await trigger.getAttribute("aria-describedby")
+    if (!describedBy) throw new Error("trigger has no aria-describedby")
+    let found = false
+    for (const refId of describedBy.split(/\s+/)) {
+      const text = await page.locator(`[id="${refId}"]`).textContent().catch(() => "")
+      if (text?.includes("Controls what the user can access")) found = true
+    }
+    eq(found, true, "aria-describedby resolves to the field description")
+  })
 }

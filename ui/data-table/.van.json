@@ -5,7 +5,6 @@
   "requires": [
     "badge",
     "button",
-    "checkbox",
     "command",
     "popover",
     "scroll-area",
@@ -14,6 +13,6 @@
   ],
   "files": {
     "data-table.css": "sha256-c8G7DyQ82YjC4k8OgGFAwY2LrmRHcWSkDZEUCpbWuBI=",
-    "data-table.jsx": "sha256-OVLv135UoX6CUS7hT43lueuxvDzNxQx1dHrOCfq5vIY="
+    "data-table.jsx": "sha256-U+TmY53L4afH7dhY2iS1yUXC/VTRpeuYob56bRJEfvE="
   }
 }
