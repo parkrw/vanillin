@@ -71,7 +71,7 @@ collide with, and the demo and the defaults are the same artifact.
   moved to machinery.
 - [x] 2. Split `globals.css`: token values come from generated output, machinery
   stays. Resolve the layering question and comment the chosen order.
-- [ ] 3. Wire the build so generated defaults are produced before vite runs, and
+- [x] 3. Wire the build so generated defaults are produced before vite runs, and
   the generated file is committed (determinism from 37 makes the diff stable).
 - [ ] 4. Test: generated defaults are byte-identical to the pre-task-60 `:root`;
   a non-default config changes tokens without touching machinery; 34/35 token
