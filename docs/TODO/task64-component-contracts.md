@@ -102,7 +102,7 @@ what to do is worse than no check.
 
 ## Sub-tasks
 
-- [ ] 1. Manifest schema + reader/writer that round-trips unknown fields. Files:
+- [x] 1. Manifest schema + reader/writer that round-trips unknown fields. Files:
   `scripts/manifest.mjs`, `tests/manifest.unit.mjs`.
 - [ ] 2. Generate manifests for all existing `ui/*/` from the current tree; commit
   them. Expect the `requires` derivation to surface import edges nobody
