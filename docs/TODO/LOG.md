@@ -598,3 +598,44 @@ agents and cherry-picked onto `feat/phase-2`. Suite 406/406, build clean.
   Docs: `site/pages/docs/contracts.jsx` (manifest format, lint-contract
   caveat, add-a-component checklist). Conformance keys allowlists by intent —
   indeterminate loops, static components, providers — each entry with a reason.
+
+## Task 39 — container queries (2026-07-27)
+
+- **Support (Chrome 150, round-tripped, not just `CSS.supports`):**
+  `container-type: inline-size`, `cqi` units and even `container-type:
+  scroll-state` all resolve. No fallback path is needed for the target, but
+  every rule is still written as a *narrow override* (`max-width`) so a browser
+  without support renders the pre-task layout rather than a broken one. The one
+  exception is `.field--responsive`, whose base state is the stacked layout and
+  whose enhancement is `min-width` — no support there also means stacked, which
+  is the safe direction.
+- **An element never matches a query against a container it declares itself.**
+  `@container (min-width: X) { .foo { … } }` where `.foo` also sets
+  `container-type` resolves against `.foo`'s *ancestor* container, so it either
+  matches the wrong box or (with no ancestor container) never matches at all.
+  Verified empirically: `flexDirection` stayed `column` on a 300px self-querying
+  container asking for `min-width: 200px`, while the same query on a child of a
+  300px container gave `row`.
+  - **This was a live bug in `ui/field`.** `.field--responsive` declared
+    `container-type` and then queried itself, so it never switched to the
+    horizontal layout on its own. It appeared to work only because
+    `site/pages/field.jsx` wrapped the demo in an *outer* `containerType:
+    inline-size` div, which the anonymous query then matched — the field was
+    responding to the wrapper's width by accident. The wrapper's
+    `containerType` is now removed and the field queries its own named
+    container correctly.
+  - **Consequence for the whole task: layout flips must be expressed as
+    descendant properties.** `flex-direction`/`grid-template-columns` on the
+    container's own box cannot respond to its width, so the pattern is
+    `flex-wrap: wrap` (or the grid) declared unconditionally on the root and
+    only the *children's* `flex-basis`/`grid-column` inside the query.
+    `.field--responsive` uses `gap: var(--space-2) var(--space-3)` so row-gap
+    serves the stacked layout and column-gap the side-by-side one, since `gap`
+    is a root property and cannot be queried either.
+- **Every container is named** (`vanillin-card`, `vanillin-item`,
+  `vanillin-field`, …). A query naming a container that does not exist silently
+  never matches — verified — so names must be exact, but the same property makes
+  a mis-scoped query fail safe instead of claiming an unrelated ancestor.
+- **Thresholds are literal `rem` values.** Container query conditions cannot
+  read custom properties, so this is a deliberate exception to the tokens-only
+  rule.

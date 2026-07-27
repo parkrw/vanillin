@@ -1,6 +1,13 @@
+/* Query container: an item in a narrow list column drops its actions onto
+   their own line instead of squeezing the title. `flex-wrap` is set here
+   unconditionally — only the children's flex-basis is queried, because the
+   container's own layout properties cannot respond to its own width. */
 .item {
+  container-type: inline-size;
+  container-name: vanillin-item;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.75rem;
   padding: 0.75rem;
   border-radius: var(--radius-md);
@@ -106,6 +113,14 @@ button.item:hover {
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
+}
+
+/* Narrow item: actions wrap to a full-width row under the media and content. */
+@container vanillin-item (max-width: 18rem) {
+  .item-actions {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
 }
 
 /* Group */

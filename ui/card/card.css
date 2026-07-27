@@ -1,4 +1,10 @@
+/* The card is a query container, so its parts respond to the card's own width
+   rather than the viewport's — the same card reads correctly in a 320px side
+   panel and a 1200px main region. Only descendants may query it: an element
+   can never match a query against a container it declares itself. */
 .card {
+  container-type: inline-size;
+  container-name: vanillin-card;
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
@@ -47,6 +53,28 @@
 .card-footer {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-2);
   padding-inline: var(--space-6);
+}
+
+/* Narrow card: the action drops below the title instead of competing with it
+   for the header's inline space, and footer buttons stretch to fill the row.
+   Written as a max-width override so a browser without container query support
+   keeps the wide layout. Thresholds are literal — container query conditions
+   cannot read custom properties. */
+@container vanillin-card (max-width: 20rem) {
+  .card-header:has(.card-action) {
+    grid-template-columns: 1fr;
+  }
+
+  .card-action {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: stretch;
+  }
+
+  .card-footer > * {
+    flex: 1;
+  }
 }

@@ -15,16 +15,29 @@
   flex: 1;
 }
 
-/* Responsive: vertical by default, horizontal from 40rem container width */
+/* Responsive: stacked by default, side by side from 40rem of the field's own
+   width. The field declares the container, so only its children may query it —
+   an element never matches a query against a container it declares itself.
+   That is why the layout switch is expressed as the children's flex-basis and
+   `flex-wrap`/`gap` are set unconditionally: at 100% basis every child claims
+   its own line (the stacked layout), at `auto` they share one row. Row-gap
+   serves the stacked layout, column-gap the side-by-side one. */
 .field--responsive {
   container-type: inline-size;
+  container-name: vanillin-field;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
 }
 
-@container (min-width: 40rem) {
-  .field--responsive {
-    flex-direction: row;
-    align-items: center;
-    gap: var(--space-3);
+.field--responsive > * {
+  flex-basis: 100%;
+}
+
+@container vanillin-field (min-width: 40rem) {
+  .field--responsive > * {
+    flex-basis: auto;
   }
 
   .field--responsive > .field-content {

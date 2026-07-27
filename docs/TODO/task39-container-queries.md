@@ -52,8 +52,8 @@ differentiator, not parity work.
 
 ## Sub-tasks
 
-- [ ] 1. Support check for container queries and `cqi`; record in the log.
-- [ ] 2. `ui/card` + `ui/item` + `ui/field` containers and narrow-width
+- [x] 1. Support check for container queries and `cqi`; record in the log.
+- [x] 2. `ui/card` + `ui/item` + `ui/field` containers and narrow-width
   layouts. Files: those components' `.css`.
 - [ ] 3. `ui/data-table` stacked-row mode below a threshold — the headline
   feature. Files: `ui/data-table/data-table.css`, and `data-table.jsx` only if
