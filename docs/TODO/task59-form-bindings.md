@@ -68,7 +68,7 @@ allowed to know about both.
 - [x] 3. Demo page + prose: `playground/pages/form-fields.jsx` showing the same
   form as `playground/pages/form.jsx` written with bindings, side by side with
   what it replaces, and stating when to reach for each layer. Registry entry.
-- [ ] 4. Test: a resolver error (use `schemaResolver` from `lib/schema.js`, which
+- [x] 4. Test: a resolver error (use `schemaResolver` from `lib/schema.js`, which
   landed in 62) surfaces through a bound field without the caller touching
   `FormMessage`.
 

@@ -176,4 +176,47 @@ export default async function run({ page, baseUrl, test, eq }) {
     )
     eq(JSON.stringify(bound), JSON.stringify(hand), "identical wiring")
   })
+
+  /* ────────────────────────────────────────────────────────────────── */
+  /*  5. schemaResolver errors surface without the caller writing one  */
+  /* ────────────────────────────────────────────────────────────────── */
+
+  await test("a schemaResolver error renders itself in a bound field", async () => {
+    await page.locator('[data-pg="ff-reset"]').click()
+    await page.locator('[data-pg="ff-submit"]').click()
+    await page.waitForSelector('[data-pg="ff-username"][aria-invalid="true"]')
+
+    // The page's JSX for this field is a single <TextField />: no FormMessage,
+    // no error prop, no message text. Everything below comes from the schema.
+    const item = page.locator('[data-pg="ff-username"]').locator("xpath=..")
+    const alerts = item.locator('[role="alert"]')
+    eq(await alerts.count(), 1, "exactly one message, inside the field")
+    eq(
+      await alerts.textContent(),
+      "Username must be at least 2 characters",
+      "the schema's own message"
+    )
+
+    const id = await page.locator('[data-pg="ff-username"]').getAttribute("id")
+    eq(
+      await alerts.getAttribute("id"),
+      `${id}-message`,
+      "the message is the one aria-describedby points at"
+    )
+  })
+
+  await test("the message clears itself when the value becomes valid", async () => {
+    await page.locator('[data-pg="ff-username"]').fill("caseynolan")
+    await page.waitForSelector('[data-pg="ff-username"][aria-invalid="true"]', {
+      state: "detached",
+    })
+
+    const item = page.locator('[data-pg="ff-username"]').locator("xpath=..")
+    eq(await item.locator('[role="alert"]').count(), 0, "message is gone")
+    eq(
+      (await wiring(page, "ff-username")).describedBy,
+      "-form-item-description",
+      "message id left aria-describedby"
+    )
+  })
 }
