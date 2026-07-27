@@ -116,8 +116,19 @@ absorbed, and needed `-D` to delete.
 
 ## Next step
 
-**Batch 59/60/63 is in flight** in three worktrees (see the in-flight table
-below when it exists). Order after it lands:
+**Batch 59/60/63 is in flight.** Base commit `dbd79b94d074` on branch
+`docs/batch-59-60-63`; base suite 583/583. tmux window `@66` (`batch-59-60-63`).
+
+| Task | Branch                   | Worktree                            | Pane | Port |
+| ---- | ------------------------ | ----------------------------------- | ---- | ---- |
+| 59   | `feat/form-bindings`     | `../vanillin-task59-form-bindings`  | %77  | 5211 |
+| 60   | `feat/generated-defaults`| `../vanillin-task60-generated-defaults` | %78 | 5212 |
+| 63   | `feat/composition-pass`  | `../vanillin-task63-composition-pass` | %79 | 5213 |
+
+Reports land in `docs/TODO/reports/taskNN.md` + `.done` (git-excluded, scratch).
+Each worktree has `node_modules` symlinked to the main one.
+
+Order after this batch lands:
 
 1. **64** alone — it hashes every component file, so it must not run concurrently
    with anything that edits components. Then **38** (`add` consumes the manifest

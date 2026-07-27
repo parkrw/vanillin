@@ -532,3 +532,33 @@ agents and cherry-picked onto `feat/phase-2`. Suite 406/406, build clean.
   59 owns `playground/registry.js`, 60 owns `styles/globals.css` + the theme
   scripts, 63 owns `ui/badge` / `ui/combobox` / `ui/data-table` /
   `lib/use-highlight.js`. Base commit suite: 583/583.
+- 2026-07-26 — batch **59/60/63** all three passed supervision. Full suite run
+  by the head in each worktree: 59 → 594/594, 60 → 589/589, 63 → 596/596; builds
+  clean; ownership checks empty; 60's generator proved deterministic
+  (`rm styles/defaults.css && npm run build` regenerates byte-identical). No
+  rework sent. Three findings worth keeping:
+  - **Task 59 found a live a11y bug it was posited to prevent.**
+    `ui/select/select.jsx:41` destructures a fixed prop list with no `...props`,
+    so the `id`/`aria-describedby`/`aria-invalid` that `FormControl` clones onto
+    a `<Select>` vanish — the trigger has no id and `FormLabel`'s `htmlFor`
+    points at nothing. Shipped and live in `playground/pages/form.jsx:132-163`.
+    `SelectField` wraps `SelectTrigger` instead. Fix for the demo page is written
+    out in `docs/TODO/reports/task59.md`; giving `Select` a `...props` rest so
+    the failure is loud belongs to 63/64.
+  - **Task 63 found header column pinning was already broken on main.**
+    `.data-table-sized .table-head { position: relative }` (0,2,0) out-specified
+    `.data-table-pinned` (0,1,0), so pinned `<th>`s were never sticky. The
+    existing test passed **vacuously** — it asserted computed
+    `inset-inline-start === "0px"`, true for `relative` too. Fixed, and the test
+    now asserts `scrollLeft > 0` and compares bounding rects.
+  - **Task 60 revived a dead `prefers-contrast: more` border repair.**
+    `forced-colors.css` was imported before globals' own `:root` at equal
+    specificity (0,1,0) and lost on source order. New order is
+    `defaults.css` → `forced-colors.css` → machinery, so the repair wins. A
+    behaviour change nobody asked for; taken because the alternative was writing
+    the order down while knowingly re-cementing a dead a11y repair.
+  Task 60's `van.defaults.json` deliberately carries **no `theme.brand`** — the
+  kit palette is greyscale and brand derivation produces different numbers, so
+  the 53 colour tokens are literal light/dark pairs. Machinery that stayed
+  hand-written: shadows, the radius/space/motion ramps, `--*-hover` relative-colour
+  derivations, `color-scheme`.

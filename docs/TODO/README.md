@@ -96,11 +96,11 @@ written; it is a final consistency and gap pass.
 | 56  | forced-colors            | ~M  | [x]    | `forced-colors`, `prefers-contrast`, reduced-transparency [^56]        |
 | 57  | platform-polish          | ~S  | [x]    | Speculation Rules prefetch, `field-sizing: content` on textarea        |
 | 58  | carousel-parity          | ~S  | [x]    | nice-to-have; `plugins`, `opts.loop`, `opts.align` (currently stubbed) |
-| 59  | form-bindings            | ~M  | [ ]    | deps: 40, 41; third layer over engine + `ui/form` [^59]                |
-| 60  | generated-defaults       | ~L  | [ ]    | deps: 37, 61; kit theme from a default config [^60]                    |
+| 59  | form-bindings            | ~M  | [x]    | `ui/form-fields/` — deps: 40, 41; third layer over engine + `ui/form`  |
+| 60  | generated-defaults       | ~L  | [x]    | deps: 37, 61; `van.defaults.json` → `styles/defaults.css` [^60]        |
 | 61  | brand-multicolor         | ~M  | [x]    | deps: 37; `brand` as string-or-object [^61]                            |
 | 62  | schema-core              | ~L  | [x]    | `lib/schema.js` — zod-shaped validation + resolver [^62]               |
-| 63  | composition-pass         | ~M  | [~]    | reuse only where the relationship is **semantic** [^63]                |
+| 63  | composition-pass         | ~M  | [x]    | reuse only where the relationship is **semantic** [^63]                |
 | 64  | component-contracts      | ~L  | [ ]    | per-copy `.van.json` manifest + conformance suite [^64]                |
 | 65  | component-update          | ~L  | [ ]    | deps: 64, 38; `van update` this can wait  [^65]                      |
 
