@@ -83,7 +83,7 @@ written; it is a final consistency and gap pass.
 | 35  | tokenize-core-b          | ~M  | [x]    | deps: 33; the twelve surfaces [^35]                                    |
 | 36  | density-modes            | ~S  | [x]    | deps: 34, 35; `compact` / `comfortable` / `spacious` [^36]             |
 | 37  | config-generator         | ~L  | [x]    | deps: 34, 35; `van.config.json` → `van.css` generator [^37]            |
-| 38  | cli                      | ~L  | [ ]    | deps: 37, **64**; `bin/van.mjs` init/add/build/list [^38]              |
+| 38  | cli                      | ~L  | [x]    | `bin/van.mjs` init/add/diff/build/list + framework detection [^38]     |
 | 39  | container-queries        | ~M  | [ ]    | deps: 34, 35; components size to container, not viewport [^39]         |
 | 40  | use-form-core            | ~L  | [x]    | zero-dep `lib/use-form.js`, RHF-shaped [^40]                           |
 | 41  | form-component           | ~M  | [x]    | deps: 40; `ui/form/` engine-agnostic + Actions path [^41]              |
@@ -130,8 +130,12 @@ written; it is a final consistency and gap pass.
     `van.css`; **output not wired into the docs site — see 60**.
 
 [^38]: deps: 37, **64** (manifest format — `add` writes the sidecar);
-    `bin/van.mjs` init/add/build/list + `registry.json`; git-sourced, stays
-    `private: true`.
+    `bin/van.mjs` init/add/diff/build/list + generated `registry.json`;
+    git-sourced, stays `private: true`. Sub-task 8 (framework detection +
+    `"use client"` injection under `rsc`) was added mid-task; `framework` and
+    `rsc` join `paths` as top-level config keys. Over-the-network
+    `npx github:` and the render-in-a-real-app check remain user-gated — a bare
+    clone was verified locally.
 
 [^39]: deps: 34, 35; components size to container, not viewport (console
     panels).
@@ -238,8 +242,10 @@ detail just-in-time after 58 lands. Rough order of usefulness:
 - Planning is **just-in-time**: the rows above are durable, task files are
   written when a task is picked up. Task files now exist for every task except
   22–29 (landed before the convention).
-  Unstarted-but-specified and ready to dispatch: 38 (in flight on `feat/cli`),
-  39; then 65, 66, 67; 30 last. **39 runs alone** — it rewrites every
+  Unstarted-but-specified and ready to dispatch: 39; then 65, 66, 67; 30 last.
+  **66 must cover `framework`, `rsc` and `paths`** — task 38 added all three as
+  top-level config keys, so the generated schema has three more branches than
+  its row assumed. **39 runs alone** — it rewrites every
   component's CSS, so it cannot share a batch with component work (and manifests
   + registry need regenerating after it).
 - Test: `node tests/run.mjs` — boots its own vite on :5199, drives local Chrome;
