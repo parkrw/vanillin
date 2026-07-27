@@ -69,7 +69,7 @@ collide with, and the demo and the defaults are the same artifact.
   exactly. Generate, diff against the current `:root`, iterate to zero diff.
   Expect gaps — record each one and whether it became a generator feature or
   moved to machinery.
-- [ ] 2. Split `globals.css`: token values come from generated output, machinery
+- [x] 2. Split `globals.css`: token values come from generated output, machinery
   stays. Resolve the layering question and comment the chosen order.
 - [ ] 3. Wire the build so generated defaults are produced before vite runs, and
   the generated file is committed (determinism from 37 makes the diff stable).

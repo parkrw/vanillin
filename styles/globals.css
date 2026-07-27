@@ -1,15 +1,43 @@
-@import "./forced-colors.css";
-
 /*
- * vanillin — project-wide design tokens.
- * This is the single theming config: edit these variables (or add a .dark
- * override) and every component follows.
+ * vanillin — project-wide design token machinery.
+ *
+ * Split by kind, not by file:
+ *
+ *  - Token *values* are generated. `van.defaults.json` → `styles/defaults.css`
+ *    (`npm run theme:defaults`, and automatically before vite runs). That
+ *    generated `:root` is the single authoritative set of token values — the
+ *    kit's own theme is generator output, so the defaults and the demo are the
+ *    same artifact and cannot drift. Retheme by editing van.defaults.json.
+ *  - Token *machinery* is hand-written and lives below. It is not themeable:
+ *    @property registrations (`initial-value` must be computationally
+ *    independent — no `var()`, no `rem`), the ramps derived from a generated
+ *    root, the relative-colour hover derivations, the `[data-density]`
+ *    `--space-*` re-declaration block and the touch-target floor.
+ *
+ * Cascade order — nothing here uses @layer, deliberately. Layered styles lose
+ * to unlayered ones, so emitting the generated tokens into `@layer
+ * vanillin.config` would make them lose to every rule in this file. Everything
+ * is unlayered and plain source order decides:
+ *
+ *   1. defaults.css       generated token values
+ *   2. forced-colors.css  repair layer — must be able to override (1), which
+ *                         is why it is imported second
+ *   3. this file          machinery and base element styles
+ *   4. component CSS      imported per component
+ *   5. your own van.css   imported after globals.css by your app entry
+ *
+ * No token name is declared in more than one of (1) and (3); tokens/*.test.mjs
+ * asserts it. That disjointness is the whole point of the split — two :root
+ * blocks setting the same token is the bug this replaced.
  *
  * Modern features used:
  *  - @property: typed tokens; invalid values fall back to initial-value.
  *  - light-dark(): one declaration per token; .dark flips color-scheme.
  *  - Relative color syntax: derived interaction states from base families.
  */
+
+@import "./defaults.css";
+@import "./forced-colors.css";
 
 /* ---- @property: colour tokens ---- */
 
@@ -84,118 +112,55 @@
 @property --motion-scale { syntax: "<number>"; inherits: true; initial-value: 1; }
 @property --density-scale { syntax: "<number>"; inherits: true; initial-value: 1; }
 
-/* ---- Token values ---- */
+/* ---- Token machinery ----
+ *
+ * Every token *value* comes from defaults.css. What is left here either
+ * derives from one of those values or has no config surface at all — nothing
+ * below duplicates a declaration made there.
+ */
 
 :root {
+  /* .dark flips this; light-dark() in defaults.css resolves against it. */
   color-scheme: light;
 
-  /* Core semantic colours — light-dark(light, dark) */
-  --background: light-dark(oklch(1 0 0), oklch(0.145 0 0));
-  --foreground: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
-  --card: light-dark(oklch(1 0 0), oklch(0.205 0 0));
-  --card-foreground: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
-  --popover: light-dark(oklch(1 0 0), oklch(0.205 0 0));
-  --popover-foreground: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
-  --primary: light-dark(oklch(0.205 0 0), oklch(0.922 0 0));
-  --primary-foreground: light-dark(oklch(0.985 0 0), oklch(0.205 0 0));
-  --secondary: light-dark(oklch(0.97 0 0), oklch(0.269 0 0));
-  --secondary-foreground: light-dark(oklch(0.205 0 0), oklch(0.985 0 0));
-  --muted: light-dark(oklch(0.97 0 0), oklch(0.269 0 0));
-  --muted-foreground: light-dark(oklch(0.556 0 0), oklch(0.708 0 0));
-  --accent: light-dark(oklch(0.97 0 0), oklch(0.269 0 0));
-  --accent-foreground: light-dark(oklch(0.205 0 0), oklch(0.985 0 0));
-  --destructive: light-dark(oklch(0.577 0.245 27.325), oklch(0.704 0.191 22.216));
-  /* dark-mode destructive-foreground is dark text — white fails contrast
-     (2.8:1) on the lighter dark-mode red */
-  --destructive-foreground: light-dark(oklch(0.985 0 0), oklch(0.205 0 0));
-  --border: light-dark(oklch(0.922 0 0), oklch(1 0 0 / 10%));
-  --input: light-dark(oklch(0.922 0 0), oklch(1 0 0 / 15%));
-  /* fill for bordered form controls — transparent in light; dark gives them
-     a faint lift so they read on near-black */
-  --input-background: light-dark(transparent, color-mix(in oklab, var(--input) 30%, transparent));
-  --ring: light-dark(oklch(0.708 0 0), oklch(0.556 0 0));
-
-  /* Status colours */
-  --success: light-dark(oklch(0.55 0.18 145), oklch(0.65 0.16 145));
-  --success-foreground: light-dark(oklch(0.3 0.1 145), oklch(0.85 0.1 145));
-  --success-background: light-dark(oklch(0.95 0.05 145), oklch(0.25 0.06 145));
-  --success-border: light-dark(oklch(0.8 0.12 145), oklch(0.4 0.1 145));
-  --warning: light-dark(oklch(0.75 0.18 65), oklch(0.8 0.16 65));
-  --warning-foreground: light-dark(oklch(0.35 0.1 65), oklch(0.85 0.08 65));
-  --warning-background: light-dark(oklch(0.95 0.05 85), oklch(0.25 0.05 85));
-  --warning-border: light-dark(oklch(0.85 0.1 85), oklch(0.4 0.08 85));
-  --info: light-dark(oklch(0.55 0.18 250), oklch(0.65 0.16 250));
-  --info-foreground: light-dark(oklch(0.3 0.1 250), oklch(0.85 0.06 250));
-  --info-background: light-dark(oklch(0.95 0.04 250), oklch(0.25 0.04 250));
-  --info-border: light-dark(oklch(0.8 0.1 250), oklch(0.4 0.08 250));
-  --destructive-background: light-dark(oklch(0.95 0.04 25), oklch(0.25 0.05 25));
-  --destructive-border: light-dark(oklch(0.8 0.1 25), oklch(0.4 0.08 25));
-
-  /* Chart colours */
-  --chart-1: light-dark(oklch(0.646 0.222 41.116), oklch(0.488 0.243 264.376));
-  --chart-2: light-dark(oklch(0.6 0.118 184.704), oklch(0.696 0.17 162.48));
-  --chart-3: light-dark(oklch(0.398 0.07 227.392), oklch(0.769 0.188 70.08));
-  --chart-4: light-dark(oklch(0.828 0.189 84.429), oklch(0.627 0.265 303.9));
-  --chart-5: light-dark(oklch(0.769 0.188 70.08), oklch(0.645 0.246 16.439));
-
-  /* Sidebar */
-  --sidebar: light-dark(oklch(0.985 0 0), oklch(0.205 0 0));
-  --sidebar-foreground: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
-  --sidebar-primary: light-dark(oklch(0.205 0 0), oklch(0.488 0.243 264.376));
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: light-dark(oklch(0.97 0 0), oklch(0.269 0 0));
-  --sidebar-accent-foreground: light-dark(oklch(0.205 0 0), oklch(0.985 0 0));
-  --sidebar-border: light-dark(oklch(0.922 0 0), oklch(1 0 0 / 10%));
-  --sidebar-ring: light-dark(oklch(0.708 0 0), oklch(0.556 0 0));
-
-  /* Radii */
-  --radius: 0.625rem;
+  /* Radius ramp — rungs off the generated --radius (theme.radius). */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* Typography */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", monospace;
-
-  /* Shadows */
+  /* Shadows. Generator gap: van.config.json has no theme.shadow key, so
+     these have no config surface yet and stay hand-written. */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 
   /*
-   * Motion. --motion-scale is the smoothness knob: it multiplies every
-   * component duration (1 = snappy default; 1.5–2 = slower, smoother).
-   * --motion-ease sets the curve for all transitions and open/close
-   * animations; try cubic-bezier(0.22, 1, 0.36, 1) for a softer landing.
-   * Override --motion-scale at :root — the duration tokens derive from it
-   * there. For a subtree-local tweak, override --motion-fast/--motion-medium
-   * directly instead.
+   * Motion durations. --motion-scale (theme.motion.scale) is the smoothness
+   * knob: it multiplies every component duration (1 = snappy default; 1.5–2 =
+   * slower, smoother). --motion-ease (theme.motion.ease) sets the curve; try
+   * cubic-bezier(0.22, 1, 0.36, 1) for a softer landing. Override
+   * --motion-scale at :root — the duration tokens derive from it there. For a
+   * subtree-local tweak, override --motion-fast/--motion-medium directly.
    */
-  --motion-scale: 1;
-  --motion-ease: ease-out;
   --motion-fast: calc(150ms * var(--motion-scale));
   --motion-medium: calc(200ms * var(--motion-scale));
 
   /* Derived interaction states — relative color syntax.
      These shift lightness by a fixed amount; because var(--primary) etc.
      are already resolved per-mode by @property + light-dark(), the shift
-     works in both light and dark without separate declarations.
-     Tasks 34/35 migrate components to use these instead of the current
-     color-mix(in oklab, … 90%, transparent) hover pattern. */
+     works in both light and dark without separate declarations. Deriving
+     here rather than generating them is what lets any brand colour — the
+     kit's own or a consumer's van.css — get correct hovers for free. */
   --primary-hover: oklch(from var(--primary) calc(l - 0.05) c h);
   --secondary-hover: oklch(from var(--secondary) calc(l - 0.05) c h);
   --accent-hover: oklch(from var(--accent) calc(l - 0.05) c h);
   --destructive-hover: oklch(from var(--destructive) calc(l - 0.05) c h);
   --muted-hover: oklch(from var(--muted) calc(l - 0.05) c h);
 
-  /* Density scaffold — task 36 applies these to component spacing.
-     Override --density-scale at :root to tighten (0.875) or loosen (1.25)
-     all spacing uniformly. */
-  --density-scale: 1;
+  /* Spacing ramp — rungs off the generated --density-scale (theme.density).
+     Override --density-scale to tighten (0.875) or loosen (1.25) uniformly,
+     or use a [data-density] preset below. */
   --space-1: calc(0.25rem * var(--density-scale));
   --space-1-5: calc(0.375rem * var(--density-scale));
   --space-2: calc(0.5rem * var(--density-scale));
