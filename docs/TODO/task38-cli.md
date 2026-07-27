@@ -190,7 +190,7 @@ prose above predates the rename, `git remote -v` is authoritative.
   Deliberately **not** copied from shadcn: Tailwind config mutation and npm
   dependency installation — the other two reasons its CLI detects frameworks,
   neither of which exists here.
-- [ ] 6. Test: CLI against scratch dirs — `init` produces a buildable tree;
+- [x] 6. Test: CLI against scratch dirs — `init` produces a buildable tree;
   `add dialog` pulls its `lib/` deps; `add alert-dialog` pulls `dialog`
   transitively and its CSS `@import` resolves; re-`add` of an edited file
   refuses without `--overwrite`; re-`add` of an *unmodified* file overwrites
