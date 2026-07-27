@@ -9,7 +9,18 @@ import {
   FormMessage,
   useFormField,
 } from "../form/form.jsx"
+import { Checkbox } from "../checkbox/checkbox.jsx"
 import { Input } from "../input/input.jsx"
+import { Label } from "../label/label.jsx"
+import { RadioGroup, RadioGroupItem } from "../radio-group/radio-group.jsx"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../select/select.jsx"
+import { Switch } from "../switch/switch.jsx"
 import { Textarea } from "../textarea/textarea.jsx"
 
 /* ── control resolution ───────────────────────────────────────────── */
@@ -158,6 +169,180 @@ export function TextareaField({
       description={description}
       rules={rules}
       render={({ field }) => <FormControl as={Textarea} {...props} {...field} />}
+    />
+  )
+}
+
+/* ── Controller-path fields ───────────────────────────────────────── */
+
+/*
+ * These four have a value channel the DOM does not carry, so `register`'s
+ * ref/onChange pair cannot see them: Select, Checkbox and Switch render
+ * buttons, RadioGroup a div. `Controller` owns their value instead.
+ * `field.ref` is deliberately not forwarded — it would hand the engine a
+ * <button> to read a `value` off, and Controller-managed fields are skipped
+ * by the DOM read anyway.
+ */
+
+/**
+ * `items` is `[{ value, label, disabled? }]`. Pass `children` instead to
+ * build the list yourself (groups, separators, custom items).
+ */
+export function SelectField({
+  name,
+  control,
+  label,
+  description,
+  rules,
+  defaultValue = "",
+  placeholder,
+  items,
+  children,
+  ...props
+}) {
+  return (
+    <FormFieldBinding
+      controlled
+      name={name}
+      control={control}
+      label={label}
+      description={description}
+      rules={rules}
+      defaultValue={defaultValue}
+      render={({ field }) => (
+        <Select value={field.value ?? ""} onValueChange={field.onChange}>
+          <FormControl as={SelectTrigger} onBlur={field.onBlur} {...props}>
+            <SelectValue placeholder={placeholder} />
+          </FormControl>
+          <SelectContent>
+            {children ??
+              items?.map((item) => (
+                <SelectItem
+                  key={item.value}
+                  value={item.value}
+                  disabled={item.disabled}
+                >
+                  {item.label ?? item.value}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+      )}
+    />
+  )
+}
+
+export function CheckboxField({
+  name,
+  control,
+  label,
+  description,
+  rules,
+  defaultValue = false,
+  ...props
+}) {
+  return (
+    <FormFieldBinding
+      controlled
+      layout="inline"
+      name={name}
+      control={control}
+      label={label}
+      description={description}
+      rules={rules}
+      defaultValue={defaultValue}
+      render={({ field }) => (
+        <FormControl
+          as={Checkbox}
+          checked={field.value ?? false}
+          onCheckedChange={field.onChange}
+          onBlur={field.onBlur}
+          {...props}
+        />
+      )}
+    />
+  )
+}
+
+export function SwitchField({
+  name,
+  control,
+  label,
+  description,
+  rules,
+  defaultValue = false,
+  ...props
+}) {
+  return (
+    <FormFieldBinding
+      controlled
+      layout="inline"
+      name={name}
+      control={control}
+      label={label}
+      description={description}
+      rules={rules}
+      defaultValue={defaultValue}
+      render={({ field }) => (
+        <FormControl
+          as={Switch}
+          checked={field.value ?? false}
+          onCheckedChange={field.onChange}
+          onBlur={field.onBlur}
+          {...props}
+        />
+      )}
+    />
+  )
+}
+
+/**
+ * `items` is `[{ value, label, disabled? }]`. The group is a div, so
+ * `FormLabel`'s `htmlFor` cannot reach it — `aria-labelledby` does the work.
+ */
+export function RadioGroupField({
+  name,
+  control,
+  label,
+  description,
+  rules,
+  defaultValue = "",
+  items = [],
+  ...props
+}) {
+  return (
+    <FormFieldBinding
+      controlled
+      name={name}
+      control={control}
+      label={label}
+      description={description}
+      rules={rules}
+      defaultValue={defaultValue}
+      render={({ field, formItemId, labelId }) => (
+        <FormControl
+          as={RadioGroup}
+          value={field.value ?? ""}
+          onValueChange={field.onChange}
+          onBlur={field.onBlur}
+          aria-labelledby={labelId}
+          {...props}
+        >
+          {items.map((item) => {
+            const itemId = `${formItemId}-${item.value}`
+            return (
+              <div className="form-field-option" key={item.value}>
+                <RadioGroupItem
+                  id={itemId}
+                  value={item.value}
+                  disabled={item.disabled}
+                />
+                <Label htmlFor={itemId}>{item.label ?? item.value}</Label>
+              </div>
+            )
+          })}
+        </FormControl>
+      )}
     />
   )
 }

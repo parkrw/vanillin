@@ -10,7 +10,14 @@ import {
   FormLabel,
   FormMessage,
 } from "../../ui/form/form.jsx"
-import { TextField, TextareaField } from "../../ui/form-fields/form-fields.jsx"
+import {
+  CheckboxField,
+  RadioGroupField,
+  SelectField,
+  SwitchField,
+  TextField,
+  TextareaField,
+} from "../../ui/form-fields/form-fields.jsx"
 import { Input } from "../../ui/input/input.jsx"
 
 import "../../ui/form/form.css"
@@ -19,15 +26,39 @@ import "../../ui/field/field.css"
 import "../../ui/input/input.css"
 import "../../ui/textarea/textarea.css"
 import "../../ui/label/label.css"
+import "../../ui/checkbox/checkbox.css"
+import "../../ui/switch/switch.css"
+import "../../ui/select/select.css"
+import "../../ui/radio-group/radio-group.css"
 import "../../ui/button/button.css"
 
 /* ================================================================== */
 /*  Schema — the resolver from lib/schema.js (task 62)                 */
 /* ================================================================== */
 
+const ROLES = [
+  { value: "admin", label: "Admin" },
+  { value: "editor", label: "Editor" },
+  { value: "viewer", label: "Viewer" },
+]
+
+const PLANS = [
+  { value: "free", label: "Free" },
+  { value: "pro", label: "Pro" },
+  { value: "team", label: "Team" },
+]
+
 const profileSchema = s.object({
   username: s.string().min(2, "Username must be at least 2 characters"),
   bio: s.string().max(160, "Keep the bio under 160 characters"),
+  role: s
+    .string()
+    .refine((v) => ROLES.some((r) => r.value === v), "Pick a role"),
+  plan: s
+    .string()
+    .refine((v) => PLANS.some((p) => p.value === v), "Pick a plan"),
+  marketing: s.boolean(),
+  notifications: s.boolean(),
 })
 
 /* ================================================================== */
@@ -74,7 +105,14 @@ function Docs() {
 
 function BoundFormDemo() {
   const { handleSubmit, control, formState, reset } = useForm({
-    defaultValues: { username: "", bio: "" },
+    defaultValues: {
+      username: "",
+      bio: "",
+      role: "",
+      plan: "free",
+      marketing: false,
+      notifications: true,
+    },
     resolver: schemaResolver(profileSchema),
     mode: "onTouched",
   })
@@ -84,10 +122,13 @@ function BoundFormDemo() {
     <section className="pg-section">
       <h3>Bound form</h3>
       <p className="pg-description">
-        Two fields, two lines. <code>TextField</code> and{" "}
+        Six fields, six lines. <code>TextField</code> and{" "}
         <code>TextareaField</code> are native inputs, so the binding wires them
         with <code>register</code> — no <code>Controller</code>, no re-render
-        per keystroke.
+        per keystroke. <code>SelectField</code>, <code>RadioGroupField</code>,{" "}
+        <code>CheckboxField</code> and <code>SwitchField</code> render buttons
+        and divs with no DOM value to read, so those get{" "}
+        <code>Controller</code>. Nothing in the markup below says which.
       </p>
 
       <div style={{ maxWidth: "28rem" }}>
@@ -116,6 +157,40 @@ function BoundFormDemo() {
             data-pg="ff-bio"
           />
 
+          <SelectField
+            name="role"
+            control={control}
+            label="Role"
+            description="Controls what the user can access."
+            placeholder="Select a role"
+            items={ROLES}
+            data-pg="ff-role"
+          />
+
+          <RadioGroupField
+            name="plan"
+            control={control}
+            label="Plan"
+            description="Change it any time."
+            items={PLANS}
+            data-pg="ff-plan"
+          />
+
+          <CheckboxField
+            name="marketing"
+            control={control}
+            label="Receive marketing emails"
+            description="Opt in to occasional product updates."
+            data-pg="ff-marketing"
+          />
+
+          <SwitchField
+            name="notifications"
+            control={control}
+            label="Push notifications"
+            data-pg="ff-notifications"
+          />
+
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button type="submit" className="button" data-pg="ff-submit">
               Save profile
@@ -123,6 +198,7 @@ function BoundFormDemo() {
             <button
               type="button"
               className="button button--outline"
+              data-pg="ff-reset"
               onClick={() => {
                 reset()
                 setResult(null)

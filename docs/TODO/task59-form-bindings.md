@@ -61,7 +61,7 @@ allowed to know about both.
   same `id` / `aria-describedby` / `aria-invalid` wiring as the hand-wired
   version, and typing updates form state; files: `ui/form-fields/`,
   `tests/form-fields.test.mjs`.
-- [ ] 2. `SelectField`, `CheckboxField`, `SwitchField`, `RadioGroupField` (the
+- [x] 2. `SelectField`, `CheckboxField`, `SwitchField`, `RadioGroupField` (the
   `Controller` path) — test: each one round-trips its value through
   `handleSubmit` and shows a resolver error; files: `ui/form-fields/`,
   `tests/form-fields.test.mjs`.
