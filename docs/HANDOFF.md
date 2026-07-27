@@ -161,6 +161,16 @@ Order from here:
    - `ui/select/select.jsx:41` destructures a fixed prop list with **no
      `...props` rest**, so `id`/`aria-describedby`/`aria-invalid` cloned onto a
      `<Select>` vanish silently. Live in `site/pages/form.jsx:132-163`.
+1. **38 (CLI)** — `bin/van.mjs` init/add/build/list/diff. `add` writes the
+   `.van.json` sidecar via `scripts/manifest.mjs`; the format and its rules are
+   documented in the contracts docs page and
+   `docs/TODO/task64-component-contracts.md`. Never overwrite a file whose hash
+   mismatches without explicit confirmation.
+2. **39** alone — rewrites every component's CSS (regenerate manifests *and* the
+   new `registry.json` after).
+3. **65** (deps 64 + 38), then **66**/**67**, then **30** docs pass last. Task 30
+   also owns the three `README.md` edits in `docs/TODO/reports/task60.md`.
+     `<Select>` vanish silently. Live in `playground/pages/form.jsx:132-163`.
      A conformance rule should make a dropped ARIA prop fail loudly.
    - A test can assert a computed style that is true for the *wrong* value too.
      `.data-table-pinned`'s `inset-inline-start === "0px"` held for
