@@ -36,6 +36,7 @@ export const registry = {
   collapsible: { title: "Collapsible", page: lazy(() => import("./pages/collapsible.jsx")) },
   combobox: { title: "Combobox", page: lazy(() => import("./pages/combobox.jsx")) },
   command: { title: "Command", page: lazy(() => import("./pages/command.jsx")) },
+  "container-queries": { title: "Container Queries", page: lazy(() => import("./pages/container-queries.jsx")) },
   "context-menu": { title: "Context Menu", page: lazy(() => import("./pages/context-menu.jsx")) },
   "data-table": { title: "Data Table", page: lazy(() => import("./pages/data-table.jsx")) },
   density: { title: "Density", page: lazy(() => import("./pages/density.jsx")) },

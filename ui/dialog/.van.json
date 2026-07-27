@@ -4,7 +4,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "requires": [],
   "files": {
-    "dialog.css": "sha256-HcLWHAAJ3ME2ngRXP+h1J3PJWnR83KtSZluM46iX0vs=",
+    "dialog.css": "sha256-U1kQPy/Ie8JjxhG8HpjCW3BSN74/1MgPFcrHEAaQoE8=",
     "dialog.jsx": "sha256-boMPVl824W5EajDnrDtE9064WdLlDngYFXXeb3Hzx1E="
   }
 }

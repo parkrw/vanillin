@@ -52,19 +52,19 @@ differentiator, not parity work.
 
 ## Sub-tasks
 
-- [ ] 1. Support check for container queries and `cqi`; record in the log.
-- [ ] 2. `ui/card` + `ui/item` + `ui/field` containers and narrow-width
+- [x] 1. Support check for container queries and `cqi`; record in the log.
+- [x] 2. `ui/card` + `ui/item` + `ui/field` containers and narrow-width
   layouts. Files: those components' `.css`.
-- [ ] 3. `ui/data-table` stacked-row mode below a threshold — the headline
+- [x] 3. `ui/data-table` stacked-row mode below a threshold — the headline
   feature. Files: `ui/data-table/data-table.css`, and `data-table.jsx` only if
   the stacked layout needs `data-label` attributes on cells (it probably does;
   a stacked row needs its column name).
-- [ ] 4. `ui/dialog` / `ui/sheet` content reflow. Files: those `.css` files.
-- [ ] 5. Demo page: the same card and the same table rendered at three
+- [x] 4. `ui/dialog` / `ui/sheet` content reflow. Files: those `.css` files.
+- [x] 5. Demo page: the same card and the same table rendered at three
   container widths on one page, side by side. This is the demo that sells the
   feature — a viewport-resize demo does not show it. Files:
   `site/pages/container-queries.jsx`, `site/registry.js`.
-- [ ] 6. Test: a card in a 300px container computes a different layout than
+- [x] 6. Test: a card in a 300px container computes a different layout than
   the same card in a 900px container **on the same page at the same viewport**
   (that assertion is the whole point); the table switches to stacked mode
   below its threshold and each stacked cell exposes its column name; no

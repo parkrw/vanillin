@@ -2,6 +2,8 @@
    Open/close motion follows the global motion tokens. */
 
 .dialog {
+  container-type: inline-size;
+  container-name: vanillin-dialog;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -16,6 +18,9 @@
   box-shadow: var(--shadow-lg);
 }
 
+/* How large a modal should be is a viewport question, so this one stays a media
+   query — and it could not be a container query anyway, since the dialog cannot
+   query the container it declares itself. */
 @media (min-width: 640px) {
   .dialog {
     max-width: 32rem;
@@ -29,19 +34,23 @@
   text-align: center;
 }
 
-@media (min-width: 640px) {
-  .dialog-header {
-    text-align: start;
-  }
-}
-
 .dialog-footer {
   display: flex;
   flex-direction: column-reverse;
   gap: var(--space-2);
 }
 
-@media (min-width: 640px) {
+/* Content reflow is a container question: a right-hand sheet is ~24rem wide on
+   the largest desktop, so keying this to the viewport gave it the roomy layout
+   it has no room for. Sized against the dialog's own content box, sheets get
+   the stacked treatment and centre-aligned dialogs open up only when they are
+   actually wide. 24rem leaves the 32rem desktop dialog (464px of content)
+   comfortable slack, so a density change cannot flip it to the narrow layout. */
+@container vanillin-dialog (min-width: 24rem) {
+  .dialog-header {
+    text-align: start;
+  }
+
   .dialog-footer {
     flex-direction: row;
     justify-content: flex-end;

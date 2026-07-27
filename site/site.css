@@ -222,3 +222,61 @@
   border-color: var(--pg-accent);
   color: var(--pg-accent);
 }
+
+/* Container queries demo — the panels differ only in width. Their widths are
+   fixed and the row scrolls, because a demo whose panels resize with the
+   window would demonstrate exactly the media-query behaviour being replaced. */
+.pg-cq-row {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.pg-cq-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 0 0 auto;
+  padding: 1rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+}
+
+.pg-cq-panel--sm {
+  width: 320px;
+}
+
+.pg-cq-panel--md {
+  width: 480px;
+}
+
+.pg-cq-panel--lg {
+  width: 840px;
+}
+
+.pg-cq-width {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+}
+
+.pg-cq-resize {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 320px;
+  min-width: 240px;
+  max-width: 100%;
+  padding: 1rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  resize: horizontal;
+  overflow: auto;
+}
+
+.pg-cq-prose {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}

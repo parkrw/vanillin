@@ -88,7 +88,7 @@ export default function FieldPage() {
 
       <section className="pg-section">
         <h3>Responsive + separator with content</h3>
-        <div style={{ maxWidth: "40rem", containerType: "inline-size" }}>
+        <div style={{ maxWidth: "40rem" }}>
           <FieldGroup>
             <Field orientation="responsive">
               <FieldContent>
