@@ -59,9 +59,12 @@ export function writeManifest(componentDir, manifest) {
 /**
  * SRI-style hash: "sha256-" + base64 of the raw bytes.
  */
+export function hashBytes(bytes) {
+  return `sha256-${createHash("sha256").update(bytes).digest("base64")}`
+}
+
 export function hashFile(filePath) {
-  const hash = createHash("sha256").update(readFileSync(filePath)).digest("base64")
-  return `sha256-${hash}`
+  return hashBytes(readFileSync(filePath))
 }
 
 /**

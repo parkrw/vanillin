@@ -177,6 +177,19 @@ prose above predates the rename, `git remote -v` is authoritative.
 - [x] 5. `init` — layout detection (`components.json` aliases, `@/*` via
   `tsconfig`/`jsconfig` paths, default `./components/ui`), config scaffold,
   stylesheet copy, first build, next-steps output. Files: `bin/van.mjs`.
+- [x] 8. Framework awareness (added 2026-07-27, user-approved). `init` sniffs
+  `package.json` deps → `framework` + `rsc` + the stylesheet location
+  (`next-app` → `app/`, vite → `src/styles`), both persisted as top-level config
+  keys; `add` prepends `"use client"` to copied JSX that calls hooks or
+  `createContext` when `rsc` is true. The kit's own files stay directive-free so
+  non-Next bundlers do not warn about module-level directives. **The sidecar
+  records the hash of the bytes written, not of the kit's tree**, or every
+  RSC-injected file would read as consumer-edited on the next `add`. Files:
+  `bin/van.mjs`, `scripts/config-schema.mjs`, `scripts/manifest.mjs`
+  (`hashBytes`), `tests/config-schema.unit.mjs`.
+  Deliberately **not** copied from shadcn: Tailwind config mutation and npm
+  dependency installation — the other two reasons its CLI detects frameworks,
+  neither of which exists here.
 - [ ] 6. Test: CLI against scratch dirs — `init` produces a buildable tree;
   `add dialog` pulls its `lib/` deps; `add alert-dialog` pulls `dialog`
   transitively and its CSS `@import` resolves; re-`add` of an edited file

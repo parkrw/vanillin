@@ -501,6 +501,18 @@ test("validate: paths rejects escapes, absolutes and unknown keys", () => {
   assert.ok(unknown.errors.some((e) => e.includes('"bogus"')))
 })
 
+test("validate: framework and rsc", () => {
+  const ok = validate({ framework: "next-app", rsc: true })
+  assert.ok(ok.ok, ok.errors.join("; "))
+  assert.equal(ok.config.framework, "next-app")
+  assert.equal(ok.config.rsc, true)
+
+  const bad = validate({ framework: "sveltekit", rsc: "yes" })
+  assert.ok(!bad.ok)
+  assert.ok(bad.errors.some((e) => e.startsWith("framework:")))
+  assert.ok(bad.errors.some((e) => e.startsWith("rsc")))
+})
+
 // ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------

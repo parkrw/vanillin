@@ -20,7 +20,7 @@ import { readFileSync, existsSync, readdirSync, mkdirSync, writeFileSync } from 
 import { resolve, dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { generate } from "../scripts/build-theme.mjs"
-import { generateManifest, readManifest, writeManifest, hashFile } from "../scripts/manifest.mjs"
+import { readManifest, writeManifest, hashFile, hashBytes } from "../scripts/manifest.mjs"
 import { PATH_DEFAULTS, pathError } from "../scripts/config-schema.mjs"
 import { REGISTRY_FILE } from "../scripts/build-registry.mjs"
 
@@ -208,7 +208,7 @@ function joinRel(...parts) {
  * aliases are the cheapest possible migration story. Otherwise the default is
  * ./components/ui, which is where React projects put them anyway.
  */
-export function detectLayout(root) {
+export function detectLayout(root, detected = { styles: "styles" }) {
   const resolveAlias = aliasResolver(root)
   const componentsJson = readJsonc(root, "components.json")
   const aliases = componentsJson?.aliases || {}
@@ -231,12 +231,65 @@ export function detectLayout(root) {
   const lib = fromAlias(aliases.lib) || fromAlias(aliases.utils)?.replace(/\/utils$/, "")
   layout.lib = lib || `${layout.ui.replace(/\/ui$/, "")}/lib`
 
-  // A Tailwind css entry tells us where the project keeps stylesheets.
+  // A Tailwind css entry names the project's global stylesheet; failing that,
+  // the framework tells us where one belongs.
   const css = typeof componentsJson?.tailwind?.css === "string" ? joinRel(componentsJson.tailwind.css) : null
-  layout.styles = css && css.includes("/") ? css.slice(0, css.lastIndexOf("/")) : "styles"
+  layout.styles = css && css.includes("/") ? css.slice(0, css.lastIndexOf("/")) : detected.styles
   layout.css = `${layout.styles}/van.css`
 
-  return { layout, source: componentsJson ? "components.json" : "defaults" }
+  const hints = [componentsJson && "components.json", detected.framework !== "unknown" && detected.framework]
+  return { layout, source: hints.filter(Boolean).join(" + ") || "defaults" }
+}
+
+// ── framework awareness ─────────────────────────────────────────────
+
+/**
+ * Identify the consumer's framework from its dependencies.
+ *
+ * Only two framework differences reach a tool that just copies files: where the
+ * global stylesheet belongs, and whether components need a "use client"
+ * directive. Tailwind config mutation and dependency installation — the other
+ * reasons upstream's CLI cares — do not exist here.
+ */
+export function detectFramework(root) {
+  const pkg = readJsonc(root, "package.json")
+  const deps = { ...pkg?.dependencies, ...pkg?.devDependencies }
+
+  if (deps.next) {
+    // App Router is a directory, not a dependency: only its files are RSC.
+    const appDir = ["app", "src/app"].find((d) => existsSync(join(root, d)))
+    return appDir ? { framework: "next-app", rsc: true, styles: appDir } : { framework: "next-pages", rsc: false, styles: "styles" }
+  }
+  if (deps["@remix-run/react"] || deps["@remix-run/node"]) {
+    return { framework: "remix", rsc: false, styles: "app/styles" }
+  }
+  if (deps.astro) return { framework: "astro", rsc: false, styles: "src/styles" }
+  if (deps.vite) {
+    return { framework: "vite", rsc: false, styles: existsSync(join(root, "src")) ? "src/styles" : "styles" }
+  }
+  return { framework: "unknown", rsc: false, styles: "styles" }
+}
+
+/** Hooks and context make a module client-only under React Server Components. */
+const CLIENT_ONLY = /\buse[A-Z]\w*\s*\(|\bcreateContext\s*\(/
+
+/**
+ * Bytes to write for one kit file in this project.
+ *
+ * Under RSC, a component that calls hooks needs a "use client" directive, and
+ * the kit's own files carry none — shipping them unconditionally would make
+ * every non-Next bundler warn about module-level directives. Injecting here
+ * keeps that cost on the projects that need it.
+ *
+ * The transform is deterministic, and the sidecar records the hash of what was
+ * actually written, so a later add or diff still compares like with like.
+ */
+export function kitFileContent(project, slug, rel) {
+  const bytes = readFileSync(join(kitRoot, "ui", slug, rel))
+  if (!project.config?.rsc || !/\.(jsx|js|tsx|ts)$/.test(rel)) return bytes
+  const text = bytes.toString("utf8")
+  if (/^\s*["']use client["']/.test(text) || !CLIENT_ONLY.test(text)) return bytes
+  return Buffer.from(`"use client"\n\n${text}`)
 }
 
 // ── closure + file states ───────────────────────────────────────────
@@ -285,9 +338,9 @@ export function resolveClosure(registry, slugs) {
  * file to the *current* kit version cannot tell "the consumer changed this"
  * from "upstream moved on", and those two deserve opposite behaviour.
  */
-export function fileState(kitPath, targetPath, recordedHash) {
+export function fileState(expected, targetPath, recordedHash) {
   if (!existsSync(targetPath)) return "missing"
-  if (readFileSync(targetPath).equals(readFileSync(kitPath))) return "identical"
+  if (readFileSync(targetPath).equals(expected)) return "identical"
   if (recordedHash && hashFile(targetPath) === recordedHash) return "unmodified"
   return "edited"
 }
@@ -306,15 +359,13 @@ export function planAdd(project, registry, slugs) {
 
   for (const slug of components) {
     const entry = registry.components[slug]
-    const kitDir = join(kitRoot, "ui", slug)
     const targetDir = join(project.root, project.paths.ui, slug)
     const recorded = readManifest(targetDir)?.files || {}
-    const files = entry.files.map((rel) => ({
-      rel,
-      from: join(kitDir, rel),
-      to: join(targetDir, rel),
-      state: fileState(join(kitDir, rel), join(targetDir, rel), recorded[rel]),
-    }))
+    const files = entry.files.map((rel) => {
+      const contents = kitFileContent(project, slug, rel)
+      const to = join(targetDir, rel)
+      return { rel, contents, to, state: fileState(contents, to, recorded[rel]) }
+    })
     plan.components.push({
       slug,
       dir: `${project.paths.ui}/${slug}`,
@@ -324,11 +375,11 @@ export function planAdd(project, registry, slugs) {
   }
 
   for (const file of lib) {
-    const from = join(kitRoot, "lib", file)
+    const contents = readFileSync(join(kitRoot, "lib", file))
     const to = join(project.root, project.paths.lib, file)
     // No sidecar covers lib/ (it is substrate, versioned by kitVersion), so a
     // difference cannot be attributed and is treated as an edit.
-    plan.lib.push({ file, from, to, state: fileState(from, to) })
+    plan.lib.push({ file, contents, to, state: fileState(contents, to) })
   }
 
   return plan
@@ -352,12 +403,14 @@ function cmdList(project) {
 }
 
 /** The scaffolded config: a brand colour to change, and the detected layout. */
-export function initialConfig(layout) {
+export function initialConfig(layout, detected = { framework: "unknown", rsc: false }) {
   const paths = {}
   for (const [k, v] of Object.entries(layout)) {
     if (v !== PATH_DEFAULTS[k]) paths[k] = v
   }
   const config = {
+    framework: detected.framework,
+    rsc: detected.rsc,
     paths,
     theme: {
       brand: "oklch(0.55 0.2 265)",
@@ -376,11 +429,13 @@ function cmdInit(project) {
     fail(`${CONFIG_FILE} already exists — edit it, or re-run with --overwrite`)
   }
 
-  const { layout, source } = detectLayout(project.root)
+  const detected = detectFramework(project.root)
+  const { layout, source } = detectLayout(project.root, detected)
   say(`${bold("van init")} ${dim(`in ${project.root}`)}`)
+  say(`  framework: ${detected.framework}${detected.rsc ? ' — components get a "use client" directive' : ""}`)
   say(`  layout from ${source}: components → ${layout.ui}, primitives → ${layout.lib}, styles → ${layout.styles}`)
 
-  const config = initialConfig(layout)
+  const config = initialConfig(layout, detected)
   writeFileAtomic(project.configPath, JSON.stringify(config, null, 2) + "\n")
   say(`  ${green("+")} ${CONFIG_FILE}`)
 
@@ -462,24 +517,25 @@ function cmdAdd(project, slugs) {
   for (const comp of writable) {
     for (const f of comp.files) {
       if (f.state === "identical") continue
-      writeFileAtomic(f.to, readFileSync(f.from))
+      writeFileAtomic(f.to, f.contents)
       written++
     }
-    // Record provenance from the kit's own tree: hashes of what we just wrote,
-    // so a later add or diff can tell consumer edits from upstream movement.
+    // Provenance for what we actually wrote — hashes of the written bytes, not
+    // of the kit's tree, so an RSC-injected copy is still recognised as
+    // unedited the next time add or diff runs.
     const targetDir = join(project.root, project.paths.ui, comp.slug)
     mkdirSync(targetDir, { recursive: true })
-    writeManifest(
-      targetDir,
-      generateManifest(join(kitRoot, "ui", comp.slug), {
-        kitVersion: registry.kitVersion,
-        source: registry.source,
-      }),
-    )
+    writeManifest(targetDir, {
+      name: comp.slug,
+      kitVersion: registry.kitVersion,
+      source: registry.source,
+      requires: registry.components[comp.slug].requires,
+      files: Object.fromEntries(comp.files.map((f) => [f.rel, hashBytes(f.contents)])),
+    })
   }
   for (const f of plan.lib) {
     if (f.state === "identical" || blockedLib.includes(f)) continue
-    writeFileAtomic(f.to, readFileSync(f.from))
+    writeFileAtomic(f.to, f.contents)
     written++
   }
 
@@ -513,9 +569,9 @@ export function diffComponent(project, registry, slug) {
 
   for (const rel of rels) {
     const localPath = join(targetDir, rel)
-    const kitPath = join(kitDir, rel)
     const local = existsSync(localPath) ? hashFile(localPath) : null
-    const kit = existsSync(kitPath) ? hashFile(kitPath) : null
+    // The kit side is what `add` would write here, RSC transform included.
+    const kit = existsSync(join(kitDir, rel)) ? hashBytes(kitFileContent(project, slug, rel)) : null
     const was = recorded[rel] || null
 
     let state

@@ -48,6 +48,15 @@ const COMPONENT_SECTION_KEYS = new Set(["tokens", "variants", "sizes"])
 export const PATH_KEYS = new Set(["ui", "lib", "styles", "css"])
 export const PATH_DEFAULTS = { ui: "ui", lib: "lib", styles: "styles", css: "styles/van.css" }
 
+/**
+ * Frameworks `van init` recognises. Recorded for provenance and to explain the
+ * chosen layout; the only behavioural bit is `rsc`, which decides whether
+ * copied components get a "use client" directive.
+ */
+export const FRAMEWORKS = new Set(["next-app", "next-pages", "vite", "remix", "astro", "unknown"])
+
+const TOP_LEVEL_KEYS = new Set(["theme", "components", "paths", "framework", "rsc"])
+
 /** Shorthand token names -> CSS property names. */
 const PROPERTY_SHORTHANDS = {
   bg: "background-color",
@@ -173,9 +182,22 @@ export function validate(config, { colorTokens, knownComponents } = {}) {
 
   // Unknown top-level keys
   for (const k of Object.keys(config)) {
-    if (k !== "theme" && k !== "components" && k !== "paths") {
+    if (!TOP_LEVEL_KEYS.has(k)) {
       errors.push(`unknown top-level key "${k}"`)
     }
+  }
+
+  // --- framework / rsc -----------------------------------------------------
+  if (config.framework !== undefined) {
+    if (!FRAMEWORKS.has(config.framework)) {
+      errors.push(`framework: unknown value "${config.framework}", expected: ${[...FRAMEWORKS].join(", ")}`)
+    } else {
+      out.framework = config.framework
+    }
+  }
+  if (config.rsc !== undefined) {
+    if (typeof config.rsc !== "boolean") errors.push("rsc must be a boolean")
+    else out.rsc = config.rsc
   }
 
   // --- paths ---------------------------------------------------------------
