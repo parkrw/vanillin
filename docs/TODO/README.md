@@ -38,12 +38,36 @@ platform features upstream cannot adopt (Tailwind/Radix/React-18 bound).
 | 27           | sidebar             | ~L  | [x]    | all 24 exports real; mobile = sheet; Cmd+B; sidebar_state cookie                                  |
 | 28           | dark-mode-pass      | ~M  | [x]    | axe contrast sweep + screenshot QA; `--input-background` token                                    |
 | 29           | docs-shell          | ~M  | [x]    | grouped nav (Get started / Components); intro + install/theming stubs; empty hash → #introduction |
-| 30 (do last) | docs-content        | ~M  | [ ]    | **runs last**, after 65; now a consistency/gap pass only — tasks write own docs (2026-07-26)      |
+| 30 (do last) | docs-content        | ~M  | [ ]    | **runs last**, after 70; consistency/gap pass + the docs half of `docs/BUGS.md` (A3, B1–B6)       |
 
 ## Phase 2 — config, form, parity, platform
 
-Sequence: 28 → 29 (thin) → 31…61 → 30. Rationale in the 2026-07-25 log entry.
 Tasks are detailed just-in-time; only the rows below are durable.
+
+**Order from here (settled 2026-07-27, after 38 landed):**
+
+```
+39 → 68 (bugs) → 65 → 66 → 67 → 69 → 70 → 30 → console kit
+```
+
+- **39 runs alone and runs first** — it rewrites every component's CSS, so
+  visual bug-fixing (68) and new components (the console kit) both come after
+  it or get done twice. Regenerate manifests *and* `registry.json` after it.
+- **68 before the remaining CLI work.** Known code bugs, including one
+  high-priority motion glitch, should not sit under new features.
+- **69 and 70 before 30.** They rewrite the docs pages that 30 then proofreads.
+- **30 is last and absorbs the docs half of `docs/BUGS.md`** — A3 (code
+  examples on every component page) and B1–B6 (per-component config
+  undocumented, density examples, `ui/command` unexplained, drawer swipe
+  undiscoverable, form docs recommending zod over `lib/schema.js`, `ui/form` vs
+  `ui/form-fields`) are its checklist, not a separate list.
+- **The console kit comes after 30** — new components want settled docs
+  conventions and post-39 CSS. Cheap now: 64 + 38 generate the manifest,
+  registry entry and sidecar.
+
+**`docs/BUGS.md` is the triage inbox, not a plan.** Items graduate into rows
+here. Its unfinished-sweep banner is live: the user's own pass stopped at
+`form-fields`, so **remind them at the start of any session that touches bugs.**
 
 59–63 were added 2026-07-26, after 31–58 landed: 59 and 62 from the user
 directly, 60/61/63 from reviewing what phase 2 actually shipped. **61 before
@@ -113,6 +137,9 @@ written; it is a final consistency and gap pass.
 | 65  | component-update          | ~L  | [ ]    | deps: 64, 38; `van update`  [^65]                      |
 | 66  | config-schema-json       | ~M  | [ ]    | deps: 38; generated `van.schema.json` + `$schema` [^66]                |
 | 67  | cli-picker               | ~S  | [ ]    | deps: 38; interactive multi-select for a bare `add` [^67]              |
+| 68  | bug-batch                | ~M  | [ ]    | deps: 39; the confirmed code bugs in `docs/BUGS.md` [^68]              |
+| 69  | docs-site-dogfood        | ~M  | [ ]    | BUGS A2 — the site is built out of the kit [^69]                       |
+| 70  | typography-system        | ~L  | [ ]    | BUGS A4 — a real typeset scale, not per-page sizes [^70]               |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -207,6 +234,29 @@ written; it is a final consistency and gap pass.
     means hand-rolled raw-mode ANSI (~80 lines) and it is the hardest part of the
     CLI to test, so it is not in 38 — a bare `add` prints the list plus a hint.
 
+[^68]: deps: 39 (it rewrites every component's CSS, so fix visual bugs after
+    it, not before). From `docs/BUGS.md`: C2 `useFormContext()` throws +
+    `FormContext` unexported, C3 stray `htmlFor` on radiogroup labels, C4
+    data-table resize overlaps row content, C5 attachment-group scroll drops
+    edge borders, D7 switch on the Direction page, D8 empty-state alignment,
+    **E1 light/dark toggle glitch (high priority)**, E2 collapsible end-of-
+    animation glitch, H1 assertions that hold for the wrong value. **Scope is
+    "known bugs", not "all bugs"** — the user's docs-site sweep stopped at
+    `form-fields`; everything alphabetically after it is unswept, so expect this
+    task to grow or gain a sibling once the sweep finishes.
+
+[^69]: BUGS A2. The kit documents itself without using itself: raw
+    `<button>`/`pg-` classes across ~10 `site/pages/` files (combobox,
+    carousel, command, form, form-fields, primitives, resizable, select,
+    use-form, view-transitions), `ui/breadcrumb` and `ui/navigation-menu`
+    unused in the site shell, Get Started not a showcase, and the primitives
+    page with no stated purpose (decide or delete). The most visible
+    credibility item on the list. Before 30 — it changes the pages 30 then
+    proofreads.
+
+[^70]: BUGS A4. A typeset system rather than per-page font sizes; `~L` because
+    it touches every docs page and interacts with 69. Sequence after 69.
+
 [^65]: deps: 64, 38; `van update` with 3-way merge (base = recorded
     `kitVersion`). Biggest payoff — the original kit cannot take upstream fixes into an
     edited component — and the easiest to make destructive. Own task, own
@@ -220,8 +270,10 @@ progressive enhancement, never a hard requirement.
 
 ## Backlog — console kit
 
-Components a cloud console needs that upstream has no answer for. Not scheduled;
-detail just-in-time after 58 lands. Rough order of usefulness:
+Components a cloud console needs that upstream has no answer for. **Scheduled
+after 30** (see the order above): they need post-39 CSS and settled docs
+conventions, and writing them earlier means writing them twice. Detail
+just-in-time. Rough order of usefulness:
 
 - `copy-field` — resource IDs, ARNs, connection strings (~S)
 - `key-value` — resource detail pane, definition-list semantics (~S)
@@ -242,10 +294,10 @@ detail just-in-time after 58 lands. Rough order of usefulness:
 - Planning is **just-in-time**: the rows above are durable, task files are
   written when a task is picked up. Task files now exist for every task except
   22–29 (landed before the convention).
-  Unstarted-but-specified and ready to dispatch: 39; then 65, 66, 67; 30 last.
-  **66 must cover `framework`, `rsc` and `paths`** — task 38 added all three as
-  top-level config keys, so the generated schema has three more branches than
-  its row assumed. **39 runs alone** — it rewrites every
+  Specified and ready to dispatch: 39, then 65/66/67. 68, 69 and 70 have rows
+  and footnotes but no task files yet. **66 must cover `framework`, `rsc` and
+  `paths`** — task 38 added all three as top-level config keys, so the generated
+  schema has three more branches than its row assumed. **39 runs alone** — it rewrites every
   component's CSS, so it cannot share a batch with component work (and manifests
   + registry need regenerating after it).
 - Test: `node tests/run.mjs` — boots its own vite on :5199, drives local Chrome;
