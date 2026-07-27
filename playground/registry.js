@@ -9,6 +9,7 @@ export const docs = {
   installation: { title: "Installation", page: lazy(() => import("./pages/docs/installation.jsx")) },
   theming: { title: "Theming", page: lazy(() => import("./pages/docs/theming.jsx")) },
   schema: { title: "Schema", page: lazy(() => import("./pages/docs/schema.jsx")) },
+  contracts: { title: "Component contracts", page: lazy(() => import("./pages/docs/contracts.jsx")) },
 }
 
 /**

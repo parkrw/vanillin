@@ -14,7 +14,7 @@ export default async function run({ page, baseUrl, test, eq }) {
   await test("nav is grouped into get started + components", async () => {
     const labels = await page.locator(".pg-nav-group > .pg-nav-label").allTextContents()
     eq(labels.join("|"), "Get started|Components")
-    eq(await page.locator(".pg-nav-group").first().locator(".pg-nav-link").count(), 4)
+    eq(await page.locator(".pg-nav-group").first().locator(".pg-nav-link").count(), 5)
   })
 
   await test("docs links route to the stub pages", async () => {

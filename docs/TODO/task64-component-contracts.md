@@ -115,8 +115,8 @@ what to do is worse than no check.
   *(Backlog was: 7 untested stateful components — tests written; 18 props-rest
   violations — 6 fixed by forwarding/spreading, 12 allowlisted as provider-only;
   one dead `Checkbox` import in data-table faking a requires edge.)*
-- [ ] 6. Docs: the manifest format, the install-time-not-runtime caveat, and how
-  to add a component that passes conformance.
+- [x] 6. Docs: the manifest format, the install-time-not-runtime caveat, and how
+  to add a component that passes conformance. (`playground/pages/docs/contracts.jsx`)
 
 ## Verify / done
 
