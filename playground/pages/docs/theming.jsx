@@ -4,8 +4,76 @@ export default function ThemingPage() {
       <h2>Theming</h2>
 
       <p>
-        Every design token lives in <code>styles/globals.css</code>. Edit that
-        one file to retheme everything.
+        Design tokens are split by kind across two files.{" "}
+        <code>styles/defaults.css</code> holds every token <em>value</em> and is
+        generated; <code>styles/globals.css</code> holds the{" "}
+        <em>machinery</em> and is hand-written. Retheme by editing{" "}
+        <code>van.defaults.json</code>, or by generating your own overrides
+        into a <code>van.css</code> imported after <code>globals.css</code>.
+      </p>
+
+      <h3>The kit&apos;s own theme is generator output</h3>
+
+      <p>
+        <code>van.defaults.json</code> is a real, complete config — the same
+        schema a consumer writes — and{" "}
+        <code>styles/defaults.css</code> is what the generator makes of it. It
+        is committed, and the vite build regenerates it before resolving any
+        CSS, so it cannot drift from its config.
+      </p>
+
+      <p>
+        This is the point of the arrangement: there is exactly one{" "}
+        <code>:root</code> declaring token values, and it is generated. There
+        is no hand-written copy of the defaults for the generator to disagree
+        with, and the generator is exercised on every build rather than only
+        when someone remembers to run it.
+      </p>
+
+      <p>
+        What stays hand-written in <code>globals.css</code> is everything that
+        is not a value to choose: the <code>@property</code> registrations
+        (whose <code>initial-value</code> must be computationally independent —
+        no <code>var()</code>, no <code>rem</code>), the ramps that derive from
+        a generated root (<code>--radius-sm</code>…<code>--radius-xl</code>{" "}
+        from <code>--radius</code>, <code>--space-*</code> from{" "}
+        <code>--density-scale</code>, <code>--motion-fast</code>/
+        <code>--motion-medium</code> from <code>--motion-scale</code>), the{" "}
+        <code>-hover</code> relative-colour derivations, the{" "}
+        <code>[data-density]</code> block, the forced-colors repair layer and
+        the touch-target floor. Because the ramps derive, changing one
+        generated root value moves the whole family.
+      </p>
+
+      <p>
+        Shadows are the one exception: <code>--shadow-sm</code>/
+        <code>-md</code>/<code>-lg</code> are flat values with no config key
+        yet, so they sit with the machinery until{" "}
+        <code>theme.shadow</code> exists.
+      </p>
+
+      <h3>Cascade order</h3>
+
+      <p>
+        Nothing uses <code>@layer</code>, deliberately: layered styles lose to
+        unlayered ones, so putting the generated tokens in a layer would make
+        them lose to every ordinary rule in <code>globals.css</code>.
+        Everything is unlayered and plain source order decides:
+      </p>
+
+      <pre>
+{`1. defaults.css       generated token values
+2. forced-colors.css  repair layer — overrides (1)
+3. globals.css        machinery + base element styles
+4. component CSS      imported per component
+5. your van.css       imported after globals.css`}
+      </pre>
+
+      <p>
+        Your own <code>van.css</code> comes last and wins. Note that it wins
+        over <code>[data-density]</code> too, since both target the root at
+        equal specificity — if you set <code>theme.density</code> there you are
+        pinning it, not defaulting it.
       </p>
 
       <h3>Token families</h3>
@@ -60,6 +128,15 @@ export default function ThemingPage() {
         does not follow the OS colour scheme automatically &mdash; light
         mode is the default regardless of <code>prefers-color-scheme</code>,
         and <code>.dark</code> is the only way to switch.
+      </p>
+
+      <p>
+        Two pairs are asymmetric on purpose.{" "}
+        <code>--destructive-foreground</code> is dark text in dark mode: white
+        measures only 2.8:1 on the lighter dark-mode red.{" "}
+        <code>--input-background</code> is <code>transparent</code> in light
+        mode but a faint <code>--input</code> mix in dark, so bordered form
+        controls still read on near-black.
       </p>
 
       <h3>Overriding a token</h3>
