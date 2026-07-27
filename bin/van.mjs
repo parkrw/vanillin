@@ -336,6 +336,95 @@ function cmdAdd(project, slugs) {
   }
 }
 
+/**
+ * Compare one installed component against the kit and its recorded install.
+ *
+ * Three hashes decide everything: what you have, what you installed, what the
+ * kit ships now. Without the recorded middle one "differs" is ambiguous — this
+ * is the read-only half of the state machine `add` uses.
+ */
+export function diffComponent(project, registry, slug) {
+  const entry = registry.components[slug]
+  const kitDir = join(kitRoot, "ui", slug)
+  const targetDir = join(project.root, project.paths.ui, slug)
+  const manifest = readManifest(targetDir)
+  const recorded = manifest?.files || {}
+  const rels = [...new Set([...entry.files, ...Object.keys(recorded)])].sort()
+  const files = []
+
+  for (const rel of rels) {
+    const localPath = join(targetDir, rel)
+    const kitPath = join(kitDir, rel)
+    const local = existsSync(localPath) ? hashFile(localPath) : null
+    const kit = existsSync(kitPath) ? hashFile(kitPath) : null
+    const was = recorded[rel] || null
+
+    let state
+    if (!local) state = was ? "deleted" : "absent"
+    else if (local === kit) state = "current"
+    else if (!was) state = "untracked"
+    else if (local === was) state = "upstream-changed"
+    else if (kit === was) state = "edited"
+    else state = "diverged"
+
+    files.push({ rel, state })
+  }
+
+  return { slug, kitVersion: manifest?.kitVersion || null, tracked: manifest !== null, files }
+}
+
+const DIFF_LABEL = {
+  edited: () => red("edited locally"),
+  "upstream-changed": () => "upstream changed — `van add` will update it",
+  diverged: () => red("edited locally, and upstream changed"),
+  untracked: () => "not recorded in .van.json",
+  deleted: () => "recorded but missing locally",
+  absent: () => dim("not installed"),
+  current: () => dim("up to date"),
+}
+
+function cmdDiff(project, slugs) {
+  const registry = loadRegistry()
+  const installed = installedSlugs(project)
+
+  let targets
+  if (slugs.length) {
+    for (const slug of slugs) {
+      if (!registry.components[slug]) fail(`unknown component "${slug}" — run \`van list\``)
+      if (!installed.has(slug)) fail(`${slug} is not installed in ${project.paths.ui}`)
+    }
+    targets = slugs
+  } else {
+    targets = [...installed].filter((slug) => registry.components[slug]).sort()
+    if (!targets.length) fail(`no vanillin components found in ${project.paths.ui}`)
+  }
+
+  let differing = 0
+  for (const slug of targets) {
+    const result = diffComponent(project, registry, slug)
+    const interesting = result.files.filter((f) => f.state !== "current" && f.state !== "absent")
+    differing += interesting.length
+    if (!interesting.length && !flags.all) continue
+
+    const version = result.tracked ? dim(` (installed from v${result.kitVersion})`) : dim(" (no .van.json)")
+    say(`${bold(slug)}${version}`)
+    for (const f of flags.all ? result.files : interesting) {
+      say(`  ${f.rel} — ${DIFF_LABEL[f.state]()}`)
+    }
+  }
+
+  if (!differing) {
+    const n = targets.length
+    say(`${green("✓")} ${n} component${n === 1 ? " matches" : "s match"} kit v${registry.kitVersion}`)
+    return
+  }
+
+  say("")
+  say(dim(differing === 1 ? "1 file differs" : `${differing} files differ`))
+  // Non-zero so `van diff` is usable as a CI drift check.
+  process.exit(1)
+}
+
 function cmdBuild(project) {
   if (!project.hasConfig) {
     fail(`no ${CONFIG_FILE} in ${project.root} — run \`van init\` first`)
@@ -422,6 +511,9 @@ export function main(argv = process.argv.slice(2)) {
   switch (parsed.command) {
     case "add":
       cmdAdd(project, parsed.args)
+      break
+    case "diff":
+      cmdDiff(project, parsed.args)
       break
     case "list":
       cmdList(project)

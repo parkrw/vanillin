@@ -172,7 +172,7 @@ prose above predates the rename, `git remote -v` is authoritative.
   states, per-component atomicity, `--dry-run`, `--overwrite`/`--force`,
   path-escape rejection, `.van.json` sidecar write via `generateManifest`.
   Files: `bin/van.mjs`.
-- [ ] 4. `diff [slug]` — per-file `edited` vs `upstream-moved`, exit non-zero
+- [x] 4. `diff [slug]` — per-file `edited` vs `upstream-moved`, exit non-zero
   when anything differs so it is usable in CI. Files: `bin/van.mjs`.
 - [ ] 5. `init` — layout detection (`components.json` aliases, `@/*` via
   `tsconfig`/`jsconfig` paths, default `./components/ui`), config scaffold,
