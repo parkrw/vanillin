@@ -562,3 +562,12 @@ agents and cherry-picked onto `feat/phase-2`. Suite 406/406, build clean.
   the 53 colour tokens are literal light/dark pairs. Machinery that stayed
   hand-written: shadows, the radius/space/motion ramps, `--*-hover` relative-colour
   derivations, `color-scheme`.
+- 2026-07-26 — batch 59/60/63 merged to `main` (`bc53d3cc3c42`). Integrated
+  suite **613/613** = 583 base + 11 + 6 + 13; the three test sets were disjoint,
+  so unlike the previous batch there was no cross-task integration miss. All
+  three worktrees and local branches removed. Two operational lessons for the
+  next `--spawn`, both now in HANDOFF's fan-out section: **never detect worker
+  liveness by tmux `pane_title`** (claude overwrites it with its own status line
+  within seconds, so the supervisor reports every pane dead immediately — match
+  on `pane_id`), and **never poll with a bare zsh glob** (`for f in
+  reports/*.done` aborts the whole monitor on `nomatch`).

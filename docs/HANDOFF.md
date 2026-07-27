@@ -2,9 +2,13 @@
 
 ## Where things stand
 
-`main` at `81161ede5d89`, suite **583/583**, `npm run build` clean, no
-worktrees, no stale local branches. `origin/feat/brand-multicolor` still exists
-remotely and is deletable. Batches 49/61/62 and all of phase 2 are merged.
+`main` at `bc53d3cc3c42` and pushed, suite **613/613**, `npm run build` clean,
+working tree clean, **no worktrees, no local branches but `main`**. Batch
+59/60/63 is merged; phase 2 and batch 49/61/62 before it.
+
+Still to delete remotely (the push must be run by a human from `main`):
+`feat/form-bindings`, `feat/generated-defaults`, `feat/composition-pass`,
+`feat/brand-multicolor`.
 
 ### Durable facts
 
@@ -63,6 +67,21 @@ remotely and is deletable. Batches 49/61/62 and all of phase 2 are merged.
   it as a conformance bug, because it isn't one.
 - **shadcn is named only on the introduction page.** That is where the lineage
   belongs; everywhere else says "upstream" or states the reason directly.
+- **The chip lives in `ui/badge` as a `Chip` export** (task 63.3), not its own
+  slug: a chip *is* a badge with a dismiss affordance, so it inherits the base
+  geometry, focus ring and icon sizing. `combobox.css` `@import`s `badge.css`
+  (the `alert-dialog` → `dialog` precedent), and `.combobox-chip` survives as the
+  in-field hook so no combobox test changed.
+- **`van.defaults.json` carries no `theme.brand`** (task 60). The kit palette is
+  greyscale and brand derivation produces different numbers, so the 53 colour
+  tokens are literal `theme.light`/`theme.dark` pairs. Shadows, the
+  radius/space/motion ramps, the `--*-hover` relative-colour derivations and
+  `color-scheme` all stayed hand-written machinery in `globals.css`.
+- **Each `CSS.highlights` consumer gets its own registry name** (task 63.5).
+  `CSS.highlights` is one global registry, so `ui/data-table` registers under
+  `vanillin-table-search`, not `ui/command`'s `vanillin-search` — otherwise
+  typing in a faceted-filter popover blanks the table's paint. The paint rule
+  lives in the component's own CSS.
 
 ### Known flake
 
@@ -116,43 +135,24 @@ absorbed, and needed `-D` to delete.
 
 ## Next step
 
-**Batch 59/60/63 passed review and is integrated on `feat/batch-59-60-63`** —
-12 commits cherry-picked from the three worker branches with **zero conflicts**,
-on top of `b0589660758f`. Base was `dbd79b94d074` (583/583).
+**Batch 59/60/63 is merged and cleaned up.** 12 commits cherry-picked from three
+worker branches with **zero conflicts**; integrated suite 613/613 = 583 base +
+11 + 6 + 13, so the three test sets were disjoint and nothing broke on
+integration. Per-worktree before integration: 59 → 594/594, 60 → 589/589,
+63 → 596/596. Three `feature-dev:code-reviewer` passes found no issues, no
+rework was sent.
 
-Per-worktree verification by the head before integration: 59 → 594/594,
-60 → 589/589, 63 → 596/596, all builds clean, all ownership checks empty,
-60's generator byte-identical on regeneration. Three `feature-dev:code-reviewer`
-passes found no issues.
+The one commit deliberately **not** cherry-picked is `4b2a62d42c8a` ("docs:
+handoff for task 60") — it writes a root-level `HANDOFF.md`, and this project
+keeps its handoff at `docs/HANDOFF.md`. Nothing was lost; its content is in
+`docs/TODO/reports/task60.md`.
 
-| Task | Branch                    | Worktree                                | Suite   |
-| ---- | ------------------------- | --------------------------------------- | ------- |
-| 59   | `feat/form-bindings`      | `../vanillin-task59-form-bindings`      | 594/594 |
-| 60   | `feat/generated-defaults` | `../vanillin-task60-generated-defaults` | 589/589 |
-| 63   | `feat/composition-pass`   | `../vanillin-task63-composition-pass`   | 596/596 |
+**Read `docs/TODO/reports/task59.md` and `task63.md` before starting 64** —
+git-excluded scratch, still on disk. Task 59's carries a written-out fix for the
+`ui/select` ARIA bug; task 60's carries three exact `README.md` edits it could
+not make (now task 30's).
 
-All three are pushed to `origin`. The one commit deliberately **not**
-cherry-picked is `4b2a62d42c8a` ("docs: handoff for task 60") — it writes a
-root-level `HANDOFF.md`, and this project keeps its handoff at `docs/HANDOFF.md`.
-Its content is captured in `docs/TODO/reports/task60.md` and the log.
-
-Worker reports are in `docs/TODO/reports/` (git-excluded scratch) and are worth
-reading before the follow-up tasks — task 59's has a written-out fix for the
-`ui/select` ARIA bug, task 60's has three exact `README.md` edits it could not
-make.
-
-**User runs the merge** (`git merge`/`rebase`/`reset --hard` are denied here):
-
-```
-git switch main && git merge --ff-only feat/batch-59-60-63 && git push origin main
-```
-
-After the merge: `git worktree remove` the three worktrees, delete
-`feat/form-bindings`, `feat/generated-defaults`, `feat/composition-pass`
-(verify with `git cherry main <branch>` — ancestry checks lie after a
-cherry-pick) plus `docs/batch-59-60-63`.
-
-Order after this batch lands:
+Order from here:
 
 1. **64** alone — it hashes every component file, so it must not run concurrently
    with anything that edits components. Then **38** (`add` consumes the manifest
