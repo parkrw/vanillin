@@ -2,6 +2,7 @@
   "name": "vanillin",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "Zero-dependency React components. Copy-paste JSX + CSS, that's it.",
   "scripts": {
