@@ -143,6 +143,102 @@ export function installedSlugs(project) {
   )
 }
 
+// ── layout detection ────────────────────────────────────────────────
+
+/** Stylesheets `init` copies: globals.css and the two files it @imports. */
+export const STYLESHEETS = ["globals.css", "defaults.css", "forced-colors.css"]
+
+/**
+ * Read `compilerOptions.paths` from tsconfig/jsconfig and return a resolver for
+ * alias specifiers. Handles the one shape that matters — `"@/*": ["./src/*"]` —
+ * because that is what an alias in components.json actually points through.
+ *
+ * JSON with comments is tolerated: tsconfig.json is JSONC in practice.
+ */
+export function aliasResolver(root) {
+  for (const name of ["tsconfig.json", "jsconfig.json"]) {
+    if (!existsSync(join(root, name))) continue
+    // An unparseable tsconfig is not a reason to abort init.
+    const json = readJsonc(root, name)
+    const paths = json?.compilerOptions?.paths
+    if (!paths) continue
+    const baseUrl = json.compilerOptions.baseUrl || "."
+
+    return (specifier) => {
+      for (const [pattern, targets] of Object.entries(paths)) {
+        if (!pattern.endsWith("/*") || !Array.isArray(targets) || !targets.length) continue
+        const prefix = pattern.slice(0, -1) // "@/"
+        if (!specifier.startsWith(prefix)) continue
+        const rest = specifier.slice(prefix.length)
+        const target = targets[0].replace(/\*$/, "").replace(/^\.\//, "")
+        return joinRel(baseUrl, target + rest)
+      }
+      return null
+    }
+  }
+  return () => null
+}
+
+/**
+ * Read a project config file, tolerating comments (tsconfig.json is JSONC in
+ * practice) and returning null rather than throwing — none of these files is
+ * required, so an unreadable one just means "no hint available".
+ */
+function readJsonc(root, name) {
+  try {
+    const raw = readFileSync(join(root, name), "utf8").replace(/\/\*[\s\S]*?\*\/|(^|\s)\/\/.*/g, "$1")
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+/** Join project-relative segments, dropping empties and leading "./". */
+function joinRel(...parts) {
+  return parts
+    .flatMap((p) => String(p).split("/"))
+    .filter((seg) => seg && seg !== ".")
+    .join("/")
+}
+
+/**
+ * Work out where a project keeps its components.
+ *
+ * An existing components.json is honoured — upstream users have one, and its
+ * aliases are the cheapest possible migration story. Otherwise the default is
+ * ./components/ui, which is where React projects put them anyway.
+ */
+export function detectLayout(root) {
+  const resolveAlias = aliasResolver(root)
+  const componentsJson = readJsonc(root, "components.json")
+  const aliases = componentsJson?.aliases || {}
+
+  /** A components.json alias -> a project-relative directory, or null. */
+  const fromAlias = (specifier) => {
+    if (typeof specifier !== "string") return null
+    if (specifier.startsWith(".") || !specifier.includes("/")) return joinRel(specifier) || null
+    return resolveAlias(specifier) || joinRel(specifier)
+  }
+
+  const layout = { ...PATH_DEFAULTS }
+
+  // shadcn's aliases.ui is the ui dir itself; aliases.components is its parent.
+  const ui = fromAlias(aliases.ui)
+  const components = fromAlias(aliases.components)
+  layout.ui = ui || (components ? `${components}/ui` : "components/ui")
+
+  // lib/utils is a file alias in shadcn, so its directory is what we want.
+  const lib = fromAlias(aliases.lib) || fromAlias(aliases.utils)?.replace(/\/utils$/, "")
+  layout.lib = lib || `${layout.ui.replace(/\/ui$/, "")}/lib`
+
+  // A Tailwind css entry tells us where the project keeps stylesheets.
+  const css = typeof componentsJson?.tailwind?.css === "string" ? joinRel(componentsJson.tailwind.css) : null
+  layout.styles = css && css.includes("/") ? css.slice(0, css.lastIndexOf("/")) : "styles"
+  layout.css = `${layout.styles}/van.css`
+
+  return { layout, source: componentsJson ? "components.json" : "defaults" }
+}
+
 // ── closure + file states ───────────────────────────────────────────
 
 /**
@@ -253,6 +349,69 @@ function cmdList(project) {
   }
   say("")
   say(dim(`${slugs.length} components, ${installed.size} installed · kit v${registry.kitVersion}`))
+}
+
+/** The scaffolded config: a brand colour to change, and the detected layout. */
+export function initialConfig(layout) {
+  const paths = {}
+  for (const [k, v] of Object.entries(layout)) {
+    if (v !== PATH_DEFAULTS[k]) paths[k] = v
+  }
+  const config = {
+    paths,
+    theme: {
+      brand: "oklch(0.55 0.2 265)",
+      radius: "0.5rem",
+      density: "comfortable",
+    },
+  }
+  if (!Object.keys(paths).length) delete config.paths
+  return config
+}
+
+function cmdInit(project) {
+  const registry = loadRegistry()
+
+  if (project.hasConfig && !flags.overwrite) {
+    fail(`${CONFIG_FILE} already exists — edit it, or re-run with --overwrite`)
+  }
+
+  const { layout, source } = detectLayout(project.root)
+  say(`${bold("van init")} ${dim(`in ${project.root}`)}`)
+  say(`  layout from ${source}: components → ${layout.ui}, primitives → ${layout.lib}, styles → ${layout.styles}`)
+
+  const config = initialConfig(layout)
+  writeFileAtomic(project.configPath, JSON.stringify(config, null, 2) + "\n")
+  say(`  ${green("+")} ${CONFIG_FILE}`)
+
+  // Stylesheets only: a component's lib/ deps come with `add`, not up front.
+  for (const name of STYLESHEETS) {
+    const to = join(project.root, layout.styles, name)
+    if (existsSync(to) && !flags.overwrite) {
+      say(`  ${dim("=")} ${layout.styles}/${name} ${dim("exists, left alone")}`)
+      continue
+    }
+    writeFileAtomic(to, readFileSync(join(kitRoot, "styles", name)))
+    say(`  ${green("+")} ${layout.styles}/${name}`)
+  }
+
+  // First build, from the config we just wrote.
+  const css = generate(config, {
+    root: project.root,
+    uiDir: layout.ui,
+    globals: `${layout.styles}/globals.css`,
+    source: CONFIG_FILE,
+  })
+  writeFileAtomic(join(project.root, layout.css), css)
+  say(`  ${green("+")} ${layout.css} (${css.length} bytes)`)
+
+  say("")
+  say(`${bold("Next")}`)
+  say(`  1. import the stylesheets, in this order:`)
+  say(`       import "./${layout.styles}/globals.css"`)
+  say(`       import "./${layout.css}"`)
+  say(`  2. van add button dialog        ${dim(`(${Object.keys(registry.components).length} components available)`)}`)
+  say(`  3. edit ${CONFIG_FILE} and re-run van build to retheme`)
 }
 
 /** Marker for one planned file, so dry-run and the real thing read alike. */
@@ -511,6 +670,9 @@ export function main(argv = process.argv.slice(2)) {
   switch (parsed.command) {
     case "add":
       cmdAdd(project, parsed.args)
+      break
+    case "init":
+      cmdInit(project)
       break
     case "diff":
       cmdDiff(project, parsed.args)

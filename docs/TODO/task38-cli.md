@@ -174,7 +174,7 @@ prose above predates the rename, `git remote -v` is authoritative.
   Files: `bin/van.mjs`.
 - [x] 4. `diff [slug]` — per-file `edited` vs `upstream-moved`, exit non-zero
   when anything differs so it is usable in CI. Files: `bin/van.mjs`.
-- [ ] 5. `init` — layout detection (`components.json` aliases, `@/*` via
+- [x] 5. `init` — layout detection (`components.json` aliases, `@/*` via
   `tsconfig`/`jsconfig` paths, default `./components/ui`), config scaffold,
   stylesheet copy, first build, next-steps output. Files: `bin/van.mjs`.
 - [ ] 6. Test: CLI against scratch dirs — `init` produces a buildable tree;
