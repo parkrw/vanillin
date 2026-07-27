@@ -198,7 +198,7 @@ prose above predates the rename, `git remote -v` is authoritative.
   `tests/cli.unit.mjs` — **`.unit.mjs`, not `.test.mjs`**: `tests/run.mjs`
   already runs unit suites as child processes, so no runner branch is needed
   (the spec above predates that).
-- [ ] 7. Docs — rewrite the installation page (currently a stub saying a CLI "is
+- [x] 7. Docs — rewrite the installation page (currently a stub saying a CLI "is
   planned") and the README install section. Files:
   `site/pages/docs/installation.jsx`, `README.md`.
 

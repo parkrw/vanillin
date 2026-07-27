@@ -4,18 +4,38 @@
 
 ## Using it in a project
 
-This is not a package — you copy files in:
+This is not a package — the files land in your project and are yours to edit. The CLI is a faster hand for the copying:
 
-1. Copy `styles/globals.css` into your project and import it once (your app entry). It holds every design token — edit this one file to retheme everything, add a `.dark` class on `<html>` for dark mode.
-2. Copy `lib/` into your project (shared primitives some components import via relative paths — keep `lib/` and `ui/` as siblings).
-3. Copy the `ui/<component>/` folders you want. Each is one `.jsx` + one `.css`; import both:
-
-```jsx
-import { Button } from "./ui/button/button.jsx"
-import "./ui/button/button.css"
+```sh
+npx github:parkrw/vanillin init          # config + stylesheets, layout detected
+npx github:parkrw/vanillin add button dialog
 ```
 
-Your bundler (Vite, Next, etc.) compiles the JSX. Nothing to install, and the code is yours to edit.
+`init` reads your `package.json` and any `components.json` to work out where components belong (`src/components/ui` in a Next or aliased project, `./components/ui` otherwise), writes `van.config.json`, and copies the stylesheets. `add` brings each component's dependencies with it — other components it imports, and the `lib/` primitives it needs. In a Next App Router project the copied components get a `"use client"` directive; elsewhere they don't.
+
+Then import the two stylesheets once, in this order, plus the components you use:
+
+```jsx
+import "./styles/globals.css"   // every design token
+import "./styles/van.css"       // your overrides, generated from van.config.json
+
+import { Button } from "./components/ui/button/button.jsx"
+import "./components/ui/button/button.css"
+```
+
+There is nothing to install at runtime — your bundler (Vite, Next, …) compiles the JSX. Copying the folders by hand works exactly as well: `styles/globals.css`, then `lib/`, then the `ui/<component>/` directories you want, keeping `lib/` and `ui/` as siblings.
+
+The other commands:
+
+| | |
+|---|---|
+| `van list` | every component, marking the ones you have |
+| `van build` | regenerate `van.css` after editing `van.config.json` |
+| `van diff` | which files you edited, and which the kit has changed since you copied them |
+
+`add` never overwrites a file you edited — it tells you and skips that component. `van add --overwrite` replaces it deliberately. That distinction comes from the `.van.json` sidecar written next to each component, which records what you were given.
+
+Pin a tag (`npx github:parkrw/vanillin#v0.1.0`) if you want a stable source to copy from.
 
 ### Component API conventions
 
