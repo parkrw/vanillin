@@ -25,7 +25,7 @@ before task 30 starts. Re-run it; the method matters more than the table.
 
 ```bash
 # 1. Prose detection: pages with at least one rendered <p> in page-level JSX
-for f in playground/pages/*.jsx playground/pages/docs/*.jsx; do
+for f in site/pages/*.jsx site/pages/docs/*.jsx; do
   words=$(grep -oP '(?<=>)[^<]+' "$f" \
     | grep -vP '^\s*$' \
     | wc -w | tr -d ' ')
@@ -35,7 +35,7 @@ done
 
 # 2. Cross-reference: registry vs ui/ vs pages/
 comm -23 <(ls -1 ui/ | sort) \
-  <(grep -oP '^\s+"?([a-z][-a-z]*)"?\s*:' playground/registry.js \
+  <(grep -oP '^\s+"?([a-z][-a-z]*)"?\s*:' site/registry.js \
     | sed 's/[: "]*//g' | sort)
 ```
 
@@ -104,20 +104,20 @@ is clean; `date-input`/`time-picker` alias `date-picker.jsx`.
 - [ ] 2. Fix every structural violation: pages with != 1 `<h2>`, wrong
   heading hierarchy (h4 after h2, skipped levels). Currently only
   `typography.jsx` is known; the re-run may find others.
-  Files: `playground/pages/typography.jsx`, any others surfaced by step 1
+  Files: `site/pages/typography.jsx`, any others surfaced by step 1
 
 - [ ] 3. Add intro `<p>` to every component page that still lacks one after
   all prior tasks have landed. One to three sentences: what, trait, when.
   Do not touch pages that already open with prose.
-  Files: `playground/pages/*.jsx` (only those missing intros)
+  Files: `site/pages/*.jsx` (only those missing intros)
 
 - [ ] 4. Flesh out `docs/introduction.jsx` — feature list, comparison blurb,
   theming pointer. Under 300 words.
-  Files: `playground/pages/docs/introduction.jsx`
+  Files: `site/pages/docs/introduction.jsx`
 
 - [ ] 5. Fill `docs/installation.jsx` if task 38 has not. Manual steps if no
   CLI; CLI-first if 38 landed.
-  Files: `playground/pages/docs/installation.jsx`
+  Files: `site/pages/docs/installation.jsx`
 
 - [ ] 6. Sweep for factual drift — component names, prop names, or behaviors
   described in prose that no longer match the code (token renames from 33-35,
@@ -126,7 +126,7 @@ is clean; `date-input`/`time-picker` alias `date-picker.jsx`.
 
 - [ ] 7. Verify the "documented" rule holds for every page: one h2, intro
   `<p>`, at least one demo. Write a quick Node script that asserts this
-  against every `playground/pages/*.jsx` and fails CI if a future PR
+  against every `site/pages/*.jsx` and fails CI if a future PR
   regresses it.
   Files: `tests/docs-structure.unit.mjs`
 
@@ -134,7 +134,7 @@ is clean; `date-input`/`time-picker` alias `date-picker.jsx`.
 
 - `node tests/run.mjs` green — no test broke from heading or content changes.
 - `npm run build` clean.
-- Every `playground/pages/*.jsx` has exactly one `<h2>` and an intro `<p>`.
+- Every `site/pages/*.jsx` has exactly one `<h2>` and an intro `<p>`.
 - `docs/introduction.jsx` is no longer thin; `docs/installation.jsx` is no
   longer a stub.
 - `tests/docs-structure.unit.mjs` passes and would catch a missing intro or

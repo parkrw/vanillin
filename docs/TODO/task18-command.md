@@ -65,7 +65,7 @@ persisted value or a popup.
   keywords match, shouldFilter={false}, separator hides while searching,
   CommandDialog opens/closes (Esc) and traps focus in the input; files:
   `ui/command/command.jsx` + `.css`, `tests/command.test.mjs`,
-  `playground/pages/command.jsx`, `playground/registry.js`.
+  `site/pages/command.jsx`, `site/registry.js`.
 
 ## Verify / done
 

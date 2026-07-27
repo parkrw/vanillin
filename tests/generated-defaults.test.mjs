@@ -39,16 +39,16 @@ export default async function ({ page, baseUrl, repoRoot, test, eq }) {
 
   await test("every generated token reproduces its pre-task-60 value", async () => {
     const generated = extractTokenDefaults(defaultsCss)
-    // The snapshot was taken in the playground, whose own :root re-declares a
+    // The snapshot was taken in the docs site, whose own :root re-declares a
     // few tokens (slower demo motion). Those say nothing about the kit's
     // defaults.
-    const playgroundOverrides = extractTokenDefaults(read("playground/playground.css"))
+    const siteOverrides = extractTokenDefaults(read("site/site.css"))
     // The snapshot holds the computed values of the hand-written :root as it
     // stood before the split. light-dark() collapses to one side per mode, so
     // each generated pair is checked against the matching snapshot mode.
     for (const [name, { light, dark }] of Object.entries(generated)) {
       const key = `--${name}`
-      if (!(key in snapshot.light) || name in playgroundOverrides) continue
+      if (!(key in snapshot.light) || name in siteOverrides) continue
       // A value referencing another token computes to the substituted result,
       // so it cannot be string-compared here. tokens.test.mjs checks those
       // through a real CSS property in the browser.

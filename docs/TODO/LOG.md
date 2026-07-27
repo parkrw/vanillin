@@ -529,7 +529,7 @@ agents and cherry-picked onto `feat/phase-2`. Suite 406/406, build clean.
   (`ui/form-fields/`) rather than a file inside `ui/form/`, because it imports
   `lib/use-form.js` and `ui/form` must stay copyable without the engine.
   File ownership assigned in writing, one owner per shared file:
-  59 owns `playground/registry.js`, 60 owns `styles/globals.css` + the theme
+  59 owns `site/registry.js`, 60 owns `styles/globals.css` + the theme
   scripts, 63 owns `ui/badge` / `ui/combobox` / `ui/data-table` /
   `lib/use-highlight.js`. Base commit suite: 583/583.
 - 2026-07-26 — batch **59/60/63** all three passed supervision. Full suite run
@@ -541,7 +541,7 @@ agents and cherry-picked onto `feat/phase-2`. Suite 406/406, build clean.
     `ui/select/select.jsx:41` destructures a fixed prop list with no `...props`,
     so the `id`/`aria-describedby`/`aria-invalid` that `FormControl` clones onto
     a `<Select>` vanish — the trigger has no id and `FormLabel`'s `htmlFor`
-    points at nothing. Shipped and live in `playground/pages/form.jsx:132-163`.
+    points at nothing. Shipped and live in `site/pages/form.jsx:132-163`.
     `SelectField` wraps `SelectTrigger` instead. Fix for the demo page is written
     out in `docs/TODO/reports/task59.md`; giving `Select` a `...props` rest so
     the failure is loud belongs to 63/64.
@@ -595,6 +595,6 @@ agents and cherry-picked onto `feat/phase-2`. Suite 406/406, build clean.
     registry-duplicate regex matched nothing against unquoted keys — now also
     asserts non-empty extraction — and one-line CSS rules evaded the motion
     checks).
-  Docs: `playground/pages/docs/contracts.jsx` (manifest format, lint-contract
+  Docs: `site/pages/docs/contracts.jsx` (manifest format, lint-contract
   caveat, add-a-component checklist). Conformance keys allowlists by intent —
   indeterminate loops, static components, providers — each entry with a reason.

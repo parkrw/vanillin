@@ -61,8 +61,8 @@ durations). Upstream has no answer, so this is net-new surface.
   shared tick scheduler. Files: `ui/format/format.jsx` + `.css` (minimal —
   these are inline text, likely `font-variant-numeric: tabular-nums` and
   little else).
-- [ ] 4. Demo page + registry entry. Files: `playground/pages/format.jsx`,
-  `playground/registry.js`.
+- [ ] 4. Demo page + registry entry. Files: `site/pages/format.jsx`,
+  `site/registry.js`.
 - [ ] 5. Test: each formatter against a fixed locale and fixed clock; `iec`
   vs `si` suffixes; negative and zero durations; `<time dateTime>` present;
   one shared interval for N live instances (assert the timer count, not the

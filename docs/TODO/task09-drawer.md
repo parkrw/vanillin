@@ -40,8 +40,8 @@
   flush bottom, `:modal`), direction variants anchor to their edges, handle
   visible by default, aria title/description wired, X/backdrop/Esc close;
   files: `ui/drawer/drawer.jsx` + `.css`, `ui/dialog/dialog.jsx`
-  (`useDialog`), `tests/drawer.test.mjs`, `playground/pages/drawer.jsx`,
-  `playground/registry.js`.
+  (`useDialog`), `tests/drawer.test.mjs`, `site/pages/drawer.jsx`,
+  `site/registry.js`.
 - [x] 2. swipe-to-dismiss — test: mouse-drag past 25% closes, short drag
   springs back (stays open, transform cleared), drag sets `data-swiping`,
   drag on a button does not start a swipe; files: `ui/drawer/drawer.jsx`,

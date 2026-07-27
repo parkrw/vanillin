@@ -6,7 +6,7 @@ decision for `ui/data-table`.
 **Deps:** 48 (column pinning/resizing — `columnSizing`, `columnPinning`,
 `.data-table-sized`, `table-layout: fixed`)
 **Scope:** `lib/use-data-table.js`, `ui/data-table/`,
-`playground/pages/data-table.jsx`, `tests/data-table.test.mjs`.
+`site/pages/data-table.jsx`, `tests/data-table.test.mjs`.
 
 ## Where things are today
 
@@ -114,7 +114,7 @@ pagination + server-side modes. **Do not build windowing. Do not use
 - [ ] 4. Demo: grouped table (group by status), a "server-side" table that
   fakes `manual*` with a setTimeout to show loading states, section
   explaining why there is no windowing and what `manual*` is for. Files:
-  `playground/pages/data-table.jsx`.
+  `site/pages/data-table.jsx`.
 - [ ] 5. Tests: grouping produces correct row structure; expand/collapse
   round-trips; sort-within-group orders correctly; pagination applies to the
   flattened result; `manualSorting` skips the sort stage (data order

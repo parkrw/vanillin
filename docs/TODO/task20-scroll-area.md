@@ -55,8 +55,8 @@
   not scroll with the content, corner vars set when both axes overflow, rtl
   thumb starts at the inline end, viewport `tabIndex` follows overflow;
   files: `ui/scroll-area/scroll-area.jsx` + `.css`,
-  `tests/scroll-area.test.mjs`, `playground/pages/scroll-area.jsx`,
-  `playground/registry.js`.
+  `tests/scroll-area.test.mjs`, `site/pages/scroll-area.jsx`,
+  `site/registry.js`.
 
 ## Verify / done
 

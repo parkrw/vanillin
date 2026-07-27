@@ -78,12 +78,12 @@ upstream's markup get a silently different look today.
   suppression + no-morph-on-first-open. Files:
   `ui/navigation-menu/navigation-menu.jsx`, `.css`.
 - [ ] 4. Demo: viewport mode and `viewport={false}` side by side. Files:
-  `playground/pages/navigation-menu.jsx`.
+  `site/pages/navigation-menu.jsx`.
 - [ ] 5. Real `NavigationMenuIndicator` — slides to the active trigger, RTL
   correct, `aria-hidden`. Files: `ui/navigation-menu/navigation-menu.jsx`,
   `.css`.
 - [ ] 6. Demo section for the indicator. Files:
-  `playground/pages/navigation-menu.jsx`.
+  `site/pages/navigation-menu.jsx`.
 - [ ] 7. Test: viewport is a single element reused across items; content
   teleports and the source item stays mounted; `data-motion` matches the
   traversal direction and inverts under RTL; no size animation under reduced

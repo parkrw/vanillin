@@ -57,8 +57,8 @@
   buttons and dropdown-free caption, arrow/Home/End/PageUp keyboard walk
   including the month rollover, disabled dates ignore clicks, today marked,
   rtl arrow swap; files: `ui/calendar/calendar.jsx` + `.css`,
-  `tests/calendar.test.mjs`, `playground/pages/calendar.jsx`,
-  `playground/registry.js`.
+  `tests/calendar.test.mjs`, `site/pages/calendar.jsx`,
+  `site/registry.js`.
 - [x] 2. calendar modes — `mode="multiple"`, `mode="range"` (+ range
   data-attrs and hover preview), `numberOfMonths`, `showWeekNumber`,
   `captionLayout="dropdown"` with `startMonth`/`endMonth`; test: multiple

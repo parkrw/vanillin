@@ -71,7 +71,7 @@
   edge the menu flips left of the pointer; files: `lib/use-anchor-position.js`
   (Element guard), `ui/dropdown-menu/dropdown-menu.jsx` (`anchorRef` prop),
   `ui/context-menu/context-menu.jsx` + `.css`, `tests/context-menu.test.mjs`,
-  `playground/pages/context-menu.jsx`, `playground/registry.js`.
+  `site/pages/context-menu.jsx`, `site/registry.js`.
 - [x] 2. long-press + re-export coverage — test: synthetic touch pointerdown
   held 700ms opens at press point, early pointerup/move cancels; checkbox item
   toggles `aria-checked` and persists on reopen; submenu opens via ArrowRight

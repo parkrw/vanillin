@@ -51,7 +51,7 @@ Every animation and transition is driven by motion tokens. `--motion-scale` mult
 
 ```sh
 npm install   # dev-only deps: react, vite, playwright-core
-npm run dev   # playground at http://localhost:5173
+npm run dev   # docs site at http://localhost:5173
 npm test      # smoke tests (needs Google Chrome installed)
 ```
 
@@ -62,18 +62,23 @@ npm test      # smoke tests (needs Google Chrome installed)
 | `ui/<slug>/` | One component: `<slug>.jsx` + `<slug>.css` |
 | `lib/` | Shared primitives (`cn`, `useControllableState`, `usePresence`, focus/positioning helpers) |
 | `styles/globals.css` | All design tokens, light + dark |
-| `playground/` | Vite dev harness — a demo page per component |
-| `tests/` | Playwright smoke tests driving the playground |
+| `site/` | Docs site (Vite) — a demo page per component |
+| `tests/` | Playwright smoke tests driving the docs site |
+
+The docs site's own CSS classes are prefixed `pg-` and its test hooks are
+`data-pg="..."` — `pg` is short for "playground", the former name of `site/`.
+The prefix keeps site chrome from colliding with component classes; it is
+internal and never ships to consumers. Read it as "docs site".
 
 ### Adding a component
 
 1. `ui/<slug>/<slug>.jsx` + `.css`. CSS rules: block class = component name, variants `block--modifier`, subparts `.block-part`; **tokens only** (`var(--…)`), opacity via `color-mix(in oklab, …)`, no hex.
-2. Demo page `playground/pages/<slug>.jsx` (default export, imports its own css), then set `page: lazy(...)` on the component's entry in `playground/registry.js`.
+2. Demo page `site/pages/<slug>.jsx` (default export, imports its own css), then set `page: lazy(...)` on the component's entry in `site/registry.js`.
 3. Test file `tests/<slug>.test.mjs` (see below).
 
 ### Tests
 
-`npm test` starts the playground on port 5199, launches your installed Chrome via `playwright-core` (no browser download), and runs every `tests/*.test.mjs`. Each test file default-exports:
+`npm test` starts the docs site on port 5199, launches your installed Chrome via `playwright-core` (no browser download), and runs every `tests/*.test.mjs`. Each test file default-exports:
 
 ```js
 export default async function run({ page, baseUrl, test, eq, near }) {

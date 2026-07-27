@@ -89,7 +89,7 @@ One test walking every `ui/*/`, asserting what HANDOFF already requires:
   use a fixed literal and never a motion token (they must not track
   `--motion-scale`) — allowlist those by selector
 - block class matches the directory name; variants are `block--modifier`
-- a `playground/pages/<slug>.jsx` and a `playground/registry.js` entry exist, and
+- a `site/pages/<slug>.jsx` and a `site/registry.js` entry exist, and
   **no two slugs share a page module** (that bug was real — three date slugs
   pointed at one page until `0f48e2fe84de`)
 - interactive components have `tests/<slug>.test.mjs`; pure-node tests are named
@@ -116,7 +116,7 @@ what to do is worse than no check.
   violations — 6 fixed by forwarding/spreading, 12 allowlisted as provider-only;
   one dead `Checkbox` import in data-table faking a requires edge.)*
 - [x] 6. Docs: the manifest format, the install-time-not-runtime caveat, and how
-  to add a component that passes conformance. (`playground/pages/docs/contracts.jsx`)
+  to add a component that passes conformance. (`site/pages/docs/contracts.jsx`)
 
 ## Verify / done
 

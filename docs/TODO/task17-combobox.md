@@ -55,7 +55,7 @@ highlighted, not focused.
   click select, disabled item skip, outside click sync, input-click stays
   open, autoHighlight, controlled value + hidden input; files:
   `ui/combobox/combobox.jsx` + `.css`, `tests/combobox.test.mjs`,
-  `playground/pages/combobox.jsx`, `playground/registry.js`.
+  `site/pages/combobox.jsx`, `site/registry.js`.
 
 ## Verify / done
 

@@ -30,8 +30,8 @@
   `:modal` matches), Esc + backdrop click close through the exit animation,
   body scroll locked while open, focus returns to trigger on close; files:
   `ui/dialog/dialog.jsx`, `ui/dialog/dialog.css` (skeleton),
-  `tests/dialog.test.mjs`, `playground/pages/dialog.jsx`,
-  `playground/registry.js` (add `page:`).
+  `tests/dialog.test.mjs`, `site/pages/dialog.jsx`,
+  `site/registry.js` (add `page:`).
 - [x] 2. Anatomy + aria — test: `aria-labelledby` → DialogTitle id,
   `aria-describedby` → DialogDescription id, X button closes, DialogClose
   closes, controlled mode (`open`/`onOpenChange`) works; files:

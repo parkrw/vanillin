@@ -417,7 +417,7 @@ const RESOLVER_OPTIONS = {
 }
 
 // The exact scenario the hand-written RHF-shaped resolver in
-// playground/pages/use-form.jsx implements (exercised by
+// site/pages/use-form.jsx implements (exercised by
 // tests/use-form.test.mjs): email required + format, age required and
 // coerced to number, address.city required at a nested path.
 const demoSchema = s.object({

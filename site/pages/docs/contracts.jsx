@@ -114,9 +114,9 @@ export default function ContractsPage() {
           when the root renders no DOM node, like Select).
         </li>
         <li>
-          Demo page <code>playground/pages/&lt;slug&gt;.jsx</code> (it is the
+          Demo page <code>site/pages/&lt;slug&gt;.jsx</code> (it is the
           docs page &mdash; carry the prose) and its own{" "}
-          <code>playground/registry.js</code> entry &mdash; never a shared
+          <code>site/registry.js</code> entry &mdash; never a shared
           page module.
         </li>
         <li>

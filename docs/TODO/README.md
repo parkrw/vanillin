@@ -62,8 +62,8 @@ proxy or subscription engine, so there is nothing shared to extract. Do not
 revive either without new evidence.
 
 **Every task writes its own docs** (2026-07-26) — prose lands in the same PR as
-the code, on the component's playground page or the relevant
-`playground/pages/docs/` page. Task 30 is no longer where documentation gets
+the code, on the component's docs-site page or the relevant
+`site/pages/docs/` page. Task 30 is no longer where documentation gets
 written; it is a final consistency and gap pass.
 
 | #   | Slug                     | Est | Status | Notes                                                                  |
@@ -117,7 +117,7 @@ written; it is a final consistency and gap pass.
     components.
 
 [^37]: deps: 34, 35; `van.config.json` schema + zero-dep generator →
-    `van.css`; **output not wired into the playground — see 60**.
+    `van.css`; **output not wired into the docs site — see 60**.
 
 [^38]: deps: 37, **64** (manifest format — `add` writes the sidecar);
     `bin/van.mjs` init/add/build/list + `registry.json`; git-sourced, stays
@@ -227,10 +227,10 @@ detail just-in-time after 58 lands. Rough order of usefulness:
 - Build: `npm run build`. No lint configured.
 - Conventions + gotchas: `docs/HANDOFF.md` (block classes, tokens-only CSS,
   `cn()`, `as` prop, `useControllableState` + `data-state`, `usePresence`, demo
-  page + `playground/registry.js` entry per component).
+  page + `site/registry.js` entry per component).
 - Load-bearing files: `styles/globals.css` (tokens), `lib/` primitives,
   `ui/toggle/` (stateful pattern), `ui/tabs/` (roving tabindex), `ui/accordion/`
-  (disclosure/presence), `playground/registry.js`.
+  (disclosure/presence), `site/registry.js`.
 - Git gates (hooks): no commits on main — `<type>/<kebab>` branch first. The
   ~500-net-line branch-size hook is advisory only — never split or restructure
   work because of it.

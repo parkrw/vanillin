@@ -3,8 +3,13 @@ import { readdirSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { chromium } from "playwright-core"
 
-// Boots the playground on its own port, drives it with the locally
+// Boots the docs site on its own port, drives it with the locally
 // installed Chrome (no browser download), runs every tests/*.test.mjs.
+//
+// Suites select elements by `data-pg="..."` attributes rather than by class,
+// so restyling the docs site does not break tests. `pg` is short for
+// "playground", the former name of `site/`; the hooks were deliberately not
+// renamed (see the header of site/site.css). Read `data-pg` as "docs site".
 const PORT = Number(process.env.VANILLIN_TEST_PORT) || 5199
 const baseUrl = `http://localhost:${PORT}`
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))
@@ -82,7 +87,7 @@ try {
   // :focus-visible. Both are invisible in a filtered single-file run and only
   // appear in full-suite order, which is the worst way to find them.
   //
-  // A real navigation (not a #hash change — the playground is an SPA) discards
+  // A real navigation (not a #hash change — the site is an SPA) discards
   // injected tags and resets modality; clearing emulateMedia covers the rest.
   const resetPage = async () => {
     await page.goto("about:blank")

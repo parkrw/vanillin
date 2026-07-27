@@ -63,8 +63,8 @@
   click close and sync; Tab closes; trigger aria (haspopup/expanded/controls);
   exit transition plays; files: `ui/dropdown-menu/dropdown-menu.jsx` + `.css`
   (root/trigger/content/item/group/label/separator/shortcut),
-  `tests/dropdown-menu.test.mjs`, `playground/pages/dropdown-menu.jsx`,
-  `playground/registry.js`.
+  `tests/dropdown-menu.test.mjs`, `site/pages/dropdown-menu.jsx`,
+  `site/registry.js`.
 - [x] 2. checkbox + radio items — test: checkbox toggles `aria-checked`,
   closes, state persists on reopen; controlled `checked/onCheckedChange`;
   radio group is single-select with `menuitemradio` roles and

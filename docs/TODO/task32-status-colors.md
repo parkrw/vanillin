@@ -47,10 +47,10 @@ component covers the "green/amber/red pip" pattern every console needs.
 
 - [ ] 1. Badge status variants + demo section. Files: `ui/badge/badge.css`,
   `ui/badge/badge.jsx` (doc comment only),
-  `playground/pages/badge.jsx`.
+  `site/pages/badge.jsx`.
 - [ ] 2. `ui/status-dot` + demo page + registry entry. Files:
   `ui/status-dot/status-dot.jsx` + `.css`,
-  `playground/pages/status-dot.jsx`, `playground/registry.js`.
+  `site/pages/status-dot.jsx`, `site/registry.js`.
 - [ ] 3. Test: each badge variant resolves to its token pair (assert computed
   colour, not class); status-dot exposes `role="img"` + label by default,
   `aria-hidden` with `label={null}`, `data-status` per state, pulse animation

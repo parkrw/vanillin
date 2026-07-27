@@ -53,7 +53,7 @@
   motion guarded. Files: `ui/scroll-area/scroll-area.jsx`,
   `ui/scroll-area/scroll-area.css`.
 - [ ] 4. Demo: a fade-mask example driven by `data-overflow-*`, a snap-content
-  example, and the squish. Files: `playground/pages/scroll-area.jsx`.
+  example, and the squish. Files: `site/pages/scroll-area.jsx`.
 - [ ] 5. Test: attributes appear/disappear at each edge and respect a non-zero
   threshold; both axes; attributes update after content shrinks to fit;
   `scroll-snap-type` is `none` during a thumb drag and restored after; squish

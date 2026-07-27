@@ -38,7 +38,7 @@ list→detail navigation — as progressive enhancement.
   name aborts the transition with a console error. Assign the name only to the
   participating row (set on click, cleared after), never to every row.
 - **Route transitions in the playground** are the demo vehicle: the hash
-  router in `playground/registry.js` wraps its state update. Keep this in the
+  router in `site/registry.js` wraps its state update. Keep this in the
   playground; do not push routing opinions into `ui/`.
 - **Durations from tokens** (`var(--motion-medium)`, `var(--motion-ease)`) per
   the HANDOFF motion rule — view-transition pseudo-elements are styled in CSS,
@@ -54,9 +54,9 @@ list→detail navigation — as progressive enhancement.
   reduced-motion and unsupported short-circuits, and a `viewTransitionName`
   helper that guarantees uniqueness. Files: `lib/view-transition.js`.
 - [ ] 3. Theme toggle circular wipe from the click origin. Files:
-  `playground/playground.css`, the theme-toggle call site.
+  `site/site.css`, the theme-toggle call site.
 - [ ] 4. Playground route transition + a list→detail shared-element demo.
-  Files: `playground/registry.js`, `playground/pages/view-transitions.jsx`.
+  Files: `site/registry.js`, `site/pages/view-transitions.jsx`.
 - [ ] 5. Test: with the API stubbed out, every interaction still produces the
   right final DOM; with it present, `startViewTransition` is called once per
   update and not at all under reduced motion; shared-element names are unique
