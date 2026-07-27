@@ -62,7 +62,7 @@ into something a console can actually put a resource list in.
   `lib/use-data-table.js`.
 - [ ] 4. `DataTableFacetedFilter` + a global-filter input in the toolbar.
   Files: `ui/data-table/data-table.jsx`, `ui/data-table/data-table.css`.
-- [ ] 5. Demo sections. Files: `playground/pages/data-table.jsx`.
+- [ ] 5. Demo sections. Files: `site/pages/data-table.jsx`.
 - [ ] 6. Test: global filter matches across columns and respects
   `enableGlobalFilter: false`; global + column filters AND; faceted counts
   reflect other filters but not the facet's own selection; multi-value facet

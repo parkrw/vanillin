@@ -10,7 +10,7 @@ scheduled; otherwise the default config can only express a one-colour brand)
 ## Why
 
 Task 37 shipped a generator whose output nobody consumes, and a sample
-`van.config.json` with a blue hue-265 brand. `playground/main.jsx` imported
+`van.config.json` with a blue hue-265 brand. `site/main.jsx` imported
 the generated CSS after `globals.css`; at equal specificity (0,1,0) it won on
 source order, re-themed the whole playground and pinned `--density-scale` so
 `[data-density]` could not override it on the root element. That was 6 of the 12
@@ -92,7 +92,7 @@ collide with, and the demo and the defaults are the same artifact.
 
 You are the **sole owner of `styles/globals.css`**, `van.config.json`,
 `scripts/build-theme.mjs`, `scripts/config-schema.mjs` and
-`playground/pages/docs/theming.jsx`. Do **not** touch `playground/registry.js`
+`site/pages/docs/theming.jsx`. Do **not** touch `site/registry.js`
 (task 59 owns it — you need no new entry, theming is already registered) or any
 `ui/*` component file. If a component needs a token you are removing or renaming,
 report it rather than editing the component.

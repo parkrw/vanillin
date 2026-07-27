@@ -58,7 +58,7 @@ overflows, and participating in `<form>` validation.
   `name`/`required`/`form`/`disabled` forwarding and `setCustomValidity`.
   Files: `ui/select/select.jsx`, `ui/select/select.css`.
 - [ ] 4. Demo sections for all three + registry stays as-is. Files:
-  `playground/pages/select.jsx`.
+  `site/pages/select.jsx`.
 - [ ] 5. Test: item-aligned mode puts the selected item within a few px of the
   trigger; clamping at the viewport edge reveals the scroll buttons; buttons
   hide at each scroll extreme; a `required` empty select blocks

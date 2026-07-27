@@ -8,7 +8,7 @@ together, so a field is one line instead of fifteen.
 ## Why
 
 The three layers exist and none of them talk to each other. Wiring one
-`Controller`-driven Select in `playground/pages/form.jsx` costs ~28 lines
+`Controller`-driven Select in `site/pages/form.jsx` costs ~28 lines
 (`form.jsx:132-163`) — `Controller` → `FormField` → `FormItem` → `FormLabel` →
 `FormControl` → control → `FormDescription` → `FormMessage`. Every field repeats
 it, and every repetition is a chance to drop `aria-describedby` or forget
@@ -65,8 +65,8 @@ allowed to know about both.
   `Controller` path) — test: each one round-trips its value through
   `handleSubmit` and shows a resolver error; files: `ui/form-fields/`,
   `tests/form-fields.test.mjs`.
-- [x] 3. Demo page + prose: `playground/pages/form-fields.jsx` showing the same
-  form as `playground/pages/form.jsx` written with bindings, side by side with
+- [x] 3. Demo page + prose: `site/pages/form-fields.jsx` showing the same
+  form as `site/pages/form.jsx` written with bindings, side by side with
   what it replaces, and stating when to reach for each layer. Registry entry.
 - [x] 4. Test: a resolver error (use `schemaResolver` from `lib/schema.js`, which
   landed in 62) surfaces through a bound field without the caller touching
@@ -86,7 +86,7 @@ allowed to know about both.
 
 ## File ownership (batch 59/60/63)
 
-You are the **sole owner of `playground/registry.js`** this batch. Add your one
+You are the **sole owner of `site/registry.js`** this batch. Add your one
 line; change nothing else in it. Do not touch `styles/globals.css` (task 60 owns
 it) or `ui/badge`, `ui/combobox`, `ui/data-table`, `lib/use-highlight.js`
 (task 63 owns those) — report, don't edit.

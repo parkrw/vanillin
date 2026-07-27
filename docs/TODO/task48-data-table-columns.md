@@ -4,7 +4,7 @@
 **Branch:** feat/data-table-columns
 **Deps:** 47 (landed)
 **Scope:** `lib/use-data-table.js`, `ui/data-table/`,
-`playground/pages/data-table.jsx`, `tests/data-table.test.mjs`.
+`site/pages/data-table.jsx`, `tests/data-table.test.mjs`.
 
 ## Where things are today
 
@@ -20,7 +20,7 @@
 - `ui/data-table/` exports only `DataTableColumnHeader` (line 60) and
   `DataTableFacetedFilter` (line 118). Neither accepts width or style props.
 - The table markup is assembled in the **playground page**, not in `ui/`, out of
-  `ui/table` components (`playground/pages/data-table.jsx` lines 267–310).
+  `ui/table` components (`site/pages/data-table.jsx` lines 267–310).
 - `ui/table` already provides the horizontal scroll container:
   `Table` wraps `<table>` in `.table-container` with `overflow: auto`
   (table.css line 4). No `table-layout`, no `<colgroup>`, no
@@ -101,7 +101,7 @@ Table API: `setColumnSizing`, `setColumnPinning`, `resetColumnSizing`.
 - [ ] 5. Demo + **docs prose**: a sized/pinned table, pin controls in the
   Columns dropdown, and a section explaining the `table-layout: fixed` opt-in
   and why the engine has no split header groups. Files:
-  `playground/pages/data-table.jsx`.
+  `site/pages/data-table.jsx`.
 - [ ] 6. Tests. Files: `tests/data-table.test.mjs` (extend).
 
 ## Verify / done

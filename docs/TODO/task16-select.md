@@ -53,7 +53,7 @@ new roles (combobox/listbox/option).
   open and closed typeahead; long list scrolls focused option into view;
   hidden form input; controlled value/onValueChange; trigger click toggles
   closed; files: `ui/select/select.jsx` + `.css`, `tests/select.test.mjs`,
-  `playground/pages/select.jsx`, `playground/registry.js`.
+  `site/pages/select.jsx`, `site/registry.js`.
 - [x] 2. dropdown-menu trigger race fix + held-press click-to-close
   regression test; files: `ui/dropdown-menu/dropdown-menu.jsx`,
   `tests/dropdown-menu.test.mjs`.

@@ -27,7 +27,7 @@ navigation, and `field-sizing: content` on textarea.
 ### Speculation Rules
 
 - A `<script type="speculationrules">` prefetching same-origin documentation
-  links makes the docs feel instant. This is a **playground/docs-shell**
+  links makes the docs feel instant. This is a **site/docs-shell**
   feature, not a `ui/` feature — components must not inject speculation rules
   into a consumer's page.
 - **Prefetch, not prerender.** Prerendering runs the target page's scripts;
@@ -50,10 +50,10 @@ navigation, and `field-sizing: content` on textarea.
   the second finding may cancel sub-task 3.
 - [ ] 2. `autoResize` on `ui/textarea` with `rows` minimum and `max-height`
   cap; empty/placeholder states verified. Files: `ui/textarea/textarea.jsx`,
-  `ui/textarea/textarea.css`, `playground/pages/textarea.jsx`.
+  `ui/textarea/textarea.css`, `site/pages/textarea.jsx`.
 - [ ] 3. Speculation Rules for docs links, `eagerness: "moderate"`, pattern-
   scoped — **only if sub-task 1 shows it applies.** Files:
-  `playground/index.html` or the docs shell entry.
+  `site/index.html` or the docs shell entry.
 - [ ] 4. Test: `autoResize` textarea grows with content and stops at the cap,
   then scrolls; without the prop, height is unchanged; empty state keeps its
   `rows` height. Where `field-sizing` is unsupported, assert the unchanged

@@ -61,8 +61,8 @@ tool, and one upstream cannot use because it needs the imperative layer.
   `styles/globals.css` (one small block at the end).
 - [ ] 4. Wire `ui/data-table` global filter and `ui/command` matches. Files:
   `ui/data-table/data-table.jsx`, `ui/command/command.jsx`.
-- [ ] 5. Demo sections. Files: `playground/pages/data-table.jsx`,
-  `playground/pages/command.jsx`.
+- [ ] 5. Demo sections. Files: `site/pages/data-table.jsx`,
+  `site/pages/command.jsx`.
 - [ ] 6. Test: matches register the expected number of ranges;
   regex-metacharacter queries do not throw; two mounted instances do not
   clobber each other's highlight names; unmount removes the registration;

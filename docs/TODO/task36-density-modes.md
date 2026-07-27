@@ -49,10 +49,10 @@ tokenized components.
   (probably no CSS).
 - [ ] 4. Demo page showing all three modes side by side, including a table
   (the component where density matters most) and a nested scope. Files:
-  `playground/pages/density.jsx`, `playground/registry.js`.
+  `site/pages/density.jsx`, `site/registry.js`.
 - [ ] 5. Docs prose: what scales and what deliberately does not (font size,
   minimum touch targets), and how to set a custom scale. Files: the demo page
-  plus a short section in `playground/pages/docs/theming.jsx`.
+  plus a short section in `site/pages/docs/theming.jsx`.
 - [ ] 6. Test: each mode produces a distinct computed padding on a table cell
   and a button; a nested `data-density` overrides its ancestor; font size is
   unchanged across all three; checkbox/switch hit area stays ≥24px in compact.

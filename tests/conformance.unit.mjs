@@ -19,8 +19,8 @@ import {
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))
 const uiDir = join(repoRoot, "ui")
 const testsDir = join(repoRoot, "tests")
-const playgroundPagesDir = join(repoRoot, "playground", "pages")
-const registryPath = join(repoRoot, "playground", "registry.js")
+const sitePagesDir = join(repoRoot, "site", "pages")
+const registryPath = join(repoRoot, "site", "registry.js")
 const pkgPath = join(repoRoot, "package.json")
 
 let passed = 0
@@ -441,14 +441,14 @@ test("naming: CSS defines a block class matching the dir slug", () => {
 
 // ── Rule 4: Demo page + registry ────────────────────────────────────
 
-test("demo-page: every ui/ slug has playground/pages/<slug>.jsx", () => {
+test("demo-page: every ui/ slug has site/pages/<slug>.jsx", () => {
   const errors = []
   for (const slug of listUiSlugs()) {
-    const page = join(playgroundPagesDir, `${slug}.jsx`)
+    const page = join(sitePagesDir, `${slug}.jsx`)
     if (!existsSync(page)) {
       errors.push(
-        `${slug} — missing playground/pages/${slug}.jsx. ` +
-          `Create a demo page so the component is documented in the playground.`
+        `${slug} — missing site/pages/${slug}.jsx. ` +
+          `Create a demo page so the component is documented on the docs site.`
       )
     }
   }
@@ -463,7 +463,7 @@ test("demo-page: every ui/ slug has a registry entry", () => {
     const keyRe = new RegExp(`["']?${slug.replace(/-/g, "\\-")}["']?\\s*:`)
     if (!keyRe.test(registrySrc)) {
       errors.push(
-        `${slug} — no entry in playground/registry.js. ` +
+        `${slug} — no entry in site/registry.js. ` +
           `Add: "${slug}": { title: "…", page: lazy(() => import("./pages/${slug}.jsx")) }`
       )
     }

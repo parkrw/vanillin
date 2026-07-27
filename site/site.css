@@ -1,8 +1,23 @@
-/* Playground-only accent — neon green/teal, darker in light mode for contrast. */
+/* Docs-site chrome. Nothing here ships to consumers — `ui/` never sees it.
+ *
+ * The `pg-` prefix is short for "playground", this directory's former name.
+ * It was kept on purpose when `playground/` became `site/`: the prefix exists
+ * only to keep site layout from colliding with component classes (`.pg-nav`
+ * vs a component's `.nav`), it is invisible to consumers, and renaming ~480
+ * occurrences plus ~1100 `data-pg` test hooks buys nothing. Read `pg-` as
+ * "docs site". Same for the `data-pg="..."` attributes in `site/pages/` —
+ * those are Playwright selectors, so tests survive restyling.
+ *
+ * One exception worth knowing: `.pg-button` is a hand-rolled button that
+ * predates the kit documenting itself properly. It should be deleted in
+ * favour of `ui/button`, not renamed. See docs/BUGS.md A2.
+ */
+
+/* Docs-site accent — neon green/teal, darker in light mode for contrast. */
 :root {
   --pg-accent: oklch(0.52 0.13 175);
 
-  /* Smoother motion for the playground (see Motion in styles/globals.css).
+  /* Smoother motion for the docs site (see Motion in styles/globals.css).
      Scale cranked to 2.5 as a smoothness test — tune or revert to 1.75. */
   --motion-scale: 2.5;
   --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);

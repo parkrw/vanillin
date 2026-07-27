@@ -67,7 +67,7 @@ first-class React 19 Actions path.
   `useFormStatus`, unified error shape. Files: `ui/form/form.jsx`.
 - [ ] 3. Demo page: engine path with `Input` + three controlled components via
   `Controller`, a field array, and a separate Actions-path example. Files:
-  `playground/pages/form.jsx`, `playground/registry.js`.
+  `site/pages/form.jsx`, `site/registry.js`.
 - [ ] 4. Test: id wiring (`htmlFor`, `aria-describedby` covers both
   description and message, `aria-invalid` on error); message announced on
   validation failure; `Controller`-wired `Select` submits its value; the same

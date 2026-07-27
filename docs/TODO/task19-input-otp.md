@@ -38,8 +38,8 @@
   paste-style fill + onComplete, click focuses and parks the caret at the
   end, arrows move the active slot, disabled ignores input, aria-invalid
   slots; files: `ui/input-otp/input-otp.jsx` + `.css`,
-  `tests/input-otp.test.mjs`, `playground/pages/input-otp.jsx`,
-  `playground/registry.js`.
+  `tests/input-otp.test.mjs`, `site/pages/input-otp.jsx`,
+  `site/registry.js`.
 
 ## Verify / done
 

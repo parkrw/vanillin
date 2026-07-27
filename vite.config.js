@@ -33,7 +33,7 @@ function vanillinDefaults() {
 }
 
 export default defineConfig({
-  root: "playground",
+  root: "site",
   plugins: [vanillinDefaults(), react()],
   resolve: {
     alias: {

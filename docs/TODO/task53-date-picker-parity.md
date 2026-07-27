@@ -68,8 +68,8 @@ demonstrates this with `chrono-node` (~40kB); we need a subset, zero-dep.
   locale hour cycle, `step`/`min`/`max`. Files:
   `ui/time-picker/time-picker.jsx` + `.css`.
 - [ ] 4. Demo: date-input + calendar popover composed, and a datetime
-  composition. Files: `playground/pages/date-picker.jsx`,
-  `playground/registry.js`.
+  composition. Files: `site/pages/date-picker.jsx`,
+  `site/registry.js`.
 - [ ] 5. Test: parser cases per locale; blur canonicalisation and calendar
   jump; unparseable input keeps its text and marks invalid; time segments
   roll over and clamp; 12h/24h from locale. Files:

@@ -55,7 +55,7 @@ anchored links panel, on the task-10 popover recipe.
   opens and focuses first link, arrows cycle links; link click closes;
   controlled value/onValueChange; files: `ui/navigation-menu/navigation-menu.jsx`
   + `.css`, `tests/navigation-menu.test.mjs`,
-  `playground/pages/navigation-menu.jsx`, `playground/registry.js`.
+  `site/pages/navigation-menu.jsx`, `site/registry.js`.
 
 ## Verify / done
 

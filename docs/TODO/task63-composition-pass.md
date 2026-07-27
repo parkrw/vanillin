@@ -40,7 +40,7 @@ by what came with it.
 Each is verified, not speculative:
 
 1. **`date-input` / `date-picker` / `time-picker` share one demo page** via three
-   registry aliases (`playground/registry.js:40,41,81` all import
+   registry aliases (`site/registry.js:40,41,81` all import
    `./pages/date-picker.jsx`). Two of the three components are effectively
    undocumented. Cheapest item here and pure win.
 2. **`ui/form` reimplements label, description and message** instead of using
@@ -59,7 +59,7 @@ Each is verified, not speculative:
 
 ## Sub-tasks
 
-- [x] 1. Split the date demos: real `playground/pages/date-input.jsx` and
+- [x] 1. Split the date demos: real `site/pages/date-input.jsx` and
   `time-picker.jsx`, each carrying its own prose, registry pointed at them.
   Landed `0f48e2fe84de`. `tests/date-input.test.mjs` and
   `tests/time-picker.test.mjs` now drive their own slugs; their assertions were
@@ -96,7 +96,7 @@ Each is verified, not speculative:
   badge with a dismiss affordance, so `Chip` renders
   `<Badge variant="secondary" className="badge--chip">` and inherits the base
   geometry, focus ring and icon sizing; only the pill deltas are new CSS. A new
-  slug would also have needed a `playground/registry.js` entry, which task 59
+  slug would also have needed a `site/registry.js` entry, which task 59
   owns this batch. Only two implementations existed, not three — `grep -rn chip
   ui lib playground` finds `ui/combobox` and nothing else; the third was
   `ui/badge` itself. `.combobox-chip` survives as the in-field hook and the
@@ -161,7 +161,7 @@ Sub-tasks 1, 2 and 6 are **done** — do not redo them. Remaining: 3 (chips),
 4 (`ui/data-table` → `ui/scroll-area`), 5 (wire `lib/use-highlight.js`).
 
 You own `ui/badge/`, `ui/combobox/`, `ui/data-table/`, `ui/scroll-area/` and
-`lib/use-highlight.js`. Do **not** touch `playground/registry.js` (task 59 owns
+`lib/use-highlight.js`. Do **not** touch `site/registry.js` (task 59 owns
 it this batch — if sub-task 3 needs a new slug registered, report the exact line
 you want added and leave it out of your branch), `styles/globals.css` (task 60
 owns it — report missing tokens, do not add them), or `ui/form/` and

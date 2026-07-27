@@ -201,6 +201,48 @@ Order from here:
    new `registry.json` after).
 3. **65** (deps 64 + 38), then **66**/**67**, then **30** docs pass last. Task 30
    also owns the three `README.md` edits in `docs/TODO/reports/task60.md`.
+1. **64** alone — it hashes every component file, so it must not run concurrently
+   with anything that edits components. Then **38** (`add` consumes the manifest
+   format). Two things to fold into 64's conformance suite, both found this
+   batch and both currently un-caught by any test:
+   - `ui/select/select.jsx:41` destructures a fixed prop list with **no
+     `...props` rest**, so `id`/`aria-describedby`/`aria-invalid` cloned onto a
+     `<Select>` vanish silently. Live in `playground/pages/form.jsx:132-163`.
+     A conformance rule should make a dropped ARIA prop fail loudly.
+   - A test can assert a computed style that is true for the *wrong* value too.
+     `.data-table-pinned`'s `inset-inline-start === "0px"` held for
+     `position: relative`, so a real pinning bug passed for months. Assert the
+     precondition (`scrollLeft > 0`) alongside the effect.
+2. **39** alone — rewrites every component's CSS.
+3. **65** (blocked on 64 + 38), then **30** docs pass last. Task 30 now also owns
+   the three `README.md` edits task 60 wrote out but could not make (they are in
+   `docs/TODO/reports/task60.md`).
+1. **64** alone — it hashes every component file, so it must not run concurrently
+   with anything that edits components. Then **38** (`add` consumes the manifest
+   format). Two things to fold into 64's conformance suite, both found this
+   batch and both currently un-caught by any test:
+   - `ui/select/select.jsx:41` destructures a fixed prop list with **no
+     `...props` rest**, so `id`/`aria-describedby`/`aria-invalid` cloned onto a
+     `<Select>` vanish silently. Live in `site/pages/form.jsx:132-163`.
+1. **38 (CLI)** — `bin/van.mjs` init/add/build/list/diff. `add` writes the
+   `.van.json` sidecar via `scripts/manifest.mjs`; the format and its rules are
+   documented in the contracts docs page and
+   `docs/TODO/task64-component-contracts.md`. Never overwrite a file whose hash
+   mismatches without explicit confirmation.
+2. **39** alone — rewrites every component's CSS (regenerate manifests *and* the
+   new `registry.json` after).
+3. **65** (deps 64 + 38), then **66**/**67**, then **30** docs pass last. Task 30
+   also owns the three `README.md` edits in `docs/TODO/reports/task60.md`.
+     `<Select>` vanish silently. Live in `playground/pages/form.jsx:132-163`.
+     A conformance rule should make a dropped ARIA prop fail loudly.
+   - A test can assert a computed style that is true for the *wrong* value too.
+     `.data-table-pinned`'s `inset-inline-start === "0px"` held for
+     `position: relative`, so a real pinning bug passed for months. Assert the
+     precondition (`scrollLeft > 0`) alongside the effect.
+2. **39** alone — rewrites every component's CSS.
+3. **65** (blocked on 64 + 38), then **30** docs pass last. Task 30 now also owns
+   the three `README.md` edits task 60 wrote out but could not make (they are in
+   `docs/TODO/reports/task60.md`).
 
 Task files exist for every task except 22–29, 66 and 67.
 
@@ -326,6 +368,11 @@ rule — use `git diff a...b` instead.
 - Demo page `site/pages/<slug>.jsx` + `page: lazy(...)` in
   `site/registry.js`; page imports its component CSS. **The demo page is
   the docs page** — it carries the prose.
+- **`pg-` / `data-pg` mean "docs site", not "playground".** `playground/` was
+  renamed to `site/`; the CSS prefix and the Playwright hooks were deliberately
+  left alone (internal only, ~480 + ~1100 occurrences, zero user-facing gain).
+  Do not "fix" them as leftovers. `.pg-button` *is* a leftover — delete it in
+  favour of `ui/button` rather than renaming it. Full note in `site/site.css`.
 
 ## Gotchas
 

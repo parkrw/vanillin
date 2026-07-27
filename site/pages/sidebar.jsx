@@ -199,7 +199,7 @@ export default function SidebarPage() {
 
       <section className="pg-section" data-pg="sb-main">
         <h3>Default (left, offcanvas)</h3>
-        {/* Render inside a bounded container so the playground shell stays usable.
+        {/* Render inside a bounded container so the site shell stays usable.
             The sidebar is position:fixed inside this container, but we use CSS
             containment + overflow:hidden + relative positioning to scope it. */}
         <div

@@ -28,7 +28,7 @@ re-engage via `scrollToEnd()` / Button press when `autoScroll`.
   after user scrolls up, appending does NOT move scroll; prepend preserves
   visual position. files: `ui/message-scroller/message-scroller.jsx`,
   `ui/message-scroller/message-scroller.css`,
-  `playground/pages/message-scroller.jsx`, `playground/registry.js`,
+  `site/pages/message-scroller.jsx`, `site/registry.js`,
   `tests/message-scroller.test.mjs`
 - [x] 2. Button + hooks: *(stacked branch `feat/message-scroller-hooks` — core alone hit 383 net lines, both sub-tasks = 605 > 500 cap)* MessageScrollerButton (`data-active` flips when
   scrolled away from its direction; click = `scrollToEnd` + re-engage follow),

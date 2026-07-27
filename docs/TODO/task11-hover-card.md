@@ -26,7 +26,7 @@ Design (deltas from ui/tooltip):
   hover opens after delay / pointer-into-content keeps open (grace) /
   leaving both closes / focus-blur / touch ignored / Esc / controlled
   onOpenChange; files: ui/hover-card/hover-card.jsx, ui/hover-card/hover-card.css,
-  playground/pages/hover-card.jsx, playground/registry.js,
+  site/pages/hover-card.jsx, site/registry.js,
   tests/hover-card.test.mjs
 
 ## Verify / done

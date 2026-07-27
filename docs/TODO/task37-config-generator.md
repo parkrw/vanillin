@@ -89,7 +89,7 @@ script, no runtime cost in the consumer app.
 - [ ] 4. `npm run theme` script; a `van.config.json` at the repo root
   exercising every feature; playground imports the generated file so the docs
   theming page (29's stub) has something real to show. Files: `package.json`,
-  `van.config.json`, `playground/main.jsx`.
+  `van.config.json`, `site/main.jsx`.
 - [ ] 5. Test: end-to-end — generate from a fixture config, load it in the
   playground, assert computed styles on a button with a generated variant and
   a generated size; assert byte-identical output across two runs. Files:

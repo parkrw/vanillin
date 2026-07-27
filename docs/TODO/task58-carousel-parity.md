@@ -63,7 +63,7 @@ rebuilding the carousel.
   conditions. Files: `ui/carousel/carousel.jsx`,
   `ui/carousel/plugins/autoplay.js`.
 - [ ] 4. Demo sections for align, loop, and autoplay. Files:
-  `playground/pages/carousel.jsx`.
+  `site/pages/carousel.jsx`.
 - [ ] 5. Test: each `align` value sets the expected `scroll-snap-align`;
   under loop, next from the last slide lands on the first and the arrows stay
   enabled; clones are `aria-hidden` and not tab-reachable; autoplay advances,

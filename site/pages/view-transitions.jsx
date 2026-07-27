@@ -101,7 +101,7 @@ export default function ViewTransitionsPage() {
         <p>
           Route changes <em>can</em> be wrapped in{" "}
           <code>withViewTransition</code> for a crossfade between pages, but
-          this playground does not do so globally. The reason: during a view
+          this site does not do so globally. The reason: during a view
           transition the browser overlays snapshot pseudo-elements on top of
           the page, blocking pointer input for the animation's duration. A
           user who clicks immediately after navigating would hit a dead zone.

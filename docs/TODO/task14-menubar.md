@@ -75,7 +75,7 @@
   select closes and clears root value (reopen works); files:
   `ui/menubar/menubar.jsx` + `.css`, `ui/dropdown-menu/dropdown-menu.jsx`
   (skipItemFocusRef + one-shot ref reset), `tests/menubar.test.mjs`,
-  `playground/pages/menubar.jsx`, `playground/registry.js`.
+  `site/pages/menubar.jsx`, `site/registry.js`.
 - [x] 2. submenu + re-export coverage — test: ArrowRight on a SubTrigger
   opens the submenu (not the next menu), ArrowRight on a plain item inside
   the submenu jumps to the next menu (whole stack closes), ArrowLeft inside

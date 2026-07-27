@@ -63,7 +63,7 @@ differentiator, not parity work.
 - [ ] 5. Demo page: the same card and the same table rendered at three
   container widths on one page, side by side. This is the demo that sells the
   feature — a viewport-resize demo does not show it. Files:
-  `playground/pages/container-queries.jsx`, `playground/registry.js`.
+  `site/pages/container-queries.jsx`, `site/registry.js`.
 - [ ] 6. Test: a card in a 300px container computes a different layout than
   the same card in a 900px container **on the same page at the same viewport**
   (that assertion is the whole point); the table switches to stacked mode

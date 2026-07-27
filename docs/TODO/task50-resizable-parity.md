@@ -54,7 +54,7 @@ the callback surface, F6 cycling, and generous hit areas.
   `ui/resizable/resizable.jsx`.
 - [ ] 4. `hitAreaMargins` overlay + pointer-coarse detection. Files:
   `ui/resizable/resizable.jsx`, `ui/resizable/resizable.css`.
-- [ ] 5. Demo sections. Files: `playground/pages/resizable.jsx`.
+- [ ] 5. Demo sections. Files: `site/pages/resizable.jsx`.
 - [ ] 6. Test: layout survives a remount with the same `autoSaveId` and is
   ignored on a panel-count change; `onResize` fires for keyboard and
   imperative changes but not on mount; `collapse()`/`expand()` round-trip;

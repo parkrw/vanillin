@@ -30,13 +30,13 @@
   click does NOT close, Esc closes, Action and Cancel close, aria
   title/description wired; files: `ui/dialog/dialog.jsx` (role +
   `dismissible`), `ui/alert-dialog/alert-dialog.jsx` + `.css`,
-  `tests/alert-dialog.test.mjs`, `playground/pages/alert-dialog.jsx`,
-  `playground/registry.js`.
+  `tests/alert-dialog.test.mjs`, `site/pages/alert-dialog.jsx`,
+  `site/registry.js`.
 - [x] 2. sheet — test: opens from side (`sheet--right` class + right edge
   flush), side="left|top|bottom" variants, X closes, backdrop click closes,
   aria wired; files: `ui/sheet/sheet.jsx` + `.css`,
-  `tests/sheet.test.mjs`, `playground/pages/sheet.jsx`,
-  `playground/registry.js`.
+  `tests/sheet.test.mjs`, `site/pages/sheet.jsx`,
+  `site/registry.js`.
 
 ## Verify / done
 

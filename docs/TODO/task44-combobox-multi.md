@@ -84,7 +84,7 @@ this task applies the same pattern to combobox and adds multi-select on top.
   hidden input. Files: both.
 - [ ] 5. Demo + **docs prose** — multi with chips, `showClear`, and a
   `required` form example showing the validation message. Files:
-  `playground/pages/combobox.jsx`.
+  `site/pages/combobox.jsx`.
 - [ ] 6. Tests. Files: `tests/combobox.test.mjs` (extend).
 
 ## Verify / done

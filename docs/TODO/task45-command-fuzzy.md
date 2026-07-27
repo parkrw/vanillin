@@ -57,7 +57,7 @@ Push". Without re-sorting, a command palette is just a filtered list.
   `ui/command/command.css`.
 - [ ] 4. Demo sections: fuzzy example that only works with scoring ("gp" →
   "Git Push"), plus an async/loading example. Files:
-  `playground/pages/command.jsx`.
+  `site/pages/command.jsx`.
 - [ ] 5. Test: "gp" ranks "Git Push" first; groups re-order by best member;
   ties keep authored order; `shouldFilter={false}` does not reorder; arrow
   keys traverse visual order after a re-sort; `Command.Loading` announces and
