@@ -108,9 +108,9 @@ what to do is worse than no check.
   them. Expect the `requires` derivation to surface import edges nobody
   documented — there are 19 today. *(Actual: 36 edges across 14 components —
   data-table 8, form-fields 8, sidebar 5 grew after the estimate.)*
-- [ ] 3. Conformance suite over the static rules (tokens, naming, demo page,
+- [x] 3. Conformance suite over the static rules (tokens, naming, demo page,
   registry uniqueness, test presence). Files: `tests/conformance.unit.mjs`.
-- [ ] 4. Import-graph check against `requires`, including a cycle check.
+- [x] 4. Import-graph check against `requires`, including a cycle check.
 - [ ] 5. Wire into `npm test`; fix whatever it finds (expect a real backlog).
 - [ ] 6. Docs: the manifest format, the install-time-not-runtime caveat, and how
   to add a component that passes conformance.
