@@ -571,3 +571,30 @@ agents and cherry-picked onto `feat/phase-2`. Suite 406/406, build clean.
   within seconds, so the supervisor reports every pane dead immediately — match
   on `pane_id`), and **never poll with a bare zsh glob** (`for f in
   reports/*.done` aborts the whole monitor on `nomatch`).
+- 2026-07-27 — task 64 (component-contracts) done on `feat/component-contracts`,
+  8 commits, suite **667/667** (665 + the 2 known drawer flakes, 14/14 in
+  isolation), build clean. `scripts/manifest.mjs` writes `ui/*/.van.json`
+  sidecars (SRI-style hashes, unknown fields preserved, idempotent `--write`);
+  `tests/conformance.unit.mjs` (19 checks) + `tests/manifest.unit.mjs` (15) now
+  run inside `npm test` — `tests/run.mjs` executes every `*.unit.mjs` as a child
+  process before the browser files. Findings the suite forced out:
+  - **36 real ui→ui edges, not the 19 estimated** — and one was fiction:
+    `data-table` imported `Checkbox` without using it. Dead import removed.
+  - **7 stateful components had no tests at all** (accordion, checkbox,
+    collapsible, radio-group, switch, tabs, toggle — the oldest components,
+    pre-convention). 47 browser tests added.
+  - **18 exported components destructured props without a rest.** 12 are
+    provider-only (no DOM node) and sit in a reasoned `PROVIDER_COMPONENTS`
+    allowlist; 6 were real: four data-table parts now spread rest, and
+    `Select`/`Combobox` forward leftover root props to trigger/input via
+    context — which fixes the live form-page bug where `FormControl`'s cloned
+    `id`/`aria-describedby` vanished (task 59's finding; regression test in
+    `tests/form.test.mjs`).
+  - Every conformance rule was deliberately broken once to prove the failure
+    names file, rule and fix; that exercise itself caught two holes (the
+    registry-duplicate regex matched nothing against unquoted keys — now also
+    asserts non-empty extraction — and one-line CSS rules evaded the motion
+    checks).
+  Docs: `playground/pages/docs/contracts.jsx` (manifest format, lint-contract
+  caveat, add-a-component checklist). Conformance keys allowlists by intent —
+  indeterminate loops, static components, providers — each entry with a reason.

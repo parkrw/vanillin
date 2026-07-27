@@ -101,7 +101,7 @@ written; it is a final consistency and gap pass.
 | 61  | brand-multicolor         | ~M  | [x]    | deps: 37; `brand` as string-or-object [^61]                            |
 | 62  | schema-core              | ~L  | [x]    | `lib/schema.js` — zod-shaped validation + resolver [^62]               |
 | 63  | composition-pass         | ~M  | [x]    | reuse only where the relationship is **semantic** [^63]                |
-| 64  | component-contracts      | ~L  | [ ]    | per-copy `.van.json` manifest + conformance suite [^64]                |
+| 64  | component-contracts      | ~L  | [x]    | per-copy `.van.json` manifest + conformance suite [^64]                |
 | 65  | component-update          | ~L  | [ ]    | deps: 64, 38; `van update`  [^65]                      |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
