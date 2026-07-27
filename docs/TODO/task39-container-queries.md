@@ -55,7 +55,7 @@ differentiator, not parity work.
 - [x] 1. Support check for container queries and `cqi`; record in the log.
 - [x] 2. `ui/card` + `ui/item` + `ui/field` containers and narrow-width
   layouts. Files: those components' `.css`.
-- [ ] 3. `ui/data-table` stacked-row mode below a threshold — the headline
+- [x] 3. `ui/data-table` stacked-row mode below a threshold — the headline
   feature. Files: `ui/data-table/data-table.css`, and `data-table.jsx` only if
   the stacked layout needs `data-label` attributes on cells (it probably does;
   a stacked row needs its column name).

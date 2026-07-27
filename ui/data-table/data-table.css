@@ -393,3 +393,37 @@
 .data-table-pinned[data-pin-edge="right"]:dir(rtl) {
   box-shadow: 4px 0 6px -3px color-mix(in oklab, var(--foreground) 10%, transparent);
 }
+
+/* ── Stacked mode ─────────────────────────────────────────────────────────
+ *
+ * `.table--stack` (ui/table) turns rows into cards below 40rem of container
+ * width. Column-level features have no meaning once there are no columns, so
+ * they stand down here rather than leaving sticky boxes and edge shadows
+ * floating over a card layout. Same container and threshold as ui/table's own
+ * stacked rules — they must switch together.
+ *
+ * Each selector below is deliberately one step more specific than the rule it
+ * switches off — `@container` adds no specificity of its own, and the pinning
+ * rules above run from (0,1,0) up to (0,4,0).
+ */
+@container vanillin-table (max-width: 40rem) {
+  .table--stack .data-table-pinned,
+  .table--stack.data-table-sized .table-head.data-table-pinned {
+    position: static;
+  }
+
+  .table--stack .data-table-pinned[data-pin-edge],
+  .table--stack .data-table-pinned[data-pin-edge]:dir(rtl) {
+    box-shadow: none;
+  }
+
+  .table--stack .table-body .table-row > .data-table-pinned,
+  .table--stack .table-body .table-row:hover > .data-table-pinned,
+  .table--stack .table-body .table-row[data-selected="true"] > .data-table-pinned {
+    background-color: transparent;
+  }
+
+  .table--stack .data-table-resizer {
+    display: none;
+  }
+}

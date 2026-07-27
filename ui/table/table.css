@@ -1,4 +1,10 @@
+/* The scroll wrapper is the query container, which makes it the one box every
+   table part can query — a `<table>` that declared its own container could not
+   respond to it, since an element never matches a query against a container it
+   declares itself. */
 .table-container {
+  container-type: inline-size;
+  container-name: vanillin-table;
   position: relative;
   width: 100%;
   overflow: auto;
@@ -57,4 +63,73 @@
   margin-top: var(--space-4);
   font-size: 0.875rem;
   color: var(--muted-foreground);
+}
+
+/* ── Stacked mode ─────────────────────────────────────────────────────────
+ *
+ * Opt in with `.table--stack`: when the table's container is too narrow for
+ * columns, every row becomes a card of label/value pairs. Sized against the
+ * container, so a table in a 320px side panel stacks while the same table in
+ * the main region does not — at one viewport width.
+ *
+ * Written as a max-width override, so no container query support means the
+ * plain column layout rather than a broken one.
+ *
+ * Labels: the visual label comes from `data-label` on each cell, which the
+ * consumer sets (ui/table does not own the column list). Assistive tech does
+ * not read it — it keeps announcing the real header cells, which is why the
+ * header row is visually hidden here and never `display: none`.
+ */
+@container vanillin-table (max-width: 40rem) {
+  .table--stack,
+  .table--stack > .table-body,
+  .table--stack > .table-footer {
+    display: block;
+  }
+
+  /* Visually hidden, still in the accessibility tree: each stacked value keeps
+     its column association through the header cell it belongs to. */
+  .table--stack > .table-header {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .table--stack .table-row {
+    display: block;
+    padding: var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+
+  /* Base CSS drops the last row's border to avoid doubling against the
+     container edge; a stacked row is a standalone card and keeps all four. */
+  .table--stack .table-body .table-row:last-child {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table--stack .table-row + .table-row {
+    margin-block-start: var(--space-2);
+  }
+
+  .table--stack .table-cell {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-1-5);
+    text-align: end;
+  }
+
+  .table--stack .table-cell[data-label]::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    text-align: start;
+  }
 }
