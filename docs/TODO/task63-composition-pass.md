@@ -105,7 +105,24 @@ Each is verified, not speculative:
   precedent). One deliberate change: the old chip's literal `0.25rem`/`0.5rem`
   padding became `--space-1`/`--space-2`, so chips now scale with
   `--density-scale` like the input group they sit in.
-- [ ] 4. `ui/data-table` → `ui/scroll-area`, with column pinning intact.
+- [x] 4. `ui/data-table` → `ui/scroll-area`, with column pinning intact. New
+  `DataTableScroller` export wraps `ScrollArea` and mounts the horizontal
+  `ScrollBar` (`ScrollArea` mounts only the vertical one). Two findings:
+  - **`ui/table`'s `overflow: auto` had to stand down**, or it is a second
+    scroller nested in the viewport: the viewport never overflows (no bars) and
+    sticky cells measure the inner container while the bars measure the outer.
+    Done with `.data-table-scroller .table-container { overflow: visible }` in
+    `data-table.css` — specificity beats `.table-container`, so `ui/table` (not
+    mine this batch) is untouched.
+  - **Header pinning was already broken.** `.data-table-sized .table-head`
+    sets `position: relative` for the resizer and out-specifies
+    `.data-table-pinned`, so pinned `<th>`s were `relative` and scrolled away
+    (body `<td>`s stuck fine). The old test scrolled `.table-container` and
+    only read computed `inset-inline-start`, which is `0px` either way — it
+    passed vacuously. Fixed with
+    `.data-table-sized .table-head.data-table-pinned { position: sticky }`;
+    the test now scrolls the viewport, asserts it actually moved, and compares
+    the pinned cell's rect against the viewport's.
 - [ ] 5. Wire `lib/use-highlight.js` into `ui/data-table` search matches.
 - [x] 6. Write the rule into `docs/HANDOFF.md` conventions so the next fan-out
   briefs agents to *reuse named components*, and assigns any shared file to

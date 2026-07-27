@@ -599,16 +599,61 @@ export default async function run({ page, baseUrl, test, eq }) {
     const idTh = dtSized.locator(".table-head.data-table-pinned").first()
     await idTh.waitFor()
 
-    // Scroll the table container to the right
-    const container = dtSized.locator(".table-container")
-    await container.evaluate((el) => { el.scrollLeft = 200 })
+    // Scroll the scroll-area viewport (the scroller since DataTableScroller
+    // took over from .table-container's overflow) to the right.
+    const viewport = dtSized.locator(".data-table-scroller .scroll-area-viewport")
+    const scrolled = await viewport.evaluate((el) => {
+      el.scrollLeft = 200
+      return el.scrollLeft
+    })
     await page.waitForTimeout(50)
+    // Guard: if the viewport were not the scroller this would stay 0 and
+    // every assertion below would pass vacuously.
+    eq(scrolled > 0, true, `viewport actually scrolled: ${scrolled}`)
 
     // The pinned column should still be at inset-inline-start: 0
     const insetStart = await idTh.evaluate(
       (el) => getComputedStyle(el).insetInlineStart
     )
     eq(insetStart, "0px", "pinned column stays at inset-inline-start: 0")
+
+    // …and still painted at the viewport's start edge, not scrolled away.
+    const delta = await viewport.evaluate((vp) => {
+      const cell = vp.querySelector(".table-head.data-table-pinned")
+      return Math.abs(cell.getBoundingClientRect().left - vp.getBoundingClientRect().left)
+    })
+    eq(delta <= 1, true, `pinned header sits at the viewport edge (${delta}px off)`)
+  })
+
+  await test("scroller: overlay scrollbar measures the same element as pinning", async () => {
+    const root = dtSized.locator(".data-table-scroller")
+    await root.waitFor()
+    // ScrollArea sets data-has-overflow-x on the root once its viewport
+    // overflows; the inner .table-container must not scroll at all.
+    const state = await root.evaluate((el) => {
+      const inner = el.querySelector(".table-container")
+      inner.scrollLeft = 200
+      return {
+        overflowX: el.hasAttribute("data-has-overflow-x"),
+        bar: !!el.querySelector('.scroll-area-scrollbar[data-orientation="horizontal"]'),
+        innerOverflow: getComputedStyle(inner).overflowX,
+        innerScrollLeft: inner.scrollLeft,
+      }
+    })
+    eq(state.overflowX, true, "scroll area reports horizontal overflow")
+    eq(state.bar, true, "horizontal overlay scrollbar is mounted")
+    eq(state.innerOverflow, "visible", "ui/table's own overflow stands down")
+    eq(state.innerScrollLeft, 0, "inner container does not scroll")
+  })
+
+  await test("pin left: header cell is sticky, not just relative", async () => {
+    // `.data-table-sized .table-head { position: relative }` out-specifies
+    // `.data-table-pinned`, so header pinning silently degraded to relative.
+    const pos = await dtSized
+      .locator(".table-head.data-table-pinned")
+      .first()
+      .evaluate((el) => getComputedStyle(el).position)
+    eq(pos, "sticky", "pinned header cell is sticky")
   })
 
   await test("pinned cell background is opaque", async () => {

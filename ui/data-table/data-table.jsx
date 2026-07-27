@@ -15,6 +15,7 @@ import { Checkbox } from "../checkbox/checkbox.jsx"
 import { Badge } from "../badge/badge.jsx"
 import { Separator } from "../separator/separator.jsx"
 import { Button } from "../button/button.jsx"
+import { ScrollArea, ScrollBar } from "../scroll-area/scroll-area.jsx"
 
 // ── Inline SVG sort icons ───────────────────────────────────────────
 
@@ -243,6 +244,40 @@ export function DataTableGroupRow({ row, colSpan, label, className }) {
         </button>
       </TableCell>
     </TableRow>
+  )
+}
+
+// ── Scroll container ───────────────────────────────────────────────
+
+/**
+ * Horizontal scroll container for a wide table: `ScrollArea` with the one
+ * override a `<table>` needs.
+ *
+ * `Table` wraps its `<table>` in `.table-container { overflow: auto }`, which
+ * would be a second scroller nested inside the scroll area's viewport — the
+ * viewport would never overflow, so no overlay scrollbar and no reason for it
+ * to scroll. `.data-table-scroller .table-container { overflow: visible }`
+ * (in data-table.css) hands the scrolling to the viewport instead.
+ *
+ * That single change is also what keeps column pinning working: sticky cells
+ * position against their nearest scrollport, and both the pinned cells and
+ * the overlay scrollbar now measure the same element. Pinning needs nothing
+ * else from here — `position: sticky` and the `--dt-size-*` offsets are
+ * unchanged.
+ *
+ * Constrain the width on this element (or its parent) — a scroll area with
+ * nothing to scroll renders no bars.
+ */
+export function DataTableScroller({ className, children, ...props }) {
+  return (
+    <ScrollArea className={cn("data-table-scroller", className)} {...props}>
+      {children}
+      {/* ScrollArea mounts only the vertical bar itself; a wide table is
+          exactly the horizontal case, so it is not the consumer's job. The
+          bar is absolutely positioned against the scroll-area root, so
+          sitting inside the scrolled content costs nothing. */}
+      <ScrollBar orientation="horizontal" />
+    </ScrollArea>
   )
 }
 

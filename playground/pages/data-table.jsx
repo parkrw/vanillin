@@ -25,6 +25,7 @@ import {
   DataTableFacetedFilter,
   DataTableColumnResizer,
   DataTableGroupRow,
+  DataTableScroller,
 } from "../../ui/data-table/data-table.jsx"
 
 import "../../ui/table/table.css"
@@ -333,7 +334,7 @@ function SizedPinnedDemo() {
       </div>
 
       {/* Table with constrained width to demonstrate horizontal scroll */}
-      <div style={{ maxInlineSize: "36rem" }}>
+      <DataTableScroller style={{ maxInlineSize: "36rem" }}>
         <Table className="data-table-sized" style={sizeVars}>
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
@@ -401,7 +402,7 @@ function SizedPinnedDemo() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </DataTableScroller>
     </section>
   )
 }
@@ -1101,6 +1102,37 @@ export default function DataTablePage() {
           <code>getAfter("right")</code> for cumulative sticky offsets over
           visible columns (hiding a pinned column shifts the rest). The{" "}
           <code>columnPinning</code> state is <code>{`{ left: [], right: [] }`}</code>.
+        </p>
+        <p>
+          Pinned <em>header</em> cells needed a fix to work at all:{" "}
+          <code>.data-table-sized .table-head</code> sets{" "}
+          <code>position: relative</code> for the resizer handle, and it
+          out-specifies <code>.data-table-pinned</code> — so header cells were
+          silently <code>relative</code> and scrolled away with the content
+          while the body cells stuck. <code>.data-table-sized
+          .table-head.data-table-pinned</code> restores <code>sticky</code>;
+          the resizer is absolute either way.
+        </p>
+        <h3>Scrolling: DataTableScroller</h3>
+        <p>
+          The demo above is wrapped in <code>DataTableScroller</code> —{" "}
+          <code>ui/scroll-area</code> with the one override a table needs.{" "}
+          <code>Table</code> wraps its <code>&lt;table&gt;</code> in{" "}
+          <code>.table-container {`{ overflow: auto }`}</code>, which would be a
+          second scroller nested inside the scroll area's viewport: the viewport
+          would never overflow, so no overlay bar, and the sticky pinned cells
+          would measure a different element than the bar.{" "}
+          <code>.data-table-scroller .table-container {`{ overflow: visible }`}</code>{" "}
+          hands scrolling to the viewport, which is then the scrollport for both.{" "}
+          <code>ui/table</code> is not modified.
+        </p>
+        <p>
+          The scroller mounts the horizontal <code>ScrollBar</code> itself —{" "}
+          <code>ScrollArea</code> mounts only the vertical one, and a wide table
+          is exactly the horizontal case. Constrain the width on the scroller or
+          its parent (the demo caps it at <code>36rem</code>); a scroll area
+          with nothing to scroll shows no bars. Overlay bars sit above the
+          content and take no layout space, so nothing shifts when they appear.
         </p>
         <h3>No split header groups</h3>
         <p>
