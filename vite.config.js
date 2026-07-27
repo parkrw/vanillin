@@ -33,6 +33,7 @@ function vanillinDefaults() {
 }
 
 export default defineConfig({
+  base: process.env.GITHUB_ACTIONS ? "/vanillin/" : "/",
   root: "site",
   plugins: [vanillinDefaults(), react()],
   resolve: {
