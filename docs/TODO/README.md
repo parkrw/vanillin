@@ -84,7 +84,7 @@ written; it is a final consistency and gap pass.
 | 36  | density-modes            | ~S  | [x]    | deps: 34, 35; `compact` / `comfortable` / `spacious` [^36]             |
 | 37  | config-generator         | ~L  | [x]    | deps: 34, 35; `van.config.json` → `van.css` generator [^37]            |
 | 38  | cli                      | ~L  | [ ]    | deps: 37, **64**; `bin/van.mjs` init/add/build/list [^38]              |
-| 39  | container-queries        | ~M  | [ ]    | deps: 34, 35; components size to container, not viewport [^39]         |
+| 39  | container-queries        | ~M  | [x]    | deps: 34, 35; components size to container, not viewport [^39]         |
 | 40  | use-form-core            | ~L  | [x]    | zero-dep `lib/use-form.js`, RHF-shaped [^40]                           |
 | 41  | form-component           | ~M  | [x]    | deps: 40; `ui/form/` engine-agnostic + Actions path [^41]              |
 | 42  | format-intl              | ~M  | [x]    | `lib/format.js` + four components; pure Intl [^42]                     |
@@ -134,7 +134,16 @@ written; it is a final consistency and gap pass.
     `private: true`.
 
 [^39]: deps: 34, 35; components size to container, not viewport (console
-    panels).
+    panels). Containers on `ui/card`, `ui/item`, `ui/field`, `ui/table`'s scroll
+    wrapper and `ui/dialog` (so `ui/sheet` too); **not** `ui/sidebar`, whose
+    breakpoint is a JS render decision. Headline feature is `.table--stack`.
+    **It touched far less CSS than the plan assumed** — six components, not all
+    68 — so the "39 rewrites every component's CSS" premise, which is why other
+    work was sequenced after it, turned out to be false. `cqi` units were
+    **not** used; no
+    component needed fluid type, and the task file's own warning about
+    unbounded `cqi` applies. Remaining: the screen-reader ordering pass on
+    stacked rows is user-gated.
 
 [^40]: zero-dep `lib/use-form.js`, RHF-shaped; resolver contract =
     `@hookform/resolvers` compatible.
@@ -238,10 +247,14 @@ detail just-in-time after 58 lands. Rough order of usefulness:
 - Planning is **just-in-time**: the rows above are durable, task files are
   written when a task is picked up. Task files now exist for every task except
   22–29 (landed before the convention).
-  Unstarted-but-specified and ready to dispatch: 38 (in flight on `feat/cli`),
-  39; then 65, 66, 67; 30 last. **39 runs alone** — it rewrites every
-  component's CSS, so it cannot share a batch with component work (and manifests
-  + registry need regenerating after it).
+  Unstarted-but-specified and ready to dispatch: 38 (in flight on `feat/cli`);
+  then 65, 66, 67; 30 last.
+- **New CSS convention from 39:** an element never matches an `@container` query
+  against a container it declares itself — the query resolves against the
+  *ancestor* container. Layout flips therefore go on descendants
+  (`flex-wrap`/`gap` unconditional on the root, children's `flex-basis` queried).
+  Name every container `vanillin-<slug>`. Thresholds are literal `rem` —
+  container conditions cannot read custom properties.
 - Test: `node tests/run.mjs` — boots its own vite on :5199, drives local Chrome;
   one `tests/<slug>.test.mjs` per interactive component. (Dev server on :5173
   only needed for manual/screenshot QA.)

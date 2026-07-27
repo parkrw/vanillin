@@ -639,3 +639,42 @@ agents and cherry-picked onto `feat/phase-2`. Suite 406/406, build clean.
 - **Thresholds are literal `rem` values.** Container query conditions cannot
   read custom properties, so this is a deliberate exception to the tokens-only
   rule.
+- **Stacked table mode lives in `ui/table`, not `ui/data-table`** — a deviation
+  from the task file's file list. `.table--stack` is a modifier of `.table`, and
+  `ui/data-table` does not render a table at all: it ships helpers and the
+  consumer composes `TableRow`/`TableCell` itself. Putting the rules in
+  `data-table.css` would have made a `ui/table` feature invisible to anyone
+  using `ui/table` directly. `data-table.css` carries only the part that is
+  genuinely its own — pinning and the resize handle standing down, since column
+  features are meaningless once there are no columns. Those selectors are each
+  one step more specific than the rule they switch off, because `@container`
+  adds no specificity and the pinning rules run up to (0,4,0).
+- **`ui/table` now sets explicit ARIA roles.** Changing `display` on table parts
+  strips their table semantics, so a stacked row would be announced as orphaned
+  text. Explicit `role="table"/"rowgroup"/"row"/"columnheader"/"cell"` survives
+  the display change and is spread *before* `{...props}` so a consumer can still
+  pass `role="rowheader"`. The header row is therefore visually hidden and never
+  `display: none` — assistive tech keeps announcing the real column headers, and
+  the `::before` label from `data-label` is decoration for sighted users only.
+  `data-label` is the consumer's to set: `ui/table` never sees the column list.
+- **Sheet headers stay start-aligned** (`.dialog.sheet .dialog-header`). Moving
+  dialog reflow onto the container means a 20rem side sheet now qualifies as
+  "narrow", and it would otherwise have picked up the centred-header treatment
+  that only belongs to centred modals. Its footer does stack, which is the win.
+- **Dialog reflow changed behaviour on purpose.** The header/footer switch was a
+  viewport media query at 640px and is now a 24rem container query, so dialogs
+  on viewports of roughly 416–640px get the roomy row layout they always had
+  room for, and side sheets get the narrow one at any viewport. 24rem was chosen
+  over a closer-parity 28rem for slack: the 32rem desktop dialog has 464px of
+  content, and a density change that grows padding must not be able to flip it
+  into the mobile layout.
+- **`ui/sidebar` deliberately gets no container.** It swaps to a Sheet via
+  `matchMedia` in JS with the CSS mirroring that same 768px breakpoint. A
+  container query cannot drive a render decision, so a second mechanism would
+  only desynchronise from `isMobile`.
+- **Verification note:** the popover case does not assert which side the overlay
+  opens on — collision handling flips it legitimately. It opens the same popover
+  with containment on and then off and requires identical geometry relative to
+  the trigger, which is the actual claim. Width is compared as a delta against
+  the trigger because the popover's min-width tracks its anchor and dropping
+  containment reflows the table's columns by a fraction of a pixel.
