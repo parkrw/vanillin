@@ -16,6 +16,7 @@ import { Badge } from "../badge/badge.jsx"
 import { Separator } from "../separator/separator.jsx"
 import { Button } from "../button/button.jsx"
 import { ScrollArea, ScrollBar } from "../scroll-area/scroll-area.jsx"
+import { useHighlight } from "../../lib/use-highlight.js"
 
 // ── Inline SVG sort icons ───────────────────────────────────────────
 
@@ -245,6 +246,32 @@ export function DataTableGroupRow({ row, colSpan, label, className }) {
       </TableCell>
     </TableRow>
   )
+}
+
+// ── Search-match highlighting ──────────────────────────────────────
+
+/**
+ * `CSS.highlights` registry key for table search matches.
+ *
+ * Deliberately *not* `ui/command`'s default (`vanillin-search`): the faceted
+ * filter renders a Command inside a popover, and two live instances under one
+ * name overwrite each other — typing in the filter would blank the table's
+ * highlights. Styled in data-table.css under `.table-body`.
+ */
+export const DATA_TABLE_HIGHLIGHT = "vanillin-table-search"
+
+/**
+ * Paint the rows that matched a search. Pass the ref to `TableBody` (not the
+ * table) so header text does not light up when the query happens to match a
+ * column name, and pass the global filter value as the query.
+ *
+ * Progressive enhancement: no-op where `CSS.highlights` is missing — the
+ * returned `{ supported }` says which happened. Matching is per-text-node
+ * substring, so it paints nothing for the rows a fuzzy filter surfaced
+ * without a contiguous match (see lib/use-highlight.js).
+ */
+export function useDataTableHighlight(bodyRef, query) {
+  return useHighlight(bodyRef, query, { name: DATA_TABLE_HIGHLIGHT })
 }
 
 // ── Scroll container ───────────────────────────────────────────────

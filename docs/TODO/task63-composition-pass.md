@@ -123,7 +123,24 @@ Each is verified, not speculative:
     `.data-table-sized .table-head.data-table-pinned { position: sticky }`;
     the test now scrolls the viewport, asserts it actually moved, and compares
     the pinned cell's rect against the viewport's.
-- [ ] 5. Wire `lib/use-highlight.js` into `ui/data-table` search matches.
+- [x] 5. Wire `lib/use-highlight.js` into `ui/data-table` search matches. New
+  `useDataTableHighlight(bodyRef, query)` + exported `DATA_TABLE_HIGHLIGHT`.
+  Two decisions:
+  - **The ref goes on `TableBody`, not `Table`.** On the table, a query like
+    "email" lights up the column header. React 19 passes `ref` through the
+    `{...props}` spread, so no change to `ui/table` was needed.
+  - **Its own registry name, `vanillin-table-search`.** `CSS.highlights` is
+    one global registry and the faceted filter renders a `Command`, which
+    registers `ui/command`'s default `vanillin-search` — sharing the name lets
+    typing in that popover blank the table. The paint therefore lives in
+    `data-table.css` (`.table-body ::highlight(…)`, plus a forced-colors
+    block), so no `styles/globals.css` edit was needed.
+  - Not tested: that `ui/command` *also* registers its highlight while the
+    faceted popover is open. Filling that popover's `CommandInput` from the
+    test registered no ranges under `vanillin-search`, and the open popover
+    broke the two faceted tests after it. The distinct-name property is
+    asserted directly instead (the table paints under its name and not under
+    command's), which is the part `ui/data-table` owns.
 - [x] 6. Write the rule into `docs/HANDOFF.md` conventions so the next fan-out
   briefs agents to *reuse named components*, and assigns any shared file to
   exactly one owner with the others reporting requests. Landed as the first

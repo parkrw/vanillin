@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   Table,
   TableHeader,
@@ -26,6 +26,7 @@ import {
   DataTableColumnResizer,
   DataTableGroupRow,
   DataTableScroller,
+  useDataTableHighlight,
 } from "../../ui/data-table/data-table.jsx"
 
 import "../../ui/table/table.css"
@@ -872,6 +873,13 @@ export default function DataTablePage() {
   const { pagination } = table.getState()
   const selectedCount = table.getFilteredSelectedRowModel().rows.length
 
+  // Paint the global-filter matches in the rows that survived it.
+  const bodyRef = useRef(null)
+  const { supported: highlightSupported } = useDataTableHighlight(
+    bodyRef,
+    table.getState().globalFilter ?? ""
+  )
+
   return (
     <>
       <h2>Data Table</h2>
@@ -886,6 +894,30 @@ export default function DataTablePage() {
           what string the global filter matches against (useful for timestamps
           or enum codes). Global and column filters compose with AND — a row
           must pass both to appear.
+        </p>
+        <h3>Highlighted matches</h3>
+        <p>
+          Type in "Search all columns" and the matched text is painted in the
+          rows below, via <code>useDataTableHighlight(bodyRef, query)</code> —{" "}
+          <code>lib/use-highlight.js</code> (the CSS Custom Highlight API) with
+          a table-specific registry name. Pass the ref to{" "}
+          <code>TableBody</code>, not <code>Table</code>: on the table it would
+          light up a column header whenever the query matched its title.{" "}
+          {highlightSupported
+            ? "Your browser supports CSS.highlights, so matches are painted."
+            : "Your browser has no CSS.highlights, so nothing is painted — filtering still works."}
+        </p>
+        <p>
+          The name is <code>vanillin-table-search</code>, not{" "}
+          <code>ui/command</code>'s default <code>vanillin-search</code>:{" "}
+          <code>CSS.highlights</code> is one global registry, and the faceted
+          filter renders a Command — under a shared name, typing in that popover
+          would blank the table's highlights. Paint lives in{" "}
+          <code>data-table.css</code> under <code>.table-body</code>;{" "}
+          <code>::highlight()</code> accepts only colour, background-colour,
+          text-decoration and text-shadow, so there is no padding or radius to
+          be had. Matching is per-text-node substring: a match split across
+          inline markup is not painted.
         </p>
         <h3>Faceted counts</h3>
         <p>
@@ -987,7 +1019,7 @@ export default function DataTablePage() {
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
+          <TableBody ref={bodyRef}>
             {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow

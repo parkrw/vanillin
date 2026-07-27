@@ -309,6 +309,27 @@
   padding-inline: 0.375rem;
 }
 
+/* ── Search-match highlight ──────────────────────────────────────── */
+
+/*
+ * Paint for `useDataTableHighlight`. Scoped to the body so the name stays
+ * the table's own — `ui/command`'s `vanillin-search` (styled in globals.css)
+ * would clobber it, since the faceted filter renders a Command.
+ * `::highlight()` supports only color, background-color, text-decoration and
+ * text-shadow.
+ */
+.table-body ::highlight(vanillin-table-search) {
+  background-color: color-mix(in oklab, var(--primary) 25%, transparent);
+  color: var(--foreground);
+}
+
+@media (forced-colors: active) {
+  .table-body ::highlight(vanillin-table-search) {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+}
+
 /* ── Scroll container ────────────────────────────────────────────── */
 
 /*

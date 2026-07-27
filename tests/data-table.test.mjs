@@ -328,6 +328,76 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.waitForTimeout(50)
   })
 
+  // ── Search-match highlighting ──────────────────────────────────────
+
+  await test("highlight: global filter paints matches in the table body", async () => {
+    const globalInput = page.locator('[data-pg="dt-global-filter"]')
+    await globalInput.fill("alice")
+    await page.waitForTimeout(100)
+
+    const info = await page.evaluate(() => {
+      const hl = CSS.highlights?.get("vanillin-table-search")
+      if (!hl) return { count: 0, allInBody: false, texts: [] }
+      const ranges = [...hl]
+      const body = document.querySelector('[data-pg="dt"] .table-body')
+      return {
+        count: ranges.length,
+        allInBody: ranges.every((r) => body.contains(r.startContainer)),
+        texts: ranges.map((r) => r.toString()),
+      }
+    })
+    eq(info.count > 0, true, `ranges registered: ${info.count}`)
+    eq(info.allInBody, true, "every range is inside the table body")
+    eq(
+      info.texts.every((t) => t.toLowerCase() === "alice"),
+      true,
+      `ranges cover the query only: ${info.texts.join("|")}`
+    )
+  })
+
+  await test("highlight: does not paint header text", async () => {
+    // "Email" is a column title; the ref is on TableBody, so the header
+    // must stay unpainted even when the query matches it.
+    const globalInput = page.locator('[data-pg="dt-global-filter"]')
+    await globalInput.fill("email")
+    await page.waitForTimeout(100)
+
+    const inHeader = await page.evaluate(() => {
+      const hl = CSS.highlights?.get("vanillin-table-search")
+      if (!hl) return false
+      const header = document.querySelector('[data-pg="dt"] .table-header')
+      return [...hl].some((r) => header.contains(r.startContainer))
+    })
+    eq(inHeader, false, "no header ranges")
+  })
+
+  await test("highlight: clearing the filter clears the registration", async () => {
+    const globalInput = page.locator('[data-pg="dt-global-filter"]')
+    await globalInput.fill("")
+    await page.waitForTimeout(100)
+    const has = await page.evaluate(
+      () => CSS.highlights?.has("vanillin-table-search") ?? false
+    )
+    eq(has, false, "highlight deleted on empty query")
+  })
+
+  await test("highlight: registry name is the table's own, not ui/command's", async () => {
+    // ui/command registers `vanillin-search`; CSS.highlights is one global
+    // registry, so a shared name would let the faceted filter's Command
+    // blank the table's paint.
+    const globalInput = page.locator('[data-pg="dt-global-filter"]')
+    await globalInput.fill("alice")
+    await page.waitForTimeout(100)
+    const names = await page.evaluate(() => ({
+      table: CSS.highlights?.has("vanillin-table-search") ?? false,
+      shared: CSS.highlights?.has("vanillin-search") ?? false,
+    }))
+    eq(names.table, true, "table paints under its own name")
+    eq(names.shared, false, "table does not register under ui/command's name")
+    await globalInput.fill("")
+    await page.waitForTimeout(50)
+  })
+
   await test("global + column filters AND together", async () => {
     const globalInput = page.locator('[data-pg="dt-global-filter"]')
     const emailInput = page.locator('[data-pg="dt-filter"]')
