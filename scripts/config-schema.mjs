@@ -40,6 +40,14 @@ const MOTION_KEYS = new Set(["scale", "ease"])
 const FONT_KEYS = new Set(["sans", "mono"])
 const COMPONENT_SECTION_KEYS = new Set(["tokens", "variants", "sizes"])
 
+/**
+ * Project-relative locations the CLI reads and writes. Persisted by `van init`
+ * so later `add` calls are non-interactive; the kit's own checkout uses the
+ * defaults and omits the key.
+ */
+export const PATH_KEYS = new Set(["ui", "lib", "styles", "css"])
+export const PATH_DEFAULTS = { ui: "ui", lib: "lib", styles: "styles", css: "styles/van.css" }
+
 /** Shorthand token names -> CSS property names. */
 const PROPERTY_SHORTHANDS = {
   bg: "background-color",
@@ -86,6 +94,20 @@ function clamp(value, min, max) {
 
 function isPlainObject(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v)
+}
+
+/**
+ * Why a value is unusable as a project-relative path, or null if it is fine.
+ * Absolute paths, `..` segments and backslashes are all refused: the CLI
+ * resolves writes against the project root and must not be steerable out of it.
+ */
+export function pathError(v) {
+  if (typeof v !== "string") return "must be a string"
+  if (v.trim() === "") return "must not be empty"
+  if (v.includes("\\")) return "must use forward slashes"
+  if (v.startsWith("/") || /^[A-Za-z]:/.test(v)) return "must be project-relative, not absolute"
+  if (v.split("/").includes("..")) return 'must not contain ".."'
+  return null
 }
 
 // ---------------------------------------------------------------------------
@@ -151,8 +173,28 @@ export function validate(config, { colorTokens, knownComponents } = {}) {
 
   // Unknown top-level keys
   for (const k of Object.keys(config)) {
-    if (k !== "theme" && k !== "components") {
+    if (k !== "theme" && k !== "components" && k !== "paths") {
       errors.push(`unknown top-level key "${k}"`)
+    }
+  }
+
+  // --- paths ---------------------------------------------------------------
+  // Every value becomes a filesystem path the CLI writes to, so escaping the
+  // project root is rejected here rather than at each write site.
+  if (config.paths !== undefined) {
+    if (!isPlainObject(config.paths)) {
+      errors.push("paths must be an object")
+    } else {
+      out.paths = {}
+      for (const [k, v] of Object.entries(config.paths)) {
+        if (!PATH_KEYS.has(k)) {
+          errors.push(`paths: unknown key "${k}", expected: ${[...PATH_KEYS].join(", ")}`)
+          continue
+        }
+        const err = pathError(v)
+        if (err) errors.push(`paths.${k} ${err}`)
+        else out.paths[k] = v.replace(/\/+$/, "")
+      }
     }
   }
 

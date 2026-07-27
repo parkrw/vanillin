@@ -17,10 +17,10 @@
  * The output is deterministic: same config -> byte-identical CSS. Consumers
  * should commit van.css; the generator is a dev-time tool.
  *
- * Interface for task 38 (CLI):
- *   - generate(config, { root }) -> string   (CSS text)
+ * Interface for the CLI (bin/van.mjs):
+ *   - generate(config, { root, uiDir, globals }) -> string  (CSS text)
  *   - buildDefaults({ root })    -> string   (writes styles/defaults.css)
- *   - discoverComponents(root)   -> Map       (slug -> blockClass)
+ *   - discoverComponents(root, uiDir) -> Map  (slug -> blockClass)
  *   - extractTokenDefaults(css)  -> object    (token -> { light, dark })
  *   The CLI should read the config, call generate(), and write the result.
  *   Validation errors throw with a human-readable message.
@@ -58,8 +58,8 @@ function readTokenSources(root, sources) {
  * Scan ui/ to build a slug -> CSS block-class map.
  * The block class is the first class selector in the component's CSS file.
  */
-export function discoverComponents(root) {
-  const uiDir = resolve(root, "ui")
+export function discoverComponents(root, ui = "ui") {
+  const uiDir = resolve(root, ui)
   const map = new Map()
   let dirs
   try {
@@ -365,16 +365,27 @@ function deriveBrand(brand) {
  *   only: reading its own previous output would make the result depend on
  *   what was on disk.
  * @param {string} opts.source - Config filename to name in the header banner.
+ * @param {string} opts.uiDir - Component directory, relative to root. A
+ *   consumer's tree is `components/ui`, not the kit's `ui`.
+ * @param {string} opts.globals - Path to globals.css, relative to root. Its
+ *   @property declarations are the known-token list validation runs against,
+ *   and its directory is where the default tokenSources are looked for.
  * @returns {string} The complete CSS file content.
  * @throws {Error} If validation fails.
  */
-export function generate(config, { root, tokenSources = TOKEN_SOURCES, source } = {}) {
+export function generate(config, { root, tokenSources, source, uiDir = "ui", globals = "styles/globals.css" } = {}) {
   root = root || resolve(__dirname, "..")
 
+  // Default token sources sit beside globals.css, wherever the consumer put it.
+  if (!tokenSources) {
+    const dir = globals.slice(0, globals.lastIndexOf("/") + 1)
+    tokenSources = globals === "styles/globals.css" ? TOKEN_SOURCES : [`${dir}defaults.css`, globals]
+  }
+
   // Context for validation
-  const globalsCss = readFileSync(resolve(root, "styles/globals.css"), "utf-8")
+  const globalsCss = readFileSync(resolve(root, globals), "utf-8")
   const colorTokens = parseColorTokens(globalsCss)
-  const componentMap = discoverComponents(root)
+  const componentMap = discoverComponents(root, uiDir)
   const knownComponents = new Set(componentMap.keys())
   const tokenDefaults = extractTokenDefaults(readTokenSources(root, tokenSources))
 
@@ -603,7 +614,8 @@ function main() {
 
   let css
   try {
-    css = generate(config, { root })
+    // Same banner as `van build`, so the two paths cannot drift the output.
+    css = generate(config, { root, source: "van.config.json" })
   } catch (err) {
     console.error(err.message)
     process.exit(1)

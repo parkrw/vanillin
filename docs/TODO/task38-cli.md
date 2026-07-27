@@ -163,7 +163,7 @@ prose above predates the rename, `git remote -v` is authoritative.
   together, since both go stale on any `ui/` edit. Files:
   `scripts/build-registry.mjs`, `registry.json`, `scripts/manifest.mjs`,
   `package.json`, `tests/registry.unit.mjs` (on-disk === freshly generated).
-- [ ] 2. CLI skeleton — arg parsing, `--cwd`/`--yes`/`--silent`, ANSI helper,
+- [x] 2. CLI skeleton — arg parsing, `--cwd`/`--yes`/`--silent`, ANSI helper,
   `list`, `build`. `bin` entry in `package.json`; `private: true` stays. Needs
   the `generate()` `uiDir`/`globals` options and the `paths` config key. Files:
   `bin/van.mjs`, `package.json`, `scripts/build-theme.mjs`,

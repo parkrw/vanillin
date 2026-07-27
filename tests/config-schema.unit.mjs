@@ -480,6 +480,28 @@ test("validate: both brand and light.primary pass (generator handles precedence)
 })
 
 // ---------------------------------------------------------------------------
+// paths
+// ---------------------------------------------------------------------------
+
+test("validate: paths accepts project-relative dirs and strips trailing slash", () => {
+  const r = validate({ paths: { ui: "components/ui/", lib: "components/lib", css: "app/van.css" } })
+  assert.ok(r.ok, r.errors.join("; "))
+  assert.equal(r.config.paths.ui, "components/ui")
+  assert.equal(r.config.paths.css, "app/van.css")
+})
+
+test("validate: paths rejects escapes, absolutes and unknown keys", () => {
+  for (const value of ["../outside", "/etc", "C:\\win", "", "a\\b"]) {
+    const r = validate({ paths: { ui: value } })
+    assert.ok(!r.ok, `accepted paths.ui = ${JSON.stringify(value)}`)
+    assert.ok(r.errors.some((e) => e.startsWith("paths.ui")), r.errors.join("; "))
+  }
+  const unknown = validate({ paths: { bogus: "x" } })
+  assert.ok(!unknown.ok)
+  assert.ok(unknown.errors.some((e) => e.includes('"bogus"')))
+})
+
+// ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
 
