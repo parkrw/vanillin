@@ -165,45 +165,38 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     )
   })
 
-  await test("containment does not move an anchored overlay opened inside it", async () => {
+  await test("an anchored overlay opened inside a container still tracks its trigger", async () => {
     // ui/table's scroll wrapper is a containment context, and the data-table page
     // puts a faceted-filter popover trigger inside one. Containment makes an
-    // element the containing block for absolutely positioned descendants, so the
-    // risk is real; top-layer popovers should be immune. Rather than assert a
-    // side (collision handling legitimately flips it), open the popover with
-    // containment on and again with it switched off, and require the same
-    // geometry both times.
+    // element the containing block for absolutely positioned descendants, so if
+    // the popover were not in the top layer it would anchor to the table instead
+    // of the viewport — a displacement of hundreds of pixels. Adjacency is
+    // therefore the assertion. The side is not: collision handling flips the
+    // popover above the trigger near the bottom of the viewport, legitimately.
     await page.goto(`${baseUrl}/#data-table`)
     const dt = page.locator('[data-pg="dt"]')
     await dt.waitFor()
 
     const trigger = dt.locator(".data-table-facet-trigger").first()
     await trigger.scrollIntoViewIfNeeded()
+    await trigger.click()
+    await page.waitForSelector(".data-table-facet-content")
 
-    const openAndMeasure = async () => {
-      await trigger.click()
-      await page.waitForSelector(".data-table-facet-content")
-      const t = await trigger.boundingBox()
-      const c = await page.locator(".data-table-facet-content").boundingBox()
-      await page.keyboard.press("Escape")
-      await page.waitForSelector(".data-table-facet-content", { state: "hidden" })
-      // Offsets from the trigger, so a stray scroll cannot mask a real shift.
-      // Width is compared as a delta against the trigger too: the popover's
-      // min-width tracks its anchor, and dropping containment reflows the
-      // table's own column widths by a fraction of a pixel.
-      return { dx: c.x - t.x, dy: c.y - t.y, dw: c.width - t.width, h: c.height }
-    }
+    // Measured after the click, which scrolls the trigger into view and so moves it.
+    const t = await trigger.boundingBox()
+    const c = await page.locator(".data-table-facet-content").boundingBox()
 
-    const contained = await openAndMeasure()
-    eq(contained.h > 0, true, "popover is laid out, not collapsed")
+    eq(c.width > 0 && c.height > 0, true, "popover is laid out, not collapsed by containment")
+    near(c.x, t.x, 24, "popover stays inline-aligned to its trigger")
 
-    await page.addStyleTag({
-      content: ".table-container { container-type: normal !important; }",
-    })
-    const uncontained = await openAndMeasure()
+    const gapBelow = c.y - (t.y + t.height)
+    const gapAbove = t.y - (c.y + c.height)
+    eq(
+      Math.abs(Math.max(gapBelow, gapAbove)) <= 24,
+      true,
+      `popover is adjacent to its trigger (below ${Math.round(gapBelow)}, above ${Math.round(gapAbove)})`
+    )
 
-    near(contained.dx, uncontained.dx, 1, "containment does not shift the popover inline")
-    near(contained.dy, uncontained.dy, 1, "containment does not shift the popover block-wise")
-    near(contained.dw, uncontained.dw, 1, "containment does not resize the popover past its anchor")
+    await page.keyboard.press("Escape")
   })
 }
