@@ -12,6 +12,14 @@
   max-height: none;
 }
 
+/* A sheet header is a panel title and reads start-aligned at any width. Only
+   centred modals get dialog.css's narrow centring, which a 20rem side sheet
+   would otherwise pick up now that the alignment is keyed to container width
+   rather than the viewport. Its footer does stack, which is the point. */
+.dialog.sheet .dialog-header {
+  text-align: start;
+}
+
 /* The UA gives <dialog> height/width: fit-content — side sheets need the
    full edge explicitly. */
 .sheet--right {
