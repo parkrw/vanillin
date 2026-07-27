@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process"
+import { spawn, spawnSync } from "node:child_process"
 import { readdirSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { chromium } from "playwright-core"
@@ -47,11 +47,33 @@ try {
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean)
-  const files = readdirSync(fileURLToPath(new URL(".", import.meta.url)))
+  const testsDir = fileURLToPath(new URL(".", import.meta.url))
+  const matches = (file) => !filters.length || filters.some((filter) => file.includes(filter))
+  const files = readdirSync(testsDir)
     .filter((file) => file.endsWith(".test.mjs"))
-    .filter((file) => !filters.length || filters.some((filter) => file.includes(filter)))
+    .filter(matches)
     .sort()
-  if (filters.length && !files.length) throw new Error(`no test files match ${filters.join(",")}`)
+  const unitFiles = readdirSync(testsDir)
+    .filter((file) => file.endsWith(".unit.mjs"))
+    .filter(matches)
+    .sort()
+  if (filters.length && !files.length && !unitFiles.length)
+    throw new Error(`no test files match ${filters.join(",")}`)
+
+  // Pure-node suites first, each in its own process (they exit(1) on failure
+  // and print their own per-test lines only when something fails here).
+  for (const file of unitFiles) {
+    const label = file.replace(".unit.mjs", "")
+    const r = spawnSync(process.execPath, [testsDir + file], { encoding: "utf8" })
+    const tail = (r.stdout || "").trim().split("\n").at(-1) || ""
+    if (r.status === 0) {
+      results.push(["PASS", tail || `${label}: unit suite`])
+    } else {
+      if (r.stdout) process.stdout.write(r.stdout)
+      if (r.stderr) process.stderr.write(r.stderr)
+      results.push(["FAIL", `${label}: unit suite failed — see output above`])
+    }
+  }
   // The whole suite shares one page for speed (warm HTTP cache, no context
   // churn). That makes per-file state leak downhill in alphabetical order, and
   // it has already cost us two rounds of phantom failures: an injected :root

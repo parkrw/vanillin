@@ -111,7 +111,10 @@ what to do is worse than no check.
 - [x] 3. Conformance suite over the static rules (tokens, naming, demo page,
   registry uniqueness, test presence). Files: `tests/conformance.unit.mjs`.
 - [x] 4. Import-graph check against `requires`, including a cycle check.
-- [ ] 5. Wire into `npm test`; fix whatever it finds (expect a real backlog).
+- [x] 5. Wire into `npm test`; fix whatever it finds (expect a real backlog).
+  *(Backlog was: 7 untested stateful components — tests written; 18 props-rest
+  violations — 6 fixed by forwarding/spreading, 12 allowlisted as provider-only;
+  one dead `Checkbox` import in data-table faking a requires edge.)*
 - [ ] 6. Docs: the manifest format, the install-time-not-runtime caveat, and how
   to add a component that passes conformance.
 
