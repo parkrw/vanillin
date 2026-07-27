@@ -1,0 +1,10 @@
+{
+  "name": "avatar",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "avatar.css": "sha256-hcQujUVnPnJWHXubfxUFVA/nVavU59RmTQoiedP3Cg8=",
+    "avatar.jsx": "sha256-xu1pqeZb8oFGGoUw2+/0G2XpKTDjcbiizKTyNl4z9Q8="
+  }
+}

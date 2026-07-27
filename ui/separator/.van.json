@@ -1,0 +1,10 @@
+{
+  "name": "separator",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "separator.css": "sha256-OrKyGTUoI5tK8eUIIzDOBI5CPvhYWmmh5HS8ckSpqSI=",
+    "separator.jsx": "sha256-mn6atZu+OXNDuDZGxYKqQ9zjmn1v7EoTEHf0Q5QzOHo="
+  }
+}

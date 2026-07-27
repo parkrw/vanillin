@@ -1,0 +1,12 @@
+{
+  "name": "command",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [
+    "dialog"
+  ],
+  "files": {
+    "command.css": "sha256-AvehaeN9J+48qN3VjmrhCQGrrJ9vhhSBwd7j0XWG2ko=",
+    "command.jsx": "sha256-n1niTjMDkaGB6GvRZeB/x44EuynY6JQnn9B+sBPRm6E="
+  }
+}

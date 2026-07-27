@@ -1,0 +1,10 @@
+{
+  "name": "hover-card",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "hover-card.css": "sha256-GgmwllASnQPqj6itRJZ+r9rHQeshy2IKKn9//dNK6As=",
+    "hover-card.jsx": "sha256-BpUCSKjdU3cvbh1XEQj4UJf1Hjz0IDXSCv81BH+MZiY="
+  }
+}

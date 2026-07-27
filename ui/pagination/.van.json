@@ -1,0 +1,10 @@
+{
+  "name": "pagination",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "pagination.css": "sha256-B7bgnuXkdCCxpg3No10DkIWRjmWzlbhDcPoDu1AZLWo=",
+    "pagination.jsx": "sha256-Jgj+gGaNUKAG8szCmDTRBtn9z1WcNb2HhNXQWWz4H8w="
+  }
+}

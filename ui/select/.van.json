@@ -1,0 +1,10 @@
+{
+  "name": "select",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "select.css": "sha256-dH6m/dGgp0zWEAumc04hmkzkgxcUSFp4KaNskQnET4o=",
+    "select.jsx": "sha256-E5HOuP0VHHvZfVmxIFXgAXjX3vF08IqoxhKbm46BK94="
+  }
+}

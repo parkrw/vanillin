@@ -1,0 +1,12 @@
+{
+  "name": "attachment",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [
+    "button"
+  ],
+  "files": {
+    "attachment.css": "sha256-M9ekX2E/exv0I8MsQ/5U2+y3A86fB9TP8Bf2dHJ7WAc=",
+    "attachment.jsx": "sha256-pJoyih+G75hUa72fXUKfUgACM3SsbFK7IkOq1LnwDGU="
+  }
+}

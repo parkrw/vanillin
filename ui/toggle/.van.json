@@ -1,0 +1,10 @@
+{
+  "name": "toggle",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "toggle.css": "sha256-1yEpPPdNl0kUg4FIBYZqune7f+w6a4CM0P6raG3ag+0=",
+    "toggle.jsx": "sha256-81OLyCB8ftwMVvrY2Va2m5gvawtvCFGEErKt96MLj5A="
+  }
+}

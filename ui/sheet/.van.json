@@ -1,0 +1,12 @@
+{
+  "name": "sheet",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [
+    "dialog"
+  ],
+  "files": {
+    "sheet.css": "sha256-Nw/pZ/xntLX+GLcXcWvGKs1BjO0+MZYl3i2IzPFtv58=",
+    "sheet.jsx": "sha256-yA55J+49sfklqBSkmTYj2P+L6zNU958KEMAa/H/KZIU="
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "badge",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "badge.css": "sha256-aEZh/asWXvVnk+TvJokARs4mVcjhhtQunq8o+/Wz8zU=",
+    "badge.jsx": "sha256-tc0pQ2nDkeWyobmeZcUL9AC1VHs4tqCi3s2/NseSfIE="
+  }
+}

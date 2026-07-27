@@ -1,0 +1,10 @@
+{
+  "name": "format",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "format.css": "sha256-4k6m7EsXT9uwkwRKC7ItUqTu+xm4lmvEbDrtnlUnY+c=",
+    "format.jsx": "sha256-kOEKgNpw8D5qonLZjvIv6U64SMlLDxcZ+Mh3X2VavQc="
+  }
+}

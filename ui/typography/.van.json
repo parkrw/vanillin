@@ -1,0 +1,9 @@
+{
+  "name": "typography",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "typography.css": "sha256-2HmyU82iq5M0LyhmublBczi3E5NXmcLLtLRTEdMY3nc="
+  }
+}

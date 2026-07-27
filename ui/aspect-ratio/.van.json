@@ -1,0 +1,10 @@
+{
+  "name": "aspect-ratio",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "aspect-ratio.css": "sha256-wxFDnFC6VjXJUAEMLLHcy5X86kFZGyDEmwE/Zk9hoW0=",
+    "aspect-ratio.jsx": "sha256-I0Zt+VHq/7LZSdUWj5REQXTChqucwWeDYb+rwQgD97w="
+  }
+}

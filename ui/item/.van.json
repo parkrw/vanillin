@@ -1,0 +1,10 @@
+{
+  "name": "item",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "item.css": "sha256-9gmMkXwioNF8chU+n6B8ErW3hVoiPInfaJ1mgD7PhUM=",
+    "item.jsx": "sha256-PaeWd5cD068YQMVuB3U1KhscbjLty9xG6+vk7GlpR8M="
+  }
+}

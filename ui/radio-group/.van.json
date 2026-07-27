@@ -1,0 +1,10 @@
+{
+  "name": "radio-group",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "radio-group.css": "sha256-dv3UoDEtSPKL8nkUavU9ZWdlbnCG57Q+CufxzRwN+gI=",
+    "radio-group.jsx": "sha256-3luWRO0FgbbX1v6Q/u0yCqrQ9o/F+32KTe+vE6gZumg="
+  }
+}

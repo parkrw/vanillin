@@ -1,0 +1,10 @@
+{
+  "name": "toggle-group",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "toggle-group.css": "sha256-4/b+NeD799BGV9f4grmgSPeaSMCmPEY6bkYIZpvJ1ro=",
+    "toggle-group.jsx": "sha256-Kh+2jcRBtfKlRxBBhTEdhM3leWSJMLm4Z1a2C7XtUfA="
+  }
+}

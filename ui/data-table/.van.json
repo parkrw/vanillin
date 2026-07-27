@@ -1,0 +1,19 @@
+{
+  "name": "data-table",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [
+    "badge",
+    "button",
+    "checkbox",
+    "command",
+    "popover",
+    "scroll-area",
+    "separator",
+    "table"
+  ],
+  "files": {
+    "data-table.css": "sha256-c8G7DyQ82YjC4k8OgGFAwY2LrmRHcWSkDZEUCpbWuBI=",
+    "data-table.jsx": "sha256-OVLv135UoX6CUS7hT43lueuxvDzNxQx1dHrOCfq5vIY="
+  }
+}

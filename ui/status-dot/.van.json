@@ -1,0 +1,10 @@
+{
+  "name": "status-dot",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "status-dot.css": "sha256-moVhT5y5u9bqpcSH2UBTYKKXP2AcCXI4KTxLbM6Wi2c=",
+    "status-dot.jsx": "sha256-4rvH4CRRvAIo5grgYp9TAj0UviePPoBXwlqEt/lEaj0="
+  }
+}

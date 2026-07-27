@@ -1,0 +1,10 @@
+{
+  "name": "button-group",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "button-group.css": "sha256-JTwITO9jWzjmaFaC1SfB3DlZjjT0j2oZuMPT5sIZ5tQ=",
+    "button-group.jsx": "sha256-VciMDJn0SNHHpdXLY8PV4wvX0SHbT4dKLw/NBX2SXKI="
+  }
+}

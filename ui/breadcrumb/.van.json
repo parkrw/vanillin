@@ -1,0 +1,10 @@
+{
+  "name": "breadcrumb",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "breadcrumb.css": "sha256-KL7vWcXC+KGCFCYYryPinDHOC04ZfWZGAqF6buRRaU4=",
+    "breadcrumb.jsx": "sha256-2riyi247crFXR7f4GZ5toxKGmYKD4R+9gny4eG3oYhw="
+  }
+}

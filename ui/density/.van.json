@@ -1,0 +1,9 @@
+{
+  "name": "density",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "density.jsx": "sha256-NeoJ/gfqOQO6SoRa2akqVZWNlx0SI1zjFuB0XTB7lN0="
+  }
+}

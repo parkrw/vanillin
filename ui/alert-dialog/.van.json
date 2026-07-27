@@ -1,0 +1,13 @@
+{
+  "name": "alert-dialog",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [
+    "button",
+    "dialog"
+  ],
+  "files": {
+    "alert-dialog.css": "sha256-P51iiZL9klZ8evvdThnLf85Co3ryVaagWBuPtFSksZE=",
+    "alert-dialog.jsx": "sha256-w+hZbvAk0ydRAfgpBu7E7TuDDB1Os7YyEROw/JLQl3E="
+  }
+}

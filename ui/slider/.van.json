@@ -1,0 +1,10 @@
+{
+  "name": "slider",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "slider.css": "sha256-bDkyXXPuhk0uzt5VooFNRKWzMPHvlZo68us/jVqTas4=",
+    "slider.jsx": "sha256-d9lzt4xV6yS4Ir9UE2gaTlDhMMSc61Z+A96S9UMPrkc="
+  }
+}

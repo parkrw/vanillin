@@ -1,0 +1,10 @@
+{
+  "name": "input-group",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "input-group.css": "sha256-bnAONgA9Cl+erGpofT5oHlwB7lGO6vijnkFhGp5Iz68=",
+    "input-group.jsx": "sha256-7UyRRnfqpC2HtJ99JOcJSowdntBonZyi0JLmkk0yV3s="
+  }
+}

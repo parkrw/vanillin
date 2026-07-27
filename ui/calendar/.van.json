@@ -1,0 +1,13 @@
+{
+  "name": "calendar",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [
+    "button",
+    "native-select"
+  ],
+  "files": {
+    "calendar.css": "sha256-kGKJs9++NyTMkoCMPpn6C/sI81/i8vg0TeTt7Xu1UNg=",
+    "calendar.jsx": "sha256-Yjf10IOmrv5O1pfUrsbozsNMPVeOCf1ANegKP2bsOUk="
+  }
+}

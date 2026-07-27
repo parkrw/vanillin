@@ -1,0 +1,10 @@
+{
+  "name": "empty",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "empty.css": "sha256-0SM1UVSqRu6czq+NszABLeOz0a43Z0cO/T+QUkIzfTM=",
+    "empty.jsx": "sha256-nzdOTJeLMMs7zwDr8FqIidzaZJs1ejDmbrmdxtMkg8U="
+  }
+}

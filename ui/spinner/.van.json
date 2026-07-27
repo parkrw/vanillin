@@ -1,0 +1,10 @@
+{
+  "name": "spinner",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "spinner.css": "sha256-itbq1C+LdXC+UDPoN8Ex6VoiNhQFtg+Cjfie6yJVte0=",
+    "spinner.jsx": "sha256-j/QuMN2p/0uTiHwfK0YvRq7XKrSaSfgzWDNTwspOX8c="
+  }
+}

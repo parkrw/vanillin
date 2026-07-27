@@ -104,9 +104,10 @@ what to do is worse than no check.
 
 - [x] 1. Manifest schema + reader/writer that round-trips unknown fields. Files:
   `scripts/manifest.mjs`, `tests/manifest.unit.mjs`.
-- [ ] 2. Generate manifests for all existing `ui/*/` from the current tree; commit
+- [x] 2. Generate manifests for all existing `ui/*/` from the current tree; commit
   them. Expect the `requires` derivation to surface import edges nobody
-  documented — there are 19 today.
+  documented — there are 19 today. *(Actual: 36 edges across 14 components —
+  data-table 8, form-fields 8, sidebar 5 grew after the estimate.)*
 - [ ] 3. Conformance suite over the static rules (tokens, naming, demo page,
   registry uniqueness, test presence). Files: `tests/conformance.unit.mjs`.
 - [ ] 4. Import-graph check against `requires`, including a cycle check.

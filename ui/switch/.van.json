@@ -1,0 +1,10 @@
+{
+  "name": "switch",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "switch.css": "sha256-8/AbzuLjQwzyP95DmbavtzNX0+RpL4iYcWxfSCnSEfk=",
+    "switch.jsx": "sha256-ohq0NYX49WbmUvsn5UZW1VH0atvL68zXoyYpPjj0Wfo="
+  }
+}

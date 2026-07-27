@@ -1,0 +1,16 @@
+{
+  "name": "sidebar",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [
+    "input",
+    "separator",
+    "sheet",
+    "skeleton",
+    "tooltip"
+  ],
+  "files": {
+    "sidebar.css": "sha256-F3TBj1McaOA9aJd4lmc1VbaIxjs9y2YE6kz2Da4CjFY=",
+    "sidebar.jsx": "sha256-or/e1uJ8S5/9u7kEcLCqm3Cjp1ArBI8IEaN2zlNYmM0="
+  }
+}

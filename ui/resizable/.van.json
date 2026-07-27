@@ -1,0 +1,10 @@
+{
+  "name": "resizable",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "resizable.css": "sha256-huw7fvZRTwmuQbZmtcnCS4D5BbkDwYIL2/xDGNqbaW4=",
+    "resizable.jsx": "sha256-ft89YdIWxdO3JWu65904tAsYdVX3mDa5rfJJw0aCzRE="
+  }
+}

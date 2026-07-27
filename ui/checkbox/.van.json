@@ -1,0 +1,10 @@
+{
+  "name": "checkbox",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "checkbox.css": "sha256-SQ9gWZ/I9PJ38Xou+c0vwnaOY1cBRavdKtqPcDj3R1Y=",
+    "checkbox.jsx": "sha256-XR5EVDLEYwnLQai9YOMPX3Y2Bql8Xw5CezCwNX03+ek="
+  }
+}

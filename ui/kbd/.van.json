@@ -1,0 +1,10 @@
+{
+  "name": "kbd",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "kbd.css": "sha256-tM+Fd7X/GzdDrQ19fcrT9Wn4nvjZuumL8Es1sYx7FFk=",
+    "kbd.jsx": "sha256-1taPhhxBImyTIRg3/+8gYzUh1IAt9ZDxuctZcu/o6/M="
+  }
+}

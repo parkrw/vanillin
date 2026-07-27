@@ -1,0 +1,10 @@
+{
+  "name": "label",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "label.css": "sha256-JxrC+0yei1eMqTNcH4wVA5j11X+XSfUJOMNXv5ZURrI=",
+    "label.jsx": "sha256-+LtqKtYr8/1kSvDrAOKN4CkVAZ+Ow/QhlrQRna/wQYc="
+  }
+}

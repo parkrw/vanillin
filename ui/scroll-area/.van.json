@@ -1,0 +1,10 @@
+{
+  "name": "scroll-area",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "scroll-area.css": "sha256-kg2KcVIiPPrv72vzdkrdJZLe4nMph71Y2VBx2ovVKGA=",
+    "scroll-area.jsx": "sha256-1Z3qqD0osKMNdonzFrDd4fqWi4/47NgWnoBgtvT3aAg="
+  }
+}

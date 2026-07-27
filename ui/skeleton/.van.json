@@ -1,0 +1,10 @@
+{
+  "name": "skeleton",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "skeleton.css": "sha256-Ie/sYauNPMx02sPEQRihso4PbtZ90WKwpf8Mfa5Phd4=",
+    "skeleton.jsx": "sha256-OB1/0pl8dVoTUXwM7Lvax5tH4Ut2qM62vlJgWdgr92E="
+  }
+}

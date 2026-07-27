@@ -1,0 +1,13 @@
+{
+  "name": "form",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [
+    "field",
+    "label"
+  ],
+  "files": {
+    "form.css": "sha256-og5M1Wm5cNixN5cqHjREKWMJrezXg3Pcc34eILq36Zo=",
+    "form.jsx": "sha256-QqFEeOvdAHV4rnOav0/AJyqa2ia6n2UXpyt+1rVhaS8="
+  }
+}

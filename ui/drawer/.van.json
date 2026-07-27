@@ -1,0 +1,12 @@
+{
+  "name": "drawer",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [
+    "dialog"
+  ],
+  "files": {
+    "drawer.css": "sha256-UxgrjDBHwC7uCbSrAc6jeFif03dNKRK3c4c/5p1uGIU=",
+    "drawer.jsx": "sha256-H77ObTiZodArO1ztPIs4pH1qzYjJ0Avr48WvInzmu+o="
+  }
+}

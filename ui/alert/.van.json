@@ -1,0 +1,10 @@
+{
+  "name": "alert",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "alert.css": "sha256-pHAfbN4TbZIKuTeW1VLL7JVPkkf64JHhOhDmlJze/6E=",
+    "alert.jsx": "sha256-34leyVKgSliomu/d8/+3qRt+/RUZNLbBukN3UDF6gIo="
+  }
+}

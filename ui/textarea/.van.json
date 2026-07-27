@@ -1,0 +1,10 @@
+{
+  "name": "textarea",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "textarea.css": "sha256-fYg3B8rHX4IZFX1AKzGmMXOVwgAsTPoeput2MZtNrUE=",
+    "textarea.jsx": "sha256-GZqk7AfVviAIcuM47g2X1/betqLh7lfcK7mUr62BMEc="
+  }
+}

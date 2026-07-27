@@ -1,0 +1,12 @@
+{
+  "name": "menubar",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [
+    "dropdown-menu"
+  ],
+  "files": {
+    "menubar.css": "sha256-6ubBp8Q/3sgU5S+wwVoX/9n5+CF2MkRtDBFxjTSwwt4=",
+    "menubar.jsx": "sha256-PSHhxjzJXNYBa/V17SusMDB1RD9B83cQZ75AECX6O38="
+  }
+}

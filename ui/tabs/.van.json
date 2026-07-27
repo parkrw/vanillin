@@ -1,0 +1,10 @@
+{
+  "name": "tabs",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "tabs.css": "sha256-O4PyeyCDL3b5nefKTjPXWyKyMs/49t6ogkNEUSGql8w=",
+    "tabs.jsx": "sha256-1qExkC2zGg43hRzDKCDS4Rb0kGili0QVdG8+B66B3ak="
+  }
+}
