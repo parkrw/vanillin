@@ -116,25 +116,60 @@ absorbed, and needed `-D` to delete.
 
 ## Next step
 
-**Batch 59/60/63 is in flight.** Base commit `dbd79b94d074` on branch
-`docs/batch-59-60-63`; base suite 583/583. tmux window `@66` (`batch-59-60-63`).
+**Batch 59/60/63 passed review and is integrated on `feat/batch-59-60-63`** —
+12 commits cherry-picked from the three worker branches with **zero conflicts**,
+on top of `b0589660758f`. Base was `dbd79b94d074` (583/583).
 
-| Task | Branch                   | Worktree                            | Pane | Port |
-| ---- | ------------------------ | ----------------------------------- | ---- | ---- |
-| 59   | `feat/form-bindings`     | `../vanillin-task59-form-bindings`  | %77  | 5211 |
-| 60   | `feat/generated-defaults`| `../vanillin-task60-generated-defaults` | %78 | 5212 |
-| 63   | `feat/composition-pass`  | `../vanillin-task63-composition-pass` | %79 | 5213 |
+Per-worktree verification by the head before integration: 59 → 594/594,
+60 → 589/589, 63 → 596/596, all builds clean, all ownership checks empty,
+60's generator byte-identical on regeneration. Three `feature-dev:code-reviewer`
+passes found no issues.
 
-Reports land in `docs/TODO/reports/taskNN.md` + `.done` (git-excluded, scratch).
-Each worktree has `node_modules` symlinked to the main one.
+| Task | Branch                    | Worktree                                | Suite   |
+| ---- | ------------------------- | --------------------------------------- | ------- |
+| 59   | `feat/form-bindings`      | `../vanillin-task59-form-bindings`      | 594/594 |
+| 60   | `feat/generated-defaults` | `../vanillin-task60-generated-defaults` | 589/589 |
+| 63   | `feat/composition-pass`   | `../vanillin-task63-composition-pass`   | 596/596 |
+
+All three are pushed to `origin`. The one commit deliberately **not**
+cherry-picked is `4b2a62d42c8a` ("docs: handoff for task 60") — it writes a
+root-level `HANDOFF.md`, and this project keeps its handoff at `docs/HANDOFF.md`.
+Its content is captured in `docs/TODO/reports/task60.md` and the log.
+
+Worker reports are in `docs/TODO/reports/` (git-excluded scratch) and are worth
+reading before the follow-up tasks — task 59's has a written-out fix for the
+`ui/select` ARIA bug, task 60's has three exact `README.md` edits it could not
+make.
+
+**User runs the merge** (`git merge`/`rebase`/`reset --hard` are denied here):
+
+```
+git switch main && git merge --ff-only feat/batch-59-60-63 && git push origin main
+```
+
+After the merge: `git worktree remove` the three worktrees, delete
+`feat/form-bindings`, `feat/generated-defaults`, `feat/composition-pass`
+(verify with `git cherry main <branch>` — ancestry checks lie after a
+cherry-pick) plus `docs/batch-59-60-63`.
 
 Order after this batch lands:
 
 1. **64** alone — it hashes every component file, so it must not run concurrently
    with anything that edits components. Then **38** (`add` consumes the manifest
-   format).
+   format). Two things to fold into 64's conformance suite, both found this
+   batch and both currently un-caught by any test:
+   - `ui/select/select.jsx:41` destructures a fixed prop list with **no
+     `...props` rest**, so `id`/`aria-describedby`/`aria-invalid` cloned onto a
+     `<Select>` vanish silently. Live in `playground/pages/form.jsx:132-163`.
+     A conformance rule should make a dropped ARIA prop fail loudly.
+   - A test can assert a computed style that is true for the *wrong* value too.
+     `.data-table-pinned`'s `inset-inline-start === "0px"` held for
+     `position: relative`, so a real pinning bug passed for months. Assert the
+     precondition (`scrollLeft > 0`) alongside the effect.
 2. **39** alone — rewrites every component's CSS.
-3. **65** (blocked on 64 + 38), then **30** docs pass last.
+3. **65** (blocked on 64 + 38), then **30** docs pass last. Task 30 now also owns
+   the three `README.md` edits task 60 wrote out but could not make (they are in
+   `docs/TODO/reports/task60.md`).
 
 Task files exist for every task except 22–29.
 
@@ -179,6 +214,14 @@ a dozen of them destabilised Chrome and produced failures that looked exactly
 like real regressions (the crash point moved between runs — that is the tell).
 Worse, the cleanup `pkill -f "vite --port 53"` matched a *still-active* agent's
 port and stalled it. Namespace your ports and kill precisely.
+
+**Never detect worker liveness by tmux `pane_title`.** `claude` overwrites the
+pane title with its own spinner + task summary within seconds of launching, so a
+supervisor loop matching `#{pane_title}` against `taskNN` reports every pane dead
+immediately. Keep the **task → `pane_id`** map from `tmux list-panes` at spawn
+time and match on `#{pane_id}`. Also: the report-polling loop must not use a bare
+glob (`for f in reports/*.done`) — zsh `nomatch` aborts the whole monitor on the
+first empty poll. Use `ls dir 2>/dev/null | grep '\.done$'`.
 
 **Broadcast conventions the moment you discover them.** `tests/run.mjs`
 imports every `tests/*.test.mjs` and calls its default export, so pure-node
