@@ -47,12 +47,13 @@ Tasks are detailed just-in-time; only the rows below are durable.
 **Order from here (settled 2026-07-27, after 38 landed):**
 
 ```
-39 → 68 (bugs) → 65 → 66 → 67 → 69 → 70 → 30 → console kit
+39 ✓ → 68 (bugs) → 65 → 66 → 67 → 69 → 70 → 30 → console kit
 ```
 
-- **39 runs alone and runs first** — it rewrites every component's CSS, so
-  visual bug-fixing (68) and new components (the console kit) both come after
-  it or get done twice. Regenerate manifests *and* `registry.json` after it.
+- **39 landed 2026-07-27 and unblocked everything after it.** It ran alone on the
+  premise that it rewrites every component's CSS; in the event it touched six
+  components, so that premise was wrong — see [^39]. The order below stands
+  regardless.
 - **68 before the remaining CLI work.** Known code bugs, including one
   high-priority motion glitch, should not sit under new features.
 - **69 and 70 before 30.** They rewrite the docs pages that 30 then proofreads.
@@ -169,12 +170,12 @@ written; it is a final consistency and gap pass.
     wrapper and `ui/dialog` (so `ui/sheet` too); **not** `ui/sidebar`, whose
     breakpoint is a JS render decision. Headline feature is `.table--stack`.
     **It touched far less CSS than the plan assumed** — six components, not all
-    68 — so the "39 rewrites every component's CSS" premise, which is why other
-    work was sequenced after it, turned out to be false. `cqi` units were
-    **not** used; no
-    component needed fluid type, and the task file's own warning about
-    unbounded `cqi` applies. Remaining: the screen-reader ordering pass on
-    stacked rows is user-gated.
+    68 — so the "39 rewrites every component's CSS" premise behind sequencing 68
+    and the console kit after it turned out to be false. Kept the order anyway:
+    68 is unblocked either way. `cqi` units were **not** used; no component
+    needed fluid type, and the task file's own warning about unbounded `cqi`
+    applies. Remaining: the screen-reader ordering pass on stacked rows is
+    user-gated.
 
 [^40]: zero-dep `lib/use-form.js`, RHF-shaped; resolver contract =
     `@hookform/resolvers` compatible.
