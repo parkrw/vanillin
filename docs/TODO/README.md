@@ -102,7 +102,7 @@ written; it is a final consistency and gap pass.
 | 62  | schema-core              | ~L  | [x]    | `lib/schema.js` — zod-shaped validation + resolver [^62]               |
 | 63  | composition-pass         | ~M  | [x]    | reuse only where the relationship is **semantic** [^63]                |
 | 64  | component-contracts      | ~L  | [ ]    | per-copy `.van.json` manifest + conformance suite [^64]                |
-| 65  | component-update          | ~L  | [ ]    | deps: 64, 38; `van update` this can wait  [^65]                      |
+| 65  | component-update          | ~L  | [ ]    | deps: 64, 38; `van update`  [^65]                      |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -158,7 +158,6 @@ written; it is a final consistency and gap pass.
 [^56]: `forced-colors`, `prefers-contrast`, `prefers-reduced-transparency`
     sweep.
 
-[^59]: deps: 40, 41; user-requested. Third layer composing `use-form` +
     `ui/form` + controls into one import; `ui/form` must still never import
     the engine. Also where `ui/form` stops reimplementing
     label/description/message.
