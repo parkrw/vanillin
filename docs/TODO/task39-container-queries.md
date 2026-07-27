@@ -60,7 +60,7 @@ differentiator, not parity work.
   the stacked layout needs `data-label` attributes on cells (it probably does;
   a stacked row needs its column name).
 - [x] 4. `ui/dialog` / `ui/sheet` content reflow. Files: those `.css` files.
-- [ ] 5. Demo page: the same card and the same table rendered at three
+- [x] 5. Demo page: the same card and the same table rendered at three
   container widths on one page, side by side. This is the demo that sells the
   feature — a viewport-resize demo does not show it. Files:
   `site/pages/container-queries.jsx`, `site/registry.js`.
