@@ -168,7 +168,7 @@ prose above predates the rename, `git remote -v` is authoritative.
   the `generate()` `uiDir`/`globals` options and the `paths` config key. Files:
   `bin/van.mjs`, `package.json`, `scripts/build-theme.mjs`,
   `scripts/config-schema.mjs`.
-- [ ] 3. `add` — closure resolution (component + `lib`), the four per-file
+- [x] 3. `add` — closure resolution (component + `lib`), the four per-file
   states, per-component atomicity, `--dry-run`, `--overwrite`/`--force`,
   path-escape rejection, `.van.json` sidecar write via `generateManifest`.
   Files: `bin/van.mjs`.
