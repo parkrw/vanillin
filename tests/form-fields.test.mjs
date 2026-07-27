@@ -132,7 +132,27 @@ export default async function run({ page, baseUrl, test, eq }) {
   })
 
   /* ────────────────────────────────────────────────────────────────── */
-  /*  3. Bound and hand-wired produce the same attributes              */
+  /*  3. The escape hatch binds a control the layer has never heard of */
+  /* ────────────────────────────────────────────────────────────────── */
+
+  await test("FormFieldBinding binds an arbitrary control", async () => {
+    const w = await wiring(page, "ff-budget")
+    eq(w.idSuffix, "-form-item", "control id is the FormItem id")
+    eq(w.labelText, "Budget", "label points at the slider")
+
+    await page.locator('[data-pg="ff-budget"] [role="slider"]').focus()
+    await page.keyboard.press("ArrowRight")
+    await page.locator('[data-pg="ff-hatch-submit"]').click()
+    await page.waitForSelector('[data-pg="ff-hatch-result"]')
+
+    const data = JSON.parse(
+      await page.locator('[data-pg="ff-hatch-result"]').textContent()
+    )
+    eq(data.budget, 41, "the adapted value round-tripped as a number")
+  })
+
+  /* ────────────────────────────────────────────────────────────────── */
+  /*  4. Bound and hand-wired produce the same attributes              */
   /* ────────────────────────────────────────────────────────────────── */
 
   await test("bound field matches the hand-wired one (no error)", async () => {

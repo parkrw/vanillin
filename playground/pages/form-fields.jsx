@@ -18,7 +18,9 @@ import {
   TextField,
   TextareaField,
 } from "../../ui/form-fields/form-fields.jsx"
+import { FormFieldBinding } from "../../ui/form-fields/form-fields.jsx"
 import { Input } from "../../ui/input/input.jsx"
+import { Slider } from "../../ui/slider/slider.jsx"
 
 import "../../ui/form/form.css"
 import "../../ui/form-fields/form-fields.css"
@@ -30,6 +32,7 @@ import "../../ui/checkbox/checkbox.css"
 import "../../ui/switch/switch.css"
 import "../../ui/select/select.css"
 import "../../ui/radio-group/radio-group.css"
+import "../../ui/slider/slider.css"
 import "../../ui/button/button.css"
 
 /* ================================================================== */
@@ -94,6 +97,196 @@ function Docs() {
           <code>&lt;FormProvider&gt;</code> ancestor; with neither it throws by
           name. Everything else is forwarded to the underlying control.
         </p>
+
+        <h4>Which layer to reach for</h4>
+        <p>
+          <strong>
+            <code>ui/form-fields</code>
+          </strong>{" "}
+          for ordinary fields — a label, a control, a description, an error.
+          That is most of them.{" "}
+          <strong>
+            <code>ui/form</code>
+          </strong>{" "}
+          when the layout is unusual (two controls in one item, a label that is
+          not text, a field whose control is chosen at runtime) or when you are
+          driving it with a different engine — React Hook Form, or React 19
+          Actions via <code>&lt;Form action&gt;</code>, neither of which this
+          layer knows about.{" "}
+          <strong>
+            <code>lib/use-form</code>
+          </strong>{" "}
+          alone when there is no field UI at all: a search box, a filter bar, a
+          form you are styling from scratch.
+        </p>
+        <p>
+          Mixing them is normal and expected. A bound field and a hand-written
+          one sit in the same <code>&lt;Form&gt;</code> and produce the same
+          markup — see below.
+        </p>
+
+        <h4>Why its own directory</h4>
+        <p>
+          <code>ui/form/form.jsx</code> inlines its own <code>getByPath</code>{" "}
+          rather than importing the engine's, on purpose: copying{" "}
+          <code>ui/form/</code> into your project must not drag{" "}
+          <code>lib/use-form.js</code> with it. Putting these bindings inside{" "}
+          <code>ui/form/</code> would break exactly that. So they live next
+          door, and copying <code>ui/form-fields/</code> is an explicit choice
+          to take the engine too.
+        </p>
+      </div>
+    </section>
+  )
+}
+
+/* ================================================================== */
+/*  What it replaces                                                   */
+/* ================================================================== */
+
+const BOUND_SOURCE = `<SelectField
+  name="role"
+  control={control}
+  label="Role"
+  description="Controls what the user can access."
+  placeholder="Select a role"
+  items={ROLES}
+/>`
+
+const HAND_SOURCE = `<Controller
+  name="role"
+  control={control}
+  render={({ field }) => (
+    <FormField name="role">
+      <FormItem>
+        <FormLabel>Role</FormLabel>
+        <FormControl>
+          <Select
+            value={field.value}
+            onValueChange={field.onChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="editor">Editor</SelectItem>
+              <SelectItem value="viewer">Viewer</SelectItem>
+            </SelectContent>
+          </Select>
+        </FormControl>
+        <FormDescription>
+          Controls what the user can access.
+        </FormDescription>
+        <FormMessage />
+      </FormItem>
+    </FormField>
+  )}
+/>`
+
+function ReplacesDemo() {
+  return (
+    <section className="pg-section">
+      <h3>What it replaces</h3>
+      <p className="pg-description">
+        The role field from the <code>Form</code> page, both ways. Beyond the
+        line count, the right-hand version has three places to get wrong:{" "}
+        <code>Controller</code> instead of <code>register</code>, the{" "}
+        <code>FormField name</code> matching the <code>Controller name</code>,
+        and remembering <code>FormMessage</code> at all — drop it and the field
+        validates but never says so.
+      </p>
+      <p className="pg-description">
+        One real difference: <code>FormControl</code> wrapping{" "}
+        <code>&lt;Select&gt;</code> clones the ARIA props onto the{" "}
+        <code>Select</code> root, which does not forward unknown props — so
+        they never reach the trigger. <code>SelectField</code> puts{" "}
+        <code>FormControl</code> on <code>SelectTrigger</code> instead, where
+        they land on a real button.
+      </p>
+
+      <div
+        style={{
+          display: "grid",
+          gap: "1rem",
+          gridTemplateColumns: "repeat(auto-fit, minmax(20rem, 1fr))",
+        }}
+      >
+        <div>
+          <p className="pg-description" style={{ margin: "0 0 0.5rem" }}>
+            <strong>Bound</strong> — 8 lines
+          </p>
+          <pre data-pg="ff-source-bound">{BOUND_SOURCE}</pre>
+        </div>
+        <div>
+          <p className="pg-description" style={{ margin: "0 0 0.5rem" }}>
+            <strong>Hand-wired</strong> — 30 lines
+          </p>
+          <pre data-pg="ff-source-hand">{HAND_SOURCE}</pre>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ================================================================== */
+/*  Escape hatch                                                       */
+/* ================================================================== */
+
+function EscapeHatchDemo() {
+  const { handleSubmit, control, formState } = useForm({
+    defaultValues: { budget: 40 },
+  })
+  const [result, setResult] = useState(null)
+
+  return (
+    <section className="pg-section">
+      <h3>Escape hatch</h3>
+      <p className="pg-description">
+        Every <code>&lt;XField&gt;</code> above is a thin call to{" "}
+        <code>FormFieldBinding</code>, and so is anything you write yourself.
+        It does the plumbing and hands back <code>field</code>; you decide what
+        to render. <code>controlled</code> is the one thing it cannot infer —
+        set it for a control with its own value channel, leave it off for a
+        native input.
+      </p>
+      <p className="pg-description">
+        <code>Slider</code> is a good example of why the hatch exists: it takes
+        and emits an array, so the value needs adapting in both directions.
+      </p>
+
+      <div style={{ maxWidth: "28rem" }}>
+        <Form
+          form={{ formState }}
+          onSubmit={handleSubmit((data) => setResult(JSON.stringify(data)))}
+          data-pg="ff-hatch"
+        >
+          <FormFieldBinding
+            controlled
+            name="budget"
+            control={control}
+            label="Budget"
+            description="Anything from 0 to 100."
+            render={({ field }) => (
+              <FormControl
+                as={Slider}
+                value={[field.value ?? 0]}
+                onValueChange={([v]) => field.onChange(v)}
+                data-pg="ff-budget"
+              />
+            )}
+          />
+
+          <button type="submit" className="button" data-pg="ff-hatch-submit">
+            Submit
+          </button>
+        </Form>
+
+        {result && (
+          <pre data-pg="ff-hatch-result" style={{ marginTop: "1rem" }}>
+            {result}
+          </pre>
+        )}
       </div>
     </section>
   )
@@ -300,7 +493,9 @@ export default function FormFieldsPage() {
       <h2>Form Fields</h2>
       <Docs />
       <BoundFormDemo />
+      <ReplacesDemo />
       <ParityDemo />
+      <EscapeHatchDemo />
     </>
   )
 }
