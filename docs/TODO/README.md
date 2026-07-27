@@ -61,9 +61,17 @@ eight plain `useState` calls (`lib/use-data-table.js:38-48`) with no listeners,
 proxy or subscription engine, so there is nothing shared to extract. Do not
 revive either without new evidence.
 
+66–67 were added 2026-07-27, split out of 38 while scoping it. Task 38 also took
+on six shadcn-parity items in the same pass (`diff`, `--cwd`, shadcn's flag
+vocabulary, `@/*` resolution via tsconfig paths, a registry `type` field, minimal
+ANSI) — all cheap, all in `bin/van.mjs`. **An HTTP registry was rejected**:
+`npx github:` already ships the whole tree, so it would buy only speed and
+third-party registries, and distribution was settled in task 38's own spec. See
+`docs/TODO/task38-cli.md`.
+
 **Every task writes its own docs** (2026-07-26) — prose lands in the same PR as
-the code, on the component's playground page or the relevant
-`playground/pages/docs/` page. Task 30 is no longer where documentation gets
+the code, on the component's docs-site page or the relevant
+`site/pages/docs/` page. Task 30 is no longer where documentation gets
 written; it is a final consistency and gap pass.
 
 | #   | Slug                     | Est | Status | Notes                                                                  |
@@ -103,6 +111,8 @@ written; it is a final consistency and gap pass.
 | 63  | composition-pass         | ~M  | [x]    | reuse only where the relationship is **semantic** [^63]                |
 | 64  | component-contracts      | ~L  | [x]    | per-copy `.van.json` manifest + conformance suite [^64]                |
 | 65  | component-update          | ~L  | [ ]    | deps: 64, 38; `van update`  [^65]                      |
+| 66  | config-schema-json       | ~M  | [ ]    | deps: 38; generated `van.schema.json` + `$schema` [^66]                |
+| 67  | cli-picker               | ~S  | [ ]    | deps: 38; interactive multi-select for a bare `add` [^67]              |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -117,7 +127,7 @@ written; it is a final consistency and gap pass.
     components.
 
 [^37]: deps: 34, 35; `van.config.json` schema + zero-dep generator →
-    `van.css`; **output not wired into the playground — see 60**.
+    `van.css`; **output not wired into the docs site — see 60**.
 
 [^38]: deps: 37, **64** (manifest format — `add` writes the sidecar);
     `bin/van.mjs` init/add/build/list + `registry.json`; git-sourced, stays
@@ -183,6 +193,16 @@ written; it is a final consistency and gap pass.
     `add` consumes the format. Independent release windows, one monotonic
     `kitVersion`.
 
+[^66]: deps: 38; `van.schema.json` **generated from `scripts/config-schema.mjs`**
+    (hand-writing it guarantees drift) + `$schema` in `van.config.json` for
+    editor autocomplete over the whole theme surface. Split out of 38 because the
+    config surface is large: brand/radius/density/motion/font/light/dark plus
+    `components.<slug>.tokens|variants|sizes`.
+
+[^67]: deps: 38; interactive multi-select when `add` gets no slugs. Zero-dep
+    means hand-rolled raw-mode ANSI (~80 lines) and it is the hardest part of the
+    CLI to test, so it is not in 38 — a bare `add` prints the list plus a hint.
+
 [^65]: deps: 64, 38; `van update` with 3-way merge (base = recorded
     `kitVersion`). Biggest payoff — the original kit cannot take upstream fixes into an
     edited component — and the easiest to make destructive. Own task, own
@@ -218,19 +238,20 @@ detail just-in-time after 58 lands. Rough order of usefulness:
 - Planning is **just-in-time**: the rows above are durable, task files are
   written when a task is picked up. Task files now exist for every task except
   22–29 (landed before the convention).
-  Unstarted-but-specified and ready to dispatch: 64 (then 38), 39; 30 last.
-  **64 and 39 each run alone** — 64 hashes every component file, 39 rewrites
-  every component's CSS, so neither can share a batch with component work.
+  Unstarted-but-specified and ready to dispatch: 38 (in flight on `feat/cli`),
+  39; then 65, 66, 67; 30 last. **39 runs alone** — it rewrites every
+  component's CSS, so it cannot share a batch with component work (and manifests
+  + registry need regenerating after it).
 - Test: `node tests/run.mjs` — boots its own vite on :5199, drives local Chrome;
   one `tests/<slug>.test.mjs` per interactive component. (Dev server on :5173
   only needed for manual/screenshot QA.)
 - Build: `npm run build`. No lint configured.
 - Conventions + gotchas: `docs/HANDOFF.md` (block classes, tokens-only CSS,
   `cn()`, `as` prop, `useControllableState` + `data-state`, `usePresence`, demo
-  page + `playground/registry.js` entry per component).
+  page + `site/registry.js` entry per component).
 - Load-bearing files: `styles/globals.css` (tokens), `lib/` primitives,
   `ui/toggle/` (stateful pattern), `ui/tabs/` (roving tabindex), `ui/accordion/`
-  (disclosure/presence), `playground/registry.js`.
+  (disclosure/presence), `site/registry.js`.
 - Git gates (hooks): no commits on main — `<type>/<kebab>` branch first. The
   ~500-net-line branch-size hook is advisory only — never split or restructure
   work because of it.

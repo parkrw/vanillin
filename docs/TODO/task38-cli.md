@@ -91,32 +91,112 @@ Tag releases (`v0.1.0`, …) so consumers have something stable to pin. Untagged
 - **No colour/spinner library.** Plain output, `process.stdout`. If it needs
   to be pretty, ANSI escapes are four lines.
 
+## Decisions taken on approach (2026-07-27)
+
+Four things the spec above left open, settled after reading the ground:
+
+- **`generate()` gains `uiDir` and `globals` options** (root-relative, defaults
+  unchanged). Today `scripts/build-theme.mjs` hard-codes `styles/globals.css`
+  and `ui/`, which a consumer using `components/ui` does not have. `build` must
+  validate against the *consumer's* tree, so those two paths become options.
+  `discoverComponents(root, uiDir = "ui")` likewise.
+
+- **`paths` becomes a third top-level config key** — `ui`, `lib`, `styles`,
+  `css`. `scripts/config-schema.mjs` rejects unknown top-level keys, and the
+  layout has to persist somewhere so later `add` calls are non-interactive.
+  Validate as project-relative paths: no absolute, no `..`.
+
+- **`add` is atomic per component.** If *any* file of a component is
+  consumer-edited (hash ≠ sidecar), refuse the whole component and name the
+  files; other components in the same `add` still proceed. A partial write
+  leaves one copy straddling two `kitVersion`s, which is exactly the diamond
+  problem task 64 refused. Per-file states: `missing` / `identical` (bytes match
+  source) / `unmodified` (hash matches sidecar — upstream moved on, safe to
+  overwrite) / `edited` (refuse). Only `edited` blocks.
+
+- **`init` copies stylesheets only; `add` pulls each component's `lib/` deps.**
+  The prose above says init copies all of `lib/`, but sub-task 6's own test
+  ("`add dialog` pulls its `lib/` deps") says otherwise, and 23 files for one
+  component is wrong. `init` copies `globals.css` + the two files it `@import`s
+  (`defaults.css`, `forced-colors.css`). `lib/`→`lib/` imports need their own
+  closure (`use-anchor-position.js` → `anchor-position.js`).
+
+## Scope additions (2026-07-27)
+
+Six cheap parity items with shadcn's CLI, agreed with the user. Together ~150
+lines.
+
+- **`van diff [slug]`** — own sub-task. The read-only half of the state machine
+  `add` already needs: "you edited these files" vs "upstream moved since your
+  recorded `kitVersion`". Task 64's sidecar is what makes the two
+  distinguishable, and nothing currently surfaces it. Natural on-ramp to task 65
+  — `update` is `diff` plus a merge.
+- **`--cwd <dir>`** — also what keeps `tests/cli.unit.mjs` from `chdir`-ing a
+  shared process.
+- **shadcn's flag vocabulary** — `--overwrite` primary (`--force` an alias),
+  plus `--yes` and `--silent`.
+- **Resolve `@/*` from `tsconfig.json` / `jsconfig.json`
+  `compilerOptions.paths`** rather than guessing `./src`. ~20 lines, and it is
+  what makes honouring an existing `components.json` actually correct.
+- **`type` field per registry entry** (`ui` | `lib`) — one field, no second code
+  path in `add` when something lib-shaped is added later.
+- **Minimal ANSI** — bold/dim/red/green from a 4-line helper, disabled when
+  `NO_COLOR` is set or `!process.stdout.isTTY`. The rule above is no colour
+  *library*, not no colour.
+
+Deliberately **not** copied from shadcn: the HTTP registry (`npx github:` already
+ships the whole tree; distribution is settled above), npm-dependency
+installation (there are none), Tailwind config mutation, telemetry, style
+variants. Deferred to their own tasks: **66** generated `van.schema.json` +
+`$schema`, **67** interactive multi-select for a bare `add`.
+
 ## Sub-tasks
 
-- [ ] 1. `package.json` `bin` entry + a git-install smoke check
-  (`npx github:progrums/vanillin#<branch> list` from a scratch dir).
-  `private: true` stays. Files: `package.json`, `README.md`.
-- [ ] 2. Registry generator — walk `ui/`, parse imports, emit `registry.json`
-  with the dependency closure. Files: `scripts/build-registry.mjs`,
-  `registry.json`.
-- [ ] 3. CLI arg parsing + `list` + `build`. Files: `bin/van.mjs`.
-- [ ] 4. `add` with closure resolution, existence/clobber checks, `--dry-run`,
-  `--force`, path-escape rejection. Files: `bin/van.mjs`.
-- [ ] 5. `init` — config scaffold, globals + lib copy, first build, next-steps
-  output. Files: `bin/van.mjs`.
-- [ ] 6. Test: run the CLI against a scratch directory — `init` produces a
-  buildable tree; `add dialog` pulls its `lib/` deps; `add alert-dialog` pulls
-  `dialog` transitively and its CSS `@import` resolves; re-`add` of a modified
-  file refuses without `--force`; a `../` slug is rejected. Files:
-  `tests/cli.test.mjs` (Node-only — no browser needed; may need a runner
-  branch since `tests/run.mjs` assumes Playwright).
+Seven commits. The remote is `parkrw/vanillin`, not `progrums/vanillin` — the
+prose above predates the rename, `git remote -v` is authoritative.
+
+- [ ] 1. Registry generator — walk `ui/`, emit `registry.json` (slug → `files`,
+  `requires`, `lib`, `type`). **Reuses `deriveRequires` from
+  `scripts/manifest.mjs`** — the graph must not get a second parser (see the
+  registry/manifest agreement rule above); adds `deriveLibs`, exports
+  `listRegularFiles`. `npm run contracts` refreshes manifests + registry
+  together, since both go stale on any `ui/` edit. Files:
+  `scripts/build-registry.mjs`, `registry.json`, `scripts/manifest.mjs`,
+  `package.json`, `tests/registry.unit.mjs` (on-disk === freshly generated).
+- [ ] 2. CLI skeleton — arg parsing, `--cwd`/`--yes`/`--silent`, ANSI helper,
+  `list`, `build`. `bin` entry in `package.json`; `private: true` stays. Needs
+  the `generate()` `uiDir`/`globals` options and the `paths` config key. Files:
+  `bin/van.mjs`, `package.json`, `scripts/build-theme.mjs`,
+  `scripts/config-schema.mjs`.
+- [ ] 3. `add` — closure resolution (component + `lib`), the four per-file
+  states, per-component atomicity, `--dry-run`, `--overwrite`/`--force`,
+  path-escape rejection, `.van.json` sidecar write via `generateManifest`.
+  Files: `bin/van.mjs`.
+- [ ] 4. `diff [slug]` — per-file `edited` vs `upstream-moved`, exit non-zero
+  when anything differs so it is usable in CI. Files: `bin/van.mjs`.
+- [ ] 5. `init` — layout detection (`components.json` aliases, `@/*` via
+  `tsconfig`/`jsconfig` paths, default `./components/ui`), config scaffold,
+  stylesheet copy, first build, next-steps output. Files: `bin/van.mjs`.
+- [ ] 6. Test: CLI against scratch dirs — `init` produces a buildable tree;
+  `add dialog` pulls its `lib/` deps; `add alert-dialog` pulls `dialog`
+  transitively and its CSS `@import` resolves; re-`add` of an edited file
+  refuses without `--overwrite`; re-`add` of an *unmodified* file overwrites
+  silently; a `../` slug is rejected; `diff` reports an edit. Files:
+  `tests/cli.unit.mjs` — **`.unit.mjs`, not `.test.mjs`**: `tests/run.mjs`
+  already runs unit suites as child processes, so no runner branch is needed
+  (the spec above predates that).
+- [ ] 7. Docs — rewrite the installation page (currently a stub saying a CLI "is
+  planned") and the README install section. Files:
+  `site/pages/docs/installation.jsx`, `README.md`.
 
 ## Verify / done
 
 - `node tests/run.mjs` green; `npm run build` clean.
+- **Git-install smoke check:** `npx github:parkrw/vanillin#feat/cli list` from a
+  scratch dir. Needs the branch pushed first — user-gated.
 - **Real integration check:** from a scratch Vite + React app, run
-  `npx github:progrums/vanillin#<tag> init`, then
+  `npx github:parkrw/vanillin#<tag> init`, then
   `add button dialog data-table`, and render them. The unit tests run against
   the working tree and cannot prove a git install resolves correctly — only
   this can. Do this before calling the task done.
-- `npx van add` output is legible to someone who has never seen the tool.
+- `van add` output is legible to someone who has never seen the tool.
