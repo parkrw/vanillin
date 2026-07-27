@@ -73,7 +73,7 @@ collide with, and the demo and the defaults are the same artifact.
   stays. Resolve the layering question and comment the chosen order.
 - [x] 3. Wire the build so generated defaults are produced before vite runs, and
   the generated file is committed (determinism from 37 makes the diff stable).
-- [ ] 4. Test: generated defaults are byte-identical to the pre-task-60 `:root`;
+- [x] 4. Test: generated defaults are byte-identical to the pre-task-60 `:root`;
   a non-default config changes tokens without touching machinery; 34/35 token
   snapshots and `tests/density.test.mjs` still pass unmodified.
 - [ ] 5. Docs prose on the theming page — the real config, not a stub.
