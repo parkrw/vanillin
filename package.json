@@ -9,6 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node tests/run.mjs",
+    "contracts": "node scripts/manifest.mjs --write && node scripts/build-registry.mjs --write",
     "theme": "node scripts/build-theme.mjs",
     "theme:defaults": "node scripts/build-theme.mjs --defaults"
   },

@@ -1,0 +1,882 @@
+{
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "components": {
+    "accordion": {
+      "type": "ui",
+      "files": [
+        "accordion.css",
+        "accordion.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-controllable-state.js",
+        "use-presence.js"
+      ]
+    },
+    "alert": {
+      "type": "ui",
+      "files": [
+        "alert.css",
+        "alert.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "alert-dialog": {
+      "type": "ui",
+      "files": [
+        "alert-dialog.css",
+        "alert-dialog.jsx"
+      ],
+      "requires": [
+        "button",
+        "dialog"
+      ],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "aspect-ratio": {
+      "type": "ui",
+      "files": [
+        "aspect-ratio.css",
+        "aspect-ratio.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "attachment": {
+      "type": "ui",
+      "files": [
+        "attachment.css",
+        "attachment.jsx"
+      ],
+      "requires": [
+        "button"
+      ],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "avatar": {
+      "type": "ui",
+      "files": [
+        "avatar.css",
+        "avatar.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "badge": {
+      "type": "ui",
+      "files": [
+        "badge.css",
+        "badge.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "breadcrumb": {
+      "type": "ui",
+      "files": [
+        "breadcrumb.css",
+        "breadcrumb.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "bubble": {
+      "type": "ui",
+      "files": [
+        "bubble.css",
+        "bubble.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "button": {
+      "type": "ui",
+      "files": [
+        "button.css",
+        "button.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "button-group": {
+      "type": "ui",
+      "files": [
+        "button-group.css",
+        "button-group.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "calendar": {
+      "type": "ui",
+      "files": [
+        "calendar.css",
+        "calendar.jsx"
+      ],
+      "requires": [
+        "button",
+        "native-select"
+      ],
+      "lib": [
+        "cn.js",
+        "direction.jsx",
+        "use-controllable-state.js"
+      ]
+    },
+    "card": {
+      "type": "ui",
+      "files": [
+        "card.css",
+        "card.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "carousel": {
+      "type": "ui",
+      "files": [
+        "carousel.css",
+        "carousel.jsx",
+        "plugins/autoplay.js"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "direction.jsx"
+      ]
+    },
+    "checkbox": {
+      "type": "ui",
+      "files": [
+        "checkbox.css",
+        "checkbox.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-controllable-state.js"
+      ]
+    },
+    "collapsible": {
+      "type": "ui",
+      "files": [
+        "collapsible.css",
+        "collapsible.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-controllable-state.js",
+        "use-presence.js"
+      ]
+    },
+    "combobox": {
+      "type": "ui",
+      "files": [
+        "combobox.css",
+        "combobox.jsx"
+      ],
+      "requires": [
+        "badge"
+      ],
+      "lib": [
+        "cn.js",
+        "use-anchor-position.js",
+        "use-controllable-state.js"
+      ]
+    },
+    "command": {
+      "type": "ui",
+      "files": [
+        "command.css",
+        "command.jsx"
+      ],
+      "requires": [
+        "dialog"
+      ],
+      "lib": [
+        "cn.js",
+        "command-score.js",
+        "use-controllable-state.js",
+        "use-highlight.js"
+      ]
+    },
+    "context-menu": {
+      "type": "ui",
+      "files": [
+        "context-menu.css",
+        "context-menu.jsx"
+      ],
+      "requires": [
+        "dropdown-menu"
+      ],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "data-table": {
+      "type": "ui",
+      "files": [
+        "data-table.css",
+        "data-table.jsx"
+      ],
+      "requires": [
+        "badge",
+        "button",
+        "command",
+        "popover",
+        "scroll-area",
+        "separator",
+        "table"
+      ],
+      "lib": [
+        "cn.js",
+        "use-highlight.js"
+      ]
+    },
+    "date-input": {
+      "type": "ui",
+      "files": [
+        "date-input.css",
+        "date-input.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "parse-date.js",
+        "use-controllable-state.js"
+      ]
+    },
+    "date-picker": {
+      "type": "ui",
+      "files": [
+        "date-picker.css"
+      ],
+      "requires": [
+        "calendar",
+        "popover"
+      ],
+      "lib": []
+    },
+    "density": {
+      "type": "ui",
+      "files": [
+        "density.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "dialog": {
+      "type": "ui",
+      "files": [
+        "dialog.css",
+        "dialog.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "scroll-lock.js",
+        "use-controllable-state.js",
+        "use-presence.js",
+        "use-return-focus.js"
+      ]
+    },
+    "drawer": {
+      "type": "ui",
+      "files": [
+        "drawer.css",
+        "drawer.jsx"
+      ],
+      "requires": [
+        "dialog"
+      ],
+      "lib": [
+        "cn.js",
+        "use-swipe.js"
+      ]
+    },
+    "dropdown-menu": {
+      "type": "ui",
+      "files": [
+        "dropdown-menu.css",
+        "dropdown-menu.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "direction.jsx",
+        "use-anchor-position.js",
+        "use-controllable-state.js",
+        "use-safe-triangle.js"
+      ]
+    },
+    "empty": {
+      "type": "ui",
+      "files": [
+        "empty.css",
+        "empty.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "field": {
+      "type": "ui",
+      "files": [
+        "field.css",
+        "field.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "form": {
+      "type": "ui",
+      "files": [
+        "form.css",
+        "form.jsx"
+      ],
+      "requires": [
+        "field",
+        "label"
+      ],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "form-fields": {
+      "type": "ui",
+      "files": [
+        "form-fields.css",
+        "form-fields.jsx"
+      ],
+      "requires": [
+        "checkbox",
+        "form",
+        "input",
+        "label",
+        "radio-group",
+        "select",
+        "switch",
+        "textarea"
+      ],
+      "lib": [
+        "cn.js",
+        "use-form.js"
+      ]
+    },
+    "format": {
+      "type": "ui",
+      "files": [
+        "format.css",
+        "format.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "direction.jsx",
+        "format.js"
+      ]
+    },
+    "hover-card": {
+      "type": "ui",
+      "files": [
+        "hover-card.css",
+        "hover-card.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-anchor-position.js",
+        "use-controllable-state.js"
+      ]
+    },
+    "input": {
+      "type": "ui",
+      "files": [
+        "input.css",
+        "input.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "input-group": {
+      "type": "ui",
+      "files": [
+        "input-group.css",
+        "input-group.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "input-otp": {
+      "type": "ui",
+      "files": [
+        "input-otp.css",
+        "input-otp.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-controllable-state.js"
+      ]
+    },
+    "item": {
+      "type": "ui",
+      "files": [
+        "item.css",
+        "item.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "kbd": {
+      "type": "ui",
+      "files": [
+        "kbd.css",
+        "kbd.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "label": {
+      "type": "ui",
+      "files": [
+        "label.css",
+        "label.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "marker": {
+      "type": "ui",
+      "files": [
+        "marker.css",
+        "marker.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "menubar": {
+      "type": "ui",
+      "files": [
+        "menubar.css",
+        "menubar.jsx"
+      ],
+      "requires": [
+        "dropdown-menu"
+      ],
+      "lib": [
+        "cn.js",
+        "direction.jsx",
+        "use-controllable-state.js",
+        "use-roving-focus.js"
+      ]
+    },
+    "message": {
+      "type": "ui",
+      "files": [
+        "message.css",
+        "message.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "message-scroller": {
+      "type": "ui",
+      "files": [
+        "message-scroller.css",
+        "message-scroller.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "native-select": {
+      "type": "ui",
+      "files": [
+        "native-select.css",
+        "native-select.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "navigation-menu": {
+      "type": "ui",
+      "files": [
+        "navigation-menu.css",
+        "navigation-menu.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "direction.jsx",
+        "use-anchor-position.js",
+        "use-controllable-state.js"
+      ]
+    },
+    "pagination": {
+      "type": "ui",
+      "files": [
+        "pagination.css",
+        "pagination.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "popover": {
+      "type": "ui",
+      "files": [
+        "popover.css",
+        "popover.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-anchor-position.js",
+        "use-controllable-state.js"
+      ]
+    },
+    "progress": {
+      "type": "ui",
+      "files": [
+        "progress.css",
+        "progress.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "radio-group": {
+      "type": "ui",
+      "files": [
+        "radio-group.css",
+        "radio-group.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-controllable-state.js",
+        "use-roving-focus.js"
+      ]
+    },
+    "resizable": {
+      "type": "ui",
+      "files": [
+        "resizable.css",
+        "resizable.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "direction.jsx"
+      ]
+    },
+    "scroll-area": {
+      "type": "ui",
+      "files": [
+        "scroll-area.css",
+        "scroll-area.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "direction.jsx"
+      ]
+    },
+    "select": {
+      "type": "ui",
+      "files": [
+        "select.css",
+        "select.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-anchor-position.js",
+        "use-controllable-state.js"
+      ]
+    },
+    "separator": {
+      "type": "ui",
+      "files": [
+        "separator.css",
+        "separator.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "sheet": {
+      "type": "ui",
+      "files": [
+        "sheet.css",
+        "sheet.jsx"
+      ],
+      "requires": [
+        "dialog"
+      ],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "sidebar": {
+      "type": "ui",
+      "files": [
+        "sidebar.css",
+        "sidebar.jsx"
+      ],
+      "requires": [
+        "input",
+        "separator",
+        "sheet",
+        "skeleton",
+        "tooltip"
+      ],
+      "lib": [
+        "cn.js",
+        "use-controllable-state.js"
+      ]
+    },
+    "skeleton": {
+      "type": "ui",
+      "files": [
+        "skeleton.css",
+        "skeleton.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "slider": {
+      "type": "ui",
+      "files": [
+        "slider.css",
+        "slider.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "direction.jsx",
+        "use-controllable-state.js"
+      ]
+    },
+    "spinner": {
+      "type": "ui",
+      "files": [
+        "spinner.css",
+        "spinner.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "status-dot": {
+      "type": "ui",
+      "files": [
+        "status-dot.css",
+        "status-dot.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "switch": {
+      "type": "ui",
+      "files": [
+        "switch.css",
+        "switch.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-controllable-state.js"
+      ]
+    },
+    "table": {
+      "type": "ui",
+      "files": [
+        "table.css",
+        "table.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "tabs": {
+      "type": "ui",
+      "files": [
+        "tabs.css",
+        "tabs.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-controllable-state.js",
+        "use-roving-focus.js"
+      ]
+    },
+    "textarea": {
+      "type": "ui",
+      "files": [
+        "textarea.css",
+        "textarea.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
+    "time-picker": {
+      "type": "ui",
+      "files": [
+        "time-picker.css",
+        "time-picker.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-controllable-state.js"
+      ]
+    },
+    "toast": {
+      "type": "ui",
+      "files": [
+        "toast.css",
+        "toast.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-swipe.js"
+      ]
+    },
+    "toggle": {
+      "type": "ui",
+      "files": [
+        "toggle.css",
+        "toggle.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-controllable-state.js"
+      ]
+    },
+    "toggle-group": {
+      "type": "ui",
+      "files": [
+        "toggle-group.css",
+        "toggle-group.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-controllable-state.js",
+        "use-roving-focus.js"
+      ]
+    },
+    "tooltip": {
+      "type": "ui",
+      "files": [
+        "tooltip.css",
+        "tooltip.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-anchor-position.js",
+        "use-controllable-state.js"
+      ]
+    },
+    "typography": {
+      "type": "ui",
+      "files": [
+        "typography.css"
+      ],
+      "requires": [],
+      "lib": []
+    }
+  },
+  "lib": {
+    "anchor-position.js": [],
+    "cn.js": [],
+    "command-score.js": [],
+    "compose-refs.js": [],
+    "direction.jsx": [],
+    "format.js": [],
+    "parse-date.js": [],
+    "portal.jsx": [],
+    "schema.js": [],
+    "scroll-lock.js": [],
+    "use-anchor-position.js": [
+      "anchor-position.js"
+    ],
+    "use-controllable-state.js": [],
+    "use-data-table.js": [],
+    "use-dismissable-layer.js": [],
+    "use-focus-trap.js": [],
+    "use-form.js": [],
+    "use-highlight.js": [],
+    "use-presence.js": [],
+    "use-return-focus.js": [],
+    "use-roving-focus.js": [],
+    "use-safe-triangle.js": [],
+    "use-swipe.js": [],
+    "view-transition.js": []
+  }
+}

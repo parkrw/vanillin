@@ -103,10 +103,42 @@ export function deriveRequires(componentDir) {
 }
 
 /**
+ * Derive sorted unique array of lib/ files this component imports directly.
+ * Names are bare filenames ("cn.js"), matching the flat lib/ layout.
+ * Not recorded in the manifest (lib/ is substrate covered by kitVersion) —
+ * the registry needs it so `van add` can copy a component's primitives.
+ */
+export function deriveLibs(componentDir) {
+  const libs = new Set()
+  for (const file of listRegularFiles(componentDir)) {
+    const ext = file.split(".").pop()
+    if (ext !== "jsx" && ext !== "js" && ext !== "mjs") continue
+    const content = readFileSync(join(componentDir, file), "utf8").replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, "")
+    const re = /\bfrom\s+["'](?:\.\.\/)+lib\/([^/"']+)["']/g
+    let m
+    while ((m = re.exec(content)) !== null) libs.add(m[1])
+  }
+  return [...libs].sort()
+}
+
+/**
+ * Derive sorted unique array of sibling lib/ files a lib/ file imports.
+ * Flat layout, so only `./name.js` edges exist.
+ */
+export function deriveLibDeps(libFile) {
+  const content = readFileSync(libFile, "utf8").replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, "")
+  const deps = new Set()
+  const re = /\bfrom\s+["']\.\/([^/"']+)["']/g
+  let m
+  while ((m = re.exec(content)) !== null) deps.add(m[1])
+  return [...deps].sort()
+}
+
+/**
  * List regular files in a component dir (recursively), excluding .van.json.
  * Paths are relative to componentDir with forward slashes.
  */
-function listRegularFiles(dir, prefix = "") {
+export function listRegularFiles(dir, prefix = "") {
   const results = []
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const rel = prefix ? `${prefix}/${entry.name}` : entry.name

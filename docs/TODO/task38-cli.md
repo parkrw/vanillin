@@ -155,7 +155,7 @@ variants. Deferred to their own tasks: **66** generated `van.schema.json` +
 Seven commits. The remote is `parkrw/vanillin`, not `progrums/vanillin` — the
 prose above predates the rename, `git remote -v` is authoritative.
 
-- [ ] 1. Registry generator — walk `ui/`, emit `registry.json` (slug → `files`,
+- [x] 1. Registry generator — walk `ui/`, emit `registry.json` (slug → `files`,
   `requires`, `lib`, `type`). **Reuses `deriveRequires` from
   `scripts/manifest.mjs`** — the graph must not get a second parser (see the
   registry/manifest agreement rule above); adds `deriveLibs`, exports
