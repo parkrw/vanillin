@@ -2,53 +2,82 @@
 
 ## Where things stand
 
-On **`feat/cli`**, 10 commits, nothing uncommitted, **no PR yet**. Task 38 (CLI)
-is complete: suite **669/669**, `npm run build` clean.
+On **`main`**, clean tree, **nothing in flight** — no feature branch, no open PR.
+Tasks 38 (CLI) and 39 (container-queries) are both merged; suite **679/679**
+(verified on `main` 2026-07-28, no flakes that run), `npm run build` clean.
 
 `docs/TODO/README.md` carries the durable plan and the settled order; per-task
-decisions go in `docs/TODO/LOG.md` (task 38's entry is the newest). Read those
+decisions go in `docs/TODO/LOG.md` (task 39's entry is the newest). Read those
 two before planning anything.
+
+Also landed since 39: **MIT `LICENSE` and a GitHub Pages deploy**
+(`.github/workflows/deploy.yml`) — every push to `main` runs `npm ci && npm run
+build` and publishes `site/dist`. **It does not run the tests**, so a red suite
+still deploys.
+
+The five absorbed branches are **deleted** — remote and local tracking refs both
+gone. `origin/main` is the only remote branch.
 
 ### Waiting on the user
 
-```sh
-git push -u origin feat/cli
-gh pr create --title "feat(cli): van init/add/diff/build/list" --base main
-```
-
-Then two verify items that need the branch pushed: `npx
-github:parkrw/vanillin#feat/cli init` from a scratch Vite app, and rendering the
-copied components. A bare `git clone` + `node <clone>/bin/van.mjs` was verified
-locally, which is what `npx github:` reduces to.
-
-Also still pending: delete five absorbed remote branches — `feat/form-bindings`,
-`feat/generated-defaults`, `feat/composition-pass`, `feat/brand-multicolor`,
-`feat/component-contracts`. Judge absorption with `git cherry main <branch>`;
-ancestry checks lie after a cherry-pick, and deleting needs `-D`.
+One verify item is still open: `npx github:parkrw/vanillin init` from a scratch
+Vite app, then rendering the copied components. It targets **`main`** now (task
+38's branch is merged). A bare `git clone` + `node <clone>/bin/van.mjs` was
+verified locally, which is what `npx github:` reduces to.
 
 **Merges are the user's to run.** `git merge` / `git rebase` / `git reset --hard`
 are denied in settings. You cherry-pick; they fast-forward.
 
 ## Next step
 
-**Task 39 (container-queries), alone.** It rewrites every component's CSS, so it
-cannot share a batch with component work, and both manifests and `registry.json`
-need regenerating after it (`npm run contracts`). First step is a live
-browser-support check — degrade to progressive enhancement, never a hard
-requirement.
+**Task 68 (bug batch).** It was gated on 39 and 39 has landed, so it is
+unblocked. **There is no `docs/TODO/task68-bug-batch.md` yet** — detail it first
+from the `[^68]` footnote in `docs/TODO/README.md`, which lists the items:
 
-Order after that: 68 (bug batch) → 65 → 66 → 67 → 69 → 70 → 30 → console kit.
-Rationale is in `docs/TODO/README.md`; don't re-derive it.
+- **E1 light/dark toggle transition glitch — high priority**
+- C2 `useFormContext()` throws and `FormContext` is unexported
+  (`lib/use-form.js:785-794`)
+- C3 stray `htmlFor` on radiogroup labels (`ui/form/form.jsx:119`)
+- C4 data-table column resize overlaps row content
+- C5 `ui/attachment` group scroll drops the outer edge borders
+- D7 switch on the Direction page, D8 empty-state alignment
+- E2 `ui/collapsible` end-of-animation glitch
+- H1 assertions that hold for the wrong value
+
+`docs/BUGS.md` says to **re-check every line number before acting** — they drift.
 
 **`docs/BUGS.md` asks to be surfaced at the start of any session touching bugs:**
 the user's docs-site sweep stopped at `form-fields`, so everything alphabetically
-after it is unswept. Task 68 covers *known* bugs only.
+after it is unswept. Task 68 covers *known* bugs only, and expects to grow or
+gain a sibling once the sweep finishes.
 
-## What task 38 shipped
+Order after that: 65 → 66 → 67 → 69 → 70 → 30 → console kit. Rationale is in
+`docs/TODO/README.md`; don't re-derive it.
 
-`bin/van.mjs` — `init` / `add` / `diff` / `build` / `list`, plus `--cwd`,
-`--dry-run`, `--overwrite` (`--force` alias), `--yes`, `--silent`, `--no-color`.
-Node stdlib only.
+## What 38 and 39 shipped
+
+**Task 39 (container-queries)** touched six components, not all of them — the
+"it rewrites every component's CSS" premise the task ran alone on was wrong.
+
+- **Stacked table mode lives in `ui/table`** (`.table--stack`), not
+  `ui/data-table`, which renders no table at all. `data-table.css` carries only
+  pinning and the resize handle standing down.
+- **`ui/table` now sets explicit ARIA roles** — changing `display` strips table
+  semantics. Spread *before* `{...props}`. The header row is visually hidden,
+  never `display: none`; the `::before` label from consumer-set `data-label` is
+  decoration for sighted users only.
+- **Dialog reflow changed behaviour on purpose**: a 640px viewport media query
+  became a **24rem container query**, so ~416–640px viewports get the roomy row
+  layout and side sheets get the narrow one at any viewport. 24rem over 28rem
+  for slack against density growth. Sheet headers stay start-aligned.
+- **`ui/sidebar` deliberately gets no container** — it swaps to a Sheet via
+  `matchMedia` in JS; a container query can't drive a render decision and would
+  only desynchronise from `isMobile`.
+- Both manifests and `registry.json` were regenerated (`npm run contracts`).
+
+**Task 38 (CLI)** — `bin/van.mjs`: `init` / `add` / `diff` / `build` / `list`,
+plus `--cwd`, `--dry-run`, `--overwrite` (`--force` alias), `--yes`, `--silent`,
+`--no-color`. Node stdlib only.
 
 - **`registry.json` is generated** by `scripts/build-registry.mjs` from the same
   `deriveRequires` the manifests use, so the upstream graph and the per-copy
@@ -171,7 +200,11 @@ Node stdlib only.
   empty diff reads as "no differences" — it fails silently and reassuringly. Use
   `git diff -z --name-only … | xargs -0 git diff …`.
 - `git merge-base` trips the `git merge` deny rule — use `git diff a...b`.
-- `site/dist/` is stale untracked build output; it pollutes `grep -r`.
+- **`git branch -a` lists branches deleted on the remote** until `git remote
+  prune origin` — another failure that reads reassuringly. Confirm against
+  GitHub before reporting branch state.
+- `site/dist/` is stale untracked build output; it pollutes `grep -r`. The Pages
+  workflow builds its own copy in CI.
 - Visual QA: `npm run dev` (:5173); dark mode = click `.pg-theme-toggle`. Hash
   routes are `#<slug>`.
 
