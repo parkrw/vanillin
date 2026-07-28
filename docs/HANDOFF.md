@@ -2,13 +2,132 @@
 
 ## Where things stand
 
-On **`main`**, clean tree, **nothing in flight** — no feature branch, no open PR.
-Tasks 38 (CLI) and 39 (container-queries) are both merged; suite **679/679**
-(verified on `main` 2026-07-28, no flakes that run), `npm run build` clean.
+Two branches in flight, **no PR on either**, both off `main` (679/679 there).
+
+**`fix/bug-batch`** — 2 commits. `e13161c` refreshed this file and detailed task
+68; `d8183de` is E1's first half. Task 68's other eight items are untouched.
+
+**`feat/mode-toggle`** — branched off `fix/bug-batch`, so **merge that first**.
+**All of it is uncommitted** (see below). New `ui/mode-toggle` + a demo page +
+`lib/use-color-scheme.js`, and the nav toggle now *is* the component (pays down
+BUGS A2 for one component). `mode-toggle` 7/7 in isolation, `npm run build`
+clean.
+
+**`npm test` exits 0 even with failures** — the runner isolates per-file
+failures, so the `N/M` count is the only signal. Never read exit 0 as green, and
+never pipe the run through `tail` (it discards the `FAIL` lines): use
+`npm test > <file> 2>&1` then grep `^FAIL`.
+
+Two runs on this branch: 682/686, then 685/686. The difference was the three
+known flakes (two `drawer` swipe cases, `message-scroller: button click returns
+to bottom` — full-suite order only, 14/14 in isolation). The one real failure was
+`status-dot: badge: axe contrast check on all variants (light mode)`.
+
+**Cause, and a landmine worth understanding:** seeding the site from
+`systemPrefersDark()` made the initial theme depend on the *host machine's* OS
+setting, because `resetPage()` in `tests/run.mjs` reset `colorScheme` to `null`
+(= inherit the host's). On a dark-mode machine the whole suite silently tested
+the wrong theme. `resetPage()` now pins `colorScheme: "light"`; suites wanting
+dark emulate it or click the toggle. **A verification run on this repo is only
+meaningful with that pin in place.**
+
+### ⚠️ One failure open — finish this first
+
+After the pin, the suite is **685/686** with a single failure:
+
+```
+FAIL  mode-toggle: the sweep actually paints partway through
+      — the corner ends up a different colour expected false, got true
+```
+
+`start.equals(end)` is true: the sampled corner never changed colour. The same
+file is **7/7 in isolation**, and it passed in full-suite order *before* the pin.
+The pin reversed the sweep's direction (the run used to start dark, from the host
+preference; it now starts light), so **the test depends on the starting theme in
+a way it should not** — the defect is almost certainly in the test, not the
+sweep, which was verified by eye on real frames.
+
+Where to look, cheapest first:
+
+1. Print the theme at the top of that case. If the page is already dark when it
+   starts, the sweep goes dark→light and the corner it samples (`x: 820, y: 520`,
+   60×60 on `#mode-toggle`) may be near-identical in both themes — pick a region
+   with real contrast, or assert against a computed background colour instead of
+   raw PNG bytes.
+2. Make the case theme-agnostic: read the current scheme, and assert the corner
+   changes *relative to it*, rather than assuming light→dark.
+3. Check the viewport. The clip is hard-coded; if the runner's viewport is
+   smaller than 880×580 the clip clamps and may sample a constant region.
+
+**Do not weaken it to a keyframe check.** The whole point of this case is that
+the previous `mask-image` implementation produced a flawless animation object and
+painted nothing; only a pixel assertion caught it.
+
+Uncommitted on `feat/mode-toggle`:
+
+```
+M  lib/view-transition.js  registry.json  site/app.jsx
+M  site/registry.js  site/site.css  tests/view-transitions.test.mjs
+?? lib/use-color-scheme.js  site/color-scheme.js
+?? site/pages/mode-toggle.jsx  tests/mode-toggle.test.mjs  ui/mode-toggle/
+```
+
+`stash@{0}: On main: whoops` predates this session — not ours, left alone.
 
 `docs/TODO/README.md` carries the durable plan and the settled order; per-task
 decisions go in `docs/TODO/LOG.md` (task 39's entry is the newest). Read those
-two before planning anything.
+two before planning anything. **Neither branch has a LOG entry yet** — task 68's
+and mode-toggle's decisions are only in this file.
+
+### mode-toggle: the design, and why
+
+The user asked for a component where "an icon or a boolean (switch, checkbox)"
+could drive the swap. **That axis was argued down and they agreed:** one
+component covering `<button aria-pressed>`, `role="switch"` and
+`<input type=checkbox>` must import `ui/button` + `ui/switch` + `ui/checkbox`,
+so every consumer copying one file gets three components and renders one. Shape
+that landed instead:
+
+- **`lib/use-color-scheme.js`** — `useControllableState` + the transition.
+  **Owns no persistence and no DOM**: never writes `.dark`, never touches
+  localStorage. An app on `next-themes` already does all three and a hook
+  repeating them would fight it. Also exports `systemPrefersDark()`.
+- **`ui/mode-toggle/`** — one rendering, an icon button. Sun/crescent glyph.
+- **A switch or checkbox is a two-line consumer composition** over the hook,
+  shown on the demo page. Do not add a `variant` prop for it.
+- **`site/color-scheme.js`** is site plumbing, not kit API — the one place the
+  docs site keeps the boolean, because the kit hook deliberately won't.
+
+### E1 (light/dark sweep) — three real defects, all fixed
+
+1. **Duration was silently pinned to a fallback.** `--motion-medium` is
+   `calc(200ms * var(--motion-scale))` and is **not** `@property`-registered, so
+   `getPropertyValue` returns that literal string and `parseFloat` gives NaN.
+   The old code fell through to 200ms while the site runs `--motion-scale: 2.5`
+   (i.e. everything else was 500ms). Now resolved by normalising through a real
+   CSS property — the trick already in Gotchas below.
+2. **A second clock raced the first.** `site.css` killed `animation` on
+   `::view-transition-old/new(root)` but not on `::view-transition-group(root)`,
+   which kept its 250ms UA default and outlasted the reveal. That is the
+   mid-sweep stutter. All three are `animation: none` now.
+3. **Two sources of truth for `.dark`** — `site/app.jsx` and the demo page each
+   held `useState` and both wrote the class, so whichever rendered last won and
+   clicking one then the other did nothing. Fixed by `site/color-scheme.js`.
+
+**`mask-image` does not paint on view-transition pseudo-elements in Chrome.**
+Verified with a side-by-side probe: `clip-path` clips visibly, an equivalent
+`mask-image` shows nothing at all — the snapshot vanishes. A feathered edge is
+therefore **not buildable** this way; do not retry it. The reveal is
+`clip-path: ellipse()` (1.6× vertical bias, the "sunrise") plus an opacity ramp
+from `0.15`, which blends the swept region with the outgoing theme so it passes
+through grey. Tune `SUNRISE_BIAS` / `SUNRISE_DIM` / `SUNRISE_DURATION` in
+`lib/view-transition.js`.
+
+**The lesson worth keeping:** the first version of these tests asserted the
+*shape of the animation object* and passed while nothing rendered. `mode-toggle`
+now samples a viewport corner at start / mid-sweep / end and requires all three
+to differ. **Motion assertions must be about pixels** — this is exactly the H1
+defect class task 68 is meant to sweep.
 
 Also landed since 39: **MIT `LICENSE` and a GitHub Pages deploy**
 (`.github/workflows/deploy.yml`) — every push to `main` runs `npm ci && npm run
@@ -30,19 +149,29 @@ are denied in settings. You cherry-pick; they fast-forward.
 
 ## Next step
 
-**Task 68 (bug batch).** It was gated on 39 and 39 has landed, so it is
-unblocked. **There is no `docs/TODO/task68-bug-batch.md` yet** — detail it first
-from the `[^68]` footnote in `docs/TODO/README.md`, which lists the items:
+**Fix the one open failure above (`mode-toggle: the sweep actually paints partway
+through`), then land `feat/mode-toggle`**: commit it as one unit and push both
+branches. It is all uncommitted and nothing else can proceed cleanly over it. The nav toggle is now an icon button rather than the old `dark mode` text
+button — an intentional visual change to the docs site, worth flagging in the PR.
 
-- **E1 light/dark toggle transition glitch — high priority**
-- C2 `useFormContext()` throws and `FormContext` is unexported
-  (`lib/use-form.js:785-794`)
-- C3 stray `htmlFor` on radiogroup labels (`ui/form/form.jsx:119`)
-- C4 data-table column resize overlaps row content
-- C5 `ui/attachment` group scroll drops the outer edge borders
-- D7 switch on the Direction page, D8 empty-state alignment
-- E2 `ui/collapsible` end-of-animation glitch
-- H1 assertions that hold for the wrong value
+Then **task 68**, from `docs/TODO/task68-bug-batch.md` (written this session, 9
+sub-tasks). E1 is done bar its LOG entry; **C2 is next**:
+
+- ~~E1 light/dark sweep~~ — done, `d8183de` + the mode-toggle work
+- **C2 `useFormContext()` throws and `FormContext` is unexported** —
+  `lib/use-form.js:791-794`; the `try/catch` workaround is at
+  `ui/form-fields/form-fields.jsx:36-38`. Add `useFormContextSafe()`.
+- C3 stray `htmlFor` on radiogroup labels — `ui/form/form.jsx:119`; workaround
+  at `ui/form-fields/form-fields.jsx:301,328`
+- **D7 is not what BUGS.md thinks.** The Direction page *does* import
+  `ui/switch`, and it is not the D1/D2 contrast family: `switch.css:37,42` moves
+  the thumb with physical `translateX`, so a checked switch in RTL travels out
+  of its track. It hits **every RTL consumer**. Use `:dir(rtl)`, as
+  `ui/data-table/data-table.css:295,389-393` already does.
+- C5 root cause found: the `mask-image` at `ui/attachment/attachment.css:198-206`
+  fades to `transparent` at both edges, which is what eats the first and last
+  cards' outer border. Keep the commented Chrome compositing workaround.
+- C4 resize overlap, D8 empty-state alignment, E2 collapsible tail, H1 sweep
 
 `docs/BUGS.md` says to **re-check every line number before acting** — they drift.
 

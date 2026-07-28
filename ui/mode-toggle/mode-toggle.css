@@ -1,0 +1,83 @@
+.mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  width: 2.25rem;
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: var(--foreground);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease);
+}
+
+.mode-toggle:hover {
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.mode-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+.mode-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ── Icon ─────────────────────────────────────────────────────────── */
+
+.mode-toggle-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* The whole glyph contracts a little on the way to dark, so the sun reads as
+   the same light source dimming rather than a swapped picture. */
+.mode-toggle-orb {
+  transform-origin: center;
+  transition: transform var(--motion-medium) var(--motion-ease);
+}
+
+.mode-toggle[data-state="dark"] .mode-toggle-orb {
+  transform: scale(1.2);
+}
+
+/* Rays retract into the orb, staggered from the vertical pair outwards. */
+.mode-toggle-rays {
+  transform-origin: center;
+  transition:
+    transform var(--motion-medium) var(--motion-ease),
+    opacity var(--motion-fast) var(--motion-ease);
+}
+
+.mode-toggle[data-state="dark"] .mode-toggle-rays {
+  transform: scale(0.4) rotate(-45deg);
+  opacity: 0;
+}
+
+/* Parked concentric with the orb — a mask circle exactly over it would hide
+   the glyph, so it sits offset far enough to clear the stroke entirely. */
+.mode-toggle-crescent {
+  transform: translate(9px, -9px);
+  transition: transform var(--motion-medium) var(--motion-ease);
+}
+
+.mode-toggle[data-state="dark"] .mode-toggle-crescent {
+  transform: translate(4px, -4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mode-toggle,
+  .mode-toggle-orb,
+  .mode-toggle-rays,
+  .mode-toggle-crescent {
+    transition: none;
+  }
+}

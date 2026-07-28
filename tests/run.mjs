@@ -91,7 +91,12 @@ try {
   // injected tags and resets modality; clearing emulateMedia covers the rest.
   const resetPage = async () => {
     await page.goto("about:blank")
-    await page.emulateMedia({ colorScheme: null, forcedColors: null, reducedMotion: null })
+    // colorScheme is pinned, not reset to null (= "inherit the host's"): the
+    // site seeds its initial theme from prefers-color-scheme, so leaving this
+    // to the machine makes every suite pass or fail depending on whether the
+    // developer runs their OS in dark mode. Suites that want dark emulate it
+    // or click the toggle themselves.
+    await page.emulateMedia({ colorScheme: "light", forcedColors: null, reducedMotion: null })
   }
 
   for (const file of files) {
