@@ -142,6 +142,11 @@
 
 /* View Transitions — theme toggle circular wipe */
 
+/* The group keeps its own UA animation unless told otherwise, and at the UA
+   default of 250ms it outlasts our --motion-medium reveal — the sweep finishes,
+   the group carries on, and the mismatch reads as a stutter near the end. Kill
+   all three so the JS reveal is the only clock. */
+::view-transition-group(root),
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
