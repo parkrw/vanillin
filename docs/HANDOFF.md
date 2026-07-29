@@ -88,11 +88,12 @@ component covering `<button aria-pressed>`, `role="switch"` and
 so every consumer copying one file gets three components and renders one. Shape
 that landed instead:
 
-- **`lib/use-color-scheme.js`** — `useControllableState` + the transition.
+- **`lib/use-color-scheme.js`** — `useControllableState`, nothing more.
   **Owns no persistence and no DOM**: never writes `.dark`, never touches
   localStorage. An app on `next-themes` already does all three and a hook
   repeating them would fight it. Also exports `systemPrefersDark()`.
-- **`ui/mode-toggle/`** — one rendering, an icon button. Sun/crescent glyph.
+- **`ui/mode-toggle/`** — one rendering, an icon button. A table lamp that rocks
+  on its foot when clicked, with a cone of light that goes out.
 - **A switch or checkbox is a two-line consumer composition** over the hook,
   shown on the demo page. Do not add a `variant` prop for it.
 - **`site/color-scheme.js`** is site plumbing, not kit API — the one place the
@@ -114,20 +115,46 @@ that landed instead:
    held `useState` and both wrote the class, so whichever rendered last won and
    clicking one then the other did nothing. Fixed by `site/color-scheme.js`.
 
-**`mask-image` does not paint on view-transition pseudo-elements in Chrome.**
-Verified with a side-by-side probe: `clip-path` clips visibly, an equivalent
-`mask-image` shows nothing at all — the snapshot vanishes. A feathered edge is
-therefore **not buildable** this way; do not retry it. The reveal is
-`clip-path: ellipse()` (1.6× vertical bias, the "sunrise") plus an opacity ramp
-from `0.15`, which blends the swept region with the outgoing theme so it passes
-through grey. Tune `SUNRISE_BIAS` / `SUNRISE_DIM` / `SUNRISE_DURATION` in
-`lib/view-transition.js`.
+### The page-wide sweep is gone. Do not bring it back casually.
+
+**The mode toggle now swaps the scheme instantly** and keeps its feedback inside
+the button. The `clipPath` option survives in `lib/view-transition.js` and is
+demonstrated on the View Transitions page (`.pg-vt-wipe`), where a wipe is the
+subject rather than a side effect.
+
+Four versions were tried on the toggle, in order, each fixing the last one's
+complaint and drawing a new one:
+
+1. **Feathered `mask-image`.** Never rendered. `mask-image` is **ignored on
+   view-transition pseudo-elements in Chrome** — not "the snapshot vanishes", as
+   an earlier note here claimed. Probed twice, animated through WAAPI *and* as a
+   plain static CSS rule: stretch the sweep to 5000ms with `--motion-scale: 25`,
+   sample a region beside the origin against one 900px away, and both flip to the
+   new scheme together inside the first few hundred ms. The reveal is not
+   softened, it is skipped, and the swap looks instant. **A feathered edge is not
+   buildable this way.**
+2. **`ellipse()` + opacity ramp ("sunrise"), 2× duration.** Reverted on sight:
+   1000ms read as sluggish and the ramp through grey as a glitch.
+3. **Hard circle, `--motion-ease`.** That token is a quintic ease-out — it throws
+   the edge most of the way across in the first third, then crawls, then the last
+   sliver jumps as the snapshot is discarded. Quick, slow, jump. Visible on a
+   120Hz laptop, invisible on a 60Hz external.
+4. **Hard circle, `linear`, +12% overshoot.** Fixed the crawl and the end jump,
+   and then read as *accelerating* — a circle's area grows as r², so a constant
+   edge speed means an accelerating amount of screen changing. `ease-out` tracks
+   the √t that keeps the area even, to within 0.04 the whole way.
+
+Even at (4) the same easing could not be right on a 14" 120Hz laptop and a 27"
+60Hz display at once. **That is the actual finding: a viewport-sized reveal has a
+viewport-sized feel, and there is no single timing for every display.** Feedback
+whose size is fixed — inside the control — does not have this problem.
 
 **The lesson worth keeping:** the first version of these tests asserted the
-*shape of the animation object* and passed while nothing rendered. `mode-toggle`
-now samples a viewport corner at start / mid-sweep / end and requires all three
-to differ. **Motion assertions must be about pixels** — this is exactly the H1
-defect class task 68 is meant to sweep.
+*shape of the animation object* and passed while nothing rendered. Every motion
+assertion in `tests/mode-toggle.test.mjs` is now about rendered output — the
+swing is read back as a computed rotation angle at sampled instants, the light as
+a screenshot diff. **Motion assertions must be about pixels** — this is exactly
+the H1 defect class task 68 is meant to sweep.
 
 Also landed since 39: **MIT `LICENSE` and a GitHub Pages deploy**
 (`.github/workflows/deploy.yml`) — every push to `main` runs `npm ci && npm run

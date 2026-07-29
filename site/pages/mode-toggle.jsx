@@ -25,10 +25,10 @@ export default function ModeTogglePage() {
       <section className="pg-section">
         <h3>Default</h3>
         <p>
-          An icon button. The sun contracts and its rays retract as the crescent
-          slides in, while the new scheme is revealed by an ellipse rising out of
-          the button — light through grey to dark, and the reverse on the way
-          back.
+          An icon button. A pendant lamp swings on its cord as if the chain had
+          been pulled, and the light under it goes out. The scheme itself swaps
+          instantly — the feedback is inside the button, where its size is fixed
+          and it looks the same on every display.
         </p>
         <div className="pg-row">
           <ModeToggle isDark={isDark} onIsDarkChange={setSiteDark} />
@@ -72,7 +72,7 @@ export default function ModeTogglePage() {
       <section className="pg-section">
         <h3>Applying the scheme is yours</h3>
         <p>
-          The hook tracks a boolean and drives the transition. It never writes{" "}
+          The hook tracks a boolean and nothing else. It never writes{" "}
           <code>.dark</code>, touches <code>localStorage</code>, or reads a
           cookie — an app on <code>next-themes</code> already does all three, and
           duplicating them here would fight it. Wire{" "}
@@ -89,15 +89,14 @@ const { theme, setTheme } = useTheme()
       </section>
 
       <section className="pg-section">
-        <h3>Without the sweep</h3>
+        <h3>Reduced motion</h3>
         <p>
-          <code>transition={"{false}"}</code> swaps instantly. Reduced-motion
-          users already get this path — <code>withViewTransition</code> falls
-          back to a plain update, so the scheme still changes.
+          The swing is CSS keyframes, so it tracks <code>--motion-scale</code>{" "}
+          and switches off under{" "}
+          <code>prefers-reduced-motion: reduce</code> without a branch in the
+          component. The scheme still changes; only the swing and the press
+          scale go.
         </p>
-        <div className="pg-row">
-          <ModeToggle isDark={isDark} onIsDarkChange={setSiteDark} transition={false} />
-        </div>
       </section>
     </>
   )

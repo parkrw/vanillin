@@ -4,7 +4,7 @@ export default async function run({ page, baseUrl, test, eq }) {
 
   // -- API-absent path: interactions still produce the right final DOM --
 
-  await test("theme toggle works without startViewTransition", async () => {
+  await test("wipe works without startViewTransition", async () => {
     // Stub out the API
     await page.evaluate(() => {
       window.__origSVT = document.startViewTransition
@@ -13,18 +13,18 @@ export default async function run({ page, baseUrl, test, eq }) {
     const wasDark = await page.evaluate(() =>
       document.documentElement.classList.contains("dark")
     )
-    await page.locator(".pg-theme-toggle").click()
+    await page.locator(".pg-vt-wipe").click()
     const isDark = await page.evaluate(() =>
       document.documentElement.classList.contains("dark")
     )
-    eq(isDark, !wasDark, "theme toggled without API")
+    eq(isDark, !wasDark, "scheme toggled without API")
     // Restore
     await page.evaluate(() => {
       document.startViewTransition = window.__origSVT
       delete window.__origSVT
     })
     // Toggle back to original state
-    await page.locator(".pg-theme-toggle").click()
+    await page.locator(".pg-vt-wipe").click()
     await page.waitForTimeout(100)
   })
 
@@ -49,7 +49,7 @@ export default async function run({ page, baseUrl, test, eq }) {
 
   // -- API-present path: startViewTransition is called --
 
-  await test("startViewTransition called on theme toggle", async () => {
+  await test("startViewTransition called on the wipe", async () => {
     await page.evaluate(() => {
       window.__vtCalls = 0
       window.__origSVT = document.startViewTransition
@@ -59,17 +59,17 @@ export default async function run({ page, baseUrl, test, eq }) {
         return { ready: Promise.resolve(), finished: Promise.resolve(), updateCallbackDone: Promise.resolve() }
       }
     })
-    await page.locator(".pg-theme-toggle").click()
+    await page.locator(".pg-vt-wipe").click()
     await page.waitForTimeout(100)
     const calls = await page.evaluate(() => window.__vtCalls)
-    eq(calls, 1, "called once for theme toggle")
+    eq(calls, 1, "called once for the wipe")
     await page.evaluate(() => {
       document.startViewTransition = window.__origSVT
       delete window.__origSVT
       delete window.__vtCalls
     })
     // Toggle back
-    await page.locator(".pg-theme-toggle").click()
+    await page.locator(".pg-vt-wipe").click()
     await page.waitForTimeout(100)
   })
 
@@ -112,12 +112,12 @@ export default async function run({ page, baseUrl, test, eq }) {
     const wasDark = await page.evaluate(() =>
       document.documentElement.classList.contains("dark")
     )
-    await page.locator(".pg-theme-toggle").click()
+    await page.locator(".pg-vt-wipe").click()
     await page.waitForTimeout(100)
     const isDark = await page.evaluate(() =>
       document.documentElement.classList.contains("dark")
     )
-    eq(isDark, !wasDark, "theme still toggled")
+    eq(isDark, !wasDark, "scheme still toggled")
     const calls = await page.evaluate(() => window.__vtCalls)
     eq(calls, 0, "startViewTransition not called under reduced motion")
     await page.evaluate(() => {
@@ -126,7 +126,7 @@ export default async function run({ page, baseUrl, test, eq }) {
       delete window.__vtCalls
     })
     // Toggle back and restore motion preference
-    await page.locator(".pg-theme-toggle").click()
+    await page.locator(".pg-vt-wipe").click()
     await page.waitForTimeout(100)
     await page.emulateMedia({ reducedMotion: "no-preference" })
   })

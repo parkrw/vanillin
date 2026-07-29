@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react"
 import { withViewTransition, setTransitionName } from "../../lib/view-transition.js"
+import { setSiteDark, useSiteDark } from "../color-scheme.js"
 
 const items = [
   { id: "alpha", label: "Alpha", detail: "First item. The shared-element transition morphs this card from its list position to the detail view." },
@@ -61,6 +62,35 @@ function ListDetailDemo() {
   )
 }
 
+/**
+ * The clip-path reveal, on its own button.
+ *
+ * The nav mode toggle used to do this and no longer does — a page-wide wipe
+ * could not be timed to feel right on a 14" 120Hz laptop and a 27" 60Hz display
+ * at the same time, so `ui/mode-toggle` swaps instantly and keeps its feedback
+ * local. The option itself is still worth having and still needs a live demo, so
+ * it lives here, where a wipe is the subject rather than a side effect.
+ */
+function WipeDemo() {
+  const isDark = useSiteDark()
+  return (
+    <button
+      className="pg-vt-wipe"
+      onClick={(event) => {
+        const rect = event.currentTarget.getBoundingClientRect()
+        withViewTransition(() => setSiteDark(!isDark), {
+          clipPath: {
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+          },
+        })
+      }}
+    >
+      Wipe to {isDark ? "light" : "dark"}
+    </button>
+  )
+}
+
 export default function ViewTransitionsPage() {
   return (
     <>
@@ -80,19 +110,31 @@ export default function ViewTransitionsPage() {
       </section>
 
       <section className="pg-section">
-        <h3>Theme toggle (circular wipe)</h3>
+        <h3>Circular wipe</h3>
         <p>
-          Click the <strong>dark mode / light mode</strong> button in the nav.
-          The theme change uses a <code>clip-path: circle()</code> expanding
-          from the button center on the <code>::view-transition-new(root)</code>{" "}
-          pseudo-element. The wipe radius is computed from the viewport
-          diagonal relative to the click point, so it covers the full viewport
-          regardless of scroll position.
+          <code>clip-path: circle()</code> expanding from the button centre on
+          the <code>::view-transition-new(root)</code> pseudo-element. The radius
+          is the distance to the farthest viewport corner, times a small
+          overshoot so the last sliver is covered before the clock runs out —
+          without it, discarding the snapshot finishes the job in one frame and
+          the sweep ends with a pop.
+        </p>
+        <div className="pg-row">
+          <WipeDemo />
+        </div>
+        <p>
+          A hard edge is the only option: Chrome ignores <code>mask-image</code>{" "}
+          on these pseudo-elements, so a feathered reveal is not merely
+          unsupported, it is silently skipped. Duration reads from{" "}
+          <code>--motion-medium</code>; the easing is <code>ease-out</code>{" "}
+          rather than <code>--motion-ease</code>, because a circle&apos;s area
+          grows as the square of its radius and anything faster reads as
+          accelerating into the corners. Under reduced motion the scheme switches
+          instantly.
         </p>
         <p>
-          Duration and easing read from <code>--motion-medium</code> and{" "}
-          <code>--motion-ease</code>. Under reduced motion the theme switches
-          instantly with no transition.
+          The nav mode toggle deliberately does <em>not</em> do this — see{" "}
+          <a href="#mode-toggle">Mode Toggle</a>.
         </p>
       </section>
 

@@ -879,8 +879,7 @@
       "anchor-position.js"
     ],
     "use-color-scheme.js": [
-      "use-controllable-state.js",
-      "view-transition.js"
+      "use-controllable-state.js"
     ],
     "use-controllable-state.js": [],
     "use-data-table.js": [],

@@ -4,7 +4,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "requires": [],
   "files": {
-    "mode-toggle.css": "sha256-hkxqMnz4q3/a9a6Zx+BgPbEAUNW53tGwRSZVFEWizBI=",
-    "mode-toggle.jsx": "sha256-Okq1phCnRdWUp/wL5Va8dDMhXG5UFtS3AKo/zjQlfDw="
+    "mode-toggle.css": "sha256-azm7Jwpk78YGhgK4/ftjGCM9HB9HSNGGPKHsVj/v/j8=",
+    "mode-toggle.jsx": "sha256-MCE8vfVXVkuvwV+OS9A1/AO8W5yaC9eNdNkCoXMWW/g="
   }
 }
