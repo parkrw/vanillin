@@ -1,5 +1,5 @@
 import { cn } from "../../lib/cn.js"
-import { Controller, useFormContext } from "../../lib/use-form.js"
+import { Controller, useFormContextSafe } from "../../lib/use-form.js"
 import {
   FormControl,
   FormDescription,
@@ -27,17 +27,10 @@ import { Textarea } from "../textarea/textarea.jsx"
 
 /**
  * Explicit `control` prop wins; otherwise fall back to the nearest
- * `<FormProvider>`. `useFormContext` throws when there is no provider, but
- * its `useContext` call has already run by the time it does — the hook order
- * is identical on both paths, so catching here is safe.
+ * `<FormProvider>`.
  */
 function useBoundControl(control, name) {
-  let context = null
-  try {
-    context = useFormContext()
-  } catch {
-    context = null
-  }
+  const context = useFormContextSafe()
   const resolved = control || context?.control
   if (!resolved) {
     throw new Error(

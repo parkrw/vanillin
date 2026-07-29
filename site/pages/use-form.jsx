@@ -4,6 +4,7 @@ import {
   Controller,
   FormProvider,
   useFormContext,
+  useFormContextSafe,
   useFieldArray,
 } from "../../lib/use-form.js"
 
@@ -264,6 +265,11 @@ function ContextChild() {
   )
 }
 
+function SafeContextProbe({ hook }) {
+  const ctx = useFormContextSafe()
+  return <span data-pg={hook}>{ctx === null ? "null" : "methods"}</span>
+}
+
 function ContextDemo() {
   const methods = useForm({ defaultValues: { email: "" } })
   const [result, setResult] = useState(null)
@@ -273,10 +279,15 @@ function ContextDemo() {
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit((d) => setResult(JSON.stringify(d)))}>
           <ContextChild />
+          <SafeContextProbe hook="uf-ctx-safe-inside" />
           <button type="submit" data-pg="uf-ctx-submit">Submit</button>
         </form>
       </FormProvider>
       {result && <pre data-pg="uf-ctx-result">{result}</pre>}
+      <p style={{ margin: 0 }}>
+        <code>useFormContextSafe</code> outside any provider:{" "}
+        <SafeContextProbe hook="uf-ctx-safe-outside" />
+      </p>
     </section>
   )
 }
@@ -552,7 +563,16 @@ function Docs() {
       </p>
       <p>
         Additional exports: <code>Controller</code>, <code>FormProvider</code>,{" "}
-        <code>useFormContext</code>, <code>useFieldArray</code>.
+        <code>useFormContext</code>, <code>useFormContextSafe</code>,{" "}
+        <code>useFieldArray</code>, and the <code>FormContext</code> object
+        itself.
+      </p>
+      <p>
+        <code>useFormContext</code> throws outside a provider;{" "}
+        <code>useFormContextSafe</code> returns <code>null</code>. Reach for the
+        safe one when a component accepts an explicit <code>control</code> prop
+        as an alternative to context — that is what <code>ui/form-fields</code>{" "}
+        does.
       </p>
       <p>
         Path helpers <code>getByPath</code>, <code>setByPath</code>,{" "}
