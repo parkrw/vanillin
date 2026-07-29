@@ -1,5 +1,5 @@
 # task68: bug-batch
-**Goal:** Clear the confirmed code bugs in `docs/BUGS.md` — the motion glitches,
+**Goal:** Clear the confirmed code bugs in `docs/ISSUES.md` — the motion glitches,
 four component defects, and the test-quality gap.
 **Branch:** `fix/bug-batch`  **Deps:** 39 (done — visual fixes land after the
 container-query CSS rewrite, not before)
@@ -12,22 +12,22 @@ affordance), G1–G3 (flakes), I1 (unverified).
 
 ## Sub-tasks
 
-- [ ] 1. **E1 — light/dark wipe, high priority.** Kill the mid-sweep hitch and
-      soften the leading edge to an opacity fade instead of a hard boundary,
-      both directions. `lib/view-transition.js:16-22` (`withViewTransition`,
-      `clipPath` from the button centre, `site/app.jsx:35-40`) and the
-      `::view-transition-old/new(root)` block at `site/site.css:145-158`, which
-      currently sets `animation: none` and leans on z-index alone. Suspect the
-      hitch is a paint boundary in the circular clip-path.
-      — test: `tests/view-transitions.test.mjs` still green (10 cases, incl.
-      the reduced-motion skip and the no-`startViewTransition` fallbacks);
-      motion QA under emulated `no-preference`.
-      files: `lib/view-transition.js`, `site/site.css`
+- [x] 1. **E1 — light/dark wipe, high priority.** Done: `d8183de` on this branch
+      plus `fe125ed` on `feat/mode-toggle`, where the sweep now lives.
+      Three real defects, none of them the suspected paint boundary: the
+      duration silently fell back to 200ms (unregistered `calc()` token vs
+      `parseFloat`) while the site runs `--motion-scale: 2.5`;
+      `::view-transition-group(root)` kept its 250ms UA animation and outlasted
+      the reveal; and `site/app.jsx` and the demo page each wrote `.dark`.
+      **"Soften the leading edge" was dropped as impossible** — Chrome does not
+      paint `mask-image` on view-transition pseudos at all, verified with a
+      side-by-side probe. The reveal is `clip-path: ellipse()` plus an opacity
+      ramp that carries the swept region through grey instead.
 
 - [ ] 2. **C2 — non-throwing form-context read.** `lib/use-form.js:791-794`
       throws with no safe alternative, forcing `try/catch` around a hook call in
       `ui/form-fields/form-fields.jsx:36-38`. Add `useFormContextSafe()`
-      returning `null` (export `FormContext` too, per BUGS) and drop the catch.
+      returning `null` (export `FormContext` too, per ISSUES) and drop the catch.
       — test: `useFormContextSafe` returns `null` outside a provider and the
       methods inside one; `useBoundControl` still works on both paths.
       files: `lib/use-form.js`, `ui/form-fields/form-fields.jsx`,
@@ -108,7 +108,7 @@ npm run build
 
 - Motion items (1, 6) QA'd under emulated `no-preference`, not just default.
 - E1 checked in both directions of the swap, light→dark and dark→light.
-- Each fixed item struck through in `docs/BUGS.md` with its commit sha, matching
+- Each fixed item struck through in `docs/ISSUES.md` with its commit sha, matching
   how C1 is recorded.
-- No new `docs/BUGS.md` items silently absorbed — if the sweep turns up
-  something new, it goes in BUGS.md, not this branch.
+- No new `docs/ISSUES.md` items silently absorbed — if the sweep turns up
+  something new, it goes in ISSUES.md, not this branch.

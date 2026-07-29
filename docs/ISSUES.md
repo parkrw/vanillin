@@ -1,4 +1,4 @@
-# BUGS
+# ISSUES
 
 Running list. Nothing here is scheduled; triage into `docs/TODO/` when a batch
 is planned. Items marked **verified** were checked against the tree at

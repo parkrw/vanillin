@@ -38,7 +38,7 @@ platform features upstream cannot adopt (Tailwind/Radix/React-18 bound).
 | 27           | sidebar             | ~L  | [x]    | all 24 exports real; mobile = sheet; Cmd+B; sidebar_state cookie                                  |
 | 28           | dark-mode-pass      | ~M  | [x]    | axe contrast sweep + screenshot QA; `--input-background` token                                    |
 | 29           | docs-shell          | ~M  | [x]    | grouped nav (Get started / Components); intro + install/theming stubs; empty hash → #introduction |
-| 30 (do last) | docs-content        | ~M  | [ ]    | **runs last**, after 70; consistency/gap pass + the docs half of `docs/BUGS.md` (A3, B1–B6)       |
+| 30 (do last) | docs-content        | ~M  | [ ]    | **runs last**, after 70; consistency/gap pass + the docs half of `docs/ISSUES.md` (A3, B1–B6)       |
 
 ## Phase 2 — config, form, parity, platform
 
@@ -57,7 +57,7 @@ Tasks are detailed just-in-time; only the rows below are durable.
 - **68 before the remaining CLI work.** Known code bugs, including one
   high-priority motion glitch, should not sit under new features.
 - **69 and 70 before 30.** They rewrite the docs pages that 30 then proofreads.
-- **30 is last and absorbs the docs half of `docs/BUGS.md`** — A3 (code
+- **30 is last and absorbs the docs half of `docs/ISSUES.md`** — A3 (code
   examples on every component page) and B1–B6 (per-component config
   undocumented, density examples, `ui/command` unexplained, drawer swipe
   undiscoverable, form docs recommending zod over `lib/schema.js`, `ui/form` vs
@@ -66,7 +66,7 @@ Tasks are detailed just-in-time; only the rows below are durable.
   conventions and post-39 CSS. Cheap now: 64 + 38 generate the manifest,
   registry entry and sidecar.
 
-**`docs/BUGS.md` is the triage inbox, not a plan.** Items graduate into rows
+**`docs/ISSUES.md` is the triage inbox, not a plan.** Items graduate into rows
 here. Its unfinished-sweep banner is live: the user's own pass stopped at
 `form-fields`, so **remind them at the start of any session that touches bugs.**
 
@@ -138,9 +138,9 @@ written; it is a final consistency and gap pass.
 | 65  | component-update          | ~L  | [ ]    | deps: 64, 38; `van update`  [^65]                      |
 | 66  | config-schema-json       | ~M  | [ ]    | deps: 38; generated `van.schema.json` + `$schema` [^66]                |
 | 67  | cli-picker               | ~S  | [ ]    | deps: 38; interactive multi-select for a bare `add` [^67]              |
-| 68  | bug-batch                | ~M  | [ ]    | deps: 39; the confirmed code bugs in `docs/BUGS.md` [^68]              |
-| 69  | docs-site-dogfood        | ~M  | [ ]    | BUGS A2 — the site is built out of the kit [^69]                       |
-| 70  | typography-system        | ~L  | [ ]    | BUGS A4 — a real typeset scale, not per-page sizes [^70]               |
+| 68  | bug-batch                | ~M  | [ ]    | deps: 39; the confirmed code bugs in `docs/ISSUES.md` [^68]              |
+| 69  | docs-site-dogfood        | ~M  | [ ]    | ISSUES A2 — the site is built out of the kit [^69]                       |
+| 70  | typography-system        | ~L  | [ ]    | ISSUES A4 — a real typeset scale, not per-page sizes [^70]               |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -245,7 +245,7 @@ written; it is a final consistency and gap pass.
     CLI to test, so it is not in 38 — a bare `add` prints the list plus a hint.
 
 [^68]: deps: 39 (it rewrites every component's CSS, so fix visual bugs after
-    it, not before). From `docs/BUGS.md`: C2 `useFormContext()` throws +
+    it, not before). From `docs/ISSUES.md`: C2 `useFormContext()` throws +
     `FormContext` unexported, C3 stray `htmlFor` on radiogroup labels, C4
     data-table resize overlaps row content, C5 attachment-group scroll drops
     edge borders, D7 switch on the Direction page, D8 empty-state alignment,
@@ -255,7 +255,7 @@ written; it is a final consistency and gap pass.
     `form-fields`; everything alphabetically after it is unswept, so expect this
     task to grow or gain a sibling once the sweep finishes.
 
-[^69]: BUGS A2. The kit documents itself without using itself: raw
+[^69]: ISSUES A2. The kit documents itself without using itself: raw
     `<button>`/`pg-` classes across ~10 `site/pages/` files (combobox,
     carousel, command, form, form-fields, primitives, resizable, select,
     use-form, view-transitions), `ui/breadcrumb` and `ui/navigation-menu`
@@ -264,7 +264,7 @@ written; it is a final consistency and gap pass.
     credibility item on the list. Before 30 — it changes the pages 30 then
     proofreads.
 
-[^70]: BUGS A4. A typeset system rather than per-page font sizes; `~L` because
+[^70]: ISSUES A4. A typeset system rather than per-page font sizes; `~L` because
     it touches every docs page and interacts with 69. Sequence after 69.
 
 [^65]: deps: 64, 38; `van update` with 3-way merge (base = recorded

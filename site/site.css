@@ -10,7 +10,7 @@
  *
  * One exception worth knowing: `.pg-button` is a hand-rolled button that
  * predates the kit documenting itself properly. It should be deleted in
- * favour of `ui/button`, not renamed. See docs/BUGS.md A2.
+ * favour of `ui/button`, not renamed. See docs/ISSUES.md A2.
  */
 
 /* Docs-site accent — neon green/teal, darker in light mode for contrast. */
