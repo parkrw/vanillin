@@ -178,11 +178,16 @@ around `<Select>` rather than `<SelectTrigger>`.** Harmless now that the props
 forward, but it teaches the wrong pattern on the page consumers copy from. The
 rewrite is written out in `docs/TODO/reports/task59.md`.
 
-### C2. `useFormContext()` throws and `FormContext` is not exported
+### C2. ~~`useFormContext()` throws and `FormContext` is not exported~~ — FIXED (`3bbd2bb318d7`)
 
-**Verified.** `lib/use-form.js:785-794`. No non-throwing read exists, so
-`ui/form-fields`' `useBoundControl` has to wrap the call in `try/catch`. Needs
-either `export { FormContext }` or a `useFormContextSafe()`.
+Both were done: `FormContext` is exported and `useFormContextSafe()` returns
+`null` outside a provider. `useBoundControl`'s `try/catch` is gone.
+
+Found while fixing it: **the `FormProvider` path of `useBoundControl` was
+covered by no test at all** — every `form-fields` demo passed `control`
+explicitly, so the branch this issue is about ran nowhere in the suite. The fix
+adds a provider-path demo (`site/pages/form-fields.jsx`, "Without a control
+prop") and cases for both paths.
 
 ### C3. Stray `htmlFor` on radiogroup labels
 

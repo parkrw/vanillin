@@ -24,14 +24,15 @@ affordance), G1–G3 (flakes), I1 (unverified).
       side-by-side probe. The reveal is `clip-path: ellipse()` plus an opacity
       ramp that carries the swept region through grey instead.
 
-- [ ] 2. **C2 — non-throwing form-context read.** `lib/use-form.js:791-794`
-      throws with no safe alternative, forcing `try/catch` around a hook call in
-      `ui/form-fields/form-fields.jsx:36-38`. Add `useFormContextSafe()`
-      returning `null` (export `FormContext` too, per ISSUES) and drop the catch.
-      — test: `useFormContextSafe` returns `null` outside a provider and the
-      methods inside one; `useBoundControl` still works on both paths.
-      files: `lib/use-form.js`, `ui/form-fields/form-fields.jsx`,
-      `tests/use-form.unit.mjs`
+- [x] 2. **C2 — non-throwing form-context read.** Done: `3bbd2bb318d7`.
+      `useFormContextSafe()` added, `FormContext` exported, the `try/catch` in
+      `useBoundControl` gone. **The `FormProvider` path it guards had no test
+      coverage** — every `form-fields` demo passed `control` explicitly — so the
+      fix also adds a provider-path demo and two cases for it.
+      Tests went in `tests/use-form.test.mjs` and `tests/form-fields.test.mjs`,
+      **not** the `tests/use-form.unit.mjs` this sub-task named: that file does
+      not exist, and a pure-node hook test would need a DOM the repo has no
+      dependency for. Browser suite is the only seam.
 
 - [ ] 3. **C3 — stray `htmlFor` on radiogroup labels.** `ui/form/form.jsx:119`
       always sets `htmlFor={formItemId}`; `<label for>` cannot bind to
