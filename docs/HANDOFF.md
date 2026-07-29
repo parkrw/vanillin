@@ -2,16 +2,15 @@
 
 ## Where things stand
 
-Two branches, **no PR on either**, both ahead of `main` (679/679 there).
+**Both branches are merged into `main`.** `fix/bug-batch` fast-forwarded;
+`feat/mode-toggle` merged behind it and conflicted only in this file. Nothing is
+in flight, there is no open PR, and `main` is several commits ahead of
+`origin/main` — **unpushed**. `feat/mode-toggle` and `fix/bug-batch` are fully
+absorbed and safe to delete.
 
-**`fix/bug-batch`** — 3 commits: `e13161c` (handoff + task 68 detailed),
-`d8183de` (E1's first half), `a892d8d` (**`docs/BUGS.md` is now
-`docs/ISSUES.md`**, all references updated, task 68's E1 checked off).
-
-**`feat/mode-toggle`** — branches off `fix/bug-batch`, so that one lands first
-and this fast-forwards. One commit, `fe125ed`: `ui/mode-toggle` +
-`lib/use-color-scheme.js` + demo page, the nav toggle *is* the component now,
-and `resetPage()` pins `colorScheme: light`. The user accepted the sweep as-is.
+What landed: `ui/mode-toggle` + `lib/use-color-scheme.js` + a demo page, the nav
+toggle *is* the component now (pays down ISSUES A2 for one component),
+`docs/BUGS.md` became `docs/ISSUES.md`, and task 68's E1 is checked off.
 
 **The rename is deliberately only half done.** The file is `docs/ISSUES.md` and
 every reference points at it, but item ids (`A2`, `C5`, `E1`…) and the task slug
@@ -23,27 +22,118 @@ later**, so renaming ids now would be churn twice over.
 - **`npm test` exits 0 even when tests fail.** The runner isolates per-file
   failures, so the `N/M` count is the *only* signal. Never pipe through `tail`;
   it discards the `FAIL` lines. Use `npm test > <file> 2>&1`, then grep `^FAIL`.
-- Last full run on `feat/mode-toggle`: **685/686**. The one failure is
-  `mode-toggle: the sweep actually paints partway through` — `start.equals(end)`
-  true, i.e. the sampled corner never changed colour. **7/7 in isolation**, and
-  it passed in full-suite order before the `colorScheme` pin.
+- Last full run: **685/686**. The one failure is `mode-toggle: the sweep actually
+  paints partway through` — `start.equals(end)` true, i.e. the sampled corner
+  never changed colour. **7/7 in isolation**, and it passed in full-suite order
+  before the `colorScheme` pin.
 - **Why, and the landmine behind it:** the site seeds from
   `prefers-color-scheme`, and `resetPage()` used to reset `colorScheme` to `null`
   (inherit the host's), so on a dark-mode machine the whole suite silently tested
-  the wrong theme. The pin fixes that but reverses this case's sweep direction
-  (it used to start dark, now starts light), so the test depends on the starting
-  theme in a way it should not. Cheapest fixes: log the scheme at the top of the
-  case; sample a region with real contrast in both themes, or assert a computed
-  background colour rather than raw PNG bytes; check the hard-coded clip
-  (`x: 820, y: 520`, 60×60) against the runner's viewport.
+  the wrong theme. The pin (`tests/run.mjs:99`) fixes that but reverses this
+  case's sweep direction (it used to start dark, now starts light), so the test
+  depends on the starting theme in a way it should not. Cheapest fixes: log the
+  scheme at the top of the case; sample a region with real contrast in both
+  themes, or assert a computed background colour rather than raw PNG bytes; check
+  the hard-coded clip (`x: 820, y: 520`, 60×60) against the runner's viewport.
 - **Do not weaken that case to a keyframe check.** Its whole point is that the
   previous `mask-image` implementation produced a flawless animation object and
   painted nothing. Only a pixel assertion caught it.
+- **Known flakes** (full-suite order only, all green in isolation): two `drawer`
+  swipe cases and `message-scroller: button click returns to bottom`.
 
 `docs/TODO/README.md` carries the durable plan and the settled order; per-task
 decisions go in `docs/TODO/LOG.md` (task 39's entry is the newest). Read those
-two before planning anything. **Neither branch has a LOG entry yet** — task 68's
-and mode-toggle's decisions live only in this file.
+two before planning anything. **Neither merged branch has a LOG entry yet** —
+task 68's and mode-toggle's decisions live only in this file.
+
+### mode-toggle: the design, and why
+
+The user asked for a component where "an icon or a boolean (switch, checkbox)"
+could drive the swap. **That axis was argued down and they agreed:** one
+component covering `<button aria-pressed>`, `role="switch"` and
+`<input type=checkbox>` must import `ui/button` + `ui/switch` + `ui/checkbox`,
+so every consumer copying one file gets three components and renders one. Shape
+that landed instead:
+
+- **`lib/use-color-scheme.js`** — `useColorScheme()` over `useControllableState`,
+  nothing more. **Owns no persistence and no DOM**: never writes `.dark`, never
+  touches localStorage. An app on `next-themes` already does all three and a hook
+  repeating them would fight it. Also exports `systemPrefersDark()`.
+- **`ui/mode-toggle/`** — one rendering, an icon button. A table lamp that rocks
+  on its foot when clicked, with a cone of light that goes out. Exports
+  `ModeToggle` and `ModeToggleIcon`.
+- **The glyph is filled, not stroked** (`mode-toggle.jsx:113`): at 20px a 2px ray
+  reads as noise, and a bulb drawn inside the shade merges with its outline and
+  turns the whole thing muddy. The cone alone carries on/off.
+- **A switch or checkbox is a two-line consumer composition** over the hook,
+  shown on the demo page. Do not add a `variant` prop for it.
+- **`site/color-scheme.js` is site plumbing, not kit API** — `setSiteDark()` /
+  `useSiteDark()`, the one place the docs site keeps the boolean, precisely
+  because the kit hook deliberately won't. **System preference is the default**,
+  seeded via `systemPrefersDark()`.
+- `.pg-theme-toggle` (`site/app.jsx:33`) survives as the **test hook** only;
+  everything visual now comes from `mode-toggle.css`, so the site cannot drift
+  from the component it documents.
+
+### E1 (light/dark sweep) — three real defects, all fixed
+
+1. **Duration was silently pinned to a fallback.** `--motion-medium` is
+   `calc(200ms * var(--motion-scale))` and is **not** `@property`-registered, so
+   `getPropertyValue` returns that literal string and `parseFloat` gives NaN.
+   The old code fell through to 200ms while the site runs `--motion-scale: 2.5`
+   (i.e. everything else was 500ms). Now resolved by normalising through a real
+   CSS property — the trick already in Gotchas below.
+2. **A second clock raced the first.** `site.css` killed `animation` on
+   `::view-transition-old/new(root)` but not on `::view-transition-group(root)`,
+   which kept its 250ms UA default and outlasted the reveal. That is the
+   mid-sweep stutter. All three are `animation: none` now.
+3. **Two sources of truth for `.dark`** — `site/app.jsx` and the demo page each
+   held `useState` and both wrote the class, so whichever rendered last won and
+   clicking one then the other did nothing. Fixed by `site/color-scheme.js`.
+
+### The page-wide sweep is gone. Do not bring it back casually.
+
+**The mode toggle now swaps the scheme instantly** and keeps its feedback inside
+the button. The `clipPath` option survives in `lib/view-transition.js` (see
+`withViewTransition(update, { clipPath: { x, y } })`) and is demonstrated on the
+View Transitions page (`.pg-vt-wipe`, `site/pages/view-transitions.jsx:78`),
+where a wipe is the subject rather than a side effect. There are no
+`SUNRISE_*` constants any more — earlier prose here referred to them; they are
+gone with the sweep.
+
+Four versions were tried on the toggle, in order, each fixing the last one's
+complaint and drawing a new one:
+
+1. **Feathered `mask-image`.** Never rendered. `mask-image` is **ignored on
+   view-transition pseudo-elements in Chrome** — not "the snapshot vanishes", as
+   an earlier note here claimed. Probed twice, animated through WAAPI *and* as a
+   plain static CSS rule: stretch the sweep to 5000ms with `--motion-scale: 25`,
+   sample a region beside the origin against one 900px away, and both flip to the
+   new scheme together inside the first few hundred ms. The reveal is not
+   softened, it is skipped, and the swap looks instant. **A feathered edge is not
+   buildable this way.**
+2. **`ellipse()` + opacity ramp ("sunrise"), 2× duration.** Reverted on sight:
+   1000ms read as sluggish and the ramp through grey as a glitch.
+3. **Hard circle, `--motion-ease`.** That token is a quintic ease-out — it throws
+   the edge most of the way across in the first third, then crawls, then the last
+   sliver jumps as the snapshot is discarded. Quick, slow, jump. Visible on a
+   120Hz laptop, invisible on a 60Hz external.
+4. **Hard circle, `linear`, +12% overshoot.** Fixed the crawl and the end jump,
+   and then read as *accelerating* — a circle's area grows as r², so a constant
+   edge speed means an accelerating amount of screen changing. `ease-out` tracks
+   the √t that keeps the area even, to within 0.04 the whole way.
+
+Even at (4) the same easing could not be right on a 14" 120Hz laptop and a 27"
+60Hz display at once. **That is the actual finding: a viewport-sized reveal has a
+viewport-sized feel, and there is no single timing for every display.** Feedback
+whose size is fixed — inside the control — does not have this problem.
+
+**The lesson worth keeping:** the first version of these tests asserted the
+*shape of the animation object* and passed while nothing rendered. Every motion
+assertion in `tests/mode-toggle.test.mjs` is now about rendered output — the
+swing is read back as a computed rotation angle at sampled instants, the light as
+a screenshot diff. **Motion assertions must be about pixels** — this is exactly
+the H1 defect class task 68 is meant to sweep.
 
 Also landed since 39: **MIT `LICENSE` and a GitHub Pages deploy**
 (`.github/workflows/deploy.yml`) — every push to `main` runs `npm ci && npm run
@@ -65,10 +155,15 @@ are denied in settings. You cherry-pick; they fast-forward.
 
 ## Next step
 
-1. **Fix the one failing test** described above, on `feat/mode-toggle`.
-2. **Finish task 68** — `docs/TODO/task68-bug-batch.md`, 9 sub-tasks, sub-task 1
-   (E1) done. **C2 is next.** One atomic commit each, on `fix/bug-batch`.
-3. **Later, on the user's word: move `docs/ISSUES.md` onto real GitHub issues.**
+1. **Push `main`.** It is several commits ahead of `origin/main` and the Pages
+   workflow has not run on any of this.
+2. **Fix the one failing test** described above (`mode-toggle: the sweep actually
+   paints partway through`). It is the only thing between here and a green suite.
+3. **Finish task 68** — `docs/TODO/task68-bug-batch.md`, 9 sub-tasks, sub-task 1
+   (E1) done. **C2 is next.** One atomic commit each.
+4. **Write the missing LOG entries** for task 68's E1 and for mode-toggle;
+   `docs/TODO/LOG.md` stops at task 39.
+5. **Later, on the user's word: move `docs/ISSUES.md` onto real GitHub issues.**
    Not started, no shape agreed. `gh` works here; the repo is `parkrw/vanillin`.
 
 Remaining sub-tasks, with what this session already established:
@@ -97,43 +192,6 @@ drift.
 issues:** the user's docs-site sweep stopped at `form-fields`, so everything
 alphabetically after it is unswept. Task 68 covers *known* items only, and
 expects a sibling once the sweep finishes.
-
-### mode-toggle: the design, and why
-
-The user asked for a component where "an icon or a boolean (switch, checkbox)"
-could drive the swap. **That axis was argued down and they agreed:** one
-component covering `<button aria-pressed>`, `role="switch"` and
-`<input type=checkbox>` must import `ui/button` + `ui/switch` + `ui/checkbox`, so
-every consumer copying one file gets three components and renders one.
-
-- **`lib/use-color-scheme.js`** — `useControllableState` + the transition.
-  **Owns no persistence and no DOM**: never writes `.dark`, never touches
-  localStorage. An app on `next-themes` already does all three and a hook
-  repeating them would fight it. Also exports `systemPrefersDark()`.
-- **`ui/mode-toggle/`** — one rendering, an icon button, sun/crescent glyph. The
-  glyph is a **filled** disc masked by an offset circle; masking a *stroked* ring
-  gives a thin arc, not a crescent.
-- **A switch or checkbox is a two-line consumer composition** over the hook,
-  shown on the demo page. **Do not add a `variant` prop for it.**
-- **`site/color-scheme.js` is site plumbing, not kit API** — the one place the
-  docs site keeps the boolean, precisely because the kit hook won't. Before it,
-  `site/app.jsx` and the demo page each held `useState` and both wrote `.dark`,
-  so they fought and clicking one then the other did nothing.
-- **System preference is the default**, seeded via `systemPrefersDark()`.
-
-**`mask-image` does not paint on view-transition pseudo-elements in Chrome.**
-Verified with a side-by-side probe: `clip-path` clips visibly, an equivalent
-`mask-image` shows nothing — the snapshot vanishes. A feathered edge is **not
-buildable** that way; do not retry it. The reveal is `clip-path: ellipse()`
-(1.6× vertical bias, the "sunrise") plus an opacity ramp from `0.15`, blending
-the swept region through grey. Tune `SUNRISE_BIAS` / `SUNRISE_DIM` /
-`SUNRISE_DURATION` in `lib/view-transition.js`.
-
-**E1's other two defects**, both fixed: `--motion-medium` is
-`calc(200ms * var(--motion-scale))` and is not `@property`-registered, so
-`parseFloat` saw NaN and the sweep silently used a 200ms fallback while the site
-runs scale 2.5; and `::view-transition-group(root)` kept its 250ms UA animation,
-outlasting the reveal — that was the stutter.
 
 Order after that: 65 → 66 → 67 → 69 → 70 → 30 → console kit. Rationale is in
 `docs/TODO/README.md`; don't re-derive it.
@@ -294,7 +352,13 @@ plus `--cwd`, `--dry-run`, `--overwrite` (`--force` alias), `--yes`, `--silent`,
   `git diff … -- $files` becomes one bogus pathspec matching nothing, and an
   empty diff reads as "no differences" — it fails silently and reassuringly. Use
   `git diff -z --name-only … | xargs -0 git diff …`.
-- `git merge-base` trips the `git merge` deny rule — use `git diff a...b`.
+- **`git merge-base` trips the `git merge` deny rule**, and so does
+  `git merge-tree`. Use `git diff a...b` for the symmetric diff, and
+  `git rev-list --count a..b` / `b..a` for ahead/behind.
+- **`merge.conflictStyle` is `zdiff3`**, so conflicts carry a third section
+  (`||||||| <sha>`) holding the common ancestor. It is context, **never a
+  resolution** — in lazygit it is a selectable hunk, and picking it reverts the
+  region to the ancestor.
 - **`git branch -a` lists branches deleted on the remote** until `git remote
   prune origin` — another failure that reads reassuringly. Confirm against
   GitHub before reporting branch state.

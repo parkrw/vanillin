@@ -1,6 +1,9 @@
 import { Suspense, useEffect, useState } from "react"
-import { withViewTransition } from "../lib/view-transition.js"
+import { ModeToggle } from "../ui/mode-toggle/mode-toggle.jsx"
+import { setSiteDark, useSiteDark } from "./color-scheme.js"
 import { docs, registry } from "./registry.js"
+
+import "../ui/mode-toggle/mode-toggle.css"
 
 const sections = [
   { label: "Get started", entries: docs },
@@ -19,28 +22,18 @@ function useHashRoute() {
 
 export function App() {
   const route = useHashRoute()
-  const [dark, setDark] = useState(false)
+  const dark = useSiteDark()
   const entry = docs[route] ?? registry[route]
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark)
-  }, [dark])
 
   return (
     <div className="pg">
       <nav className="pg-nav">
         <h1>vanillin</h1>
-        <button
+        <ModeToggle
           className="pg-theme-toggle"
-          onClick={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect()
-            const x = rect.left + rect.width / 2
-            const y = rect.top + rect.height / 2
-            withViewTransition(() => setDark((d) => !d), { clipPath: { x, y } })
-          }}
-        >
-          {dark ? "light" : "dark"} mode
-        </button>
+          isDark={dark}
+          onIsDarkChange={setSiteDark}
+        />
         {sections.map(({ label, entries }) => (
           <section className="pg-nav-group" key={label} aria-label={label}>
             <div className="pg-nav-label">{label}</div>

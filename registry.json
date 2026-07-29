@@ -536,6 +536,18 @@
         "cn.js"
       ]
     },
+    "mode-toggle": {
+      "type": "ui",
+      "files": [
+        "mode-toggle.css",
+        "mode-toggle.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-color-scheme.js"
+      ]
+    },
     "native-select": {
       "type": "ui",
       "files": [
@@ -865,6 +877,9 @@
     "scroll-lock.js": [],
     "use-anchor-position.js": [
       "anchor-position.js"
+    ],
+    "use-color-scheme.js": [
+      "use-controllable-state.js"
     ],
     "use-controllable-state.js": [],
     "use-data-table.js": [],

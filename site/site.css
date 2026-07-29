@@ -124,19 +124,14 @@
   gap: 0.75rem;
 }
 
+/* The nav toggle is ui/mode-toggle — this only places it. Everything visual
+   comes from mode-toggle.css, so the site cannot drift from the component it
+   documents. `.pg-theme-toggle` survives as the test hook. */
 .pg-theme-toggle {
   margin: 0 0.5rem 1rem;
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--background);
-  color: var(--foreground);
-  cursor: pointer;
 }
 
 .pg-theme-toggle:hover {
-  border-color: var(--pg-accent);
   color: var(--pg-accent);
 }
 
@@ -183,6 +178,21 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
   gap: 0.75rem;
+}
+
+.pg-vt-wipe {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--card-foreground);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--motion-ease);
+}
+
+.pg-vt-wipe:hover {
+  border-color: var(--pg-accent);
 }
 
 .pg-vt-card {

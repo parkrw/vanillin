@@ -1,0 +1,10 @@
+{
+  "name": "mode-toggle",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "mode-toggle.css": "sha256-azm7Jwpk78YGhgK4/ftjGCM9HB9HSNGGPKHsVj/v/j8=",
+    "mode-toggle.jsx": "sha256-MCE8vfVXVkuvwV+OS9A1/AO8W5yaC9eNdNkCoXMWW/g="
+  }
+}

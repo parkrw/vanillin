@@ -1,0 +1,109 @@
+.mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  width: 2.25rem;
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: var(--foreground);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease);
+}
+
+.mode-toggle:hover {
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.mode-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+/* The press itself, so the click registers before the swing starts. */
+.mode-toggle:active {
+  transform: scale(0.92);
+}
+
+.mode-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ── Icon ─────────────────────────────────────────────────────────── */
+
+.mode-toggle-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  /* The swing overshoots the 24-unit box at the corners of the shade. */
+  overflow: visible;
+}
+
+/* The lamp pivots on its foot, not at its own centre — that is what makes it
+   read as rocking on a table rather than spinning. `view-box` keeps the origin
+   in viewBox units, so it does not move with the glyph's ink. */
+.mode-toggle-lamp {
+  transform-box: view-box;
+  transform-origin: 12px 20.5px;
+}
+
+.mode-toggle-lamp--swing {
+  animation: mode-toggle-swing calc(var(--motion-medium) * 1.4)
+    var(--motion-ease);
+}
+
+/* Decaying alternation — a yanked chain, not a metronome. Each rock back is
+   roughly half the last. Kept small: it stands on a table, it does not hang. */
+@keyframes mode-toggle-swing {
+  0% {
+    transform: rotate(0deg);
+  }
+  16% {
+    transform: rotate(-6deg);
+  }
+  38% {
+    transform: rotate(3.5deg);
+  }
+  58% {
+    transform: rotate(-2deg);
+  }
+  76% {
+    transform: rotate(1deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+/* The light going out. Nothing subtle about it: the cone is either there or it
+   is not, which is the only difference that survives at 20px. */
+.mode-toggle-glow {
+  opacity: 0.32;
+  transition: opacity var(--motion-medium) var(--motion-ease);
+}
+
+.mode-toggle[data-state="dark"] .mode-toggle-glow {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mode-toggle,
+  .mode-toggle-glow {
+    transition: none;
+  }
+
+  .mode-toggle:active {
+    transform: none;
+  }
+
+  .mode-toggle-lamp--swing {
+    animation: none;
+  }
+}
