@@ -1,5 +1,7 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–61)
 
+**Resume:** `docs/TODO/task68-bug-batch.md` → Handoff (IN PROGRESS — 3 of 9, D7 next)
+
 Plan: `~/.claude/plans/vanillin-zero-dep-shadcn-ui-recreation.md`. 31 of 64
 components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 

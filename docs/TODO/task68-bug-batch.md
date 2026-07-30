@@ -115,3 +115,25 @@ npm run build
   how C1 is recorded.
 - No new `docs/ISSUES.md` items silently absorbed — if the sweep turns up
   something new, it goes in ISSUES.md, not this branch.
+
+## Handoff
+
+**Status:** IN PROGRESS
+**Branch:** `fix/bug-batch` (5 commits, unpushed)  **PR:** none  **Updated:** 2026-07-30
+
+- **Landed:** sub-tasks 1–3. C2 — `useFormContextSafe()` + exported
+  `FormContext`, no more `try/catch` around a hook. C3 — `FormItem grouped`
+  drops `htmlFor` and switches the field to `aria-labelledby`, so no label
+  aims `for` at a `<div role="radiogroup">`.
+- **Repo state:** clean. Full suite **692/692**, `npm run build` green.
+  (`stash@{0}` "On main: whoops" predates this work — not ours, left alone.)
+- **Next:** sub-task 4, **D7**. Start by verifying the diagnosis: `ui/switch`
+  moves its thumb with physical `translateX` (`ui/switch/switch.css:37,42`), so
+  a checked switch in RTL leaves its track. Pattern to copy is `:dir(rtl)` as
+  used in `ui/data-table/data-table.css`.
+- **Gotchas:** `docs/ISSUES.md` misdiagnoses D7 as the D1/D2 contrast family and
+  as Direction-page-only — it is neither; it hits every RTL consumer. Line
+  numbers in ISSUES drift (C3's had moved 301,328 → 294,321), so re-check before
+  editing. Sub-task 2 named a `tests/use-form.unit.mjs` that does not exist:
+  pure-node hook tests need a DOM this repo has no dependency for, so form tests
+  go in the browser suites.
