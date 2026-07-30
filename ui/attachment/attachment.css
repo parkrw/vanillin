@@ -197,23 +197,30 @@
    scroller itself hits a Chrome compositing bug (pane paints white). */
 
 .attachment-group {
+  --attachment-group-fade: 1rem;
   max-inline-size: 100%;
   /* symmetric fade, direction-safe */
   mask-image: linear-gradient(
     to right,
     transparent,
-    black 1rem,
-    black calc(100% - 1rem),
+    black var(--attachment-group-fade),
+    black calc(100% - var(--attachment-group-fade)),
     transparent
   );
 }
 
+/* Inset by the fade width so a resting card edge never lands where the mask
+   is transparent — otherwise the first and last card lose their outer border.
+   scroll-padding shrinks the snapport to match, keeping snapped edges out of
+   the fade too. */
 .attachment-group-viewport {
   display: flex;
   gap: 0.5rem;
   overflow-x: auto;
   scroll-snap-type: inline mandatory;
   padding-block: 0.25rem;
+  padding-inline: var(--attachment-group-fade);
+  scroll-padding-inline: var(--attachment-group-fade);
 }
 
 .attachment-group-viewport > .attachment {
