@@ -45,14 +45,19 @@ affordance), G1–G3 (flakes), I1 (unverified).
       `tests/form.test.mjs` and `tests/form-fields.test.mjs`.
       The workaround's line numbers had drifted from 301,328 to 294,321.
 
-- [ ] 4. **D7 — `ui/switch` thumb ignores writing direction.**
-      `switch.css:37,42` uses physical `translateX`, so a checked switch in RTL
-      travels out of its track — the real cause of "the switch on the Direction
-      page looks broken". Use the kit's existing convention (`:dir(rtl)`, as
-      `ui/data-table/data-table.css:295,389-393`).
-      — test: checked thumb offset is mirrored under `dir="rtl"` vs `ltr`;
-      assert the *sign* of the offset, not just a non-zero value (see 9).
-      files: `ui/switch/switch.css`, `tests/switch.test.mjs`
+- [x] 4. **D7 — `ui/switch` thumb ignores writing direction.** Done:
+      `066fb6a22a2e`. Diagnosis held and the line numbers were still accurate:
+      `switch.css:37,42` used physical `translateX`. Only the checked rule
+      needed mirroring — `translateX(0)` is direction-neutral — so the fix is
+      one `:dir(rtl)` override, matching `ui/data-table/data-table.css:295`.
+      **A third file was needed beyond the two listed:** `tests/switch.test.mjs`
+      had no RTL switch to measure, and the repo's convention is an RTL fixture
+      on the component's own page (`sa-rtl`, `cal-rtl`), not borrowing the
+      Direction page — so `site/pages/switch.jsx` gained an RTL section
+      (`sw-rtl`, `sw-rtl-off`) plus `sw-ltr` on the existing checked switch.
+      Test asserts the offset sign flips, magnitudes mirror within 2px, and the
+      thumb stays inside the track both ways. Confirmed load-bearing per 9:
+      removing the `:dir(rtl)` rule fails the sign assertion.
 
 - [ ] 5. **C5 — attachment group scroll eats the outer edge borders.** The
       `mask-image` at `ui/attachment/attachment.css:198-206` fades to
@@ -119,21 +124,29 @@ npm run build
 ## Handoff
 
 **Status:** IN PROGRESS
-**Branch:** `fix/bug-batch` (5 commits, unpushed)  **PR:** none  **Updated:** 2026-07-30
+**Branch:** `fix/bug-batch-2` (1 commit past `main`, unpushed)  **PR:** none  **Updated:** 2026-07-30
 
-- **Landed:** sub-tasks 1–3. C2 — `useFormContextSafe()` + exported
+- **Landed:** sub-tasks 1–4. C2 — `useFormContextSafe()` + exported
   `FormContext`, no more `try/catch` around a hook. C3 — `FormItem grouped`
   drops `htmlFor` and switches the field to `aria-labelledby`, so no label
-  aims `for` at a `<div role="radiogroup">`.
-- **Repo state:** clean. Full suite **692/692**, `npm run build` green.
+  aims `for` at a `<div role="radiogroup">`. D7 — `:dir(rtl)` mirror on the
+  switch thumb, so a checked switch stays in its track in RTL.
+- **Repo state:** clean. Full suite **694/694**, `npm run contracts` and
+  `npm run build` green.
   (`stash@{0}` "On main: whoops" predates this work — not ours, left alone.)
-- **Next:** sub-task 4, **D7**. Start by verifying the diagnosis: `ui/switch`
-  moves its thumb with physical `translateX` (`ui/switch/switch.css:37,42`), so
-  a checked switch in RTL leaves its track. Pattern to copy is `:dir(rtl)` as
-  used in `ui/data-table/data-table.css`.
-- **Gotchas:** `docs/ISSUES.md` misdiagnoses D7 as the D1/D2 contrast family and
-  as Direction-page-only — it is neither; it hits every RTL consumer. Line
-  numbers in ISSUES drift (C3's had moved 301,328 → 294,321), so re-check before
-  editing. Sub-task 2 named a `tests/use-form.unit.mjs` that does not exist:
-  pure-node hook tests need a DOM this repo has no dependency for, so form tests
-  go in the browser suites.
+- **Branch history:** the original `fix/bug-batch` was merged into `main` and
+  deleted, so sub-tasks 1–3 are in `main`, not on a feature branch. Work
+  continues on `fix/bug-batch-2`, cut from that merge commit.
+- **Next:** sub-task 5, **C5** — attachment group `mask-image` at
+  `ui/attachment/attachment.css:198-206` fades to `transparent` at both edges
+  and eats the first/last card's outer border. Re-check those line numbers
+  first. The Chrome compositing workaround (mask on the outer div, scroll on the
+  inner viewport) is commented as load-bearing — keep it.
+- **Gotchas:** line numbers in `docs/ISSUES.md` and in this file's sub-task
+  bodies drift — C3's had moved 301,328 → 294,321; D7's `switch.css:37,42` was
+  still accurate. Verify before editing either way. Sub-task 4 needed a third
+  file the sub-task did not list (a fixture page); expect the same where a test
+  needs a demo that does not exist yet. Sub-task 2 named a
+  `tests/use-form.unit.mjs` that does not exist: pure-node hook tests need a DOM
+  this repo has no dependency for, so form tests go in the browser suites.
+  Run `npm run contracts` after any `ui/` edit or `npm test` fails.

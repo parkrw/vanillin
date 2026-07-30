@@ -227,11 +227,19 @@ All of these are "not enough contrast", light **and** dark unless noted.
 - **D5.** `ui/checkbox` — border and background.
 - **D6.** Date input — the time text is muddied and hard to read.
 
-### D7. The switch on the Direction page looks broken
+### D7. ~~The switch on the Direction page looks broken~~ — FIXED (`066fb6a22a2e`)
 
-Visibly worse than switches elsewhere. **First check whether that page is even
-using `ui/switch`** — if it hand-rolls one, that is the bug, and it should
-consume the component.
+Not a hand-rolled switch and not contrast: `site/pages/direction.jsx:9` imports
+the real component. `.switch-thumb` moved with physical `translateX`, so under
+`dir="rtl"` a checked thumb travelled *out* of its track. It hit **every RTL
+consumer**, not just the Direction page — that page was only where anyone
+happened to look.
+
+Fixed with a `:dir(rtl)` override mirroring the checked transform, the same
+convention as `ui/data-table/data-table.css:295`. `tests/switch.test.mjs`
+asserts the *sign* of the thumb offset flips between `ltr` and `rtl` and that
+the thumb stays inside the track in both; the RTL fixture lives on the switch
+page as `data-pg="sw-rtl"`.
 
 ### D8. Empty-state components sit too far left
 
