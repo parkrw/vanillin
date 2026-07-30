@@ -34,14 +34,16 @@ affordance), G1–G3 (flakes), I1 (unverified).
       not exist, and a pure-node hook test would need a DOM the repo has no
       dependency for. Browser suite is the only seam.
 
-- [ ] 3. **C3 — stray `htmlFor` on radiogroup labels.** `ui/form/form.jsx:119`
-      always sets `htmlFor={formItemId}`; `<label for>` cannot bind to
-      `<div role="radiogroup">`. Fix in `ui/form`, then the
-      `aria-labelledby` workaround at `ui/form-fields/form-fields.jsx:301,328`
-      becomes belt-and-braces — leave it, update its comment.
-      — test: a radiogroup form field renders no `for` attribute; a text field
-      still does.
-      files: `ui/form/form.jsx`, `tests/form.test.mjs`
+- [x] 3. **C3 — stray `htmlFor` on radiogroup labels.** Done: `b730bab4e43a`.
+      New `grouped` flag on `FormItem` — `FormLabel` drops `htmlFor` and takes
+      an id, `FormControl` adds `aria-labelledby`. It had to go on the
+      *ancestor*: `FormLabel` renders before `FormControl` and cannot learn what
+      the control will be, and context only flows down.
+      The `ui/form-fields` workaround was left in place with its comment
+      updated, as specified. Also documents `grouped` on the form page
+      (`site/pages/form.jsx`, "Grouped fields") and covers it in both
+      `tests/form.test.mjs` and `tests/form-fields.test.mjs`.
+      The workaround's line numbers had drifted from 301,328 to 294,321.
 
 - [ ] 4. **D7 — `ui/switch` thumb ignores writing direction.**
       `switch.css:37,42` uses physical `translateX`, so a checked switch in RTL

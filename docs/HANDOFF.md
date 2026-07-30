@@ -153,8 +153,10 @@ are denied in settings. You cherry-pick; they fast-forward.
 ## Next step
 
 1. **Continue task 68 on `fix/bug-batch`** — `docs/TODO/task68-bug-batch.md`,
-   9 sub-tasks, **1 (E1) and 2 (C2) done**. **C3 is next.** One atomic commit
-   each. The branch is unpushed and has no PR.
+   9 sub-tasks, **1 (E1), 2 (C2) and 3 (C3) done**. **D7 is next**, and note
+   HANDOFF's own correction below: it is an RTL `translateX` bug in
+   `ui/switch`, not the contrast family. One atomic commit each. The branch is
+   unpushed and has no PR.
 2. **Write the missing LOG entries** for task 68's E1 and C2 and for
    mode-toggle; `docs/TODO/LOG.md` stops at task 39.
 3. **Later, on the user's word: move `docs/ISSUES.md` onto real GitHub issues.**
