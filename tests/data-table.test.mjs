@@ -644,6 +644,71 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(reset, 260, "double-click resets to column def size")
   })
 
+  await test("narrowed column clips to an ellipsis instead of overlapping the next cell", async () => {
+    await dtSized.waitFor()
+    // Widen amount to its max first: while the columns still fit the 36rem
+    // scroller, table-layout: fixed stretches them all and nothing is squeezed.
+    const amountResizer = dtSized.locator(".data-table-resizer").nth(3)
+    await amountResizer.focus()
+    await page.keyboard.press("End")
+    const idResizer = dtSized.locator(".data-table-resizer").nth(0)
+    await idResizer.focus()
+    await page.keyboard.press("Home")
+    // Back to the start of the scrollport: hit-testing a cell that a previous
+    // test scrolled out of view answers with the docs-site nav on top of it.
+    await dtSized.locator(".scroll-area-viewport").evaluate((el) => { el.scrollLeft = 0 })
+    await page.waitForTimeout(100)
+
+    const probe = await dtSized.evaluate((root) => {
+      const cells = [
+        ...root.querySelector(".table-body .table-row").querySelectorAll(".table-cell"),
+      ]
+      const narrowed = cells[1] // id — an 8-char <code>, no spaces to wrap at
+      const neighbour = cells[2]
+      const style = getComputedStyle(narrowed)
+      const box = neighbour.getBoundingClientRect()
+      // Un-clipped, the id text reached ~34px past its own box; hit-test a
+      // point just inside the neighbour, where those characters painted.
+      const hit = document.elementFromPoint(box.left + 4, box.top + box.height / 2)
+      return {
+        scrollWidth: narrowed.scrollWidth,
+        clientWidth: narrowed.clientWidth,
+        overflowX: style.overflowX,
+        textOverflow: style.textOverflow,
+        whiteSpace: style.whiteSpace,
+        hitFromNarrowed: narrowed.contains(hit),
+        hitInNeighbour: neighbour.contains(hit),
+        hitDesc: hit ? `${hit.tagName}.${hit.className}` : "null",
+        neighbourBox: [Math.round(box.left), Math.round(box.top), Math.round(box.width)],
+      }
+    })
+
+    // Restore before asserting — the pinning tests below drive this same demo,
+    // and a failed assertion must not leave it at 40px/800px.
+    await idResizer.dblclick()
+    await amountResizer.dblclick()
+    await page.waitForTimeout(50)
+
+    eq(
+      probe.scrollWidth > probe.clientWidth,
+      true,
+      `id cell content overflows its column (${probe.scrollWidth} > ${probe.clientWidth})`
+    )
+    eq(
+      probe.hitFromNarrowed,
+      false,
+      `narrowed cell's text stops at its own box (hit ${probe.hitDesc})`
+    )
+    eq(
+      probe.hitInNeighbour,
+      true,
+      `the next cell owns its own leading edge (hit ${probe.hitDesc} at ${probe.neighbourBox})`
+    )
+    eq(probe.whiteSpace, "nowrap", "text stays on one line, so it clips per character")
+    eq(probe.overflowX, "hidden", "narrowed cell clips instead of painting outside")
+    eq(probe.textOverflow, "ellipsis", "dropped characters are marked with an ellipsis")
+  })
+
   // ── Column pinning ────────────────────────────────────────────────
 
   await test("pin left: column stays at inset-inline-start 0 after horizontal scroll", async () => {

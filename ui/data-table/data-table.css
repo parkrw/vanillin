@@ -219,6 +219,20 @@
   position: relative;
 }
 
+/*
+ * `table-layout: fixed` hands each column a width but no clip, so a cell wider
+ * than its column paints over the next one as the column narrows. Clip to the
+ * column box and mark the dropped characters with an ellipsis.
+ *
+ * Body cells only: `overflow: hidden` on a `<th>` would also clip the resizer
+ * handle, which sits 2px outside the header box (`inset-inline-end: -2px`).
+ */
+.data-table-sized .table-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── Column resizer handle ───────────────────────────────────────── */
 
 .data-table-resizer {
@@ -425,5 +439,12 @@
 
   .table--stack .data-table-resizer {
     display: none;
+  }
+
+  /* A card is as wide as the row, so a long value wraps rather than clipping. */
+  .table--stack.data-table-sized .table-cell {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
   }
 }
