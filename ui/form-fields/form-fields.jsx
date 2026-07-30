@@ -1,5 +1,5 @@
 import { cn } from "../../lib/cn.js"
-import { Controller, useFormContext } from "../../lib/use-form.js"
+import { Controller, useFormContextSafe } from "../../lib/use-form.js"
 import {
   FormControl,
   FormDescription,
@@ -27,17 +27,10 @@ import { Textarea } from "../textarea/textarea.jsx"
 
 /**
  * Explicit `control` prop wins; otherwise fall back to the nearest
- * `<FormProvider>`. `useFormContext` throws when there is no provider, but
- * its `useContext` call has already run by the time it does — the hook order
- * is identical on both paths, so catching here is safe.
+ * `<FormProvider>`.
  */
 function useBoundControl(control, name) {
-  let context = null
-  try {
-    context = useFormContext()
-  } catch {
-    context = null
-  }
+  const context = useFormContextSafe()
   const resolved = control || context?.control
   if (!resolved) {
     throw new Error(
@@ -63,10 +56,10 @@ function useBoundControl(control, name) {
  * control in `<FormControl>` yourself — that is what stamps `id`,
  * `aria-describedby` and `aria-invalid` onto it.
  */
-export function FormFieldBinding({ name, className, ...props }) {
+export function FormFieldBinding({ name, className, grouped, ...props }) {
   return (
     <FormField name={name}>
-      <FormItem className={cn("form-field", className)}>
+      <FormItem className={cn("form-field", className)} grouped={grouped}>
         <BoundField name={name} {...props} />
       </FormItem>
     </FormField>
@@ -85,11 +78,9 @@ function BoundField({
   render,
 }) {
   const boundControl = useBoundControl(control, name)
-  const { formItemId, error } = useFormField()
-  const labelId = formItemId ? `${formItemId}-label` : undefined
+  const { formItemId, labelId, error } = useFormField()
 
-  const labelNode =
-    label == null ? null : <FormLabel id={labelId}>{label}</FormLabel>
+  const labelNode = label == null ? null : <FormLabel>{label}</FormLabel>
 
   const controlNode = controlled ? (
     <Controller
@@ -298,7 +289,10 @@ export function SwitchField({
 
 /**
  * `items` is `[{ value, label, disabled? }]`. The group is a div, so
- * `FormLabel`'s `htmlFor` cannot reach it — `aria-labelledby` does the work.
+ * `<label for>` cannot reach it — `grouped` switches `ui/form` to
+ * `aria-labelledby`. The explicit `aria-labelledby` below is the same id and
+ * is now redundant; it stays as belt-and-braces for anyone lifting this
+ * `render` out on its own.
  */
 export function RadioGroupField({
   name,
@@ -313,6 +307,7 @@ export function RadioGroupField({
   return (
     <FormFieldBinding
       controlled
+      grouped
       name={name}
       control={control}
       label={label}

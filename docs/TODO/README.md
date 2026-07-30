@@ -1,5 +1,7 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–61)
 
+**Resume:** `docs/TODO/task68-bug-batch.md` → Handoff (IN PROGRESS — 3 of 9, D7 next)
+
 Plan: `~/.claude/plans/vanillin-zero-dep-shadcn-ui-recreation.md`. 31 of 64
 components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).
 
@@ -138,7 +140,7 @@ written; it is a final consistency and gap pass.
 | 65  | component-update          | ~L  | [ ]    | deps: 64, 38; `van update`  [^65]                      |
 | 66  | config-schema-json       | ~M  | [ ]    | deps: 38; generated `van.schema.json` + `$schema` [^66]                |
 | 67  | cli-picker               | ~S  | [ ]    | deps: 38; interactive multi-select for a bare `add` [^67]              |
-| 68  | bug-batch                | ~M  | [ ]    | deps: 39; the confirmed code bugs in `docs/ISSUES.md` [^68]              |
+| 68  | bug-batch                | ~M  | [~]    | deps: 39; 3 of 9 done (E1, C2, C3) on `fix/bug-batch`; D7 next [^68]    |
 | 69  | docs-site-dogfood        | ~M  | [ ]    | ISSUES A2 — the site is built out of the kit [^69]                       |
 | 70  | typography-system        | ~L  | [ ]    | ISSUES A4 — a real typeset scale, not per-page sizes [^70]               |
 

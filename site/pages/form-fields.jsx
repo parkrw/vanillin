@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { s, schemaResolver } from "../../lib/schema.js"
-import { useForm } from "../../lib/use-form.js"
+import { FormProvider, useForm } from "../../lib/use-form.js"
 import {
   Form,
   FormControl,
@@ -224,6 +224,58 @@ function ReplacesDemo() {
           </p>
           <pre data-pg="ff-source-hand">{HAND_SOURCE}</pre>
         </div>
+      </div>
+    </section>
+  )
+}
+
+/* ================================================================== */
+/*  Provider path — no `control` prop                                  */
+/* ================================================================== */
+
+function ProviderPathDemo() {
+  const methods = useForm({ defaultValues: { nickname: "" } })
+  const [result, setResult] = useState(null)
+
+  return (
+    <section className="pg-section">
+      <h3>Without a control prop</h3>
+      <p className="pg-description">
+        Drop <code>control</code> and a field reads it from the nearest{" "}
+        <code>&lt;FormProvider&gt;</code> instead. With neither it throws,
+        naming the field.
+      </p>
+
+      <div style={{ maxWidth: "28rem" }}>
+        <FormProvider {...methods}>
+          <Form
+            form={{ formState: methods.formState }}
+            onSubmit={methods.handleSubmit((data) =>
+              setResult(JSON.stringify(data))
+            )}
+            data-pg="ff-provider"
+          >
+            <TextField
+              name="nickname"
+              label="Nickname"
+              rules={{ required: "Nickname is required" }}
+              data-pg="ff-provider-nickname"
+            />
+            <button
+              type="submit"
+              className="button"
+              data-pg="ff-provider-submit"
+            >
+              Submit
+            </button>
+          </Form>
+        </FormProvider>
+
+        {result && (
+          <pre data-pg="ff-provider-result" style={{ marginTop: "1rem" }}>
+            {result}
+          </pre>
+        )}
       </div>
     </section>
   )
@@ -495,6 +547,7 @@ export default function FormFieldsPage() {
       <BoundFormDemo />
       <ReplacesDemo />
       <ParityDemo />
+      <ProviderPathDemo />
       <EscapeHatchDemo />
     </>
   )

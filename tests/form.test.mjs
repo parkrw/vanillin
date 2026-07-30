@@ -281,4 +281,27 @@ export default async function run({ page, baseUrl, test, eq }) {
     }
     eq(found, true, "aria-describedby resolves to the field description")
   })
+
+  /* ────────────────────────────────────────────────────────────────── */
+  /*  FormItem grouped — a group control takes no `<label for>`         */
+  /* ────────────────────────────────────────────────────────────────── */
+
+  await test("grouped FormItem names its control without htmlFor", async () => {
+    const label = page.locator('[data-pg="form-grouped-label"]')
+    const group = page.locator('[data-pg="form-grouped-control"]')
+
+    eq(await label.getAttribute("for"), null, "label emits no for attribute")
+
+    const labelledBy = await group.getAttribute("aria-labelledby")
+    eq(
+      labelledBy,
+      await label.getAttribute("id"),
+      "aria-labelledby points at the label"
+    )
+    eq(
+      await page.locator(`[id="${labelledBy}"]`).textContent(),
+      "Tier",
+      "and it resolves to the label text"
+    )
+  })
 }

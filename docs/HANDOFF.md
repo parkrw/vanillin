@@ -2,11 +2,10 @@
 
 ## Where things stand
 
-**Both branches are merged into `main`.** `fix/bug-batch` fast-forwarded;
-`feat/mode-toggle` merged behind it and conflicted only in this file. Nothing is
-in flight, there is no open PR, and `main` is several commits ahead of
-`origin/main` — **unpushed**. `feat/mode-toggle` and `fix/bug-batch` are fully
-absorbed and safe to delete.
+**Both branches are merged into `main`, and `main` is pushed** — verified
+2026-07-29: `git ls-remote origin main` and local `main` are both `66dce7a9839`,
+0 ahead / 0 behind. Earlier prose here called it unpushed; that is stale.
+`feat/mode-toggle` and `fix/bug-batch` were fully absorbed and deleted.
 
 What landed: `ui/mode-toggle` + `lib/use-color-scheme.js` + a demo page, the nav
 toggle *is* the component now (pays down ISSUES A2 for one component),
@@ -22,24 +21,22 @@ later**, so renaming ids now would be churn twice over.
 - **`npm test` exits 0 even when tests fail.** The runner isolates per-file
   failures, so the `N/M` count is the *only* signal. Never pipe through `tail`;
   it discards the `FAIL` lines. Use `npm test > <file> 2>&1`, then grep `^FAIL`.
-- Last full run: **685/686**. The one failure is `mode-toggle: the sweep actually
-  paints partway through` — `start.equals(end)` true, i.e. the sampled corner
-  never changed colour. **7/7 in isolation**, and it passed in full-suite order
-  before the `colorScheme` pin.
-- **Why, and the landmine behind it:** the site seeds from
-  `prefers-color-scheme`, and `resetPage()` used to reset `colorScheme` to `null`
-  (inherit the host's), so on a dark-mode machine the whole suite silently tested
-  the wrong theme. The pin (`tests/run.mjs:99`) fixes that but reverses this
-  case's sweep direction (it used to start dark, now starts light), so the test
-  depends on the starting theme in a way it should not. Cheapest fixes: log the
-  scheme at the top of the case; sample a region with real contrast in both
-  themes, or assert a computed background colour rather than raw PNG bytes; check
-  the hard-coded clip (`x: 820, y: 520`, 60×60) against the runner's viewport.
-- **Do not weaken that case to a keyframe check.** Its whole point is that the
-  previous `mask-image` implementation produced a flawless animation object and
-  painted nothing. Only a pixel assertion caught it.
-- **Known flakes** (full-suite order only, all green in isolation): two `drawer`
-  swipe cases and `message-scroller: button click returns to bottom`.
+- Last full run: **690/690, no failures** (2026-07-29, on `fix/bug-batch` after
+  C2). **The `mode-toggle: the sweep actually paints partway through` failure
+  this section previously described is gone** — that case no longer exists; the
+  page-wide sweep was removed and `tests/mode-toggle.test.mjs`' eight cases all
+  pass. Ignore any prose below or elsewhere that treats it as the one thing
+  between here and green.
+- **The `colorScheme` pin still matters** (`tests/run.mjs`): the site seeds from
+  `prefers-color-scheme`, and `resetPage()` resetting it to `null` (inherit the
+  host's) made the whole suite silently test the wrong theme on a dark-mode
+  machine. Keep it pinned.
+- **Do not weaken a motion case to a keyframe check.** The `mask-image`
+  implementation produced a flawless animation object and painted nothing. Only
+  a pixel assertion caught it.
+- **Suspected flakes** (two `drawer` swipe cases, `message-scroller: button
+  click returns to bottom`): all three passed in the 690/690 full-suite run, so
+  treat them as unconfirmed rather than known-bad.
 
 `docs/TODO/README.md` carries the durable plan and the settled order; per-task
 decisions go in `docs/TODO/LOG.md` (task 39's entry is the newest). Read those
@@ -155,22 +152,20 @@ are denied in settings. You cherry-pick; they fast-forward.
 
 ## Next step
 
-1. **Push `main`.** It is several commits ahead of `origin/main` and the Pages
-   workflow has not run on any of this.
-2. **Fix the one failing test** described above (`mode-toggle: the sweep actually
-   paints partway through`). It is the only thing between here and a green suite.
-3. **Finish task 68** — `docs/TODO/task68-bug-batch.md`, 9 sub-tasks, sub-task 1
-   (E1) done. **C2 is next.** One atomic commit each.
-4. **Write the missing LOG entries** for task 68's E1 and for mode-toggle;
-   `docs/TODO/LOG.md` stops at task 39.
-5. **Later, on the user's word: move `docs/ISSUES.md` onto real GitHub issues.**
+1. **Continue task 68 on `fix/bug-batch`** — `docs/TODO/task68-bug-batch.md`,
+   9 sub-tasks, **1 (E1), 2 (C2) and 3 (C3) done**. **D7 is next**, and note
+   HANDOFF's own correction below: it is an RTL `translateX` bug in
+   `ui/switch`, not the contrast family. One atomic commit each. The branch is
+   unpushed and has no PR.
+2. **Write the missing LOG entries** for task 68's E1 and C2 and for
+   mode-toggle; `docs/TODO/LOG.md` stops at task 39.
+3. **Later, on the user's word: move `docs/ISSUES.md` onto real GitHub issues.**
    Not started, no shape agreed. `gh` works here; the repo is `parkrw/vanillin`.
 
-Remaining sub-tasks, with what this session already established:
+Also unmerged: `docs/agents-md` (one commit, `61a15b8f2eac`) adds `AGENTS.md` as
+the single agent-guidance doc with `CLAUDE.md` pointing at it.
 
-- **C2** `useFormContext()` throws, `FormContext` unexported —
-  `lib/use-form.js:791-794`; the `try/catch` workaround is at
-  `ui/form-fields/form-fields.jsx:36-38`. Add `useFormContextSafe()`.
+Remaining sub-tasks, with what this session already established:
 - **C3** stray `htmlFor` on radiogroup labels — `ui/form/form.jsx:119`;
   workaround at `ui/form-fields/form-fields.jsx:301,328`.
 - **D7 is misdiagnosed in `ISSUES.md`.** The Direction page *does* import

@@ -178,18 +178,26 @@ around `<Select>` rather than `<SelectTrigger>`.** Harmless now that the props
 forward, but it teaches the wrong pattern on the page consumers copy from. The
 rewrite is written out in `docs/TODO/reports/task59.md`.
 
-### C2. `useFormContext()` throws and `FormContext` is not exported
+### C2. ~~`useFormContext()` throws and `FormContext` is not exported~~ — FIXED (`3bbd2bb318d7`)
 
-**Verified.** `lib/use-form.js:785-794`. No non-throwing read exists, so
-`ui/form-fields`' `useBoundControl` has to wrap the call in `try/catch`. Needs
-either `export { FormContext }` or a `useFormContextSafe()`.
+Both were done: `FormContext` is exported and `useFormContextSafe()` returns
+`null` outside a provider. `useBoundControl`'s `try/catch` is gone.
 
-### C3. Stray `htmlFor` on radiogroup labels
+Found while fixing it: **the `FormProvider` path of `useBoundControl` was
+covered by no test at all** — every `form-fields` demo passed `control`
+explicitly, so the branch this issue is about ran nowhere in the suite. The fix
+adds a provider-path demo (`site/pages/form-fields.jsx`, "Without a control
+prop") and cases for both paths.
 
-**Verified.** `ui/form/form.jsx:119` always sets `htmlFor={formItemId}`.
-`RadioGroup` renders `<div role="radiogroup">`, which `<label for>` cannot
-bind to. Harmless only because `ui/form-fields/form-fields.jsx:301` works
-around it with `aria-labelledby`. Fix belongs to `ui/form`.
+### C3. ~~Stray `htmlFor` on radiogroup labels~~ — FIXED (`b730bab4e43a`)
+
+`FormItem` gained a `grouped` flag: `FormLabel` drops `htmlFor` and takes an
+id, `FormControl` points `aria-labelledby` at it. `RadioGroupField` sets it.
+The flag has to be declared by an ancestor — `FormLabel` renders before
+`FormControl` and cannot learn what the control turns out to be.
+
+`ui/form-fields`' own `aria-labelledby` resolves to the same id and was left in
+place, per the task file. Its comment now says why it is redundant.
 
 ### C4. Data-table column resize overlaps row content
 

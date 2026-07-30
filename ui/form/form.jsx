@@ -37,17 +37,21 @@ export function useFormField() {
   }
 
   const { name } = field
-  const { id } = item || {}
+  const { id, grouped = false } = item || {}
   const raw = getByPath(form?.formState?.errors, name)
   const error =
     raw && typeof raw === "object" && "message" in raw ? raw : undefined
 
+  const formItemId = id ? `${id}-form-item` : undefined
+
   return {
     name,
     id,
-    formItemId: id ? `${id}-form-item` : undefined,
+    formItemId,
     formDescriptionId: id ? `${id}-form-item-description` : undefined,
     formMessageId: id ? `${id}-form-item-message` : undefined,
+    labelId: formItemId ? `${formItemId}-label` : undefined,
+    grouped,
     error,
   }
 }
@@ -101,10 +105,17 @@ export function FormField({ name, children }) {
 
 /* ── FormItem ─────────────────────────────────────────────────────── */
 
-export function FormItem({ className, ...props }) {
+/**
+ * `grouped` marks a field whose control is a group element rather than a
+ * labelable one — `<div role="radiogroup">`, a fieldset-alike. `<label for>`
+ * cannot bind to those, so the wiring switches to `aria-labelledby`. It has to
+ * be declared here: only an ancestor can tell `FormLabel` what the control
+ * will turn out to be.
+ */
+export function FormItem({ className, grouped = false, ...props }) {
   const id = useId()
   return (
-    <FormItemContext.Provider value={{ id }}>
+    <FormItemContext.Provider value={{ id, grouped }}>
       <div className={cn("form-item", className)} {...props} />
     </FormItemContext.Provider>
   )
@@ -113,10 +124,11 @@ export function FormItem({ className, ...props }) {
 /* ── FormLabel ────────────────────────────────────────────────────── */
 
 export function FormLabel({ className, ...props }) {
-  const { formItemId, error } = useFormField()
+  const { formItemId, labelId, grouped, error } = useFormField()
   return (
     <Label
-      htmlFor={formItemId}
+      htmlFor={grouped ? undefined : formItemId}
+      id={grouped ? labelId : undefined}
       className={cn("form-label", error && "form-label--error", className)}
       data-error={error ? "" : undefined}
       {...props}
@@ -127,7 +139,8 @@ export function FormLabel({ className, ...props }) {
 /* ── FormControl ──────────────────────────────────────────────────── */
 
 export function FormControl({ as: Component, children, ...props }) {
-  const { formItemId, formDescriptionId, formMessageId, error } = useFormField()
+  const { formItemId, formDescriptionId, formMessageId, labelId, grouped, error } =
+    useFormField()
 
   const describedBy =
     [formDescriptionId, error ? formMessageId : null]
@@ -138,6 +151,8 @@ export function FormControl({ as: Component, children, ...props }) {
     id: formItemId,
     "aria-describedby": describedBy,
     "aria-invalid": error ? true : undefined,
+    // A grouped control gets no `<label for>`, so name it from the label.
+    "aria-labelledby": grouped ? labelId : undefined,
   }
 
   if (Component) {

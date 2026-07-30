@@ -564,6 +564,45 @@ function Docs() {
 /*  Engine-agnostic proof — hand-rolled RHF-shaped context             */
 /* ================================================================== */
 
+function GroupedItemDemo() {
+  const fakeForm = { formState: { errors: {} } }
+
+  return (
+    <section className="pg-section">
+      <h3>Grouped fields</h3>
+      <p className="pg-description">
+        <code>&lt;label for&gt;</code> only binds to a labelable element, so a
+        field whose control is a group — <code>role=&quot;radiogroup&quot;</code>
+        , a fieldset-alike — must not emit one. Set <code>grouped</code> on{" "}
+        <code>FormItem</code> and <code>FormLabel</code> drops its{" "}
+        <code>htmlFor</code>, takes an id, and <code>FormControl</code> points{" "}
+        <code>aria-labelledby</code> back at it.
+      </p>
+
+      <div style={{ maxWidth: "28rem" }}>
+        <Form form={fakeForm} data-pg="form-grouped">
+          <FormField name="tier">
+            <FormItem grouped>
+              <FormLabel data-pg="form-grouped-label">Tier</FormLabel>
+              <FormControl>
+                <div role="radiogroup" data-pg="form-grouped-control">
+                  <label>
+                    <input type="radio" name="tier" value="free" /> Free
+                  </label>{" "}
+                  <label>
+                    <input type="radio" name="tier" value="pro" /> Pro
+                  </label>
+                </div>
+              </FormControl>
+              <FormDescription>No `for` points at the group.</FormDescription>
+            </FormItem>
+          </FormField>
+        </Form>
+      </div>
+    </section>
+  )
+}
+
 function EngineAgnosticDemo() {
   const [errors, setErrors] = useState({})
 
@@ -705,6 +744,7 @@ export default function FormPage() {
       <EnginePathDemo />
       <FieldArrayDemo />
       <ActionsPathDemo />
+      <GroupedItemDemo />
       <EngineAgnosticDemo />
       <PortalledSubmitDemo />
     </>

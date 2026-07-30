@@ -230,6 +230,19 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(data.email, "test@example.com", "context form submitted")
   })
 
+  await test("useFormContextSafe returns null outside a provider", async () => {
+    eq(
+      await page.locator('[data-pg="uf-ctx-safe-outside"]').textContent(),
+      "null",
+      "no provider -> null"
+    )
+    eq(
+      await page.locator('[data-pg="uf-ctx-safe-inside"]').textContent(),
+      "methods",
+      "inside provider -> methods"
+    )
+  })
+
   // ── useFieldArray ─────────────────────────────────────────────────
 
   await test("useFieldArray append and remove", async () => {

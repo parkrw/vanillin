@@ -69,6 +69,26 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(labelText, "Plan", "the radiogroup names itself via aria-labelledby")
   })
 
+  await test("no label points `for` at a radiogroup", async () => {
+    // `<label for>` cannot bind to <div role="radiogroup">, so the grouped
+    // field must not emit one — its name comes from aria-labelledby instead.
+    const groupId = await page.locator('[data-pg="ff-plan"]').getAttribute("id")
+    eq(
+      await page.locator(`label[for="${groupId}"]`).count(),
+      0,
+      "radiogroup has no label[for] aimed at it"
+    )
+
+    const textId = await page
+      .locator('[data-pg="ff-username"]')
+      .getAttribute("id")
+    eq(
+      await page.locator(`label[for="${textId}"]`).count(),
+      1,
+      "a labelable control still gets label[for]"
+    )
+  })
+
   await test("typing in a bound field updates form state", async () => {
     await page.locator('[data-pg="ff-username"]').fill("caseynolan")
     await page.locator('[data-pg="ff-bio"]').fill("Builds things.")
@@ -217,6 +237,47 @@ export default async function run({ page, baseUrl, test, eq }) {
       (await wiring(page, "ff-username")).describedBy,
       "-form-item-description",
       "message id left aria-describedby"
+    )
+  })
+
+  /* ────────────────────────────────────────────────────────────────── */
+  /*  The other binding path: FormProvider, no `control` prop          */
+  /* ────────────────────────────────────────────────────────────────── */
+
+  await test("a field with no control prop binds through FormProvider", async () => {
+    const field = page.locator('[data-pg="ff-provider-nickname"]')
+    eq(await field.count(), 1, "field rendered")
+    eq(
+      (await wiring(page, "ff-provider-nickname")).labelText,
+      "Nickname",
+      "wired to its label like the control-prop path"
+    )
+
+    await field.fill("case")
+    await page.locator('[data-pg="ff-provider-submit"]').click()
+    await page.waitForSelector('[data-pg="ff-provider-result"]')
+    eq(
+      JSON.parse(
+        await page.locator('[data-pg="ff-provider-result"]').textContent()
+      ).nickname,
+      "case",
+      "the value reached the provider's form"
+    )
+  })
+
+  await test("provider-bound field still validates", async () => {
+    await page.locator('[data-pg="ff-provider-nickname"]').fill("")
+    await page.locator('[data-pg="ff-provider-submit"]').click()
+    await page.waitForSelector(
+      '[data-pg="ff-provider-nickname"][aria-invalid="true"]'
+    )
+    const item = page
+      .locator('[data-pg="ff-provider-nickname"]')
+      .locator("xpath=..")
+    eq(
+      await item.locator('[role="alert"]').textContent(),
+      "Nickname is required",
+      "the rule ran on the provider path"
     )
   })
 }

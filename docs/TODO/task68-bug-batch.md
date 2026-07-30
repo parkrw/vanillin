@@ -24,23 +24,26 @@ affordance), G1–G3 (flakes), I1 (unverified).
       side-by-side probe. The reveal is `clip-path: ellipse()` plus an opacity
       ramp that carries the swept region through grey instead.
 
-- [ ] 2. **C2 — non-throwing form-context read.** `lib/use-form.js:791-794`
-      throws with no safe alternative, forcing `try/catch` around a hook call in
-      `ui/form-fields/form-fields.jsx:36-38`. Add `useFormContextSafe()`
-      returning `null` (export `FormContext` too, per ISSUES) and drop the catch.
-      — test: `useFormContextSafe` returns `null` outside a provider and the
-      methods inside one; `useBoundControl` still works on both paths.
-      files: `lib/use-form.js`, `ui/form-fields/form-fields.jsx`,
-      `tests/use-form.unit.mjs`
+- [x] 2. **C2 — non-throwing form-context read.** Done: `3bbd2bb318d7`.
+      `useFormContextSafe()` added, `FormContext` exported, the `try/catch` in
+      `useBoundControl` gone. **The `FormProvider` path it guards had no test
+      coverage** — every `form-fields` demo passed `control` explicitly — so the
+      fix also adds a provider-path demo and two cases for it.
+      Tests went in `tests/use-form.test.mjs` and `tests/form-fields.test.mjs`,
+      **not** the `tests/use-form.unit.mjs` this sub-task named: that file does
+      not exist, and a pure-node hook test would need a DOM the repo has no
+      dependency for. Browser suite is the only seam.
 
-- [ ] 3. **C3 — stray `htmlFor` on radiogroup labels.** `ui/form/form.jsx:119`
-      always sets `htmlFor={formItemId}`; `<label for>` cannot bind to
-      `<div role="radiogroup">`. Fix in `ui/form`, then the
-      `aria-labelledby` workaround at `ui/form-fields/form-fields.jsx:301,328`
-      becomes belt-and-braces — leave it, update its comment.
-      — test: a radiogroup form field renders no `for` attribute; a text field
-      still does.
-      files: `ui/form/form.jsx`, `tests/form.test.mjs`
+- [x] 3. **C3 — stray `htmlFor` on radiogroup labels.** Done: `b730bab4e43a`.
+      New `grouped` flag on `FormItem` — `FormLabel` drops `htmlFor` and takes
+      an id, `FormControl` adds `aria-labelledby`. It had to go on the
+      *ancestor*: `FormLabel` renders before `FormControl` and cannot learn what
+      the control will be, and context only flows down.
+      The `ui/form-fields` workaround was left in place with its comment
+      updated, as specified. Also documents `grouped` on the form page
+      (`site/pages/form.jsx`, "Grouped fields") and covers it in both
+      `tests/form.test.mjs` and `tests/form-fields.test.mjs`.
+      The workaround's line numbers had drifted from 301,328 to 294,321.
 
 - [ ] 4. **D7 — `ui/switch` thumb ignores writing direction.**
       `switch.css:37,42` uses physical `translateX`, so a checked switch in RTL
@@ -112,3 +115,25 @@ npm run build
   how C1 is recorded.
 - No new `docs/ISSUES.md` items silently absorbed — if the sweep turns up
   something new, it goes in ISSUES.md, not this branch.
+
+## Handoff
+
+**Status:** IN PROGRESS
+**Branch:** `fix/bug-batch` (5 commits, unpushed)  **PR:** none  **Updated:** 2026-07-30
+
+- **Landed:** sub-tasks 1–3. C2 — `useFormContextSafe()` + exported
+  `FormContext`, no more `try/catch` around a hook. C3 — `FormItem grouped`
+  drops `htmlFor` and switches the field to `aria-labelledby`, so no label
+  aims `for` at a `<div role="radiogroup">`.
+- **Repo state:** clean. Full suite **692/692**, `npm run build` green.
+  (`stash@{0}` "On main: whoops" predates this work — not ours, left alone.)
+- **Next:** sub-task 4, **D7**. Start by verifying the diagnosis: `ui/switch`
+  moves its thumb with physical `translateX` (`ui/switch/switch.css:37,42`), so
+  a checked switch in RTL leaves its track. Pattern to copy is `:dir(rtl)` as
+  used in `ui/data-table/data-table.css`.
+- **Gotchas:** `docs/ISSUES.md` misdiagnoses D7 as the D1/D2 contrast family and
+  as Direction-page-only — it is neither; it hits every RTL consumer. Line
+  numbers in ISSUES drift (C3's had moved 301,328 → 294,321), so re-check before
+  editing. Sub-task 2 named a `tests/use-form.unit.mjs` that does not exist:
+  pure-node hook tests need a DOM this repo has no dependency for, so form tests
+  go in the browser suites.
