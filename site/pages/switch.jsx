@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { DirectionProvider } from "../../lib/direction.jsx"
 import { Switch } from "../../ui/switch/switch.jsx"
 import { Label } from "../../ui/label/label.jsx"
 import "../../ui/switch/switch.css"
@@ -21,7 +22,7 @@ export default function SwitchPage() {
       <section className="pg-section">
         <h3>States</h3>
         <div className="pg-row">
-          <Switch defaultChecked aria-label="Checked by default" />
+          <Switch data-pg="sw-ltr" defaultChecked aria-label="Checked by default" />
           <Switch disabled aria-label="Disabled" />
           <Switch disabled defaultChecked aria-label="Disabled checked" />
         </div>
@@ -33,6 +34,16 @@ export default function SwitchPage() {
           <Switch id="notifications" checked={checked} onCheckedChange={setChecked} />
           <Label htmlFor="notifications">Notifications: {checked ? "on" : "off"}</Label>
         </div>
+      </section>
+
+      <section className="pg-section">
+        <h3>RTL</h3>
+        <DirectionProvider dir="rtl">
+          <div className="pg-row">
+            <Switch data-pg="sw-rtl" defaultChecked aria-label="الإشعارات" />
+            <Switch data-pg="sw-rtl-off" aria-label="الطيران" />
+          </div>
+        </DirectionProvider>
       </section>
     </>
   )
