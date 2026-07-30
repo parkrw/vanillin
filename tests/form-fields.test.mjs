@@ -69,6 +69,26 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(labelText, "Plan", "the radiogroup names itself via aria-labelledby")
   })
 
+  await test("no label points `for` at a radiogroup", async () => {
+    // `<label for>` cannot bind to <div role="radiogroup">, so the grouped
+    // field must not emit one — its name comes from aria-labelledby instead.
+    const groupId = await page.locator('[data-pg="ff-plan"]').getAttribute("id")
+    eq(
+      await page.locator(`label[for="${groupId}"]`).count(),
+      0,
+      "radiogroup has no label[for] aimed at it"
+    )
+
+    const textId = await page
+      .locator('[data-pg="ff-username"]')
+      .getAttribute("id")
+    eq(
+      await page.locator(`label[for="${textId}"]`).count(),
+      1,
+      "a labelable control still gets label[for]"
+    )
+  })
+
   await test("typing in a bound field updates form state", async () => {
     await page.locator('[data-pg="ff-username"]').fill("caseynolan")
     await page.locator('[data-pg="ff-bio"]').fill("Builds things.")
