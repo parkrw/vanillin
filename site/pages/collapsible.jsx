@@ -27,7 +27,7 @@ export default function CollapsiblePage() {
         <Collapsible
           open={open}
           onOpenChange={setOpen}
-          style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxWidth: "22rem" }}
+          style={{ display: "flex", flexDirection: "column", maxWidth: "22rem" }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingInline: "1rem" }}>
             <span style={{ fontSize: "0.875rem", fontWeight: 600 }}>
@@ -48,12 +48,19 @@ export default function CollapsiblePage() {
               </svg>
             </CollapsibleTrigger>
           </div>
-          <div style={repoStyle}>@radix-ui/primitives</div>
-          <CollapsibleContent
-            style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
-          >
-            <div style={repoStyle}>@radix-ui/colors</div>
-            <div style={repoStyle}>@stitches/react</div>
+          <div style={{ ...repoStyle, marginTop: "0.5rem" }}>@radix-ui/primitives</div>
+          <CollapsibleContent>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem",
+                paddingTop: "0.5rem",
+              }}
+            >
+              <div style={repoStyle}>@radix-ui/colors</div>
+              <div style={repoStyle}>@stitches/react</div>
+            </div>
           </CollapsibleContent>
         </Collapsible>
       </section>
@@ -64,11 +71,20 @@ export default function CollapsiblePage() {
           <CollapsibleTrigger as={Button} variant="outline">
             Toggle details
           </CollapsibleTrigger>
-          <CollapsibleContent style={{ paddingTop: "0.5rem", fontSize: "0.875rem" }}>
-            These details render only while open.
+          <CollapsibleContent>
+            <div style={{ paddingTop: "0.5rem", fontSize: "0.875rem" }}>
+              These details render only while open.
+            </div>
           </CollapsibleContent>
         </Collapsible>
       </section>
+
+      <p className="pg-description">
+        Spacing contract: <code>CollapsibleContent</code> owns its spacing through an inner
+        wrapper, never as padding on the content element itself, and a <code>Collapsible</code>{" "}
+        root must not use <code>gap</code> — a zero-height child still occupies its gap slot, so
+        either one leaves a step of that size behind when the content mounts and unmounts.
+      </p>
     </>
   )
 }
