@@ -748,3 +748,13 @@ One commit on `fix/empty-page-alignment`: `71aa0516b940`.
 - **The stated diagnosis was wrong outright** — the third time in this task. `.pg-section` was already on every section of `site/pages/empty.jsx`, and the page's chrome measures pixel-identical to `card` and `alert`. Nothing about the page was misaligned; the demo just had no visible bounds, so `ui/empty`'s own centring read as drift against a column of left-anchored bordered demos.
 - **The fix belonged to the docs site, not `ui/`.** Upstream leaves Empty full-bleed on purpose so it can fill a parent slot, and supplies the frame from its docs. `.pg-empty-frame` reuses `.pg-cq-panel`'s dashed convention.
 - **Geometry could not have caught this.** The specified assertion passes against the broken code, and so does a left-edge check on the demo box — a container with `border-width: 0` reports the same rect as one that paints. Only a pixel sample distinguishes them, and a *dashed* border needs the whole edge scanned: a single mid-height sample lands in a gap and reads as unpainted.
+
+## Task 68 — sub-task 9, H1 assertion sweep (2026-07-31)
+
+One commit on `test/assertion-precondition-sweep`: `12cc896f9787`. Only `tests/` changed.
+
+- **Four real instances out of twenty candidate files**, the rest already sound — the triage and the reason for each exclusion are under H1 in `docs/ISSUES.md`. Grepping for `eq(..., "none")` and friends over-reports badly: readouts of demo `textContent`, explicit opt-in values like `forced-color-adjust: none`, and reads of inline style or custom properties (which return `""` when absent) are all self-guarding.
+- **`ui/scroll-area`'s overscroll squish had shipped with no real coverage.** Both tests asserted `transform: none`, no positive case existed, and deleting the feature left the suite green. Two independent causes, either alone sufficient: the gesture fired one `touchmove` when the transform is not written until a *later* move, and CDP's `Input.dispatchTouchEvent` delivers no touch events to the listeners in this harness at all.
+- **`Input.dispatchTouchEvent` does not work here** — instrumented with listeners, zero events, `hasTouch` on or off. It was the suite's only CDP-touch user. Synthesise `TouchEvent` in-page instead; `tests/scroll-area.test.mjs` has the recipe.
+- **The check that matters is deletion, not green.** Every amended assertion was confirmed by removing the feature and watching it fail — the squish (3 failures) and the status-dot pulse (2). An absence-assertion that survives deleting the thing it describes is not a test.
+- Worth its own task, deliberately not absorbed: this swept assertions expecting an absence. The squish suggests the inverse question — which features have tests that never exercise them at all.
