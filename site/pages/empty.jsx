@@ -43,48 +43,54 @@ export default function EmptyPage() {
 
       <section className="pg-section">
         <h3>Default</h3>
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia>
-              <InboxIcon />
-            </EmptyMedia>
-            <EmptyTitle>No messages</EmptyTitle>
-            <EmptyDescription>Your inbox is empty. New messages will appear here.</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <div className="pg-empty-frame" data-pg="empty-frame">
+          <Empty data-pg="empty-default">
+            <EmptyHeader>
+              <EmptyMedia>
+                <InboxIcon />
+              </EmptyMedia>
+              <EmptyTitle>No messages</EmptyTitle>
+              <EmptyDescription>Your inbox is empty. New messages will appear here.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        </div>
       </section>
 
       <section className="pg-section">
         <h3>With Icon Variant</h3>
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <CloudIcon />
-            </EmptyMedia>
-            <EmptyTitle>Cloud Storage Empty</EmptyTitle>
-            <EmptyDescription>Upload files to your cloud storage to access them anywhere.</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <Button>Upload Files</Button>
-          </EmptyContent>
-        </Empty>
+        <div className="pg-empty-frame">
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <CloudIcon />
+              </EmptyMedia>
+              <EmptyTitle>Cloud Storage Empty</EmptyTitle>
+              <EmptyDescription>Upload files to your cloud storage to access them anywhere.</EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button>Upload Files</Button>
+            </EmptyContent>
+          </Empty>
+        </div>
       </section>
 
       <section className="pg-section">
         <h3>With Actions</h3>
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <SearchIcon />
-            </EmptyMedia>
-            <EmptyTitle>No results found</EmptyTitle>
-            <EmptyDescription>Try adjusting your search or filters to find what you are looking for.</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <Button variant="outline">Clear filters</Button>
-            <Button>New search</Button>
-          </EmptyContent>
-        </Empty>
+        <div className="pg-empty-frame">
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <SearchIcon />
+              </EmptyMedia>
+              <EmptyTitle>No results found</EmptyTitle>
+              <EmptyDescription>Try adjusting your search or filters to find what you are looking for.</EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button variant="outline">Clear filters</Button>
+              <Button>New search</Button>
+            </EmptyContent>
+          </Empty>
+        </div>
       </section>
     </>
   )

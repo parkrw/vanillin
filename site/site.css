@@ -124,6 +124,15 @@
   gap: 0.75rem;
 }
 
+/* `ui/empty` centres itself in whatever box it is given and paints no bounds
+   of its own, so on a page of left-anchored demos it reads as adrift. The
+   frame is the docs site's, not the component's — same dashed convention as
+   `.pg-cq-panel`. */
+.pg-empty-frame {
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+}
+
 /* The nav toggle is ui/mode-toggle — this only places it. Everything visual
    comes from mode-toggle.css, so the site cannot drift from the component it
    documents. `.pg-theme-toggle` survives as the test hook. */
