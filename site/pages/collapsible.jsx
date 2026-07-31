@@ -79,12 +79,15 @@ export default function CollapsiblePage() {
         </Collapsible>
       </section>
 
-      <p className="pg-description">
-        Spacing contract: <code>CollapsibleContent</code> owns its spacing through an inner
-        wrapper, never as padding on the content element itself, and a <code>Collapsible</code>{" "}
-        root must not use <code>gap</code> — a zero-height child still occupies its gap slot, so
-        either one leaves a step of that size behind when the content mounts and unmounts.
-      </p>
+      <section className="pg-section">
+        <h3>Spacing contract</h3>
+        <p className="pg-description">
+          <code>CollapsibleContent</code> owns its spacing through an inner wrapper, never as
+          padding on the content element itself, and a <code>Collapsible</code> root must not use{" "}
+          <code>gap</code> — a zero-height child still occupies its gap slot, so either one leaves
+          a step of that size behind when the content mounts and unmounts.
+        </p>
+      </section>
     </>
   )
 }
