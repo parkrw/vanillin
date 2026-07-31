@@ -142,7 +142,7 @@ npm run build
 ## Handoff
 
 **Status:** IN PROGRESS — 7 of 9 done, 8 and 9 left
-**Branch:** `main` @ `6f1470ab2948`, pushed  **PR:** none  **Updated:** 2026-07-31
+**Branch:** `main` @ `5772601ddb9b`, pushed  **PR:** none  **Updated:** 2026-07-31
 
 - **Landed:** sub-tasks 1–7, all on `main` and pushed (`origin/main` matches).
   Switches track correctly in RTL, attachment edge cards keep their borders,
