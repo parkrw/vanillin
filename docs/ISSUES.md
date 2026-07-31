@@ -452,6 +452,31 @@ Four concrete instances found during task 68, all worth folding into the sweep:
   "unbounded"; only a pixel sample can. And when the border is *dashed*, one
   mid-height sample lands in a gap and reports unpainted — scan the whole edge.
 
+### H2. Unknown how many features have no real test at all
+
+**Status:** open  **Found:** task 68 sub-task 9, 2026-07-31
+
+H1 asked whether assertions hold for the wrong reason. The squish answered a
+worse question nobody asked: `ui/scroll-area`'s overscroll squish had **no real
+coverage whatsoever** — two tests, both asserting an absence, no positive case,
+and deleting the feature outright left the suite green. It was found by
+accident while fixing something else.
+
+Nothing rules out more of the same. 708 tests across 68 components is ~10 each,
+thin for anything with drag, focus management or RTL, and the pinning bug
+(H1's origin) survived on `main` for months behind a passing test.
+
+The cheap probe is deletion, not reading: neuter one load-bearing rule or
+handler per component and see whether the suite notices. Mechanical, and it
+answers "which features are untested" directly rather than by inspection. A
+per-component targeted run is ~20-40s, so a first pass over all 68 is a
+half-day including authoring.
+
+Distinct from the unswept docs-site sweep at the top of this file: that one
+finds defects users can see, this one finds defects nothing would catch. Do the
+sweep first — it is cheaper and targets the class that has actually been
+biting.
+
 ---
 
 ## I. Suspected, unverified
