@@ -85,6 +85,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
         paddingInlineStart: style.paddingInlineStart,
         paddingInlineEnd: style.paddingInlineEnd,
         scrollPaddingInlineStart: style.scrollPaddingInlineStart,
+        scrollPaddingInlineEnd: style.scrollPaddingInlineEnd,
         fade: fade.trim(),
         // Chrome serializes the `transparent` stop as rgba(0, 0, 0, 0).
         masked: /rgba\(0,\s*0,\s*0,\s*0\)/.test(getComputedStyle(el.parentElement).maskImage),
@@ -94,6 +95,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(geometry.fade, "1rem")
     eq(geometry.paddingInlineStart, "16px")
     eq(geometry.paddingInlineEnd, "16px")
-    eq(geometry.scrollPaddingInlineStart, "16px", "snapped edges clear the fade too")
+    eq(geometry.scrollPaddingInlineStart, "16px", "snapped leading edges clear the fade too")
+    eq(geometry.scrollPaddingInlineEnd, "16px", "and so do snapped trailing edges")
   })
 }
