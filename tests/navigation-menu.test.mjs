@@ -351,27 +351,44 @@ export default async function run({ page, baseUrl, test, eq }) {
   })
 
   await test("viewport: no size animation under reduced motion", async () => {
+    const viewportTransition = () =>
+      page.evaluate(
+        () =>
+          getComputedStyle(document.querySelector('[data-pg="nm-vp"] .navigation-menu-viewport'))
+            .transitionDuration
+      )
+    const contentAnimationName = () =>
+      page.evaluate(
+        () => getComputedStyle(document.querySelector('[data-pg="nm-vp-content-learn"]')).animationName
+      )
+
+    // Both assertions below are satisfied by motion that was never wired up.
+    // Catch the real thing animating at no-preference first.
+    await vpLearn.hover()
+    await vpWaitOpen("nm-vp-content-learn")
+    const liveTransition = await viewportTransition()
+    const liveAnimation = await contentAnimationName()
+    await vpCleanup()
+    eq(
+      liveTransition.split(",").some((d) => parseFloat(d.trim()) > 0),
+      true,
+      "precondition: viewport transitions at no-preference",
+    )
+    eq(liveAnimation !== "none", true, "precondition: content animates at no-preference")
+
     await page.emulateMedia({ reducedMotion: "reduce" })
     try {
       await vpLearn.hover()
       await vpWaitOpen("nm-vp-content-learn")
 
-      const vpTransition = await page.evaluate(() => {
-        const vp = document.querySelector('[data-pg="nm-vp"] .navigation-menu-viewport')
-        return getComputedStyle(vp).transitionDuration
-      })
+      const vpTransition = await viewportTransition()
       // Under reduced motion, transition is suppressed (0s or none).
       const allZero = vpTransition.split(",").every(
         (d) => parseFloat(d.trim()) === 0
       )
       eq(allZero, true, "viewport transition suppressed under reduced motion")
 
-      // Content animations are also suppressed.
-      const contentAnimation = await page.evaluate(() => {
-        const el = document.querySelector('[data-pg="nm-vp-content-learn"]')
-        return getComputedStyle(el).animationName
-      })
-      eq(contentAnimation, "none", "content animation suppressed under reduced motion")
+      eq(await contentAnimationName(), "none", "content animation suppressed under reduced motion")
 
       await vpCleanup()
     } finally {

@@ -69,6 +69,10 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await page.mouse.down()
     await page.mouse.move(x, y + box.height * 0.1, { steps: 5 })
     eq(await drawer.evaluate((el) => el.hasAttribute("data-swiping")), true, "swiping")
+    // "sprang back" is `transform: none`, which is equally true of a drawer the
+    // drag never moved — so record that it was actually displaced first.
+    const midDrag = await drawer.evaluate((el) => getComputedStyle(el).transform)
+    eq(midDrag !== "none", true, `precondition: the drag displaced the drawer (${midDrag})`)
     await page.mouse.up()
     eq(await drawer.getAttribute("data-state"), "open", "stays open")
     await settle(drawer)
