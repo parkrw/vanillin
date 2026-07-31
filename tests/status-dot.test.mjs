@@ -152,21 +152,28 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     eq(before, "2s", "pulse runs at the fixed skeleton-style cadence")
   })
 
+  // `animationName: none` is also what a dot that never animates at all
+  // reports, so both tests below first catch the pending dot animating.
+  const animationName = (status) =>
+    page
+      .locator(`[data-pg="sd-statuses"] .status-dot[data-status="${status}"]`)
+      .evaluate((el) => getComputedStyle(el).animationName)
+
   await test("status-dot: pending animation absent under prefers-reduced-motion", async () => {
+    eq((await animationName("pending")) !== "none", true, "precondition: pending animates at no-preference")
+
     await page.emulateMedia({ reducedMotion: "reduce" })
-    const pendingDot = page.locator('[data-pg="sd-statuses"] .status-dot[data-status="pending"]')
-    const animName = await pendingDot.evaluate((el) => getComputedStyle(el).animationName)
-    eq(animName, "none", "animation removed under reduced motion")
+    const animName = await animationName("pending")
     await page.emulateMedia({ reducedMotion: "no-preference" })
+
+    eq(animName, "none", "animation removed under reduced motion")
   })
 
   await test("status-dot: non-pending dots have no pulse animation", async () => {
-    const statuses = ["success", "warning", "error", "info", "neutral"]
-    for (const status of statuses) {
-      const dot = page.locator(`[data-pg="sd-statuses"] .status-dot[data-status="${status}"]`)
-      const animName = await dot.evaluate((el) => getComputedStyle(el).animationName)
-      eq(animName, "none", `${status} has no animation`)
-    }
+    eq((await animationName("pending")) !== "none", true, "precondition: pending does animate")
+
+    for (const status of ["success", "warning", "error", "info", "neutral"])
+      eq(await animationName(status), "none", `${status} has no animation`)
   })
 
   await test("status-dot: ring variant adds box-shadow", async () => {

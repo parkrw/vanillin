@@ -304,9 +304,82 @@ export default async function run({ page, baseUrl, test, eq, near }) {
 
   // ── Overscroll squish guards ──────────────────────────────
 
-  await test("overscroll squish does not engage for a mouse pointer", async () => {
-    await scrollTo("sa-squish", { scrollTop: 0 })
+  // Both guards below assert `transform: none`, which is also what a squish
+  // that never engages at all produces — deleting the feature outright used to
+  // leave them green. Each now proves the gesture *does* squish under its own
+  // conditions before asserting the case that must not.
+  const squishTransform = () =>
+    page.evaluate(
+      () => getComputedStyle(document.querySelector('[data-pg="sa-squish"] .scroll-area-content')).transform
+    )
 
+  // Synthesised in-page rather than driven over CDP: `Input.dispatchTouchEvent`
+  // delivers no touch events to the listeners here even with `hasTouch`.
+  //
+  // The gesture needs **two** moves. The first only latches the boundary and
+  // origin (`scroll-area.jsx:394`); the transform is not written until a later
+  // move finds `active` already true. A single-move gesture reports
+  // `transform: none` whatever the feature does.
+  const touchSquish = async () => {
+    const transform = await page.evaluate(() => {
+      const viewport = document.querySelector('[data-pg="sa-squish"] .scroll-area-viewport')
+      const content = document.querySelector('[data-pg="sa-squish"] .scroll-area-content')
+      viewport.scrollTop = 0
+      const rect = viewport.getBoundingClientRect()
+      const x = Math.round(rect.left + rect.width / 2)
+      const top = Math.round(rect.top + 20)
+
+      const fire = (type, clientY) => {
+        const touch = new Touch({
+          identifier: 1,
+          target: viewport,
+          clientX: x,
+          clientY,
+          screenX: x,
+          screenY: clientY,
+        })
+        const ended = type === "touchend"
+        viewport.dispatchEvent(
+          new TouchEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            touches: ended ? [] : [touch],
+            targetTouches: ended ? [] : [touch],
+            changedTouches: [touch],
+          })
+        )
+      }
+
+      fire("touchstart", top)
+      fire("touchmove", top + 20)
+      fire("touchmove", top + 40)
+      const during = getComputedStyle(content).transform
+      fire("touchend", top + 40)
+      return during
+    })
+    // Wait out the spring-back. A fixed delay is not enough — the decay's tail
+    // ("matrix(1, 0, 0, 1, 0, 0.014)") survives into the next gesture on this
+    // shared page and reads as a squish that reduced motion failed to suppress.
+    await page
+      .waitForFunction(
+        () =>
+          getComputedStyle(document.querySelector('[data-pg="sa-squish"] .scroll-area-content'))
+            .transform === "none",
+        null,
+        { timeout: 3000 }
+      )
+      .catch(() => {})
+    return transform
+  }
+
+  await test("overscroll squish engages for a touch pointer", async () => {
+    eq((await touchSquish()) !== "none", true, "touch overscroll applies a transform")
+  })
+
+  await test("overscroll squish does not engage for a mouse pointer", async () => {
+    eq((await touchSquish()) !== "none", true, "precondition: touch does squish")
+
+    await scrollTo("sa-squish", { scrollTop: 0 })
     const area = await el("sa-squish").boundingBox()
     const x = area.x + area.width / 2
     const y = area.y + 20
@@ -315,42 +388,17 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await page.mouse.down()
     await page.mouse.move(x, y + 40, { steps: 8 })
 
-    const transform = await page.evaluate(
-      () => getComputedStyle(document.querySelector('[data-pg="sa-squish"] .scroll-area-content')).transform
-    )
+    const transform = await squishTransform()
     await page.mouse.up()
 
     eq(transform, "none", "no transform applied for mouse pointer")
   })
 
   await test("overscroll squish does not engage under prefers-reduced-motion", async () => {
+    eq((await touchSquish()) !== "none", true, "precondition: the same touch squishes at no-preference")
+
     await page.emulateMedia({ reducedMotion: "reduce" })
-    await scrollTo("sa-squish", { scrollTop: 0 })
-
-    const client = await page.context().newCDPSession(page)
-    const area = await el("sa-squish").boundingBox()
-    const x = Math.round(area.x + area.width / 2)
-    const y = Math.round(area.y + 20)
-
-    await client.send("Input.dispatchTouchEvent", {
-      type: "touchStart",
-      touchPoints: [{ x, y }],
-    })
-    await client.send("Input.dispatchTouchEvent", {
-      type: "touchMove",
-      touchPoints: [{ x, y: y + 40 }],
-    })
-    await page.waitForTimeout(50)
-
-    const transform = await page.evaluate(
-      () => getComputedStyle(document.querySelector('[data-pg="sa-squish"] .scroll-area-content')).transform
-    )
-
-    await client.send("Input.dispatchTouchEvent", {
-      type: "touchEnd",
-      touchPoints: [],
-    })
-    await client.detach()
+    const transform = await touchSquish()
     await page.emulateMedia({ reducedMotion: "no-preference" })
 
     eq(transform, "none", "no transform under reduced motion")
