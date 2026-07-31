@@ -1,6 +1,6 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–61)
 
-**Resume:** `docs/TODO/task68-bug-batch.md` → Handoff (COMPLETE — 9 of 9; `test/assertion-precondition-sweep` unpushed)
+**Resume:** `docs/TODO/task68-bug-batch.md` → Handoff (COMPLETE — 9 of 9; `test/assertion-precondition-sweep` unpushed). No task is in flight; the next work is the unswept docs-site pass and `docs/ISSUES.md` H2, neither yet a task.
 
 Two notes for reading anything below: the docs site directory is **`site/`** (renamed 2026-07-27), so older prose here saying `playground/` means `site/`. And `docs/HANDOFF.md` is gone — its durable content is in `AGENTS.md`, `docs/QUIRKS.md` and `docs/DECISIONS.md`; live state belongs in each task file's `## Handoff`.
 

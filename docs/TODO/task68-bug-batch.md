@@ -165,28 +165,28 @@ npm run build
 ## Handoff
 
 **Status:** COMPLETE — 9 of 9
-**Branch:** `test/assertion-precondition-sweep` @ `12cc896f9787`, **not pushed,
+**Branch:** `test/assertion-precondition-sweep` @ `63ffa71c97fe`, **not pushed,
 no PR**  **Updated:** 2026-07-31
 
-- **Landed:** sub-tasks 1–8 are on `main` (D8 merged as `71aa0516b940`).
-  Sub-task 9 is the only thing outstanding — one commit on
-  `test/assertion-precondition-sweep`, branched from `main` @ `3b9e9bf0b8a9`.
-- **Repo state:** full suite **708/708** zero FAIL. `ui/` untouched by the
-  sweep — only `tests/` changed. (`stash@{0}` "On main: whoops" is old and not
-  ours.)
-- **Next:** push `test/assertion-precondition-sweep` and open its PR. Nothing
-  else in this task remains.
-- **Follow-up worth a task of its own, not absorbed here:** the sweep only
-  covered assertions expecting an *absence*. `ui/scroll-area`'s squish having
-  shipped with zero real coverage suggests asking the inverse question — which
-  features have tests that never exercise them at all — and that is a different
-  sweep. Not started.
-- **Gotchas for whoever picks this up:**
-  - **This file's own diagnoses were wrong three times** — E2's entirely, D8's
+- **Landed:** every confirmed code bug in this batch is fixed. Sub-tasks 1–8 are
+  on `main` (D8 merged as `71aa0516b940`); sub-task 9's H1 sweep is two unpushed
+  commits on `test/assertion-precondition-sweep`, off `main` @ `3b9e9bf0b8a9`.
+- **Repo state:** suite **708/708**, `contracts` and `build` green. The sweep
+  touched only `tests/` and `docs/`. `docs/ISSUES.md` is uncommitted — a new
+  **H2** written this session. (`stash@{0}` "On main: whoops" is old, not ours.)
+- **Next:** push the branch and open its PR. Nothing in task 68 remains.
+- **Then:** the two follow-ups, both unowned and neither absorbed here — finish
+  the unswept docs-site pass (banner at the top of `docs/ISSUES.md`; ~40
+  components never looked at, and the swept 28 yielded D1–D8), then **H2**,
+  which asks which features have no real test at all. Sweep first: cheaper, and
+  it targets the class that has actually been biting.
+- **Gotchas:**
+  - **This file's own diagnoses were wrong three times** — E2's and D8's
     entirely, C4's prescription partly — and its `files:` lists were incomplete
     four times. Measure before implementing.
-  - **Three of this task's sub-tasks specified assertions that pass against the
-    broken code** (E2, D8, C4's hit-test). The H1 defect appeared inside the
-    task meant to fix it.
-  - `Input.dispatchTouchEvent` does not work in this harness. Synthesise
-    `TouchEvent` in-page instead — `tests/scroll-area.test.mjs` has the recipe.
+  - **Three of its sub-tasks specified assertions that pass against the broken
+    code** (E2, D8, C4's hit-test): the H1 defect inside the task meant to fix
+    H1. Distrust any prescription here that has not been measured.
+  - `Input.dispatchTouchEvent` delivers nothing in this harness, `hasTouch` or
+    not. Synthesise `TouchEvent` in-page — `tests/scroll-area.test.mjs` has the
+    recipe.
