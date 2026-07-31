@@ -1,8 +1,9 @@
 # task68: bug-batch
 **Goal:** Clear the confirmed code bugs in `docs/ISSUES.md` — the motion glitches,
 four component defects, and the test-quality gap.
-**Branch:** `fix/bug-batch`  **Deps:** 39 (done — visual fixes land after the
-container-query CSS rewrite, not before)
+**Branch:** sub-tasks 1–7 are on `main`; branch fresh for 8 and 9
+**Deps:** 39 (done — visual fixes land after the container-query CSS rewrite,
+not before)
 
 Scope is **known** bugs. The user's docs-site sweep stopped at `form-fields`, so
 everything alphabetically after it is unswept; expect a sibling task later.
@@ -141,48 +142,24 @@ npm run build
 ## Handoff
 
 **Status:** IN PROGRESS — 7 of 9 done, 8 and 9 left
-**Branch:** four unmerged branches, unpushed, no PRs  **Updated:** 2026-07-30
+**Branch:** `main` @ `6f1470ab2948`, pushed  **PR:** none  **Updated:** 2026-07-31
 
-- **Landed:** sub-tasks 1–7.
-  - `main`: 1 (E1), 2 (C2), 3 (C3) — the original `fix/bug-batch` was merged and
-    deleted.
-  - `fix/bug-batch-2` (from that merge): 4 (D7) — `066fb6a22a2e`, `da1ea95caac5`.
-  - `fix/c5-attachment-borders`: 5 (C5) — `76c28b8da75b`.
-  - `fix/e2-collapsible-jump`: 6 (E2) — `913325d47400`.
-  - `fix/c4-data-table-resize`: 7 (C4) — `6e0d45a6167c`.
-- **The last three ran concurrently in git worktrees** (`../vanillin-c5-attachment`,
-  `-e2-collapsible`, `-c4-data-table`), each branched from `da1ea95caac5`. They
-  are mutually disjoint by file; `.van.json` manifests are per-component, so
-  even those do not overlap. **Merging is the user's** — `git merge` is denied.
-- **Two follow-ups staged but uncommitted**, both mine, both after their worker
-  pane had exited: `tests/attachment.test.mjs` in the C5 worktree (adds the
-  missing `scrollPaddingInlineEnd` assertion) and `site/pages/collapsible.jsx`
-  in the E2 worktree (moves the spacing-contract note into its own
-  `pg-section`). Each verified green where it sits.
-- **Repo state:** every worktree's suite verified by the head, not just the
-  worker: C5 698 total with its 4 new cases green, E2 **698/698** zero FAIL, C4
-  **695/695** zero FAIL, all three with `npm run contracts` clean and
-  `npm run build` green.
-  (`stash@{0}` "On main: whoops" predates all of this — not ours, left alone.)
-- **Next:** sub-task 8, **D8** — `site/pages/empty.jsx` sits further left than
-  every other page. Confirm it is a missing `.pg-section` wrapper before
-  touching `ui/empty`. Then 9 (H1), which now has three concrete starting points
-  written up under H1 in `docs/ISSUES.md`.
+- **Landed:** sub-tasks 1–7, all on `main` and pushed (`origin/main` matches).
+  Switches track correctly in RTL, attachment edge cards keep their borders,
+  the collapsible no longer steps 8px at the presence boundary, and narrowed
+  data-table cells clip with an ellipsis instead of overlapping their neighbour.
+- **Repo state:** clean, no branches or worktrees left over. Full suite
+  **703/703** zero FAIL with all four fixes in one tree, `npm run contracts`
+  and `npm run build` green. (`stash@{0}` "On main: whoops" is old and not ours.)
+- **Next:** sub-task 8, **D8**. Branch first — `main` is protected. Then confirm
+  the cause before touching `ui/empty`: compare `site/pages/empty.jsx` against a
+  page that aligns correctly and check whether its content is missing a
+  `.pg-section` wrapper.
 - **Gotchas:**
-  - **Line numbers drift, every time.** C3's moved 301,328 → 294,321; C5's rule
-    was at `199-209` against `198-206` here and `195-205` in ISSUES; E2's
-    `13-33` was `15` + `18-34`. D7's were the only accurate ones. Re-check
-    before editing.
-  - **The `files:` lists are wishes, not inventories.** Sub-task 2 named a
-    `tests/use-form.unit.mjs` that does not exist, 4 needed a fixture page it
-    did not list, 5's `tests/attachment.test.mjs` had to be created, and 6's fix
-    landed in neither listed file.
-  - **Two sub-tasks' stated diagnoses were wrong** (E2 entirely, C4's
-    prescription partly). Verify by measurement before implementing; both were
-    caught only because the worker probed first.
-  - A worker's report claimed "no commits, staged only" two minutes *after* it
-    had committed. Check `git log` yourself.
-  - Concurrent suites need distinct `VANILLIN_TEST_PORT`s, and CPU contention
-    produces flakes — G2 (drawer) fired twice and a new G4 (navigation-menu)
-    appeared, all clean in isolation.
-  - Run `npm run contracts` after any `ui/` edit or `npm test` fails.
+  - **This file's own diagnoses have been wrong twice** — E2's entirely, C4's
+    prescription partly — and its `files:` lists have been incomplete four
+    times. Measure before implementing, and expect to touch a demo page or test
+    file the sub-task never mentions.
+  - Sub-task 9 has three worked examples waiting under **H1** in
+    `docs/ISSUES.md`; start there rather than grepping the suite cold.
+  - Fan-out mechanics, if 9 gets split up, are in `AGENTS.md` → Fan-out.
