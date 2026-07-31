@@ -276,9 +276,22 @@ asserts the *sign* of the thumb offset flips between `ltr` and `rtl` and that
 the thumb stays inside the track in both; the RTL fixture lives on the switch
 page as `data-pg="sw-rtl"`.
 
-### D8. Empty-state components sit too far left
+### D8. ~~Empty-state components sit too far left~~ — FIXED (`71aa0516b940`)
 
-The empty components page is misaligned relative to every other page.
+Not the page wrapper. `site/pages/empty.jsx` already had its `.pg-section`
+wrappers, and the page's chrome measures pixel-identical to `card` and `alert`
+at 1280px — `.pg-main` 220→1116, section and `h3` both starting at 260.
+
+`ui/empty` centres itself in whatever box it is given and paints no bounds of
+its own (`empty.css:1-8`), so the demo filled the 816px column with its content
+floating at the centre while every neighbouring page shows a bordered element
+anchored at the left edge. Read as adrift rather than as a component with a
+deliberate full-bleed box.
+
+Fixed on the docs site, not in `ui/`: a `.pg-empty-frame` container using the
+same dashed convention as `.pg-cq-panel` (`site/site.css:265`). Upstream leaves
+Empty full-bleed on purpose so it can fill a parent slot, and its own docs
+supply the frame the same way.
 
 ---
 
@@ -385,7 +398,7 @@ the test passed. Fixed in task 63, but the *class* of gap was never swept.
 Fold into task 64's conformance suite: assert the precondition
 (`scrollLeft > 0`) alongside the effect.
 
-Three concrete instances found during task 68, all worth folding into the sweep:
+Four concrete instances found during task 68, all worth folding into the sweep:
 
 - **E2's specified assertion would have passed against the broken code** —
   "content height is monotonic across the final frames" is true either way. The
@@ -402,6 +415,12 @@ Three concrete instances found during task 68, all worth folding into the sweep:
   at 40px/800px and timed out a later pinning test; the new `collapsible` cases
   depend on earlier tests having left each demo closed. They fail loudly rather
   than silently, but the coupling is real and the sweep should note it.
+- **D8's specified assertion — "the page's section box aligns with a reference
+  page's" — passes against the broken code**, measured. So does a left-edge
+  check on the demo box: a container with `border-width: 0` reports the same
+  geometry as one that paints. Geometry cannot distinguish "bounded" from
+  "unbounded"; only a pixel sample can. And when the border is *dashed*, one
+  mid-height sample lands in a gap and reports unpainted — scan the whole edge.
 
 ---
 

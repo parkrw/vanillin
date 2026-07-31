@@ -101,12 +101,20 @@ affordance), G1–G3 (flakes), I1 (unverified).
       asserting, because this suite shares one page and a mid-test failure
       leaks state into the pinning cases.
 
-- [ ] 8. **D8 — empty-state page misalignment.** `site/pages/empty.jsx` sits
-      further left than every other page. Likely a missing `.pg-section`
-      wrapper rather than a component bug — confirm before touching `ui/empty`.
-      — test: the page's section box aligns with a reference page's; visual
-      check at :5173 `#empty`.
-      files: `site/pages/empty.jsx` (or `site/site.css`)
+- [x] 8. **D8 — empty-state page misalignment.** Done: `71aa0516b940`.
+      **The suspected cause was wrong** — the `.pg-section` wrappers were
+      already there, and the page's chrome measures pixel-identical to `card`
+      and `alert` (`.pg-main` 220→1116, section and `h3` at 260). Real cause:
+      `ui/empty` centres itself in whatever box it is given and paints no
+      bounds, so the demo floated mid-column while every neighbouring page
+      shows a bordered element at the left edge. Fixed on the docs site with a
+      `.pg-empty-frame` container (`.pg-cq-panel`'s dashed convention);
+      `ui/empty` untouched, since upstream leaves Empty full-bleed on purpose.
+      **The assertion this sub-task specified passes against the broken code**
+      — measured — and so does a left-edge check on the demo box, because a
+      zero-width border reports the same geometry as a painted one. Only a
+      pixel sample separates them. Written up as a fourth H1 instance.
+      `tests/empty.test.mjs` was **new** (no browser suite existed).
 
 - [ ] 9. **H1 — sweep assertions that hold for the wrong value.**
       `.data-table-pinned`'s `inset-inline-start === "0px"` was also true under
@@ -141,25 +149,26 @@ npm run build
 
 ## Handoff
 
-**Status:** IN PROGRESS — 7 of 9 done, 8 and 9 left
-**Branch:** `main` @ `5772601ddb9b`, pushed  **PR:** none  **Updated:** 2026-07-31
+**Status:** IN PROGRESS — 8 of 9 done, only 9 left
+**Branch:** `fix/empty-page-alignment` @ `71aa0516b940`, **not pushed, no PR**
+**Updated:** 2026-07-31
 
-- **Landed:** sub-tasks 1–7, all on `main` and pushed (`origin/main` matches).
-  Switches track correctly in RTL, attachment edge cards keep their borders,
-  the collapsible no longer steps 8px at the presence boundary, and narrowed
-  data-table cells clip with an ellipsis instead of overlapping their neighbour.
-- **Repo state:** clean, no branches or worktrees left over. Full suite
-  **703/703** zero FAIL with all four fixes in one tree, `npm run contracts`
-  and `npm run build` green. (`stash@{0}` "On main: whoops" is old and not ours.)
-- **Next:** sub-task 8, **D8**. Branch first — `main` is protected. Then confirm
-  the cause before touching `ui/empty`: compare `site/pages/empty.jsx` against a
-  page that aligns correctly and check whether its content is missing a
-  `.pg-section` wrapper.
+- **Landed:** sub-tasks 1–7 on `main` and pushed; sub-task 8 (D8) on
+  `fix/empty-page-alignment`, branched from `main` @ `e4c0d5d1c3b6`. Empty-state
+  demos now sit in a dashed frame anchored to the page grid at x=260.
+- **Repo state:** full suite **707/707** zero FAIL (703 + 4 new `empty` cases),
+  `npm run contracts` and `npm run build` green. No worktrees.
+  (`stash@{0}` "On main: whoops" is old and not ours.)
+- **Next:** sub-task 9, **H1** — the last one. Branch fresh from `main`; do not
+  stack it on `fix/empty-page-alignment`. Start from the **four** worked
+  examples under H1 in `docs/ISSUES.md`, not from a cold grep of the suite.
 - **Gotchas:**
-  - **This file's own diagnoses have been wrong twice** — E2's entirely, C4's
-    prescription partly — and its `files:` lists have been incomplete four
-    times. Measure before implementing, and expect to touch a demo page or test
-    file the sub-task never mentions.
-  - Sub-task 9 has three worked examples waiting under **H1** in
-    `docs/ISSUES.md`; start there rather than grepping the suite cold.
+  - **This file's own diagnoses have been wrong three times** — E2's entirely,
+    D8's entirely, C4's prescription partly — and its `files:` lists have been
+    incomplete four times. Measure before implementing, and expect to touch a
+    demo page or test file the sub-task never mentions.
+  - **Three of this task's own sub-tasks specified assertions that pass against
+    the broken code** (E2, D8, and C4's neighbour hit-test). That is the H1
+    defect appearing inside the task meant to fix it — treat sub-task 9's own
+    prescriptions with the same suspicion.
   - Fan-out mechanics, if 9 gets split up, are in `AGENTS.md` → Fan-out.

@@ -740,3 +740,11 @@ Three worktrees off `da1ea95caac5`, one commit each, none merged: C5 `76c28b8da7
 - **E2's fix landed in neither of its listed files**, because `ui/accordion` already implemented the contract `ui/collapsible` was missing. The two share the `usePresence` recipe almost line for line; the divergence looked accidental.
 - **Three of the specified assertions would have passed against broken code** — written up under H1 in `docs/ISSUES.md` as the starting point for sub-task 9.
 - The `files:` lists in task bodies are wishes, not inventories: two named test files did not exist, and two sub-tasks needed a demo-page fixture they didn't list.
+
+## Task 68 — sub-task 8, D8 empty-state misalignment (2026-07-31)
+
+One commit on `fix/empty-page-alignment`: `71aa0516b940`.
+
+- **The stated diagnosis was wrong outright** — the third time in this task. `.pg-section` was already on every section of `site/pages/empty.jsx`, and the page's chrome measures pixel-identical to `card` and `alert`. Nothing about the page was misaligned; the demo just had no visible bounds, so `ui/empty`'s own centring read as drift against a column of left-anchored bordered demos.
+- **The fix belonged to the docs site, not `ui/`.** Upstream leaves Empty full-bleed on purpose so it can fill a parent slot, and supplies the frame from its docs. `.pg-empty-frame` reuses `.pg-cq-panel`'s dashed convention.
+- **Geometry could not have caught this.** The specified assertion passes against the broken code, and so does a left-edge check on the demo box — a container with `border-width: 0` reports the same rect as one that paints. Only a pixel sample distinguishes them, and a *dashed* border needs the whole edge scanned: a single mid-height sample lands in a gap and reads as unpainted.
