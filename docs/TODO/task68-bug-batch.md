@@ -116,7 +116,22 @@ affordance), G1–G3 (flakes), I1 (unverified).
       pixel sample separates them. Written up as a fourth H1 instance.
       `tests/empty.test.mjs` was **new** (no browser suite existed).
 
-- [ ] 9. **H1 — sweep assertions that hold for the wrong value.**
+- [x] 9. **H1 — sweep assertions that hold for the wrong value.** Done:
+      `12cc896f9787`. Triaged every assertion whose expected value is also what
+      an absent mechanism reports: **four real, four already sound** (rationale
+      for each under H1 in `docs/ISSUES.md`). Fixed `scroll-area` ×2,
+      `status-dot` ×2, `navigation-menu`, `drawer`.
+      **`ui/scroll-area`'s overscroll squish turned out to have no real coverage
+      at all** — both its tests asserted `transform: none`, no positive case
+      existed, and deleting the feature left the suite green. Two independent
+      causes: the gesture fired one `touchmove` when the transform is not
+      written until a *later* move (`scroll-area.jsx:394`), and CDP's
+      `Input.dispatchTouchEvent` delivers no touch events to the listeners here
+      at all, `hasTouch` or not — instrumented. Touch is synthesised in-page now.
+      Load-bearing confirmed by hand for both suites: removing the squish
+      transform fails 3 tests, removing the pulse keyframes fails 2.
+
+      Original text follows.
       `.data-table-pinned`'s `inset-inline-start === "0px"` was also true under
       `position: relative`, so pinning was broken for months while the test
       passed. Sweep the suite for the same class of gap and assert the
@@ -149,26 +164,29 @@ npm run build
 
 ## Handoff
 
-**Status:** IN PROGRESS — 8 of 9 done, only 9 left
-**Branch:** `fix/empty-page-alignment` @ `71aa0516b940`, **not pushed, no PR**
-**Updated:** 2026-07-31
+**Status:** COMPLETE — 9 of 9
+**Branch:** `test/assertion-precondition-sweep` @ `12cc896f9787`, **not pushed,
+no PR**  **Updated:** 2026-07-31
 
-- **Landed:** sub-tasks 1–7 on `main` and pushed; sub-task 8 (D8) on
-  `fix/empty-page-alignment`, branched from `main` @ `e4c0d5d1c3b6`. Empty-state
-  demos now sit in a dashed frame anchored to the page grid at x=260.
-- **Repo state:** full suite **707/707** zero FAIL (703 + 4 new `empty` cases),
-  `npm run contracts` and `npm run build` green. No worktrees.
-  (`stash@{0}` "On main: whoops" is old and not ours.)
-- **Next:** sub-task 9, **H1** — the last one. Branch fresh from `main`; do not
-  stack it on `fix/empty-page-alignment`. Start from the **four** worked
-  examples under H1 in `docs/ISSUES.md`, not from a cold grep of the suite.
-- **Gotchas:**
-  - **This file's own diagnoses have been wrong three times** — E2's entirely,
-    D8's entirely, C4's prescription partly — and its `files:` lists have been
-    incomplete four times. Measure before implementing, and expect to touch a
-    demo page or test file the sub-task never mentions.
-  - **Three of this task's own sub-tasks specified assertions that pass against
-    the broken code** (E2, D8, and C4's neighbour hit-test). That is the H1
-    defect appearing inside the task meant to fix it — treat sub-task 9's own
-    prescriptions with the same suspicion.
-  - Fan-out mechanics, if 9 gets split up, are in `AGENTS.md` → Fan-out.
+- **Landed:** sub-tasks 1–8 are on `main` (D8 merged as `71aa0516b940`).
+  Sub-task 9 is the only thing outstanding — one commit on
+  `test/assertion-precondition-sweep`, branched from `main` @ `3b9e9bf0b8a9`.
+- **Repo state:** full suite **708/708** zero FAIL. `ui/` untouched by the
+  sweep — only `tests/` changed. (`stash@{0}` "On main: whoops" is old and not
+  ours.)
+- **Next:** push `test/assertion-precondition-sweep` and open its PR. Nothing
+  else in this task remains.
+- **Follow-up worth a task of its own, not absorbed here:** the sweep only
+  covered assertions expecting an *absence*. `ui/scroll-area`'s squish having
+  shipped with zero real coverage suggests asking the inverse question — which
+  features have tests that never exercise them at all — and that is a different
+  sweep. Not started.
+- **Gotchas for whoever picks this up:**
+  - **This file's own diagnoses were wrong three times** — E2's entirely, D8's
+    entirely, C4's prescription partly — and its `files:` lists were incomplete
+    four times. Measure before implementing.
+  - **Three of this task's sub-tasks specified assertions that pass against the
+    broken code** (E2, D8, C4's hit-test). The H1 defect appeared inside the
+    task meant to fix it.
+  - `Input.dispatchTouchEvent` does not work in this harness. Synthesise
+    `TouchEvent` in-page instead — `tests/scroll-area.test.mjs` has the recipe.

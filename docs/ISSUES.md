@@ -390,13 +390,43 @@ bug against that rule or a deliberate exception that is undocumented:
 
 ## H. Test-quality gaps
 
-### H1. Assertions that hold for the wrong value
+### H1. ~~Assertions that hold for the wrong value~~ — SWEPT (`12cc896f9787`)
 
 `.data-table-pinned`'s `inset-inline-start === "0px"` was also true for
 `position: relative`, so header pinning was broken on `main` for months while
-the test passed. Fixed in task 63, but the *class* of gap was never swept.
-Fold into task 64's conformance suite: assert the precondition
-(`scrollLeft > 0`) alongside the effect.
+the test passed. Fixed in task 63; the *class* of gap was swept in task 68.
+
+Swept by triaging every assertion in the suite whose expected value is also
+what an absent mechanism reports. **Four were real, four were already sound.**
+Fixed: `ui/scroll-area`'s two overscroll-squish guards (plus a positive case
+that never existed — see below), `status-dot`'s two `animationName: none`
+checks, `navigation-menu`'s reduced-motion suppression, and `drawer`'s "sprang
+back". Each now proves the mechanism engages before asserting it is absent.
+
+Left alone with reason: `data-table.test.mjs:753` already got its
+`scrolled > 0` guard in task 63; `container-queries.test.mjs:123` and
+`status-dot.test.mjs:177` already assert both halves; `forced-colors`'s
+`forced-color-adjust: none` is an explicit opt-in rather than a default; the
+`"none"` checks in `date-input`, `calendar`, `select` and `combobox` read demo
+`textContent`, not computed style; and `scroll-area:164,290` read a custom
+property and an inline style, which return `""` when absent.
+
+**`ui/scroll-area`'s overscroll squish had no real coverage at all** — both
+tests asserted `transform: none` with no positive case, so deleting the feature
+left the suite green. Two independent causes, either alone sufficient:
+
+- The gesture fired **one** `touchmove`. The first move only latches the
+  boundary and origin (`ui/scroll-area/scroll-area.jsx:394`); the transform is
+  not written until a later move finds `active` already true.
+- **`Input.dispatchTouchEvent` delivers no touch events to the listeners here**,
+  with or without `hasTouch` — instrumented, zero `touchstart`/`touchmove`
+  observed. It is the only CDP-touch user in the suite. Touch gestures are now
+  synthesised in-page with `new TouchEvent`.
+
+The general lesson, for whoever writes the next motion or suppression test: an
+assertion that expects an *absence* proves nothing on its own. Pair it with the
+presence it is the absence of, and confirm by deleting the feature — a test
+that stays green is not a test.
 
 Four concrete instances found during task 68, all worth folding into the sweep:
 

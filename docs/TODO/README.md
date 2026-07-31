@@ -1,6 +1,6 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–61)
 
-**Resume:** `docs/TODO/task68-bug-batch.md` → Handoff (IN PROGRESS — 8 of 9 done, D8 on `fix/empty-page-alignment` unpushed, H1 last)
+**Resume:** `docs/TODO/task68-bug-batch.md` → Handoff (COMPLETE — 9 of 9; `test/assertion-precondition-sweep` unpushed)
 
 Two notes for reading anything below: the docs site directory is **`site/`** (renamed 2026-07-27), so older prose here saying `playground/` means `site/`. And `docs/HANDOFF.md` is gone — its durable content is in `AGENTS.md`, `docs/QUIRKS.md` and `docs/DECISIONS.md`; live state belongs in each task file's `## Handoff`.
 
@@ -142,7 +142,7 @@ written; it is a final consistency and gap pass.
 | 65  | component-update          | ~L  | [ ]    | deps: 64, 38; `van update`  [^65]                      |
 | 66  | config-schema-json       | ~M  | [ ]    | deps: 38; generated `van.schema.json` + `$schema` [^66]                |
 | 67  | cli-picker               | ~S  | [ ]    | deps: 38; interactive multi-select for a bare `add` [^67]              |
-| 68  | bug-batch                | ~M  | [~]    | deps: 39; 8 of 9 done; D8 on `fix/empty-page-alignment` unpushed; H1 last [^68] |
+| 68  | bug-batch                | ~M  | [x]    | deps: 39; all 9 done; H1 sweep on `test/assertion-precondition-sweep` unpushed [^68] |
 | 69  | docs-site-dogfood        | ~M  | [ ]    | ISSUES A2 — the site is built out of the kit [^69]                       |
 | 70  | typography-system        | ~L  | [ ]    | ISSUES A4 — a real typeset scale, not per-page sizes [^70]               |
 
