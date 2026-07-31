@@ -2,7 +2,8 @@
  * Conformance suite for ui/ components.
  * Named .unit.mjs so the browser test runner ignores it.
  *
- * Walks every ui/<slug>/ and checks static rules from HANDOFF.md Conventions.
+ * Walks every ui/<slug>/ and checks static rules from README.md's component
+ * conventions and AGENTS.md's additions to them.
  * Every failure names the offending file, the rule, and what to do.
  */
 

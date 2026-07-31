@@ -722,3 +722,21 @@ agents and cherry-picked onto `feat/phase-2`. Suite 406/406, build clean.
   the trigger, which is the actual claim. Width is compared as a delta against
   the trigger because the popover's min-width tracks its anchor and dropping
   containment reflows the table's columns by a fraction of a pixel.
+
+## mode-toggle + task 68 E1 — light/dark swap (2026-07-29)
+
+Landed `ui/mode-toggle` + `lib/use-color-scheme.js` + a demo page; the nav toggle *is* the component now, which pays down ISSUES A2 for one component. Shape and the rejected alternatives are in `docs/DECISIONS.md`; what's worth keeping here is why E1's three defects were invisible:
+
+- **The duration was silently pinned to a fallback.** `--motion-medium` is `calc(200ms * var(--motion-scale))` and is **not** `@property`-registered, so `getPropertyValue` returns that literal string and `parseFloat` gives `NaN`. The old code fell through to 200ms while the site runs `--motion-scale: 2.5`, i.e. everything else was 500ms.
+- **A second clock raced the first.** `site.css` killed `animation` on `::view-transition-old/new(root)` but not on `::view-transition-group(root)`, which kept its 250ms UA default and outlasted the reveal. That was the mid-sweep stutter.
+- **Two sources of truth for `.dark`** — `site/app.jsx` and the demo page each held `useState` and both wrote the class, so whichever rendered last won and clicking one then the other did nothing. Fixed by `site/color-scheme.js` (site plumbing, not kit API), which seeds from `systemPrefersDark()`.
+- **The first version of these tests asserted the shape of the animation object and passed while nothing rendered.** Every motion assertion in `tests/mode-toggle.test.mjs` is now about rendered output — the swing read back as a computed rotation at sampled instants, the light as a screenshot diff.
+
+## Task 68 — bug batch, sub-tasks 5/6/7 by concurrent fan-out (2026-07-30)
+
+Three worktrees off `da1ea95caac5`, one commit each, none merged: C5 `76c28b8da75b`, E2 `913325d47400`, C4 `6e0d45a6167c`. Mechanics and the lessons are in `AGENTS.md` under Fan-out. What the work itself established:
+
+- **Two of the three stated diagnoses were wrong**, and both survived only because the workers were told to measure first and to stop rather than force the stated fix. E2's two suspected causes were falsified outright — the real cause is that `height: 0` cannot collapse a padded border-box, and a zero-height flex child keeps its `gap` slot. C4's cause held but its prescription needed `white-space: nowrap` added and `min-width: 0` dropped.
+- **E2's fix landed in neither of its listed files**, because `ui/accordion` already implemented the contract `ui/collapsible` was missing. The two share the `usePresence` recipe almost line for line; the divergence looked accidental.
+- **Three of the specified assertions would have passed against broken code** — written up under H1 in `docs/ISSUES.md` as the starting point for sub-task 9.
+- The `files:` lists in task bodies are wishes, not inventories: two named test files did not exist, and two sub-tasks needed a demo-page fixture they didn't list.

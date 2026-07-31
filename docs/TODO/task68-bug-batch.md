@@ -59,36 +59,46 @@ affordance), G1–G3 (flakes), I1 (unverified).
       thumb stays inside the track both ways. Confirmed load-bearing per 9:
       removing the `:dir(rtl)` rule fails the sign assertion.
 
-- [ ] 5. **C5 — attachment group scroll eats the outer edge borders.** The
-      `mask-image` at `ui/attachment/attachment.css:198-206` fades to
-      `transparent` at both edges, so the first and last cards lose their outer
-      border. Fade to the group's own inset instead of card zero. Keep the
-      Chrome compositing workaround (mask on the outer div, scroll on the inner
-      viewport) — it is commented as load-bearing.
-      — test: first and last card each report a non-zero rendered border on the
-      outer edge while the group is scrollable.
-      files: `ui/attachment/attachment.css`, `tests/attachment.test.mjs`
+- [x] 5. **C5 — attachment group scroll eats the outer edge borders.** Done:
+      `76c28b8da75b`. Diagnosis held; line numbers had drifted again (rule was
+      `199-209`, the `mask-image` `202-208`, against `198-206` here and
+      `195-205` in ISSUES). Insets the viewport by a new
+      `--attachment-group-fade`. **`scroll-padding-inline` was the non-obvious
+      half** — mandatory snap aligns card starts to the snapport, so
+      `padding-inline` alone would have fixed only the `scrollLeft: 0` resting
+      position and re-broken every other snap point. Chrome workaround
+      untouched. `tests/attachment.test.mjs` was **new** (no browser suite
+      existed) and samples painted pixels, since a masked border still reports
+      full `border-width` in computed style.
 
-- [ ] 6. **E2 — collapsible end-of-animation jump.** Tail of both open and close
-      jumps. `ui/collapsible/collapsible.css:13-33` — measured-height keyframes
-      plus `fill-mode: forwards` on close (the `usePresence` recipe). Suspect
-      the `height: var(--collapsible-content-height)` endpoint landing on a
-      fractional pixel, or the forwards hold releasing a frame early.
-      — test: `tests/collapsible.test.mjs` green; measured height is monotonic
-      across the final frames of both directions.
-      files: `ui/collapsible/collapsible.css`, possibly
-      `ui/collapsible/collapsible.jsx`
+- [x] 6. **E2 — collapsible end-of-animation jump.** Done: `913325d47400`.
+      **Both suspected causes were falsified by per-frame measurement** and the
+      fix landed in neither listed file. No fractional endpoint (`scrollHeight
+      86` vs rect `86.0000`); `forwards` holds `0` for ~9 frames, so no early
+      release. Open jumps at the **head** (mount frame), not the tail. Real
+      cause: `height: 0` cannot collapse the box — `border-box` floors it at the
+      content's own padding, and a zero-height flex child still occupies its
+      slot in the root's `gap`, 8px each, both released in one frame at
+      mount/unmount. Fixed as a **spacing contract** on `site/pages/collapsible.jsx`
+      with `ui/collapsible/` untouched, because `ui/accordion` already ships the
+      inner wrapper this needs (`accordion.jsx:157`). **The assertion this
+      sub-task specified would have passed against the broken code** — see 9.
+      Catching it needs a pair: content height at the endpoint is 0, *and* the
+      root box step across the boundary is 0; each alone passes the other's
+      mechanism.
 
-- [ ] 7. **C4 — data-table resize overlaps row content.** Narrowing a column
-      makes cell text overlap its neighbour. Wanted: clip per character as the
-      column shrinks and show `…` the moment the first character drops, giving
-      up a second character for the ellipsis if needed — i.e. `text-overflow:
-      ellipsis` needs `overflow: hidden` + `min-width: 0` on the cell, which
-      `data-table.css` does not currently set on sized columns.
-      — test: with a column resized below its text width, cell `scrollWidth >
-      clientWidth` and the rendered text ends in an ellipsis; no overlap with
-      the next cell's box.
-      files: `ui/data-table/data-table.css`, `tests/data-table.test.mjs`
+- [x] 7. **C4 — data-table resize overlaps row content.** Done: `6e0d45a6167c`.
+      Cause held, prescription needed two corrections: **`white-space: nowrap`
+      is required** (without it anything containing a space wraps instead of
+      clipping per character) and **`min-width: 0` is not** — a `<td>` under
+      `table-layout: fixed` takes its width from the column and ignores content
+      min-width, so it would have been dead CSS. **Body cells only**:
+      `overflow: hidden` on a `<th>` clips the resizer handle, which sits 2px
+      outside the header box. Adds a stacked-mode stand-down, since a card is as
+      wide as its row and must wrap. Test is behavioural — it hit-tests a point
+      inside the neighbouring cell — and restores column widths *before*
+      asserting, because this suite shares one page and a mid-test failure
+      leaks state into the pinning cases.
 
 - [ ] 8. **D8 — empty-state page misalignment.** `site/pages/empty.jsx` sits
       further left than every other page. Likely a missing `.pg-section`
@@ -102,6 +112,13 @@ affordance), G1–G3 (flakes), I1 (unverified).
       `position: relative`, so pinning was broken for months while the test
       passed. Sweep the suite for the same class of gap and assert the
       precondition alongside the effect (`scrollLeft > 0` in that case).
+      **Three instances came out of sub-tasks 5–7 — start from them**, they are
+      written up under H1 in `docs/ISSUES.md`: E2's specified assertion passed
+      against broken code and needed a *pair* of checks; C5's borders reported
+      full `border-width` while painting at ~0 alpha, so masked/filtered/
+      transformed properties must be sampled as pixels; and the browser suites
+      share one page per component, so an early-returning test leaks state into
+      later ones.
       — test: the suite still passes; each amended assertion fails when its
       precondition is removed (verify by hand once, don't commit the break).
       files: `tests/*.test.mjs`, `tests/conformance.unit.mjs`
@@ -123,30 +140,49 @@ npm run build
 
 ## Handoff
 
-**Status:** IN PROGRESS
-**Branch:** `fix/bug-batch-2` (1 commit past `main`, unpushed)  **PR:** none  **Updated:** 2026-07-30
+**Status:** IN PROGRESS — 7 of 9 done, 8 and 9 left
+**Branch:** four unmerged branches, unpushed, no PRs  **Updated:** 2026-07-30
 
-- **Landed:** sub-tasks 1–4. C2 — `useFormContextSafe()` + exported
-  `FormContext`, no more `try/catch` around a hook. C3 — `FormItem grouped`
-  drops `htmlFor` and switches the field to `aria-labelledby`, so no label
-  aims `for` at a `<div role="radiogroup">`. D7 — `:dir(rtl)` mirror on the
-  switch thumb, so a checked switch stays in its track in RTL.
-- **Repo state:** clean. Full suite **694/694**, `npm run contracts` and
+- **Landed:** sub-tasks 1–7.
+  - `main`: 1 (E1), 2 (C2), 3 (C3) — the original `fix/bug-batch` was merged and
+    deleted.
+  - `fix/bug-batch-2` (from that merge): 4 (D7) — `066fb6a22a2e`, `da1ea95caac5`.
+  - `fix/c5-attachment-borders`: 5 (C5) — `76c28b8da75b`.
+  - `fix/e2-collapsible-jump`: 6 (E2) — `913325d47400`.
+  - `fix/c4-data-table-resize`: 7 (C4) — `6e0d45a6167c`.
+- **The last three ran concurrently in git worktrees** (`../vanillin-c5-attachment`,
+  `-e2-collapsible`, `-c4-data-table`), each branched from `da1ea95caac5`. They
+  are mutually disjoint by file; `.van.json` manifests are per-component, so
+  even those do not overlap. **Merging is the user's** — `git merge` is denied.
+- **Two follow-ups staged but uncommitted**, both mine, both after their worker
+  pane had exited: `tests/attachment.test.mjs` in the C5 worktree (adds the
+  missing `scrollPaddingInlineEnd` assertion) and `site/pages/collapsible.jsx`
+  in the E2 worktree (moves the spacing-contract note into its own
+  `pg-section`). Each verified green where it sits.
+- **Repo state:** every worktree's suite verified by the head, not just the
+  worker: C5 698 total with its 4 new cases green, E2 **698/698** zero FAIL, C4
+  **695/695** zero FAIL, all three with `npm run contracts` clean and
   `npm run build` green.
-  (`stash@{0}` "On main: whoops" predates this work — not ours, left alone.)
-- **Branch history:** the original `fix/bug-batch` was merged into `main` and
-  deleted, so sub-tasks 1–3 are in `main`, not on a feature branch. Work
-  continues on `fix/bug-batch-2`, cut from that merge commit.
-- **Next:** sub-task 5, **C5** — attachment group `mask-image` at
-  `ui/attachment/attachment.css:198-206` fades to `transparent` at both edges
-  and eats the first/last card's outer border. Re-check those line numbers
-  first. The Chrome compositing workaround (mask on the outer div, scroll on the
-  inner viewport) is commented as load-bearing — keep it.
-- **Gotchas:** line numbers in `docs/ISSUES.md` and in this file's sub-task
-  bodies drift — C3's had moved 301,328 → 294,321; D7's `switch.css:37,42` was
-  still accurate. Verify before editing either way. Sub-task 4 needed a third
-  file the sub-task did not list (a fixture page); expect the same where a test
-  needs a demo that does not exist yet. Sub-task 2 named a
-  `tests/use-form.unit.mjs` that does not exist: pure-node hook tests need a DOM
-  this repo has no dependency for, so form tests go in the browser suites.
-  Run `npm run contracts` after any `ui/` edit or `npm test` fails.
+  (`stash@{0}` "On main: whoops" predates all of this — not ours, left alone.)
+- **Next:** sub-task 8, **D8** — `site/pages/empty.jsx` sits further left than
+  every other page. Confirm it is a missing `.pg-section` wrapper before
+  touching `ui/empty`. Then 9 (H1), which now has three concrete starting points
+  written up under H1 in `docs/ISSUES.md`.
+- **Gotchas:**
+  - **Line numbers drift, every time.** C3's moved 301,328 → 294,321; C5's rule
+    was at `199-209` against `198-206` here and `195-205` in ISSUES; E2's
+    `13-33` was `15` + `18-34`. D7's were the only accurate ones. Re-check
+    before editing.
+  - **The `files:` lists are wishes, not inventories.** Sub-task 2 named a
+    `tests/use-form.unit.mjs` that does not exist, 4 needed a fixture page it
+    did not list, 5's `tests/attachment.test.mjs` had to be created, and 6's fix
+    landed in neither listed file.
+  - **Two sub-tasks' stated diagnoses were wrong** (E2 entirely, C4's
+    prescription partly). Verify by measurement before implementing; both were
+    caught only because the worker probed first.
+  - A worker's report claimed "no commits, staged only" two minutes *after* it
+    had committed. Check `git log` yourself.
+  - Concurrent suites need distinct `VANILLIN_TEST_PORT`s, and CPU contention
+    produces flakes — G2 (drawer) fired twice and a new G4 (navigation-menu)
+    appeared, all clean in isolation.
+  - Run `npm run contracts` after any `ui/` edit or `npm test` fails.

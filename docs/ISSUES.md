@@ -199,19 +199,54 @@ The flag has to be declared by an ancestor — `FormLabel` renders before
 `ui/form-fields`' own `aria-labelledby` resolves to the same id and was left in
 place, per the task file. Its comment now says why it is redundant.
 
-### C4. Data-table column resize overlaps row content
+### C4. ~~Data-table column resize overlaps row content~~ — FIXED (`6e0d45a6167c`)
 
-Resizing a column narrower makes the cell text overlap its neighbour. Wanted
-behaviour: clip character-by-character as the column shrinks, and the moment
-the first character is dropped, show an ellipsis — dropping a second character
-to make room for the `…` if needed.
+Cause confirmed by measurement: `table-layout: fixed` hands each column a width
+but no clip, so a cell wider than its column painted over the next one. Before
+the fix a 40px `id` cell measured `box [234,274]` with `text [246,308]` — 34px
+into a neighbour that starts at 274.
 
-### C5. `ui/attachment` group scroll drops the outer edge borders
+Fixed with `overflow: hidden` + `text-overflow: ellipsis` + `white-space:
+nowrap` on `.data-table-sized .table-cell`, plus a stand-down in the stacked
+container block (a card is as wide as the row, so a long value must wrap).
 
-The first and last cards in a scrolling `AttachmentGroup` are missing their
-outer edge border. Possibly the same root cause as D3 (attachment border
-contrast) — check the edge-fade mask in `ui/attachment/attachment.css:195-205`,
-which already carries a Chrome compositing workaround.
+Two corrections to the original prescription: **`white-space: nowrap` is
+required** — without it anything containing a space wraps to a second line
+instead of clipping per character — and **`min-width: 0` is not**, because a
+`<td>` under `table-layout: fixed` takes its width from the column and ignores
+content min-width. **Body cells only**: `overflow: hidden` on a `<th>` clips the
+resizer handle, which sits 2px outside the header box
+(`data-table.css:239`).
+
+### C5. ~~`ui/attachment` group scroll drops the outer edge borders~~ — FIXED (`76c28b8da75b`)
+
+Not related to D3. The edge-fade `mask-image` reaches `transparent` at both ends
+of the group, so the first and last card's outer border was painted at ~0 alpha
+— measured as a 1/255 channel delta against the card background, versus 26 for
+an interior card.
+
+Fixed by insetting `.attachment-group-viewport` by the fade width
+(`--attachment-group-fade`, extracted from the four hard-coded `1rem` stops) so
+a resting card edge lands where the gradient is fully opaque.
+`scroll-padding-inline` matters as much as `padding-inline`: `scroll-snap-type:
+inline mandatory` aligns card starts to the snapport, so padding alone would
+have fixed the resting position at `scrollLeft: 0` and re-broken every other
+snap point. The Chrome compositing workaround is untouched.
+
+`tests/attachment.test.mjs` is new — the component had no browser suite at all.
+Its border cases sample **painted pixels**, because a masked border still
+reports full `border-width` in `getComputedStyle`, which is why this bug
+survived.
+
+### C6. The sized data-table demo renders every `email` cell empty
+
+Found while fixing C4, not fixed. `site/pages/data-table.jsx:224-229` declares
+`accessorKey: "email"` with no `cell` renderer, and this repo's `flexRender`
+(`lib/use-data-table.js:7-10`) returns `null` when the renderer is undefined —
+there is no tanstack-style default cell. So the whole `email` column in the
+"Column sizing & pinning" demo is blank. Either the demo needs a `cell`, or
+`flexRender` should fall back to the accessor value; the second is a component
+decision, since it changes behaviour for every consumer who omits `cell`.
 
 ---
 
@@ -262,10 +297,46 @@ Wanted:
 - A **more subtle** look: fade the leading edge of the change line with
   opacity, in both directions, rather than a hard boundary.
 
-### E2. `ui/collapsible` glitches at the end of open and close
+### E2. ~~`ui/collapsible` glitches at the end of open and close~~ — FIXED (`913325d47400`)
 
-The tail of both animations jumps. Should be smooth. Suspect the measured-
-height keyframes + `fill-mode: forwards` close path (the `usePresence` recipe).
+**Both suspected causes were wrong, and so was "the tail of both".** Measured
+per frame: content heights are integral (`scrollHeight 86` vs rect `86.0000`),
+so there is no fractional endpoint to snap across; and `forwards` holds height
+at `0` for ~9 frames after the animation reports `finished`, so nothing releases
+early. Close jumps at the tail but open jumps at the **head** — the mount frame.
+The open tail is clean to sub-pixel, so anyone reproducing this by watching the
+end of the open animation concludes there is no bug.
+
+Real cause: animating `height` alone cannot collapse the rendered box. Under
+`box-sizing: border-box` (`styles/globals.css:185`) `height: 0` floors at the
+content element's own vertical padding, and a zero-height flex child still
+consumes its slot in the parent's `gap`. Both remainders appear or vanish in one
+frame at React's mount/unmount, outside the animation's control — 8px each.
+
+Fixed as a **spacing contract**, with `ui/collapsible/` deliberately untouched:
+spacing moved onto a wrapper inside `CollapsibleContent`, `gap` dropped from the
+root, and the contract stated on the docs page. `ui/accordion` already does
+exactly this (`accordion.jsx:157` + `accordion.css:82-84` put padding on
+`.accordion-content-inner`), so the collapsible was the odd one out of two
+components sharing the same `usePresence` recipe.
+
+**The assertion this issue originally asked for would have passed against the
+broken code.** Content height *is* monotonic across the final frames in both
+directions; the discontinuity was in the root box across the mount/unmount
+boundary, which that assertion never looks at — see H1. Catching it needs a
+*pair* of assertions, since one alone passes the other's mechanism: content
+height at the endpoint is 0 (catches the padding floor) **and** the root box
+step across the boundary is 0 (catches the gap slot).
+
+### E3. `scrollHeight` rounding can leave a sub-pixel step in the `usePresence` recipe
+
+Found while measuring E2, not fixed. `--collapsible-content-height` comes from
+`scrollHeight`, which is integer-rounded, while the natural box is not. Content
+that lands on a fractional height therefore animates to a slightly wrong
+endpoint: forcing the case measured a `0.3906px` error. Two orders of magnitude
+below E2's 8px and absent from the shipped demos, so it is latent rather than
+visible — but it applies to every consumer of the recipe, `ui/accordion`
+included.
 
 ---
 
@@ -296,6 +367,11 @@ bug against that rule or a deliberate exception that is undocumented:
 - **G3.** Two `resizable` tests — logged failing on the base commit during
   task 54 (hover-state timing; a strict `>` where the values are equal).
   Never logged as fixed, though the last three full runs were green.
+- **G4.** `navigation-menu: hover opens after delay, leave closes after grace`.
+  Failed once (`expected 0, got 1`) during task 68's three-worktree fan-out,
+  then passed **21/21 twice in isolation on an unmodified tree**. Same shape as
+  G2: a timing-sensitive delay assertion that only breaks under CPU load. New
+  2026-07-30.
 
 ---
 
@@ -308,6 +384,24 @@ bug against that rule or a deliberate exception that is undocumented:
 the test passed. Fixed in task 63, but the *class* of gap was never swept.
 Fold into task 64's conformance suite: assert the precondition
 (`scrollLeft > 0`) alongside the effect.
+
+Three concrete instances found during task 68, all worth folding into the sweep:
+
+- **E2's specified assertion would have passed against the broken code** —
+  "content height is monotonic across the final frames" is true either way. The
+  fix needed a *pair* of assertions because each mechanism silently passes the
+  other's check. Assert the precondition **and** the counter-precondition: C4's
+  test hit-tests a point in the neighbouring cell and separately asserts that
+  point resolves *inside* the neighbour, otherwise it also passes when the hit
+  lands on some third element entirely.
+- **C5's borders reported full `border-width` in computed style while painting
+  at ~0 alpha.** Any assertion about something a mask, filter or transform can
+  suppress has to sample pixels. Same lesson as the mode-toggle sweep.
+- **The browser suites share one page across tests, so state leaks forward.**
+  A `data-table` test that asserted before restoring column widths left the demo
+  at 40px/800px and timed out a later pinning test; the new `collapsible` cases
+  depend on earlier tests having left each demo closed. They fail loudly rather
+  than silently, but the coupling is real and the sweep should note it.
 
 ---
 
@@ -342,3 +436,8 @@ popover context or the range collection. Unowned.
 - Optional (task 63): `.table-container`'s `overflow: auto` is dead weight
   whenever a table is wrapped in a scroll area. Removable if `ui/table` grows
   a `scrollable={false}`.
+- **Unverified end-to-end, needs the user:** `npx github:parkrw/vanillin init`
+  from a scratch Vite app, then rendering the copied components. It targets
+  `main` now that task 38 is merged. A bare `git clone` + `node
+  <clone>/bin/van.mjs` was verified locally, which is what `npx github:`
+  reduces to.

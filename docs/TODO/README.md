@@ -1,6 +1,8 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–61)
 
-**Resume:** `docs/TODO/task68-bug-batch.md` → Handoff (IN PROGRESS — 3 of 9, D7 next)
+**Resume:** `docs/TODO/task68-bug-batch.md` → Handoff (IN PROGRESS — 7 of 9, D8 next)
+
+Two notes for reading anything below: the docs site directory is **`site/`** (renamed 2026-07-27), so older prose here saying `playground/` means `site/`. And `docs/HANDOFF.md` is gone — its durable content is in `AGENTS.md`, `docs/QUIRKS.md` and `docs/DECISIONS.md`; live state belongs in each task file's `## Handoff`.
 
 Plan: `~/.claude/plans/vanillin-zero-dep-shadcn-ui-recreation.md`. 31 of 64
 components done in `ui/` at seed time (chart excluded; toast+sonner = one slug).

@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Orientation for coding agents. Everything here is what you cannot learn from a single file. `README.md` covers the consumer story and component API conventions; `docs/HANDOFF.md` carries current state, the full convention list, and the gotchas. Don't duplicate either here.
+Orientation for coding agents. Everything here is what you cannot learn from a single file. `README.md` covers the consumer story and component API conventions; `docs/QUIRKS.md` carries the traps, `docs/DECISIONS.md` the settled calls. Don't duplicate any of them here. Current state lives in the task file you are working from (`docs/TODO/taskNN-*.md`, `## Handoff`), never in a standing document.
 
 ## Commands
 
@@ -59,12 +59,36 @@ The extension picks the runner:
 
 Implementation first, then tests, one green run — never test-driven. Assert rendered pixels or computed values, never animation objects: a `mask-image` implementation once produced a flawless `getKeyframes()` and painted nothing.
 
+**Assert the precondition and the counter-precondition, not just the effect.** `.data-table-pinned`'s `inset-inline-start === "0px"` was also true under `position: relative`, so pinning was broken for months while the test passed. A test that only checks the effect passes when the setup silently didn't happen — and one that checks a single mechanism passes when a second, different mechanism produces the same symptom.
+
+## Conventions beyond README's
+
+`README.md` has the CSS naming, token and `as`-prop rules. These are the ones it doesn't state:
+
+- **Never hard-code durations or easings** — `var(--motion-fast|medium)` + `var(--motion-ease)`, with a reduced-motion guard on keyframes. Indeterminate loops are the exception and take a **fixed literal**, so they don't track `--motion-scale`.
+- There is no `--shadow-xs`. Use `--shadow-sm`.
+- Disclosure components use `usePresence` + measured-height keyframes + `fill-mode: forwards` on close (`ui/accordion`, `ui/collapsible`), and put their spacing on an **inner wrapper** — see the `height: 0` entry in `docs/QUIRKS.md`.
+- Stateful components use `useControllableState` + `data-state` (`ui/toggle`, `ui/tabs`).
+- Every component gets `site/pages/<slug>.jsx` + a `page: lazy(...)` entry in `site/registry.js`, and the page imports its own component CSS. **The demo page is the docs page**, and it doubles as the test fixture — RTL and other variants go there (`sw-rtl`, `sa-rtl`, `cal-rtl`), not into a borrowed page.
+
+## Fan-out
+
+Spawning parallel workers in git worktrees works; the job is coordination.
+
+- **Absorb the setup yourself**: pre-create each worktree, symlink `node_modules` (and add it to `.git/info/exclude` — `.gitignore`'s `node_modules/` does not match a symlink), and assign each worker a distinct `VANILLIN_TEST_PORT`.
+- **Assign disjoint files, in writing.** This is why an 11-branch fan-out once cherry-picked with zero conflicts. Keep workers out of shared docs (`docs/ISSUES.md`, the task file) and record those centrally, or branches conflict where nothing needed to.
+- **Brief them to measure before implementing, and to stop and report rather than force a stated fix.** Two of task 68's three diagnoses were wrong; both were caught only because of that instruction.
+- **Verify claims, don't relay them.** Re-run the suite yourself, read the diff, and check `git log` — one worker reported "no commits, staged only" two minutes after committing.
+- **Never detect liveness by tmux `pane_title`** (`claude` overwrites it within seconds) and don't poll with a bare zsh glob (`nomatch` aborts the monitor). Keep the task → `pane_id` map.
+- **Fix small things yourself; round-trip only what's big.**
+
 ## Docs map — read the one matching the work
 
 | Doing | Read |
 |---|---|
-| anything non-trivial | `docs/HANDOFF.md` — state, conventions, **gotchas**, decisions not to re-litigate |
-| planning, or a numbered task | `docs/TODO/README.md`, then `docs/TODO/taskNN-*.md` |
+| anything non-trivial | `docs/QUIRKS.md` — the traps, CSS through git |
+| about to argue for a different design | `docs/DECISIONS.md` — settled, with the reasoning |
+| planning, or a numbered task | `docs/TODO/README.md`, then `docs/TODO/taskNN-*.md` (its `## Handoff` is the live state) |
 | asking why a past task went that way | `docs/TODO/LOG.md` — append here when a task lands, not to the TODO README |
 | touching bugs | `docs/ISSUES.md` — triage inbox; re-verify line numbers, they drift |
 
