@@ -1,6 +1,6 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–61)
 
-**Resume:** task 71 is COMPLETE — the docs-site sweep is finished and the `docs/ISSUES.md` banner is down. No task is in flight. Next is **72**, which now has a measured, ordered fix list in its footnote and is re-estimated `~M`; then **73** (H2, the deletion probe). Task **74** (narrow-viewport reflow, split out of 71's findings) needs a scope call before it is detailed. See `docs/TODO/task71-docs-site-sweep.md` for what the sweep tools do and how to re-run them.
+**Resume:** `docs/TODO/task71-docs-site-sweep.md` → Handoff (COMPLETE). Task 71 is COMPLETE — the docs-site sweep is finished and the `docs/ISSUES.md` banner is down. No task is in flight. Next is **72**, which now has a measured, ordered fix list in its footnote and is re-estimated `~M`; then **73** (H2, the deletion probe). Task **74** (narrow-viewport reflow, split out of 71's findings) needs a scope call before it is detailed. See `docs/TODO/task71-docs-site-sweep.md` for what the sweep tools do and how to re-run them.
 
 Two notes for reading anything below: the docs site directory is **`site/`** (renamed 2026-07-27), so older prose here saying `playground/` means `site/`. And `docs/HANDOFF.md` is gone — its durable content is in `AGENTS.md`, `docs/QUIRKS.md` and `docs/DECISIONS.md`; live state belongs in each task file's `## Handoff`.
 
@@ -377,6 +377,8 @@ just-in-time. Rough order of usefulness:
 
 ## Refs
 
+- **Measuring colour (contrast, computed styles, dark mode): `docs/TODO/notes/measuring-colour.md`.** Read before writing anything that reads a computed colour — oklch parsing, alpha compositing, and why a green axe run is not an accessibility result.
+- **Sweep tools:** `node scripts/sweep-pages.mjs` (all 79 pages, light + dark) and `node scripts/contrast-nontext.mjs` (non-text contrast). Measuring instruments — they exit non-zero on harness errors, not on findings.
 - **Per-task decisions, deviations and gotchas: `docs/TODO/LOG.md`.** Append
   there when a task lands — not to this file. This index stays scannable.
 - Planning is **just-in-time**: the rows above are durable, task files are

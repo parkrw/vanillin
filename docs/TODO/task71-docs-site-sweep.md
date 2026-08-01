@@ -11,11 +11,11 @@ Out of scope: fixes of any kind; A2 (raw `<button>` in docs pages — task 69 ow
 
 ## Sub-tasks
 
-- [ ] 1. `scripts/sweep-pages.mjs` — headless sweep over every registry page in light **and** dark, emitting one JSON report plus full-page screenshots. Per page it records: axe-core `color-contrast` violations (selector, measured ratio, required, colours), computed `cursor` for every interactive element (`button`, `a[href]`, `[role=button]`, `[role=option]`, `[role=menuitem]`, `[role=tab]`, `[role=switch]`, `input`, `select`, `summary`, `[tabindex]:not([tabindex="-1"])`) where it is not `pointer`/`text`/`grab`, console errors + React warnings + uncaught page errors, horizontal document overflow at 1280 and 380, and the left edge of the first `.pg-section` (the D8 geometry check). Dark mode via `emulateMedia({ colorScheme: "dark" })` on a fresh load — `site/color-scheme.js:16` reads the media query at import time, so toggling the class post-load desyncs the store. — test: the script's own run is the test; it must complete all 74 pages with zero harness errors and produce a report whose page count matches `site/registry.js`; files: `scripts/sweep-pages.mjs`
-- [ ] 2. Triage the machine findings — dedupe against existing D1–D6/F1–F4/C6/E3/I1 (already owned by 72), confirm each survivor by re-reading the source at the reported line, and drop anything the script flagged that does not reproduce on a second run. Output is a triaged list in the report dir, not yet in `ISSUES.md`. — test: every kept finding cites a `path:line` re-read this pass; files: (scratchpad report only)
-- [ ] 3. Visual review of the screenshots — 4 background `general-purpose` agents (`model: "opus"`), ~11 pages each, light+dark, each reporting only defects it can name concretely (clipping, overlap, misalignment against neighbouring pages, invisible state, broken demo). Screenshots stay in the agents' context, never the head's. — test: each agent returns a list with page, mode, and what is wrong; files: (scratchpad screenshots)
-- [ ] 4. Write findings into `docs/ISSUES.md` under the existing lettered sections (new items continue the numbering: D7+ are taken, so contrast items land as D9…, cursor as F5…, code bugs as C7…, motion as E4…, unverified as I2…), each with its measurement and verified line reference. — test: `grep` every new `path:line` resolves to the cited code; files: `docs/ISSUES.md`
-- [ ] 5. Take the banner down and reconcile the plan — delete the `⚠️ PICK UP HERE` block from `docs/ISSUES.md`, mark 71 `[x]` in `docs/TODO/README.md`, re-estimate 72 from the actual finding count, append to `docs/TODO/LOG.md`. — test: no `PICK UP HERE` remains; the 72 footnote lists the new item ids; files: `docs/ISSUES.md`, `docs/TODO/README.md`, `docs/TODO/LOG.md`
+- [x] 1. `scripts/sweep-pages.mjs` — headless sweep over every registry page in light **and** dark, emitting one JSON report plus full-page screenshots. Per page it records: axe-core `color-contrast` violations (selector, measured ratio, required, colours), computed `cursor` for every interactive element (`button`, `a[href]`, `[role=button]`, `[role=option]`, `[role=menuitem]`, `[role=tab]`, `[role=switch]`, `input`, `select`, `summary`, `[tabindex]:not([tabindex="-1"])`) where it is not `pointer`/`text`/`grab`, console errors + React warnings + uncaught page errors, horizontal document overflow at 1280 and 380, and the left edge of the first `.pg-section` (the D8 geometry check). Dark mode via `emulateMedia({ colorScheme: "dark" })` on a fresh load — `site/color-scheme.js:16` reads the media query at import time, so toggling the class post-load desyncs the store. — test: the script's own run is the test; it must complete all 74 pages with zero harness errors and produce a report whose page count matches `site/registry.js`; files: `scripts/sweep-pages.mjs`
+- [x] 2. Triage the machine findings — dedupe against existing D1–D6/F1–F4/C6/E3/I1 (already owned by 72), confirm each survivor by re-reading the source at the reported line, and drop anything the script flagged that does not reproduce on a second run. Output is a triaged list in the report dir, not yet in `ISSUES.md`. — test: every kept finding cites a `path:line` re-read this pass; files: (scratchpad report only)
+- [x] 3. Visual review of the screenshots — 4 background `general-purpose` agents (`model: "opus"`), ~11 pages each, light+dark, each reporting only defects it can name concretely (clipping, overlap, misalignment against neighbouring pages, invisible state, broken demo). Screenshots stay in the agents' context, never the head's. — test: each agent returns a list with page, mode, and what is wrong; files: (scratchpad screenshots)
+- [x] 4. Write findings into `docs/ISSUES.md` under the existing lettered sections (new items continue the numbering: D7+ are taken, so contrast items land as D9…, cursor as F5…, code bugs as C7…, motion as E4…, unverified as I2…), each with its measurement and verified line reference. — test: `grep` every new `path:line` resolves to the cited code; files: `docs/ISSUES.md`
+- [x] 5. Take the banner down and reconcile the plan — delete the `⚠️ PICK UP HERE` block from `docs/ISSUES.md`, mark 71 `[x]` in `docs/TODO/README.md`, re-estimate 72 from the actual finding count, append to `docs/TODO/LOG.md`. — test: no `PICK UP HERE` remains; the 72 footnote lists the new item ids; files: `docs/ISSUES.md`, `docs/TODO/README.md`, `docs/TODO/LOG.md`
 
 ## Verify / done
 
@@ -29,27 +29,11 @@ Acceptance: `docs/ISSUES.md` has no unfinished-sweep banner; every new finding n
 
 ## Handoff
 
-**Status:** COMPLETE (2026-08-01), branch `docs/site-sweep-triage`, not yet pushed.
+**Status:** COMPLETE
+**Branch:** merged to `main` (`a4d2b3761d06`, `750bcd0b89a0`), pushed  **PR:** none — fast-forwarded  **Updated:** 2026-08-01
 
-All five sub-tasks done. Nothing under `ui/`, `lib/` or `site/` was touched — the deliverable is measurement plus the two tools that produced it.
-
-**The two tools, both rerunnable and both committed:**
-
-```
-node scripts/sweep-pages.mjs      # 79 pages × light/dark, ~6 min
-node scripts/contrast-nontext.mjs # WCAG 1.4.11 boundary contrast, ~40s
-```
-
-`sweep-pages.mjs` takes route substrings to narrow a run (`node scripts/sweep-pages.mjs select tabs`), `--out <dir>` for the report and screenshots, `--no-shots` to skip the captures. It exits non-zero only on harness errors, not on findings — it is a measuring instrument, not a gate, and wiring it into `npm test` would be wrong until the findings are fixed.
-
-**Why two tools and not one:** axe's `color-contrast` rule measures text only. Every original D item is a border or a switch track — non-text. A text-only sweep calls this kit fully accessible while `--border` sits at 1.26:1.
-
-**What it found** — 56 raw contrast hits and 38 cursor hits reducing to four causes, written up as D9–D12 and F5–F6 in `docs/ISSUES.md`, plus C7–C8 (docs-page markup), K1 (now task 74) and I2. D1/D2/D3/D5 are all D9; F1/F2/F3 are all F5. Task 72's footnote in `docs/TODO/README.md` has the ordered fix list.
-
-**Traps for whoever measures colour here next:**
-
-- Computed styles come back as `oklch()`/`oklab()`. Parsing numbers out of the string yields a uniform 1.00:1 — garbage that looks like data. Convert via canvas `fillStyle`, then composite alpha over the resolved backdrop; `scripts/contrast-nontext.mjs` has the working version.
-- Probe something nobody reported, as a control. `.input`'s border failing identically to the four reported components is the entire reason we know this is one token and not four bugs.
-- Dark mode via `emulateMedia({ colorScheme })` on a fresh load. `site/color-scheme.js:16` reads the media query at import time, so toggling `.dark` after load desyncs the store from the DOM.
-
-**Deliberately not done:** anything resembling a fix, and any change to `docs/ISSUES.md` sections A, B, G, H or J. D4 and D6 were measured and did not reproduce as described — they are re-aimed in place, not struck.
+- **Landed:** the sweep is finished and the `docs/ISSUES.md` banner is down. All 79 routed pages measured in light and dark by two committed, rerunnable tools: `node scripts/sweep-pages.mjs` (axe text contrast, cursor affordance, console errors, overflow at 1280 and 380, geometry; takes route substrings, `--out`, `--no-shots`) and `node scripts/contrast-nontext.mjs` (WCAG 1.4.11 boundary contrast).
+- **Findings:** 56 raw contrast hits and 38 cursor hits collapse into four causes — D9 `--border` 1.26:1, D10 `--muted-foreground` on `--muted` 4.34:1, F5 seven component `cursor: default` declarations, F6 no native input types in the global rule. Plus C7–C8, I2, and K1 (now task 74). D1/D2/D3/D5 = D9; F1/F2/F3 = F5.
+- **Repo state:** clean. (`stash@{0} "whoops"` predates this task and is not ours.)
+- **Next:** task 72 — its footnote in `docs/TODO/README.md` has the ordered, cheapest-first fix list. Start with D9: one token in `styles/defaults.css:35`, then re-run `scripts/contrast-nontext.mjs` before touching any component.
+- **Gotchas:** D4 and D6 were measured and did **not** reproduce as described — re-aimed in place, not struck. Colour measurement traps live in `docs/TODO/notes/measuring-colour.md`; read it before writing anything that reads a computed colour.
