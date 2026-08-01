@@ -1,6 +1,6 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–61)
 
-**Resume:** `docs/TODO/task68-bug-batch.md` → Handoff (COMPLETE — 9 of 9; `test/assertion-precondition-sweep` unpushed). No task is in flight; the next work is the unswept docs-site pass and `docs/ISSUES.md` H2, neither yet a task.
+**Resume:** task 68 is COMPLETE and fully merged (9 of 9, suite 708/708). No task is in flight. Next is **71** — the unswept docs-site pass — then **72** (fix what it finds) and **73** (`docs/ISSUES.md` H2). None has a task file yet; `/cycle 71` writes the first.
 
 Two notes for reading anything below: the docs site directory is **`site/`** (renamed 2026-07-27), so older prose here saying `playground/` means `site/`. And `docs/HANDOFF.md` is gone — its durable content is in `AGENTS.md`, `docs/QUIRKS.md` and `docs/DECISIONS.md`; live state belongs in each task file's `## Handoff`.
 
@@ -51,7 +51,7 @@ Tasks are detailed just-in-time; only the rows below are durable.
 **Order from here (settled 2026-07-27, after 38 landed):**
 
 ```
-39 ✓ → 68 (bugs) → 65 → 66 → 67 → 69 → 70 → 30 → console kit
+39 ✓ → 68 ✓ → 71 (sweep) → 72 (bugs) → 73 (coverage) → 65 → 66 → 67 → 69 → 70 → 30 → console kit
 ```
 
 - **39 landed 2026-07-27 and unblocked everything after it.** It ran alone on the
@@ -60,6 +60,11 @@ Tasks are detailed just-in-time; only the rows below are durable.
   regardless.
 - **68 before the remaining CLI work.** Known code bugs, including one
   high-priority motion glitch, should not sit under new features.
+- **71 → 72 → 73 before the CLI work, for the same reason** (added 2026-07-31).
+  68's scope was *known* bugs; 71 finishes the sweep that decides what "known"
+  means, 72 fixes it, and 73 answers which features nothing would have caught
+  anyway. **73 is the one row here that can slide right** if the CLI is wanted
+  sooner — it is test quality, not a user-visible defect. 71 and 72 should not.
 - **69 and 70 before 30.** They rewrite the docs pages that 30 then proofreads.
 - **30 is last and absorbs the docs half of `docs/ISSUES.md`** — A3 (code
   examples on every component page) and B1–B6 (per-component config
@@ -71,8 +76,9 @@ Tasks are detailed just-in-time; only the rows below are durable.
   registry entry and sidecar.
 
 **`docs/ISSUES.md` is the triage inbox, not a plan.** Items graduate into rows
-here. Its unfinished-sweep banner is live: the user's own pass stopped at
-`form-fields`, so **remind them at the start of any session that touches bugs.**
+here. Its unfinished-sweep banner is live and **task 71 now owns it** — until 71
+lands, **remind the user of the unswept pages at the start of any session that
+touches bugs.**
 
 59–63 were added 2026-07-26, after 31–58 landed: 59 and 62 from the user
 directly, 60/61/63 from reviewing what phase 2 actually shipped. **61 before
@@ -142,9 +148,12 @@ written; it is a final consistency and gap pass.
 | 65  | component-update          | ~L  | [ ]    | deps: 64, 38; `van update`  [^65]                      |
 | 66  | config-schema-json       | ~M  | [ ]    | deps: 38; generated `van.schema.json` + `$schema` [^66]                |
 | 67  | cli-picker               | ~S  | [ ]    | deps: 38; interactive multi-select for a bare `add` [^67]              |
-| 68  | bug-batch                | ~M  | [x]    | deps: 39; all 9 done; H1 sweep on `test/assertion-precondition-sweep` unpushed [^68] |
+| 68  | bug-batch                | ~M  | [x]    | deps: 39; all 9 done and merged; suite 708/708 [^68]                    |
 | 69  | docs-site-dogfood        | ~M  | [ ]    | ISSUES A2 — the site is built out of the kit [^69]                       |
 | 70  | typography-system        | ~L  | [ ]    | ISSUES A4 — a real typeset scale, not per-page sizes [^70]               |
+| 71  | docs-site-sweep          | ~M  | [ ]    | ISSUES banner — the 42 unswept pages; measure + triage, no fixes [^71]  |
+| 72  | bug-batch-2              | ~L  | [ ]    | deps: 71; its findings + D1–D6, F1–F4, C6, E3, I1 [^72]                 |
+| 73  | coverage-probe           | ~L  | [ ]    | ISSUES H2 — deletion probe: what no test would notice [^73]             |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -270,6 +279,39 @@ written; it is a final consistency and gap pass.
 
 [^70]: ISSUES A4. A typeset system rather than per-page font sizes; `~L` because
     it touches every docs page and interacts with 69. Sequence after 69.
+
+[^71]: The unfinished-sweep banner at the top of `docs/ISSUES.md`. The user's own
+    pass stopped at `form-fields`, leaving **42** `site/pages/*.jsx` unswept —
+    `form` and everything alphabetically after it, through `view-transitions`.
+    **Triage only: measure and write up, fix nothing.** Task 68's own diagnoses
+    were wrong three times out of nine and its `files:` lists were incomplete
+    four times, so a finding is worth having only if it was measured; 72 then
+    works from causes instead of guesses. Findings land in `docs/ISSUES.md` under
+    the existing lettered sections with verified line numbers. Sizing signal: the
+    28 swept pages yielded D1–D8, so expect ~12 more. **The banner comes down
+    when this lands** — it is the only thing that clears it.
+
+[^72]: deps: 71. Fixes 71's findings **plus the items 68 left unowned**: D1–D6
+    (the contrast family, one pass of its own), F1–F4 (cursor affordance,
+    including the slider `grab`-vs-`pointer` decision), C6 (the sized data-table
+    demo renders every `email` cell empty — needs a call on whether `flexRender`
+    falls back to the accessor, which changes behaviour for every consumer who
+    omits `cell`), E3 (`scrollHeight` rounding leaves a sub-pixel step in the
+    `usePresence` recipe — latent, hits `ui/accordion` too) and I1 (`ui/command`
+    may never highlight inside a faceted-filter popover — unverified, so step one
+    is reproduce or close it). **G1–G4 stay out**: load-dependent timing flakes
+    need their own reproduction approach, not a component fix. `~L` is a
+    placeholder — re-estimate once 71 lands.
+
+[^73]: ISSUES H2. H1 asked whether assertions hold for the wrong *reason*; this
+    asks which features have **no real test at all**. `ui/scroll-area`'s
+    overscroll squish had two tests, both asserting an absence, no positive case
+    — deleting the feature left the suite green, and it was found by accident.
+    708 tests over 68 components is ~10 each, thin for anything with drag, focus
+    management or RTL. **The probe is deletion, not reading**: neuter one
+    load-bearing rule or handler per component and see whether the suite notices.
+    A targeted per-component run is ~20-40s, so a first pass over all 68 is about
+    a half-day including the tests it turns out to need. Never commit a break.
 
 [^65]: deps: 64, 38; `van update` with 3-way merge (base = recorded
     `kitVersion`). Biggest payoff — the original kit cannot take upstream fixes into an

@@ -19,6 +19,10 @@ is planned. Items marked **verified** were checked against the tree at
 > `separator`, `sheet`, `sidebar`, `skeleton`, `slider`, `sonner`, `table`,
 > `tabs`, `textarea`, `toast`, `toggle`, `tooltip`, and the rest.
 >
+> **42 pages of `site/pages/*.jsx`** — `form` through `view-transitions`.
+> **Owned by task 71** as of 2026-07-31; **only 71 landing takes this banner
+> down.** Its findings come back here, then task 72 fixes them.
+>
 > **Remind the user of this at the start of any session that touches bugs.**
 
 ---
@@ -199,7 +203,7 @@ The flag has to be declared by an ancestor — `FormLabel` renders before
 `ui/form-fields`' own `aria-labelledby` resolves to the same id and was left in
 place, per the task file. Its comment now says why it is redundant.
 
-### C4. ~~Data-table column resize overlaps row content~~ — FIXED (`6e0d45a6167c`)
+### C4. ~~Data-table column resize overlaps row content~~ — FIXED (`6f1470ab2948`)
 
 Cause confirmed by measurement: `table-layout: fixed` hands each column a width
 but no clip, so a cell wider than its column painted over the next one. Before
@@ -218,7 +222,7 @@ content min-width. **Body cells only**: `overflow: hidden` on a `<th>` clips the
 resizer handle, which sits 2px outside the header box
 (`data-table.css:239`).
 
-### C5. ~~`ui/attachment` group scroll drops the outer edge borders~~ — FIXED (`76c28b8da75b`)
+### C5. ~~`ui/attachment` group scroll drops the outer edge borders~~ — FIXED (`ff6cac152716`, `6a18d1e31d51`)
 
 Not related to D3. The edge-fade `mask-image` reaches `transparent` at both ends
 of the group, so the first and last card's outer border was painted at ~0 alpha
@@ -310,7 +314,7 @@ Wanted:
 - A **more subtle** look: fade the leading edge of the change line with
   opacity, in both directions, rather than a hard boundary.
 
-### E2. ~~`ui/collapsible` glitches at the end of open and close~~ — FIXED (`913325d47400`)
+### E2. ~~`ui/collapsible` glitches at the end of open and close~~ — FIXED (`197b9a9d0afe`, `a9512c7946cf`)
 
 **Both suspected causes were wrong, and so was "the tail of both".** Measured
 per frame: content heights are integral (`scrollHeight 86` vs rect `86.0000`),
@@ -390,7 +394,7 @@ bug against that rule or a deliberate exception that is undocumented:
 
 ## H. Test-quality gaps
 
-### H1. ~~Assertions that hold for the wrong value~~ — SWEPT (`12cc896f9787`)
+### H1. ~~Assertions that hold for the wrong value~~ — SWEPT (`c7f0664d119e`)
 
 `.data-table-pinned`'s `inset-inline-start === "0px"` was also true for
 `position: relative`, so header pinning was broken on `main` for months while
@@ -454,7 +458,7 @@ Four concrete instances found during task 68, all worth folding into the sweep:
 
 ### H2. Unknown how many features have no real test at all
 
-**Status:** open  **Found:** task 68 sub-task 9, 2026-07-31
+**Status:** owned by **task 73**  **Found:** task 68 sub-task 9, 2026-07-31
 
 H1 asked whether assertions hold for the wrong reason. The squish answered a
 worse question nobody asked: `ui/scroll-area`'s overscroll squish had **no real
@@ -475,7 +479,7 @@ half-day including authoring.
 Distinct from the unswept docs-site sweep at the top of this file: that one
 finds defects users can see, this one finds defects nothing would catch. Do the
 sweep first — it is cheaper and targets the class that has actually been
-biting.
+biting. Sequenced accordingly: **71 → 72 → 73**.
 
 ---
 

@@ -734,7 +734,7 @@ Landed `ui/mode-toggle` + `lib/use-color-scheme.js` + a demo page; the nav toggl
 
 ## Task 68 — bug batch, sub-tasks 5/6/7 by concurrent fan-out (2026-07-30)
 
-Three worktrees off `da1ea95caac5`, one commit each, none merged: C5 `76c28b8da75b`, E2 `913325d47400`, C4 `6e0d45a6167c`. Mechanics and the lessons are in `AGENTS.md` under Fan-out. What the work itself established:
+Three worktrees off `da1ea95caac5`, one commit each. Worktree shas were C5 `76c28b8da75b`, E2 `913325d47400`, C4 `6e0d45a6167c`; all three were **rebased on merge**, so on `main` they are C5 `ff6cac152716` + `6a18d1e31d51`, E2 `197b9a9d0afe` + `a9512c7946cf`, C4 `6f1470ab2948`. Mechanics and the lessons are in `AGENTS.md` under Fan-out. What the work itself established:
 
 - **Two of the three stated diagnoses were wrong**, and both survived only because the workers were told to measure first and to stop rather than force the stated fix. E2's two suspected causes were falsified outright — the real cause is that `height: 0` cannot collapse a padded border-box, and a zero-height flex child keeps its `gap` slot. C4's cause held but its prescription needed `white-space: nowrap` added and `min-width: 0` dropped.
 - **E2's fix landed in neither of its listed files**, because `ui/accordion` already implemented the contract `ui/collapsible` was missing. The two share the `usePresence` recipe almost line for line; the divergence looked accidental.
@@ -751,10 +751,20 @@ One commit on `fix/empty-page-alignment`: `71aa0516b940`.
 
 ## Task 68 — sub-task 9, H1 assertion sweep (2026-07-31)
 
-One commit on `test/assertion-precondition-sweep`: `12cc896f9787`. Only `tests/` changed.
+One commit on `test/assertion-precondition-sweep`, `12cc896f9787` in the branch, **`c7f0664d119e` as merged**. Only `tests/` changed.
 
 - **Four real instances out of twenty candidate files**, the rest already sound — the triage and the reason for each exclusion are under H1 in `docs/ISSUES.md`. Grepping for `eq(..., "none")` and friends over-reports badly: readouts of demo `textContent`, explicit opt-in values like `forced-color-adjust: none`, and reads of inline style or custom properties (which return `""` when absent) are all self-guarding.
 - **`ui/scroll-area`'s overscroll squish had shipped with no real coverage.** Both tests asserted `transform: none`, no positive case existed, and deleting the feature left the suite green. Two independent causes, either alone sufficient: the gesture fired one `touchmove` when the transform is not written until a *later* move, and CDP's `Input.dispatchTouchEvent` delivers no touch events to the listeners in this harness at all.
 - **`Input.dispatchTouchEvent` does not work here** — instrumented with listeners, zero events, `hasTouch` on or off. It was the suite's only CDP-touch user. Synthesise `TouchEvent` in-page instead; `tests/scroll-area.test.mjs` has the recipe.
 - **The check that matters is deletion, not green.** Every amended assertion was confirmed by removing the feature and watching it fail — the squish (3 failures) and the status-dot pulse (2). An absence-assertion that survives deleting the thing it describes is not a test.
 - Worth its own task, deliberately not absorbed: this swept assertions expecting an absence. The squish suggests the inverse question — which features have tests that never exercise them at all.
+
+## Replan — 71/72/73 added, task 68 closed out (2026-07-31, `/cycle --adjust`)
+
+No code. Three rows added and the index reconciled against what actually merged.
+
+- **Order is now `68 ✓ → 71 → 72 → 73 → 65 → 66 → 67 → 69 → 70 → 30`.** 71 and 72 inherit 68's rationale — user-visible bugs before new features. 73 sits ahead of the CLI because H1's origin bug survived on `main` for months behind a passing test, but it is the one row here that can slide right.
+- **71 is triage-only, deliberately.** Task 68's stated diagnoses were wrong three times out of nine and its `files:` lists were incomplete four times. Splitting find-and-measure from fix means 72 works from measured causes, and 71's output is what makes 72 estimable at all — `~L` on 72 is a placeholder until then.
+- **The unswept surface is 42 pages, not "~40 components"** — `site/pages/form.jsx` through `view-transitions.jsx`. Counted, not estimated.
+- **72 absorbs the residue 68 left unowned**: D1–D6, F1–F4, C6, E3, I1. G1–G4 stay out — load-dependent timing flakes need a reproduction approach, not a component fix.
+- **Four recorded shas resolved to no branch.** C5, E2, C4 and H1 were each rebased before merge and the docs kept the pre-rebase sha; `git branch --contains` found them on nothing. Corrected in `docs/ISSUES.md`, `task68-bug-batch.md` and above. `docs/TODO/reports/` was left alone — it is point-in-time worker scratch and was accurate when written. **Record the sha after merge, not at commit time.**

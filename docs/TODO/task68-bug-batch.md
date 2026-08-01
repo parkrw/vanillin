@@ -61,7 +61,7 @@ affordance), G1–G3 (flakes), I1 (unverified).
       removing the `:dir(rtl)` rule fails the sign assertion.
 
 - [x] 5. **C5 — attachment group scroll eats the outer edge borders.** Done:
-      `76c28b8da75b`. Diagnosis held; line numbers had drifted again (rule was
+      `ff6cac152716`, `6a18d1e31d51`. Diagnosis held; line numbers had drifted again (rule was
       `199-209`, the `mask-image` `202-208`, against `198-206` here and
       `195-205` in ISSUES). Insets the viewport by a new
       `--attachment-group-fade`. **`scroll-padding-inline` was the non-obvious
@@ -72,7 +72,7 @@ affordance), G1–G3 (flakes), I1 (unverified).
       existed) and samples painted pixels, since a masked border still reports
       full `border-width` in computed style.
 
-- [x] 6. **E2 — collapsible end-of-animation jump.** Done: `913325d47400`.
+- [x] 6. **E2 — collapsible end-of-animation jump.** Done: `197b9a9d0afe`, `a9512c7946cf`.
       **Both suspected causes were falsified by per-frame measurement** and the
       fix landed in neither listed file. No fractional endpoint (`scrollHeight
       86` vs rect `86.0000`); `forwards` holds `0` for ~9 frames, so no early
@@ -88,7 +88,7 @@ affordance), G1–G3 (flakes), I1 (unverified).
       root box step across the boundary is 0; each alone passes the other's
       mechanism.
 
-- [x] 7. **C4 — data-table resize overlaps row content.** Done: `6e0d45a6167c`.
+- [x] 7. **C4 — data-table resize overlaps row content.** Done: `6f1470ab2948`.
       Cause held, prescription needed two corrections: **`white-space: nowrap`
       is required** (without it anything containing a space wraps instead of
       clipping per character) and **`min-width: 0` is not** — a `<td>` under
@@ -117,7 +117,7 @@ affordance), G1–G3 (flakes), I1 (unverified).
       `tests/empty.test.mjs` was **new** (no browser suite existed).
 
 - [x] 9. **H1 — sweep assertions that hold for the wrong value.** Done:
-      `12cc896f9787`. Triaged every assertion whose expected value is also what
+      `c7f0664d119e`. Triaged every assertion whose expected value is also what
       an absent mechanism reports: **four real, four already sound** (rationale
       for each under H1 in `docs/ISSUES.md`). Fixed `scroll-area` ×2,
       `status-dot` ×2, `navigation-menu`, `drawer`.
@@ -164,22 +164,26 @@ npm run build
 
 ## Handoff
 
-**Status:** COMPLETE — 9 of 9
-**Branch:** `test/assertion-precondition-sweep` @ `63ffa71c97fe`, **not pushed,
-no PR**  **Updated:** 2026-07-31
+**Status:** COMPLETE — 9 of 9, **fully merged to `main`**
+**Updated:** 2026-07-31 (replan)
 
-- **Landed:** every confirmed code bug in this batch is fixed. Sub-tasks 1–8 are
-  on `main` (D8 merged as `71aa0516b940`); sub-task 9's H1 sweep is two unpushed
-  commits on `test/assertion-precondition-sweep`, off `main` @ `3b9e9bf0b8a9`.
-- **Repo state:** suite **708/708**, `contracts` and `build` green. The sweep
-  touched only `tests/` and `docs/`. `docs/ISSUES.md` is uncommitted — a new
-  **H2** written this session. (`stash@{0}` "On main: whoops" is old, not ours.)
-- **Next:** push the branch and open its PR. Nothing in task 68 remains.
-- **Then:** the two follow-ups, both unowned and neither absorbed here — finish
-  the unswept docs-site pass (banner at the top of `docs/ISSUES.md`; ~40
-  components never looked at, and the swept 28 yielded D1–D8), then **H2**,
-  which asks which features have no real test at all. Sweep first: cheaper, and
-  it targets the class that has actually been biting.
+- **Landed:** all nine sub-tasks are on `main`; nothing in task 68 remains and
+  no branch of it is outstanding. Suite **708/708**, `contracts` and `build`
+  green.
+- **Shas were corrected on 2026-07-31.** Four sub-tasks were rebased before
+  merge, so the shas this file and `docs/ISSUES.md` originally recorded resolve
+  to no branch. Landed values: C5 `ff6cac152716` + `6a18d1e31d51`, E2
+  `197b9a9d0afe` + `a9512c7946cf`, C4 `6f1470ab2948`, H1 `c7f0664d119e`.
+  The dead shas (`76c28b8da75b`, `913325d47400`, `6e0d45a6167c`,
+  `12cc896f9787`, `63ffa71c97fe`) survive only in `docs/TODO/reports/`, which is
+  point-in-time worker scratch and was left as written. **Record the sha after
+  merge, not at commit time.**
+- **Next:** **task 71** — the unswept docs-site pass. Then 72 (fix what it
+  finds, plus the residue below) and 73 (H2). Both follow-ups this file flagged
+  are now rows in `docs/TODO/README.md`; neither was absorbed here.
+- **Left unowned by this task, now folded into 72:** D1–D6 (contrast), F1–F4
+  (cursor affordance), C6, E3, I1. **G1–G4** flakes remain unowned — they are
+  load-dependent timing failures, not component defects.
 - **Gotchas:**
   - **This file's own diagnoses were wrong three times** — E2's and D8's
     entirely, C4's prescription partly — and its `files:` lists were incomplete
