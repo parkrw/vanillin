@@ -29,4 +29,27 @@ Acceptance: `docs/ISSUES.md` has no unfinished-sweep banner; every new finding n
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** COMPLETE (2026-08-01), branch `docs/site-sweep-triage`, not yet pushed.
+
+All five sub-tasks done. Nothing under `ui/`, `lib/` or `site/` was touched — the deliverable is measurement plus the two tools that produced it.
+
+**The two tools, both rerunnable and both committed:**
+
+```
+node scripts/sweep-pages.mjs      # 79 pages × light/dark, ~6 min
+node scripts/contrast-nontext.mjs # WCAG 1.4.11 boundary contrast, ~40s
+```
+
+`sweep-pages.mjs` takes route substrings to narrow a run (`node scripts/sweep-pages.mjs select tabs`), `--out <dir>` for the report and screenshots, `--no-shots` to skip the captures. It exits non-zero only on harness errors, not on findings — it is a measuring instrument, not a gate, and wiring it into `npm test` would be wrong until the findings are fixed.
+
+**Why two tools and not one:** axe's `color-contrast` rule measures text only. Every original D item is a border or a switch track — non-text. A text-only sweep calls this kit fully accessible while `--border` sits at 1.26:1.
+
+**What it found** — 56 raw contrast hits and 38 cursor hits reducing to four causes, written up as D9–D12 and F5–F6 in `docs/ISSUES.md`, plus C7–C8 (docs-page markup), K1 (now task 74) and I2. D1/D2/D3/D5 are all D9; F1/F2/F3 are all F5. Task 72's footnote in `docs/TODO/README.md` has the ordered fix list.
+
+**Traps for whoever measures colour here next:**
+
+- Computed styles come back as `oklch()`/`oklab()`. Parsing numbers out of the string yields a uniform 1.00:1 — garbage that looks like data. Convert via canvas `fillStyle`, then composite alpha over the resolved backdrop; `scripts/contrast-nontext.mjs` has the working version.
+- Probe something nobody reported, as a control. `.input`'s border failing identically to the four reported components is the entire reason we know this is one token and not four bugs.
+- Dark mode via `emulateMedia({ colorScheme })` on a fresh load. `site/color-scheme.js:16` reads the media query at import time, so toggling `.dark` after load desyncs the store from the DOM.
+
+**Deliberately not done:** anything resembling a fix, and any change to `docs/ISSUES.md` sections A, B, G, H or J. D4 and D6 were measured and did not reproduce as described — they are re-aimed in place, not struck.

@@ -1,6 +1,6 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–61)
 
-**Resume:** task 68 is COMPLETE and fully merged (9 of 9, suite 708/708). No task is in flight. Next is **71** — the unswept docs-site pass — then **72** (fix what it finds) and **73** (`docs/ISSUES.md` H2). None has a task file yet; `/cycle 71` writes the first.
+**Resume:** task 71 is COMPLETE — the docs-site sweep is finished and the `docs/ISSUES.md` banner is down. No task is in flight. Next is **72**, which now has a measured, ordered fix list in its footnote and is re-estimated `~M`; then **73** (H2, the deletion probe). Task **74** (narrow-viewport reflow, split out of 71's findings) needs a scope call before it is detailed. See `docs/TODO/task71-docs-site-sweep.md` for what the sweep tools do and how to re-run them.
 
 Two notes for reading anything below: the docs site directory is **`site/`** (renamed 2026-07-27), so older prose here saying `playground/` means `site/`. And `docs/HANDOFF.md` is gone — its durable content is in `AGENTS.md`, `docs/QUIRKS.md` and `docs/DECISIONS.md`; live state belongs in each task file's `## Handoff`.
 
@@ -51,7 +51,7 @@ Tasks are detailed just-in-time; only the rows below are durable.
 **Order from here (settled 2026-07-27, after 38 landed):**
 
 ```
-39 ✓ → 68 ✓ → 71 (sweep) → 72 (bugs) → 73 (coverage) → 65 → 66 → 67 → 69 → 70 → 30 → console kit
+39 ✓ → 68 ✓ → 71 ✓ → 72 (bugs) → 73 (coverage) → 65 → 66 → 67 → 69 → 70 → 30 → 74? → console kit
 ```
 
 - **39 landed 2026-07-27 and unblocked everything after it.** It ran alone on the
@@ -60,7 +60,8 @@ Tasks are detailed just-in-time; only the rows below are durable.
   regardless.
 - **68 before the remaining CLI work.** Known code bugs, including one
   high-priority motion glitch, should not sit under new features.
-- **71 → 72 → 73 before the CLI work, for the same reason** (added 2026-07-31).
+- **71 ✓ → 72 → 73 before the CLI work, for the same reason** (added 2026-07-31;
+  71 landed 2026-08-01).
   68's scope was *known* bugs; 71 finishes the sweep that decides what "known"
   means, 72 fixes it, and 73 answers which features nothing would have caught
   anyway. **73 is the one row here that can slide right** if the CLI is wanted
@@ -76,9 +77,9 @@ Tasks are detailed just-in-time; only the rows below are durable.
   registry entry and sidecar.
 
 **`docs/ISSUES.md` is the triage inbox, not a plan.** Items graduate into rows
-here. Its unfinished-sweep banner is live and **task 71 now owns it** — until 71
-lands, **remind the user of the unswept pages at the start of any session that
-touches bugs.**
+here. **The unfinished-sweep banner is gone as of 2026-08-01** — 71 swept all 79
+pages, so the file is now complete rather than a partial pass, and no session
+needs to warn about unswept pages any more.
 
 59–63 were added 2026-07-26, after 31–58 landed: 59 and 62 from the user
 directly, 60/61/63 from reviewing what phase 2 actually shipped. **61 before
@@ -151,8 +152,9 @@ written; it is a final consistency and gap pass.
 | 68  | bug-batch                | ~M  | [x]    | deps: 39; all 9 done and merged; suite 708/708 [^68]                    |
 | 69  | docs-site-dogfood        | ~M  | [ ]    | ISSUES A2 — the site is built out of the kit [^69]                       |
 | 70  | typography-system        | ~L  | [ ]    | ISSUES A4 — a real typeset scale, not per-page sizes [^70]               |
-| 71  | docs-site-sweep          | ~M  | [ ]    | ISSUES banner — the 42 unswept pages; measure + triage, no fixes [^71]  |
-| 72  | bug-batch-2              | ~L  | [ ]    | deps: 71; its findings + D1–D6, F1–F4, C6, E3, I1 [^72]                 |
+| 71  | docs-site-sweep          | ~M  | [x]    | all 79 pages swept; 2 tools committed; D/F collapse to 4 causes [^71]  |
+| 72  | bug-batch-2              | ~M  | [ ]    | deps: 71; re-estimated down — 4 root causes, not 20 items [^72]         |
+| 74  | site-responsive          | ~L  | [ ]    | ISSUES K1 — 73 of 79 pages overflow at 380px; needs a scope call [^74]  |
 | 73  | coverage-probe           | ~L  | [ ]    | ISSUES H2 — deletion probe: what no test would notice [^73]             |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
@@ -280,28 +282,58 @@ written; it is a final consistency and gap pass.
 [^70]: ISSUES A4. A typeset system rather than per-page font sizes; `~L` because
     it touches every docs page and interacts with 69. Sequence after 69.
 
-[^71]: The unfinished-sweep banner at the top of `docs/ISSUES.md`. The user's own
-    pass stopped at `form-fields`, leaving **42** `site/pages/*.jsx` unswept —
-    `form` and everything alphabetically after it, through `view-transitions`.
-    **Triage only: measure and write up, fix nothing.** Task 68's own diagnoses
-    were wrong three times out of nine and its `files:` lists were incomplete
-    four times, so a finding is worth having only if it was measured; 72 then
-    works from causes instead of guesses. Findings land in `docs/ISSUES.md` under
-    the existing lettered sections with verified line numbers. Sizing signal: the
-    28 swept pages yielded D1–D8, so expect ~12 more. **The banner comes down
-    when this lands** — it is the only thing that clears it.
+[^71]: **Landed 2026-08-01.** Swept all **79** routed pages (not the 42 the
+    banner named — it undercounted, and the five `docs/` pages were never in
+    scope at all) in light and dark. Banner is down. Two rerunnable tools
+    committed: `scripts/sweep-pages.mjs` (axe text contrast, cursor affordance,
+    console errors, overflow at 1280 and 380, content geometry) and
+    `scripts/contrast-nontext.mjs` (WCAG 1.4.11 boundary contrast — **axe cannot
+    see any of it**, which is why the whole D family looked clean to automation
+    before). New items: D9–D12, F5–F6, C7–C8, K1, I2.
+    **The sizing guess was wrong in the useful direction.** It predicted ~12 more
+    findings of the same kind; what came back was 56 raw contrast hits and 38
+    cursor hits that collapse into **four root causes** — `--border` at 1.26:1
+    (D9, = D1/D2/D3/D5), `--muted-foreground` on `--muted` at 4.34:1 (D10, eight
+    components, probably = D6), seven component `cursor: default` declarations
+    out-specifying the global rule (F5, = F1/F2/F3), and the global rule listing
+    no native input types (F6). Two of the user's original items did not
+    reproduce as described and are re-aimed rather than closed (D4, D6).
+    **Two lessons worth keeping.** Automation that only measures text contrast
+    will report a design system with an invisible border token as fully
+    accessible. And a control probe pays for itself: `.input`'s border was
+    measured as a baseline nobody had complained about, failed identically to
+    the four reported components, and that is what proved the defect was one
+    token rather than four components.
 
-[^72]: deps: 71. Fixes 71's findings **plus the items 68 left unowned**: D1–D6
-    (the contrast family, one pass of its own), F1–F4 (cursor affordance,
-    including the slider `grab`-vs-`pointer` decision), C6 (the sized data-table
-    demo renders every `email` cell empty — needs a call on whether `flexRender`
-    falls back to the accessor, which changes behaviour for every consumer who
-    omits `cell`), E3 (`scrollHeight` rounding leaves a sub-pixel step in the
-    `usePresence` recipe — latent, hits `ui/accordion` too) and I1 (`ui/command`
-    may never highlight inside a faceted-filter popover — unverified, so step one
-    is reproduce or close it). **G1–G4 stay out**: load-dependent timing flakes
-    need their own reproduction approach, not a component fix. `~L` is a
-    placeholder — re-estimate once 71 lands.
+[^72]: deps: 71. **Re-estimated `~L` → `~M` now that 71 has landed**: the
+    contrast and cursor families are four token/rule fixes, not twenty component
+    fixes, and each is one declaration.
+    Order, cheapest-first, each independently verifiable by re-running
+    `scripts/contrast-nontext.mjs` or `scripts/sweep-pages.mjs`:
+    **D9** `--border` to ≥3:1 (light and dark — one token, then re-measure
+    before touching any component; D1/D2/D3/D5 should disappear with it),
+    **D10** `--muted-foreground` on `--muted` to ≥4.5:1 light (also closes D6),
+    **F5** delete or override the seven `cursor: default` declarations (keep the
+    three `not-allowed` ones), **F6** add native input types to
+    `styles/globals.css:227-244` (this is where **F4**'s slider decision gets
+    made), **D11** bubble destructive 4.15:1, **D12** the site's active nav link
+    3.82:1, **C7/C8** two docs-page markup bugs, then the pre-existing **C6**
+    (`flexRender` fallback — still a component-behaviour call), **E3**
+    (`scrollHeight` sub-pixel step, hits `ui/accordion` too) and **I1**
+    (reproduce or close). **D4 is not a fix, it is a re-look** — the calendar has
+    no border of its own to fix. **G1–G4 stay out**: load-dependent timing flakes
+    need their own reproduction approach. **K1 is out** — it became task 74.
+    Every contrast fix wants a test that asserts the measured ratio, not the
+    token string; the H1 sweep is the precedent.
+
+[^74]: ISSUES K1, split out of 72 on 2026-08-01 because it is a different kind
+    of work. 73 of 79 pages force a horizontal document scroll at a 380px
+    viewport (nothing overflows at 1280); worst is `container-queries` at
+    1116px, which is the page whose subject is fitting a container. **Needs a
+    scope call before it is worth detailing:** is the docs site meant to work on
+    a phone at all? If yes it is demo-layout work across most of
+    `site/pages/`, not kit CSS, and belongs after 30 with the other docs-site
+    passes rather than in a bug batch.
 
 [^73]: ISSUES H2. H1 asked whether assertions hold for the wrong *reason*; this
     asks which features have **no real test at all**. `ui/scroll-area`'s

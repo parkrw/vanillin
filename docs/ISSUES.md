@@ -10,20 +10,18 @@ is planned. Items marked **verified** were checked against the tree at
 
 ---
 
-> ## ⚠️ PICK UP HERE — THE BUG SWEEP IS UNFINISHED
+> ## ✅ THE SWEEP IS FINISHED (task 71, 2026-08-01)
 >
-> The user's own pass through the docs site stopped at **`form-fields`**.
-> Everything after it in alphabetical page order is **unswept**: `hover-card`,
-> `input`, `input-otp`, `label`, `menubar`, `navigation-menu`, `pagination`,
-> `popover`, `progress`, `radio-group`, `resizable`, `scroll-area`, `select`,
-> `separator`, `sheet`, `sidebar`, `skeleton`, `slider`, `sonner`, `table`,
-> `tabs`, `textarea`, `toast`, `toggle`, `tooltip`, and the rest.
+> All **79 routed pages** — every `site/pages/*.jsx` plus the five `docs/`
+> pages — were swept in light **and** dark, not just the 42 the banner used to
+> name. Two committed tools did the measuring and both are rerunnable:
+> `scripts/sweep-pages.mjs` (axe text contrast, cursor affordance, console
+> errors, overflow, geometry) and `scripts/contrast-nontext.mjs` (the non-text
+> contrast axe structurally cannot see).
 >
-> **42 pages of `site/pages/*.jsx`** — `form` through `view-transitions`.
-> **Owned by task 71** as of 2026-07-31; **only 71 landing takes this banner
-> down.** Its findings come back here, then task 72 fixes them.
->
-> **Remind the user of this at the start of any session that touches bugs.**
+> **Every finding below carries the number that produced it.** New items are
+> D9–D12, F5–F6, C7–C8, K1, I2. The headline is that the D family collapses
+> into **two token defects**, not eight component ones — see D9.
 
 ---
 
@@ -252,6 +250,21 @@ there is no tanstack-style default cell. So the whole `email` column in the
 `flexRender` should fall back to the accessor value; the second is a component
 decision, since it changes behaviour for every consumer who omits `cell`.
 
+### C7. Adjacent `<span>`s on the use-form page render as one unreadable token
+
+`site/pages/use-form.jsx:205` renders the dirty flag and two JSON objects as
+three sibling `<span>`s with no separator, so the page shows **`false{}{}`**.
+`site/pages/use-form.jsx:524` does the same with two booleans and shows
+**`falsetrue`**. Both are in state-inspection demos, which is exactly where a
+reader is trying to read a value. Docs-page markup, not a component bug.
+
+### C8. The Density section of the input page renders no inputs
+
+`site/pages/input.jsx:41` — heading and explanatory paragraph, then no
+`<Input>`. Every other section on that page renders at least one, so it reads
+as a broken demo rather than a prose aside. Compare `site/pages/density.jsx`,
+which shows the same idea with controls.
+
 ---
 
 ## D. Contrast and visual defects
@@ -296,6 +309,83 @@ Fixed on the docs site, not in `ui/`: a `.pg-empty-frame` container using the
 same dashed convention as `.pg-cq-panel` (`site/site.css:265`). Upstream leaves
 Empty full-bleed on purpose so it can fill a parent slot, and its own docs
 supply the frame the same way.
+
+### D9. `--border` fails non-text contrast — this is D1, D2, D3 and D5
+
+**One token, not four component bugs.** `--border`
+(`styles/defaults.css:35`, `oklch(0.922 0 0)` light / `oklch(1 0 0 / 0.15)`
+dark) measures **1.26:1** against the light page and **1.48:1** against the
+dark one. WCAG 1.4.11 asks **3:1** for the visual boundary of a UI component.
+
+Measured with `node scripts/contrast-nontext.mjs`. Everything the D family
+reported separately resolves to this one value:
+
+| Reported as | Element | Light | Dark |
+| --- | --- | --- | --- |
+| D1/D2 | `.switch` unchecked track background | 1.26:1 | 1.48:1 |
+| D5 | `.checkbox` border | 1.26:1 | 1.48:1 |
+| D3 | `.attachment` border | 1.26:1 | 1.26:1 |
+| (baseline) | `.input` border | 1.26:1 | 1.48:1 |
+
+The `.input` row is the proof that this is systemic: it was probed as a
+control, was never reported by anyone, and fails identically. **Fix the token,
+then re-measure — do not fix four components.** The checked/filled states all
+pass comfortably (17.93:1 light, 15.72:1 dark), so only the resting boundary is
+at issue.
+
+Second, smaller value in the same family: `.attachment`'s destructive-tinted
+border measures **2.12:1** light / **1.95:1** dark — closer, still under 3:1,
+and a separate declaration from `--border`.
+
+### D10. `--muted-foreground` on `--muted` is 4.34:1 — eight components, one pair
+
+`--muted-foreground` (`styles/defaults.css:34`) over `--muted`
+(`styles/defaults.css:33`) measures **4.34:1** in light mode against the 4.5:1
+WCAG 1.4.3 minimum. axe flagged it independently on every page that pairs them:
+`ui/bubble` (`bubble.css:31-34`), `ui/avatar`'s fallback, `ui/kbd`, `ui/item`'s
+muted description, `ui/tabs`' inactive trigger, `ui/aspect-ratio`'s demo
+placeholder, and the `kbd` inside `ui/sidebar`.
+
+**Dark mode passes** — this is a light-mode-only defect, which is why eyeballing
+in dark missed it.
+
+**This is probably also D6.** `.time-picker-separator`
+(`ui/time-picker/time-picker.css:56-57`) uses the same `--muted-foreground`,
+and "the time text is muddied" describes 4.34:1 well. See D6's note below.
+
+### D11. `ui/bubble` destructive text is 4.15:1
+
+`bubble.css:59-61` paints `var(--destructive)` on a 10% tint of itself over the
+background — `#e7000b` on `#ffebe8`, measured **4.15:1**, against 4.5:1. Light
+only. Same shape as D10 but a different token pair, so it needs its own fix.
+
+### D12. The docs site's active nav link is 3.82:1
+
+`site/site.css:88-91` — `--pg-accent` on an 18% tint of itself: `#008065` on
+`#d1e8e3`, **3.82:1**. It is on **every page of the site**, it is the element
+marking where the reader is, and it is site chrome rather than kit code, so it
+is a one-line fix independent of everything above.
+
+### D4 and D6 — the probe did not reproduce them as described
+
+Not closed, **re-aimed**. Both were measured and neither matched its
+description, so 72 should not go looking where the text points:
+
+- **D4 (calendar borders).** `.calendar-day-button` declares `border: none`
+  (`ui/calendar/calendar.css:122`) and `.calendar` resolved to no border at
+  all, so there is no calendar-specific border to fix. What the eye saw was
+  almost certainly D9's `--border` on the surrounding frame.
+- **D6 (time text muddied).** The field text itself measures **19.80:1** light
+  / **18.97:1** dark — it is `--foreground` and is fine
+  (`ui/time-picker/time-picker.css:35`). The muddy element is the separator at
+  `time-picker.css:56-57`, which is D10's token pair.
+
+### Negative result: axe found zero text-contrast violations in dark mode
+
+Across 79 pages. Every text-contrast finding in this file is light-only. Worth
+recording because the D items were all written as "light **and** dark unless
+noted" — for text, that framing is wrong. It does **not** clear dark mode for
+non-text contrast, where D9 fails in both.
 
 ---
 
@@ -369,6 +459,47 @@ bug against that rule or a deliberate exception that is undocumented:
 - **F4.** Sliders — question, not a bug report: what is the web-wide
   convention? Decide and apply consistently. (`grab`/`grabbing` is the common
   answer for a draggable thumb, not `pointer`.)
+
+### F5. Seven `cursor: default` declarations out-specify the global rule — this is F1, F2 and F3
+
+The global rule (`styles/globals.css:227-244`) selects `button` by element, so
+**any component class that sets `cursor` wins on specificity**. Seven do, all
+ported from upstream's menu-trigger styling, and each one is a confirmed miss
+measured by `node scripts/sweep-pages.mjs`:
+
+| Declaration | Element | Reported as |
+| --- | --- | --- |
+| `ui/select/select.css:22` | `button.select-trigger` | F2 |
+| `ui/select/select.css:200` | select scroll button | new |
+| `ui/combobox/combobox.css:68` | combobox clear button | F1 |
+| `ui/combobox/combobox.css:93` | combobox chip remove | F1 |
+| `ui/menubar/menubar.css:33` | `button.menubar-trigger` | new |
+| `ui/navigation-menu/navigation-menu.css:45` | `button.navigation-menu-trigger` | new |
+| `ui/badge/badge.css:61` | `button.badge-chip-remove` | F3 |
+
+F2 is broader than reported — the select trigger misses on the `select`, `form`
+**and** `form-fields` pages, not only Form Fields. Note that
+`ui/select/select.css:40`, `ui/combobox/combobox.css:54` and `:97` set
+`not-allowed` for disabled state, which is correct and should survive the fix.
+
+### F6. The global rule covers ARIA roles but no native input types
+
+`styles/globals.css:227-244` enumerates `[role="checkbox"]`, `[role="radio"]`,
+`[role="switch"]` and friends, but the only native elements it lists are
+`button`, `summary`, `label[for]`, `a[href]` and `select`. So a plain
+`<input type="radio">` gets the OS default and no hand. Measured instances:
+
+- `<input type="radio" name="tier">` — `site/pages/form.jsx`, `cursor: default`
+- `<input type="range">` — `site/pages/use-form.jsx`, `cursor: default`
+  (this is **F4**'s decision point, arriving via a different route)
+- `<input type="file" class="input">` — `site/pages/input.jsx`,
+  `cursor: default`
+
+Native `input[type=checkbox|radio|file|submit|button|reset]` all want the same
+treatment. Low-priority sibling: a **disabled** calendar day
+(`button.calendar-day-button[disabled]`) resolves to `default` rather than
+`not-allowed`, unlike the disabled select and combobox — decide whether that is
+an exception or an oversight.
 
 ---
 
@@ -493,6 +624,14 @@ then dropped the assertion rather than chase it.
 `ui/command/command.jsx:134` does call `useHighlight`, so the fault is in the
 popover context or the range collection. Unowned.
 
+### I2. One unidentified 404 on the badge page
+
+The sweep's console capture across 79 pages × 2 modes produced exactly **one**
+error, on `#badge` in light mode: `Failed to load resource: the server
+responded with a status of 404 (Not Found)`. The message carries no URL and it
+did not recur in dark mode. Reproduce with the network panel open before
+spending time on it — it may be a dev-server artefact rather than a page bug.
+
 ---
 
 ## J. Debt / housekeeping
@@ -519,3 +658,37 @@ popover context or the range collection. Unowned.
   `main` now that task 38 is merged. A bare `git clone` + `node
   <clone>/bin/van.mjs` was verified locally, which is what `npx github:`
   reduces to.
+
+---
+
+## K. Responsive — narrow viewports
+
+### K1. 73 of 79 pages overflow horizontally at 380px
+
+Measured at a 380px viewport by `scripts/sweep-pages.mjs` (`scrollWidth` vs
+`clientWidth`). At **1280px nothing overflows** — this is narrow-only. Six
+pages are clean (`aspect-ratio`, `avatar`, `input`, `native-select`, `spinner`,
+`table`); the rest force a horizontal scroll of the whole document, which is
+WCAG 1.4.10 (Reflow).
+
+Worst offenders, `scrollWidth` at a 380px viewport:
+
+| Page | Width | | Page | Width |
+| --- | --- | --- | --- | --- |
+| container-queries | 1116 | | data-table | 754 |
+| theming | 865 | | attachment | 684 |
+| mode-toggle | 823 | | installation | 670 |
+| schema | 814 | | density | 662 |
+| carousel | 812 | | card | 652 |
+| form | 803 | | pagination | 640 |
+| form-fields | 766 | | scroll-area, skeleton | 620 |
+| contracts | 764 | | navigation-menu | 614 |
+
+The long tail sits at 390–540, which is one demo grid or one wide table each;
+the top of the list is a different problem in kind. Note that
+`container-queries` — the page whose subject is fitting a container — is the
+single worst page on the site at nearly 3× the viewport.
+
+**Not scoped to 72 without a decision first:** whether the docs site is meant
+to work on a phone at all. If it is, this is its own task, not a bug batch —
+`~L` and mostly demo-layout work rather than kit CSS.
