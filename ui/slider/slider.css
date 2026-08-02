@@ -61,11 +61,8 @@
   background-color: var(--background);
   box-shadow: var(--shadow-sm);
   transition: box-shadow var(--motion-fast) var(--motion-ease);
-  cursor: grab;
-}
-
-.slider[data-dragging] .slider-thumb {
-  cursor: grabbing;
+  /* No grab cursor: the hand sits exactly on the thumb and hides the
+     hover/focus glow (user call, 2026-08-02). The sweep flags this — leave it. */
 }
 
 .slider-thumb[data-orientation="horizontal"] {

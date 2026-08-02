@@ -511,6 +511,12 @@ bug against that rule or a deliberate exception that is undocumented:
 - **F4.** Sliders — question, not a bug report: what is the web-wide
   convention? Decide and apply consistently. (`grab`/`grabbing` is the common
   answer for a draggable thumb, not `pointer`.)
+  **Settled 2026-08-02, split decision:** native `input[type="range"]` gets
+  `grab`/`grabbing` (`styles/globals.css`); `.slider-thumb` deliberately gets
+  **no cursor** — the hand sits exactly on the thumb and hides the hover/focus
+  glow. The web-wide convention is the default arrow anyway (native controls,
+  Radix, shadcn, Primer). The sweep flags the thumb as a cursor miss; it is
+  not one — do not "fix" it.
 
 ### F5. Seven `cursor: default` declarations out-specify the global rule — this is F1, F2 and F3
 
