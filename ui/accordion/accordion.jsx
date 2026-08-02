@@ -136,11 +136,18 @@ export function AccordionContent({ className, children, ...props }) {
   const ref = useRef(null)
   const present = usePresence(open, ref)
 
-  // The open/close keyframes animate to/from the measured content height;
-  // scrollHeight is stable even while the element's own height is animating.
+  // The open/close keyframes animate to/from the measured content height.
+  // scrollHeight is integer-rounded, so fractional content lands the animation
+  // on a sub-pixel step; measure the real box with the animation suppressed
+  // for the frame instead (layout effects run before paint, so nothing shows).
   useLayoutEffect(() => {
     const node = ref.current
-    if (node) node.style.setProperty("--accordion-content-height", `${node.scrollHeight}px`)
+    if (!node) return
+    const prev = node.style.animation
+    node.style.animation = "none"
+    const height = node.getBoundingClientRect().height
+    node.style.animation = prev
+    node.style.setProperty("--accordion-content-height", `${height}px`)
   }, [present])
 
   if (!present) return null

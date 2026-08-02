@@ -129,5 +129,38 @@ export default async function run({ page, baseUrl, test, eq, near }) {
       })
     }
   }
+  // E3: scrollHeight is integer-rounded, so fractional content used to land
+  // the animation endpoint up to half a pixel away from the natural box. The
+  // measured var must carry the fraction.
+  await test("fractional content height reaches the animation endpoint exactly", async () => {
+    await page.waitForTimeout(700)
+    const result = await page.evaluate(async () => {
+      const root = document.querySelectorAll(".collapsible")[0]
+      const trigger = root.querySelector('[aria-label="Toggle"]')
+      root.classList.add("e3-probe")
+      const style = document.createElement("style")
+      style.textContent =
+        '.e3-probe .collapsible-content::after { content: ""; display: block; height: 0.4px; }'
+      document.head.appendChild(style)
+      if (root.querySelector(".collapsible-content")) trigger.click() // close first
+      await new Promise((r) => setTimeout(r, 700))
+      trigger.click() // open — the mount effect measures with the probe applied
+      await new Promise((r) => setTimeout(r, 700))
+      const node = root.querySelector(".collapsible-content")
+      const rect = node.getBoundingClientRect().height
+      const varPx = parseFloat(node.style.getPropertyValue("--collapsible-content-height"))
+      trigger.click() // restore closed
+      root.classList.remove("e3-probe")
+      style.remove()
+      return { rect, varPx }
+    })
+    eq(
+      Math.abs(result.rect - Math.round(result.rect)) > 0.1,
+      true,
+      `probe produced a fractional height (${result.rect})`
+    )
+    near(result.varPx, result.rect, 0.01, "measured var matches the natural fractional box")
+  })
+
   await page.emulateMedia({ reducedMotion: null })
 }
