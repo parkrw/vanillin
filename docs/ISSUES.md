@@ -386,6 +386,8 @@ undiluted as a 2px outline.
 A focus indicator that cannot be seen is a keyboard-navigation defect, not a
 cosmetic one. Fix alongside D9 — same generated file, same regeneration step.
 
+**Update 2026-08-02 (task 72):** token raised to `oklch(0.65 0 0)` light (3.23:1); the bare outline and the border-swap indicators (`.input:focus-visible` et al.) now pass, asserted by `tests/contrast.test.mjs`. But the 50%-alpha glow is not three sites — `grep 'color-mix(in oklab, var(--ring) 50%'` finds **28 declarations across ~24 components**, and wherever the glow is the *only* focus indicator (button, checkbox, toggle, badge, tabs, switch, radio, slider, …) it measures ~1.7:1 light regardless of the token: no alpha short of ~solid reaches 3:1 over white. The remainder is one kit-wide design call, not per-component fixes — either make the glow solid `var(--ring)` (keeps the 3px geometry, loses the softness) or stop suppressing the global 2px outline on glow-only components (keeps the glow as decoration, outline carries compliance). Blocked on that call; the token half is done.
+
 ### D4 and D6 — the probe did not reproduce them as described
 
 Not closed, **re-aimed**. Both were measured and neither matched its
