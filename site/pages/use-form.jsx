@@ -202,13 +202,21 @@ function FormStateDemo() {
     <section data-pg="uf-formstate">
       <h3>formState</h3>
       <input data-pg="uf-formstate-color" {...register("color")} />
-      <span data-pg="uf-formstate-dirty">{String(isDirty)}</span>
-      <span data-pg="uf-formstate-dirtyfields">
-        {JSON.stringify(dirtyFields)}
-      </span>
-      <span data-pg="uf-formstate-touched">
-        {JSON.stringify(touchedFields)}
-      </span>
+      <div>
+        isDirty: <span data-pg="uf-formstate-dirty">{String(isDirty)}</span>
+      </div>
+      <div>
+        dirtyFields:{" "}
+        <span data-pg="uf-formstate-dirtyfields">
+          {JSON.stringify(dirtyFields)}
+        </span>
+      </div>
+      <div>
+        touchedFields:{" "}
+        <span data-pg="uf-formstate-touched">
+          {JSON.stringify(touchedFields)}
+        </span>
+      </div>
     </section>
   )
 }
@@ -521,8 +529,13 @@ function ValidationModes() {
         {errors.field && (
           <span data-pg="uf-modes-err">{errors.field.message}</span>
         )}
-        <span data-pg="uf-modes-submitted">{String(isSubmitted)}</span>
-        <span data-pg="uf-modes-valid">{String(isValid)}</span>
+        <div>
+          isSubmitted:{" "}
+          <span data-pg="uf-modes-submitted">{String(isSubmitted)}</span>
+        </div>
+        <div>
+          isValid: <span data-pg="uf-modes-valid">{String(isValid)}</span>
+        </div>
         <button type="submit" data-pg="uf-modes-submit">
           Submit
         </button>

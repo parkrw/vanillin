@@ -2,6 +2,7 @@ import { Input } from "../../ui/input/input.jsx"
 import "../../ui/input/input.css"
 import { Label } from "../../ui/label/label.jsx"
 import "../../ui/label/label.css"
+import { Density } from "../../ui/density/density.jsx"
 
 export default function InputPage() {
   return (
@@ -44,6 +45,15 @@ export default function InputPage() {
           Padding scales with <code>--density-scale</code> via the{" "}
           <code>--space-*</code> ramp.
         </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "20rem" }}>
+          <Density mode="compact">
+            <Input placeholder="Compact" />
+          </Density>
+          <Input placeholder="Comfortable (default)" />
+          <Density mode="spacious">
+            <Input placeholder="Spacious" />
+          </Density>
+        </div>
       </section>
     </>
   )
