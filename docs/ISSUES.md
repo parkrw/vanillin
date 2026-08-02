@@ -240,7 +240,11 @@ Its border cases sample **painted pixels**, because a masked border still
 reports full `border-width` in `getComputedStyle`, which is why this bug
 survived.
 
-### C6. The sized data-table demo renders every `email` cell empty
+### C6. ~~The sized data-table demo renders every `email` cell empty~~ — FIXED in task 72
+
+`flexRender` now falls back to the context's `getValue()` when the cell def is
+undefined, matching tanstack's default cell — fixes every consumer who omits
+`cell`, not just the demo. Asserted by the data-table suite.
 
 Found while fixing C4, not fixed. `site/pages/data-table.jsx:224-229` declares
 `accessorKey: "email"` with no `cell` renderer, and this repo's `flexRender`
@@ -476,7 +480,12 @@ boundary, which that assertion never looks at — see H1. Catching it needs a
 height at the endpoint is 0 (catches the padding floor) **and** the root box
 step across the boundary is 0 (catches the gap slot).
 
-### E3. `scrollHeight` rounding can leave a sub-pixel step in the `usePresence` recipe
+### E3. ~~`scrollHeight` rounding can leave a sub-pixel step in the `usePresence` recipe~~ — FIXED in task 72
+
+Both copies of the recipe (`ui/collapsible`, `ui/accordion`) now measure
+`getBoundingClientRect().height` with the animation suppressed for the frame,
+so the var carries the fraction. Asserted by a fractional-height test in
+`tests/collapsible.test.mjs`.
 
 Found while measuring E2, not fixed. `--collapsible-content-height` comes from
 `scrollHeight`, which is integer-rounded, while the natural box is not. Content
@@ -676,13 +685,20 @@ biting. Sequenced accordingly: **71 → 72 → 73**.
 
 ## I. Suspected, unverified
 
-### I1. `ui/command` may never highlight inside a faceted-filter popover
+### I1. ~~`ui/command` may never highlight inside a faceted-filter popover~~ — CLOSED, does not reproduce
 
 Task 63 tried to assert it and got **zero ranges** registered under
 `vanillin-search` when typing into the data-table's faceted `CommandInput`,
 then dropped the assertion rather than chase it.
 `ui/command/command.jsx:134` does call `useHighlight`, so the fault is in the
 popover context or the range collection. Unowned.
+
+**Closed in task 72 (2026-08-02):** typing "pen" into the faceted
+`CommandInput` registers **one** range under `vanillin-search` — the
+contiguous match in "pending"; "processing" survives the fuzzy filter with no
+contiguous substring, which `lib/use-highlight.js` documents as unpainted.
+Whatever task 63 hit is gone (likely fixed by the task 45 fuzzy re-sort work)
+or was a probe error.
 
 ### I2. One unidentified 404 on the badge page
 

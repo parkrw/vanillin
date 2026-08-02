@@ -33,7 +33,8 @@ Verified by rendering all three options against the real kit (screenshots, not m
 - [x] 9. **D12 — the site's active nav link** 3.82:1 (`site/site.css:88-91`). Site chrome, one line, independent of everything above.
 - [x] 10. **C7/C8 — docs-page markup.** `site/pages/use-form.jsx:205` and `:524` render adjacent `<span>`s as `false{}{}` / `falsetrue`; `site/pages/input.jsx:41` has a Density heading with no `<Input>`.
   **Done 2026-08-02.** Labels added outside the `data-pg` spans (tests read span text only, all 46 use-form/input tests green); Density section renders compact/comfortable/spacious `<Input>`s via `ui/density`.
-- [ ] 11. **C6, E3, I1 — the pre-existing tail.** C6 is a component-behaviour call (`flexRender` fallback vs. demo `cell`). E3 is the `scrollHeight` sub-pixel step, which also hits `ui/accordion`. I1 is reproduce-or-close.
+- [x] 11. **C6, E3, I1 — the pre-existing tail.** C6 is a component-behaviour call (`flexRender` fallback vs. demo `cell`). E3 is the `scrollHeight` sub-pixel step, which also hits `ui/accordion`. I1 is reproduce-or-close.
+  **Done 2026-08-02.** C6: `flexRender` falls back to the context's `getValue()` (tanstack's default cell) — behaviour change for all consumers, tested. E3: both recipe copies measure `getBoundingClientRect().height` with the animation suppressed for the frame; fractional-height test added. I1: closed, does not reproduce — one range registers for a contiguous match, fuzzy-only matches unpainted as documented.
 
 **Out of scope:** G1–G4 (load-dependent timing flakes need their own reproduction approach), K1 (became task 74), D4 (not a fix — the calendar has no border of its own; what the eye saw was D9).
 
@@ -54,8 +55,8 @@ npm run build
 **Branch:** `fix/task72-contrast-cursors`  **PR:** none  **Updated:** 2026-08-02
 
 - **Landed (committed):** sub-tasks 1, 2, 5, 8, 9 (D9, D3, D10, D11, D12) plus D13's token half.
-- **Done this session (uncommitted, verified, commits proposed to the user):** sub-tasks 6, 7 (F5/F6/F4, plus the disabled-calendar-day `not-allowed` decision), 4 (probe extension: focus/exempt flags, D13 outline row passes both modes, graphical rows), 10 (C7/C8 markup). Manifests regenerated — `attachment`/`bubble` were stale from the earlier committed fixes and made the conformance suite red; `npm run contracts` is part of landing any `ui/**` edit.
+- **Done this session (uncommitted, verified, commits proposed to the user):** sub-tasks 6, 7 (F5/F6/F4, plus the disabled-calendar-day `not-allowed` decision), 4 (probe extension: focus/exempt flags, D13 outline row passes both modes, graphical rows), 10 (C7/C8 markup), 11 (C6 `flexRender` default cell, E3 fractional measure in collapsible+accordion, I1 closed as not reproducing). Manifests regenerated — `attachment`/`bubble` were stale from the earlier committed fixes and made the conformance suite red; `npm run contracts` is part of landing any `ui/**` edit.
 - **Found:** **F7** (sweep cursor heuristic: 16 residual hits are tool gaps — `w/e-resize` missing from AFFORDANCES, `[tabindex]` over-match; tool is outside Owns), **D14** (warning dot 2.31:1 light), **D15** (progress track / slider rail near-invisible both modes). All filed in `docs/ISSUES.md`.
 - **Verify state:** suite 726/726, build clean, contrast probe all ok/exempt, sweep cursor findings 0 on kit pages (16 F7 tool-gap residuals).
-- **Next:** sub-task 3's glow half — **blocked on a design call**: solid `var(--ring)` glow vs un-suppressing the global outline on the ~24 glow-only components (see D13 in `docs/ISSUES.md`). Then sub-task 11 (C6, E3, I1), each a separate investigation.
+- **Next:** sub-task 3's glow half — **blocked on a design call**: solid `var(--ring)` glow vs un-suppressing the global outline on the ~24 glow-only components (see D13 in `docs/ISSUES.md`). It is the only open sub-task.
 - **Gotchas:** `styles/defaults.css` is generated — edit `van.defaults.json`. `tests/contrast.test.mjs` has the placeholder for the `.btn:focus-visible` row once the glow call is made. Pre-existing unused `getValues` at `site/pages/use-form.jsx:376` — not ours, left alone.
