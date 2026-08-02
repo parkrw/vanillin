@@ -95,6 +95,29 @@ export default async function run({ page, baseUrl, test, eq }) {
       eq(r >= 3, true, `.switch track backgroundColor is ${r}:1`)
     })
 
+    await test(`1.4.3 ${scheme}: --muted-foreground on --muted >= 4.5:1 (D10)`, async () => {
+      const r = await page.evaluate(() => {
+        const ctx2d = document.createElement("canvas").getContext("2d", { willReadFrequently: true })
+        const parse = (css) => {
+          ctx2d.clearRect(0, 0, 1, 1)
+          ctx2d.fillStyle = css
+          ctx2d.fillRect(0, 0, 1, 1)
+          return Array.from(ctx2d.getImageData(0, 0, 1, 1).data)
+        }
+        const lum = ([r, g, b]) => {
+          const [lr, lg, lb] = [r, g, b].map((v) => {
+            const s = v / 255
+            return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+          })
+          return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb
+        }
+        const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+        const [hi, lo] = [lum(parse(token("--muted-foreground"))), lum(parse(token("--muted")))].sort((x, y) => y - x)
+        return Math.round(((hi + 0.05) / (lo + 0.05)) * 100) / 100
+      })
+      eq(r >= 4.5, true, `--muted-foreground on --muted is ${r}:1`)
+    })
+
     // Not asserted yet: components whose only focus indicator is the 50%-alpha
     // ring glow (button, checkbox, toggle, …) measure ~1.7:1 light — see the
     // D13 update in docs/ISSUES.md. Add a .btn:focus-visible row when the

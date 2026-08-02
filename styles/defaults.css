@@ -31,7 +31,7 @@
   --motion-ease: ease-out;
   --motion-scale: 1;
   --muted: light-dark(oklch(0.97 0 0), oklch(0.269 0 0));
-  --muted-foreground: light-dark(oklch(0.556 0 0), oklch(0.708 0 0));
+  --muted-foreground: light-dark(oklch(0.54 0 0), oklch(0.708 0 0));
   --popover: light-dark(oklch(1 0 0), oklch(0.205 0 0));
   --popover-foreground: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
   --primary: light-dark(oklch(0.205 0 0), oklch(0.922 0 0));
