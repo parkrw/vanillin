@@ -409,6 +409,25 @@ recording because the D items were all written as "light **and** dark unless
 noted" — for text, that framing is wrong. It does **not** clear dark mode for
 non-text contrast, where D9 fails in both.
 
+### D14. Warning status dot is 2.31:1 in light mode (found in task 72, 2026-08-02)
+
+The new graphical-object rows in `scripts/contrast-nontext.mjs` measure
+`--warning` (`oklch(0.75 0.18 65)`) at **2.31:1** on white; success, error and
+info all pass both modes, warning passes dark (10.08:1). A status dot's colour
+*is* the information, so 1.4.11's graphical-object clause applies. Fixing it
+means darkening the light `--warning` token, which touches every warning
+surface from task 32 (badge, status-dot) — a token design call, not a
+one-liner.
+
+### D15. Progress track and slider rail are invisible against the page (found in task 72, 2026-08-02)
+
+Progress track (`--primary` at 20%) measures 1.53:1 light / 1.64:1 dark;
+slider rail (`--muted`) 1.09:1 light / 1.31:1 dark. The filled portion passes
+easily in both. Whether the *unfilled* extent is "required to identify" is the
+open question: without a visible track you cannot judge the proportion, but
+upstream and most design systems ship the same values. Needs a design call —
+possibly a border on the track rather than a darker fill.
+
 ---
 
 ## E. Motion
@@ -521,7 +540,26 @@ Native `input[type=checkbox|radio|file|submit|button|reset]` all want the same
 treatment. Low-priority sibling: a **disabled** calendar day
 (`button.calendar-day-button[disabled]`) resolves to `default` rather than
 `not-allowed`, unlike the disabled select and combobox — decide whether that is
-an exception or an oversight.
+an exception or an oversight. **Settled in task 72 (2026-08-02): oversight** —
+the kit's disabled convention is `not-allowed`; `calendar.css` fixed to match.
+
+### F7. Sweep-tool cursor heuristic: two false-positive classes (found in task 72, 2026-08-02)
+
+After F5/F6 landed, `scripts/sweep-pages.mjs` still reports 16 cursor hits, all
+tool gaps rather than kit bugs (the tool is outside task 72's write scope, so
+recording instead of fixing):
+
+- **`AFFORDANCES` lacks single-side resize cursors.** `button.sidebar-rail`
+  computes `w-resize`/`e-resize` — a deliberate affordance from task 31 — but
+  the set only has `ew-resize`/`ns-resize` and friends. Add
+  `w-resize|e-resize|n-resize|s-resize`.
+- **`[tabindex]:not([tabindex="-1"])` over-matches focusable non-click
+  targets.** Scroll viewports (`.scroll-area-viewport`,
+  `.message-scroller-viewport`, `.carousel`) and `[role=tabpanel]` are
+  keyboard-focusable per ARIA authoring practice but are not click targets, so
+  `cursor: auto` is correct. Exclude `[role=tabpanel]`, `[role=region]` and
+  `[role=presentation]` from the tabindex arm, or drop hits whose only matching
+  selector is the tabindex arm.
 
 ---
 
