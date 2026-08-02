@@ -560,6 +560,18 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(tableStyle, "fixed", "sized table has table-layout: fixed")
   })
 
+  await test("column without a cell renderer shows the accessor value", async () => {
+    // The email column declares accessorKey only — flexRender's default cell.
+    await dtSized.waitFor()
+    const emails = await dtSized
+      .locator(".table-body .table-row")
+      .evaluateAll((rows) =>
+        rows.map((r) => r.querySelectorAll(".table-cell")[3]?.textContent?.trim() ?? "")
+      )
+    eq(emails.length > 0, true, "sized table has rows")
+    eq(emails.every((t) => t.includes("@")), true, `email cells render values: [${emails.join(",")}]`)
+  })
+
   await test("drag resizer changes column width, survives re-sort", async () => {
     await dtSized.waitFor()
     const resizer = dtSized.locator(".data-table-resizer").first()
