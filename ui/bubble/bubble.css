@@ -58,7 +58,7 @@
 
 .bubble--destructive > .bubble-content {
   background-color: color-mix(in oklab, var(--destructive) 10%, var(--background));
-  color: var(--destructive);
+  color: color-mix(in oklab, var(--destructive) 80%, var(--foreground));
 }
 
 /* Interactive content (as="a" / as="button") */

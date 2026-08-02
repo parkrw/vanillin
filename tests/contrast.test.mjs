@@ -32,7 +32,8 @@ export default async function run({ page, baseUrl, test, eq }) {
         const el = document.querySelector(selector)
         if (!el) return NaN
         let bg = [255, 255, 255]
-        for (let node = el.parentElement; node; node = node.parentElement) {
+        // Text sits on the element's own background; borders sit on the parent's.
+        for (let node = prop === "color" ? el : el.parentElement; node; node = node.parentElement) {
           const c = parse(getComputedStyle(node).backgroundColor)
           if (c.length >= 3 && c[3] > 0.9) { bg = c.slice(0, 3); break }
         }
@@ -93,6 +94,19 @@ export default async function run({ page, baseUrl, test, eq }) {
     await test(`1.4.11 ${scheme}: switch track >= 3:1 (D1/D2)`, async () => {
       const r = await ratioOf('.switch[data-state="unchecked"]', "backgroundColor")
       eq(r >= 3, true, `.switch track backgroundColor is ${r}:1`)
+    })
+
+    await page.goto(`${baseUrl}/#bubble`)
+    await page.waitForSelector(".bubble")
+
+    await test(`1.4.3 ${scheme}: bubble destructive text >= 4.5:1 (D11)`, async () => {
+      const r = await ratioOf(".bubble--destructive > .bubble-content", "color")
+      eq(r >= 4.5, true, `.bubble--destructive text is ${r}:1`)
+    })
+
+    await test(`1.4.3 ${scheme}: active nav link >= 4.5:1 (D12)`, async () => {
+      const r = await ratioOf('.pg-nav-link[data-active="true"]', "color")
+      eq(r >= 4.5, true, `.pg-nav-link[data-active] is ${r}:1`)
     })
 
     await test(`1.4.3 ${scheme}: --muted-foreground on --muted >= 4.5:1 (D10)`, async () => {

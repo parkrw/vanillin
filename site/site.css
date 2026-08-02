@@ -87,7 +87,7 @@
 
 .pg-nav-link[data-active="true"] {
   background: color-mix(in oklab, var(--pg-accent) 18%, transparent);
-  color: var(--pg-accent);
+  color: color-mix(in oklab, var(--pg-accent) 80%, var(--foreground));
   font-weight: 500;
 }
 
