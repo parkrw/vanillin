@@ -4,7 +4,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "requires": [],
   "files": {
-    "tabs.css": "sha256-O4PyeyCDL3b5nefKTjPXWyKyMs/49t6ogkNEUSGql8w=",
+    "tabs.css": "sha256-2snKWhwqTj2U+8m3wQ2z0FSz8BB2X99lmf5aYWUrwPU=",
     "tabs.jsx": "sha256-1qExkC2zGg43hRzDKCDS4Rb0kGili0QVdG8+B66B3ak="
   }
 }

@@ -4,7 +4,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "requires": [],
   "files": {
-    "switch.css": "sha256-UYyeFTDtDvWUdPeO8lwQE8mNUGILZFRZRRhekqJBGMQ=",
+    "switch.css": "sha256-UYRMcBy5Al9y6ENyyFBYKaNkGyRofaTK569V67PY9rw=",
     "switch.jsx": "sha256-ohq0NYX49WbmUvsn5UZW1VH0atvL68zXoyYpPjj0Wfo="
   }
 }

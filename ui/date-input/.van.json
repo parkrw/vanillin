@@ -4,7 +4,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "requires": [],
   "files": {
-    "date-input.css": "sha256-ACFZS1OjO3yyFb2ZUxtsdUH9Ap+fkf9vkkBqHJGgZvo=",
+    "date-input.css": "sha256-JzoP1Y6pRciIYBeXRcDgFFx4CpaUylzxPTntiu9e9tA=",
     "date-input.jsx": "sha256-cX13aCSTiLA1UAiOhS1NYNN9LOacroT1MgUlDjI0Cpk="
   }
 }

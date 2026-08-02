@@ -4,7 +4,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "requires": [],
   "files": {
-    "accordion.css": "sha256-+irUcWoq+cEtgRlKDRmeEyrY67gCP7BayoVfxjNmEzI=",
+    "accordion.css": "sha256-MtdhYopGOcszkQybm7MHec6VFizho4j0oEH1WTSdRl8=",
     "accordion.jsx": "sha256-Bu9YG07BT0XfZEkGzV8p8gErJSAdzoTqQ3/9iZ3Qf/E="
   }
 }

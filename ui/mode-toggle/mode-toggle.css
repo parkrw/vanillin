@@ -24,7 +24,7 @@
 
 .mode-toggle:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
 /* The press itself, so the click registers before the swing starts. */

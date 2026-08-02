@@ -4,7 +4,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "requires": [],
   "files": {
-    "carousel.css": "sha256-tG9esKygBQsh0rd/CCmYP9YQtPlLAnreBtWI49+zll8=",
+    "carousel.css": "sha256-xu/xjex0xrLbthiEPSnr25vXdSRhSvpWPkJ+vX8QYro=",
     "carousel.jsx": "sha256-O9RJhAzk1n0ifHRshIpBETI/0IYM99Z65bo1x5Bpkp8=",
     "plugins/autoplay.js": "sha256-pcZUpMvFedj/iu1VnqZHGUjvHSZOE589w5QK04LetVU="
   }

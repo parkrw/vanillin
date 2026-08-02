@@ -56,7 +56,7 @@
 .data-table-page-size > select:focus-visible {
   outline: none;
   border-color: var(--ring);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
 .data-table-page-info {
@@ -94,7 +94,7 @@
 
 .data-table-sort-btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
 .data-table-sort-btn > svg {
@@ -201,7 +201,7 @@
 
 .data-table-actions-trigger:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
 .data-table-actions-trigger > svg {
@@ -290,7 +290,7 @@
 
 .data-table-group-toggle:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
 .data-table-group-toggle > svg {

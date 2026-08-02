@@ -52,9 +52,9 @@ const probes = [
   ["calendar", ".calendar-day-button", ["borderColor"], "D4 calendar day"],
   ["date-input", ".date-input, .time-picker, .time-field", ["color"], "D6 time text"],
   ["input", ".input", ["borderColor"], "input border (baseline)"],
-  // D13 — the ring token as the always-outline components render it. The 50%
-  // glow variant is a separate open design call; see the D13 entry in
-  // docs/ISSUES.md and the placeholder in tests/contrast.test.mjs.
+  // D13 — the ring token as the always-outline components render it. The glow
+  // components render the same token solid (settled 2026-08-02); the button
+  // glow is asserted in tests/contrast.test.mjs.
   ["calendar", ".calendar-day-button:not([disabled])", ["outlineColor"], "D13 focus ring (outline)", { focus: true }],
   // Graphical objects (1.4.11's second clause). No chart component exists —
   // chart was excluded from the kit at plan time.
