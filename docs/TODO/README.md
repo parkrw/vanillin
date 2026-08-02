@@ -1,6 +1,6 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–61)
 
-**Resume:** `docs/TODO/task71-docs-site-sweep.md` → Handoff (COMPLETE). Task 71 is COMPLETE — the docs-site sweep is finished and the `docs/ISSUES.md` banner is down. No task is in flight. Next is **72**, which now has a measured, ordered fix list in its footnote and is re-estimated `~M`; then **73** (H2, the deletion probe). Task **74** (narrow-viewport reflow, split out of 71's findings) needs a scope call before it is detailed. See `docs/TODO/task71-docs-site-sweep.md` for what the sweep tools do and how to re-run them.
+**Resume:** `docs/TODO/task72-bug-batch-2.md` → Handoff (IN PROGRESS). Task 72 is detailed and scoped; branch `fix/task72-contrast-cursors` exists with the task file and one new `ISSUES.md` item, no code yet. **D9's scope changed — see the task file, not the footnote below.** Then **73** (H2, the deletion probe). Task **74** (narrow-viewport reflow, split out of 71's findings) needs a scope call before it is detailed. See `docs/TODO/task71-docs-site-sweep.md` for what the sweep tools do and how to re-run them.
 
 Two notes for reading anything below: the docs site directory is **`site/`** (renamed 2026-07-27), so older prose here saying `playground/` means `site/`. And `docs/HANDOFF.md` is gone — its durable content is in `AGENTS.md`, `docs/QUIRKS.md` and `docs/DECISIONS.md`; live state belongs in each task file's `## Handoff`.
 
@@ -153,7 +153,7 @@ written; it is a final consistency and gap pass.
 | 69  | docs-site-dogfood        | ~M  | [ ]    | ISSUES A2 — the site is built out of the kit [^69]                       |
 | 70  | typography-system        | ~L  | [ ]    | ISSUES A4 — a real typeset scale, not per-page sizes [^70]               |
 | 71  | docs-site-sweep          | ~M  | [x]    | all 79 pages swept; 2 tools committed; D/F collapse to 4 causes [^71]  |
-| 72  | bug-batch-2              | ~M  | [ ]    | deps: 71; re-estimated down — 4 root causes, not 20 items [^72]         |
+| 72  | bug-batch-2              | ~M  | [~]    | deps: 71; scoped 2026-08-01 — D9 is `--input` only, +D13 [^72]          |
 | 74  | site-responsive          | ~L  | [ ]    | ISSUES K1 — 73 of 79 pages overflow at 380px; needs a scope call [^74]  |
 | 73  | coverage-probe           | ~L  | [ ]    | ISSUES H2 — deletion probe: what no test would notice [^73]             |
 
@@ -310,8 +310,15 @@ written; it is a final consistency and gap pass.
     fixes, and each is one declaration.
     Order, cheapest-first, each independently verifiable by re-running
     `scripts/contrast-nontext.mjs` or `scripts/sweep-pages.mjs`:
-    **D9** `--border` to ≥3:1 (light and dark — one token, then re-measure
-    before touching any component; D1/D2/D3/D5 should disappear with it),
+    **D9** — ~~`--border`~~ **`--input`** to ≥3:1 (light and dark, then
+    re-measure before touching any component; D1/D2/D3/D5 disappear with it).
+    **Amended 2026-08-01, see `docs/TODO/task72-bug-batch-2.md`:** the kit has
+    two tokens at the same inherited value, and every failing element is on
+    `--input` (17 control call sites) rather than `--border` (227 surface call
+    sites). WCAG 1.4.11 covers boundaries "required to identify" a component, so
+    control borders are in scope and card frames and table rules are not. Also
+    new: **D13**, the focus ring at 2.59:1 light — found while scoping this, not
+    in 71's sweep,
     **D10** `--muted-foreground` on `--muted` to ≥4.5:1 light (also closes D6),
     **F5** delete or override the seven `cursor: default` declarations (keep the
     three `not-allowed` ones), **F6** add native input types to

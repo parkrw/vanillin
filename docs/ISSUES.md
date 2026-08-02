@@ -366,6 +366,26 @@ only. Same shape as D10 but a different token pair, so it needs its own fix.
 marking where the reader is, and it is site chrome rather than kit code, so it
 is a one-line fix independent of everything above.
 
+### D13. The focus ring is 2.59:1 in light mode
+
+**Status:** open  **Found:** task 72 scoping, 2026-08-01
+
+`--ring` light (`oklch(0.708 0 0)`) measures **2.59:1** against the page —
+under WCAG 1.4.11's 3:1 for a component state indicator. Dark
+(`oklch(0.556 0 0)` on `--background`) is 4.18:1 and passes.
+
+Not in task 71's sweep: `scripts/contrast-nontext.mjs` has no focus-ring row,
+and axe cannot see non-text contrast at all. Found by measuring the token
+directly while scoping D9.
+
+Worse than the bare number suggests — `input.css:22`, `button.css:28` and
+`checkbox.css:26` composite `--ring` at **50% alpha** for the focus glow, so
+the visible ratio there is lower still. `styles/globals.css:222` uses it
+undiluted as a 2px outline.
+
+A focus indicator that cannot be seen is a keyboard-navigation defect, not a
+cosmetic one. Fix alongside D9 — same generated file, same regeneration step.
+
 ### D4 and D6 — the probe did not reproduce them as described
 
 Not closed, **re-aimed**. Both were measured and neither matched its
