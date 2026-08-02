@@ -42,7 +42,6 @@
   font-weight: 500;
   line-height: 1.25;
   white-space: nowrap;
-  cursor: default;
   text-decoration: none;
   transition:
     background-color var(--motion-fast) var(--motion-ease),

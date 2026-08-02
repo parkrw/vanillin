@@ -65,7 +65,6 @@
   border-radius: var(--radius-sm);
   background: none;
   color: var(--muted-foreground);
-  cursor: default;
   flex-shrink: 0;
 }
 
@@ -90,7 +89,6 @@
   border-radius: var(--radius-sm);
   background: none;
   color: var(--muted-foreground);
-  cursor: default;
 }
 
 .combobox-trigger:disabled {

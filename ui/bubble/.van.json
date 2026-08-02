@@ -4,7 +4,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "requires": [],
   "files": {
-    "bubble.css": "sha256-trolO+7tbhm9Cu15Tj3OQnShSqfKtlDA55ROcvyXcv4=",
+    "bubble.css": "sha256-cCzoy2EB/eKgmFk6+jQMqn0cPbv7xmiGA/7KATVX7Og=",
     "bubble.jsx": "sha256-7gt08oBptOgDlTYTkImm86Jsqg5MHcrgajPK6uCvWwA="
   }
 }

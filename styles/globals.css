@@ -231,6 +231,12 @@ summary,
 label[for],
 a[href],
 select,
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
 [role="button"],
 [role="menuitem"],
 [role="menuitemcheckbox"],
@@ -242,6 +248,15 @@ select,
 [role="checkbox"],
 [role="link"] {
   cursor: pointer;
+}
+
+/* Draggable thumb — matches .slider-thumb's grab affordance (F4). */
+input[type="range"] {
+  cursor: grab;
+}
+
+input[type="range"]:active {
+  cursor: grabbing;
 }
 
 /* CSS Custom Highlight API — search-match paint.

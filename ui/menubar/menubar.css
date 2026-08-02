@@ -30,7 +30,6 @@
   line-height: 1.25;
   outline: none;
   user-select: none;
-  cursor: default;
 }
 
 .menubar-trigger:focus,

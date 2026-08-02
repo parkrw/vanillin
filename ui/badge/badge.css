@@ -58,7 +58,6 @@
   border-radius: var(--radius-sm);
   background: none;
   color: var(--muted-foreground);
-  cursor: default;
 }
 
 .badge-chip-remove:hover {
