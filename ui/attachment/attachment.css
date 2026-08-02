@@ -6,7 +6,7 @@
   width: fit-content;
   max-inline-size: 100%;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--input);
   border-radius: var(--radius-lg);
   background-color: var(--background);
   font-size: 0.875rem;
@@ -110,7 +110,7 @@
 /* States (data-state on root) */
 
 .attachment[data-state="error"] {
-  border-color: color-mix(in oklab, var(--destructive) 40%, transparent);
+  border-color: var(--destructive);
 }
 
 .attachment[data-state="error"] .attachment-title {

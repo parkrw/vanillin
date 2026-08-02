@@ -66,6 +66,19 @@ export default async function run({ page, baseUrl, test, eq }) {
       eq(r >= 3, true, `.input:focus-visible borderColor (--ring) is ${r}:1`)
     })
 
+    await page.goto(`${baseUrl}/#attachment`)
+    await page.waitForSelector(".attachment")
+
+    await test(`1.4.11 ${scheme}: attachment border >= 3:1 (D3)`, async () => {
+      const r = await ratioOf(".attachment", "borderColor")
+      eq(r >= 3, true, `.attachment borderColor is ${r}:1`)
+    })
+
+    await test(`1.4.11 ${scheme}: attachment error border >= 3:1 (D3)`, async () => {
+      const r = await ratioOf('.attachment[data-state="error"]', "borderColor")
+      eq(r >= 3, true, `.attachment[data-state=error] borderColor is ${r}:1`)
+    })
+
     await page.goto(`${baseUrl}/#checkbox`)
     await page.waitForSelector(".checkbox")
 
