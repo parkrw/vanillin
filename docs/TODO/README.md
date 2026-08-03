@@ -1,6 +1,14 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–61)
 
-**Resume:** `docs/TODO/task72-bug-batch-2.md` → Handoff (IN PROGRESS). Task 72 is detailed and scoped; branch `fix/task72-contrast-cursors` exists with the task file and one new `ISSUES.md` item, no code yet. **D9's scope changed — see the task file, not the footnote below.** Then **73** (H2, the deletion probe). Task **74** (narrow-viewport reflow, split out of 71's findings) needs a scope call before it is detailed. See `docs/TODO/task71-docs-site-sweep.md` for what the sweep tools do and how to re-run them.
+**Resume:** `docs/TODO/task73-coverage-probe.md` → Handoff (IN PROGRESS). Task 72 merged to main 2026-08-02 — all 11 sub-tasks, see its task file. Task **74** (narrow-viewport reflow, split out of 71's findings) still needs a scope call before it is detailed. See `docs/TODO/task71-docs-site-sweep.md` for what the sweep tools do and how to re-run them.
+
+## Handoff — task 73 (next)
+
+**Status:** NOT STARTED  **Updated:** 2026-08-02
+
+- **What:** ISSUES H2 — the deletion probe (footnote [^73]): neuter one load-bearing rule or handler per component, see whether the 730-test suite notices, write the tests it turns out to need. Never commit a break. No task file yet — detail it (phase 1) on pickup.
+- **Context from 72:** the suite is 730/730 on main; `scripts/contrast-nontext.mjs` now covers focus rings and graphical objects (5 deliberate FAILs = D14/D15, token design calls, not bugs). `npm run contracts` after any `ui/**` edit.
+- **Alternative:** README order says 73 may slide right if the CLI work (65/66/67, all specified and ready) is wanted sooner — user's call at pickup.
 
 Two notes for reading anything below: the docs site directory is **`site/`** (renamed 2026-07-27), so older prose here saying `playground/` means `site/`. And `docs/HANDOFF.md` is gone — its durable content is in `AGENTS.md`, `docs/QUIRKS.md` and `docs/DECISIONS.md`; live state belongs in each task file's `## Handoff`.
 
@@ -153,7 +161,7 @@ written; it is a final consistency and gap pass.
 | 69  | docs-site-dogfood        | ~M  | [ ]    | ISSUES A2 — the site is built out of the kit [^69]                       |
 | 70  | typography-system        | ~L  | [ ]    | ISSUES A4 — a real typeset scale, not per-page sizes [^70]               |
 | 71  | docs-site-sweep          | ~M  | [x]    | all 79 pages swept; 2 tools committed; D/F collapse to 4 causes [^71]  |
-| 72  | bug-batch-2              | ~M  | [~]    | deps: 71; scoped 2026-08-01 — D9 is `--input` only, +D13 [^72]          |
+| 72  | bug-batch-2              | ~M  | [x]    | merged 2026-08-02, no PR (local merge); all 11 sub-tasks; +F7/D14/D15 filed [^72] |
 | 74  | site-responsive          | ~L  | [ ]    | ISSUES K1 — 73 of 79 pages overflow at 380px; needs a scope call [^74]  |
 | 73  | coverage-probe           | ~L  | [ ]    | ISSUES H2 — deletion probe: what no test would notice [^73]             |
 

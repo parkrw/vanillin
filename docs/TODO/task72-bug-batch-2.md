@@ -52,13 +52,10 @@ npm run build
 
 ## Handoff
 
-**Status:** ALL SUB-TASKS DONE — pending final commit + PR
-**Branch:** `fix/task72-contrast-cursors`  **PR:** none  **Updated:** 2026-08-02
+**Status:** COMPLETE
+**Branch:** `fix/task72-contrast-cursors` (merged to main, pushed)  **PR:** none — merged locally  **Updated:** 2026-08-02
 
-- **Landed (committed):** sub-tasks 1, 2, 5, 8, 9 (D9, D3, D10, D11, D12) plus D13's token half.
-- **Done this session (uncommitted, verified, commits proposed to the user):** sub-tasks 6, 7 (F5/F6/F4, plus the disabled-calendar-day `not-allowed` decision), 4 (probe extension: focus/exempt flags, D13 outline row passes both modes, graphical rows), 10 (C7/C8 markup), 11 (C6 `flexRender` default cell, E3 fractional measure in collapsible+accordion, I1 closed as not reproducing). Manifests regenerated — `attachment`/`bubble` were stale from the earlier committed fixes and made the conformance suite red; `npm run contracts` is part of landing any `ui/**` edit.
-- **Found:** **F7** (sweep cursor heuristic: 16 residual hits are tool gaps — `w/e-resize` missing from AFFORDANCES, `[tabindex]` over-match; tool is outside Owns), **D14** (warning dot 2.31:1 light), **D15** (progress track / slider rail near-invisible both modes). All filed in `docs/ISSUES.md`.
-- **Verify state:** suite 726/726, build clean, contrast probe all ok/exempt, sweep cursor findings 0 on kit pages (16 F7 tool-gap residuals).
-- **Next:** nothing open. Glow half landed as solid `var(--ring)` (28 declarations, ~24 components) + solid `var(--destructive)` on the destructive button; the five `aria-invalid` glows and status-dot halos deliberately kept. Verify: suite 730/730, build clean, probe FAILs = exactly the 5 filed D14/D15 rows. Push + PR when the user says so.
-- **Visual caveat for review:** hover glows that shared the focus declaration (slider thumb) are now solid too — eyeball the slider and destructive-button focus states before merging. The destructive button's solid ring matches its own fill; it reads against the page, not the fill (noted in D13).
-- **Gotchas:** `styles/defaults.css` is generated — edit `van.defaults.json`. Pre-existing unused `getValues` at `site/pages/use-form.jsx:376` — not ours, left alone.
+- **Landed:** all 11 sub-tasks — the four contrast/cursor root causes (D9/D10/F5/F6), the docs and component tail (C6/C7/C8, E3, D11/D12), D13 both halves (token + solid glow), probe extended (focus/exempt rows). Suite 730/730, build clean; the 5 probe FAILs are the filed D14/D15 rows, by design.
+- **Repo state:** clean; `stash@{0} "whoops"` is old and not ours.
+- **Next:** task 73 (coverage probe) — see the Handoff in `docs/TODO/README.md`.
+- **Gotchas:** `styles/defaults.css` is generated — edit `van.defaults.json`; `npm run contracts` after any `ui/**` edit or the conformance suite goes red. Sweep flags `.slider-thumb` as a cursor miss — deliberate, see ISSUES §F4. Do not "fix" D14/D15 without a token design call.
