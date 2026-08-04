@@ -16,7 +16,9 @@
  * Global flags: --cwd <dir>, --yes, --silent, --no-color, --help, --version.
  */
 
-import { readFileSync, existsSync, readdirSync, mkdirSync, writeFileSync } from "node:fs"
+import { spawnSync } from "node:child_process"
+import { readFileSync, existsSync, readdirSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { resolve, dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { generate } from "../scripts/build-theme.mjs"
@@ -385,6 +387,49 @@ export function planAdd(project, registry, slugs) {
   return plan
 }
 
+// ── update: base retrieval + 3-way merge ───────────────────────────
+
+/**
+ * Retrieve a file's content at a recorded kitVersion from git history.
+ * Returns null when the tag or file is unavailable.
+ */
+export function getBaseContent(project, slug, rel, kitVersion) {
+  const tag = `v${kitVersion}`
+  const r = spawnSync("git", ["show", `${tag}:ui/${slug}/${rel}`], {
+    cwd: kitRoot,
+    stdio: ["pipe", "pipe", "pipe"],
+  })
+  if (r.status !== 0 || r.error) return null
+  const bytes = r.stdout
+  if (!project.config?.rsc || !/\.(jsx|js|tsx|ts)$/.test(rel)) return bytes
+  const text = bytes.toString("utf8")
+  if (/^\s*["']use client["']/.test(text) || !CLIENT_ONLY.test(text)) return bytes
+  return Buffer.from(`"use client"\n\n${text}`)
+}
+
+/**
+ * 3-way merge via git merge-file. Returns { content, clean }.
+ * clean=true means no conflicts; clean=false means conflict markers in content.
+ */
+export function mergeFile(base, local, upstream) {
+  const tmp = mkdtempSync(join(tmpdir(), "van-merge-"))
+  try {
+    const bp = join(tmp, "base")
+    const lp = join(tmp, "local")
+    const up = join(tmp, "upstream")
+    writeFileSync(bp, base)
+    writeFileSync(lp, local)
+    writeFileSync(up, upstream)
+    const r = spawnSync("git", ["merge-file", "-p", lp, bp, up], {
+      stdio: ["pipe", "pipe", "pipe"],
+    })
+    if (r.error) return { content: local, clean: false }
+    return { content: r.stdout, clean: r.status === 0 }
+  } finally {
+    rmSync(tmp, { recursive: true, force: true })
+  }
+}
+
 // ── commands ────────────────────────────────────────────────────────
 
 function cmdList(project) {
@@ -590,7 +635,7 @@ export function diffComponent(project, registry, slug) {
 
 const DIFF_LABEL = {
   edited: () => red("edited locally"),
-  "upstream-changed": () => "upstream changed — `van add` will update it",
+  "upstream-changed": () => "upstream changed — run `van update`",
   diverged: () => red("edited locally, and upstream changed"),
   untracked: () => "not recorded in .van.json",
   deleted: () => "recorded but missing locally",
@@ -640,6 +685,166 @@ function cmdDiff(project, slugs) {
   process.exit(1)
 }
 
+function cmdUpdate(project, slugs) {
+  const registry = loadRegistry()
+  const installed = installedSlugs(project)
+
+  let targets
+  if (slugs.length) {
+    for (const slug of slugs) {
+      if (!registry.components[slug]) fail(`unknown component "${slug}" — run \`van list\``)
+      if (!installed.has(slug)) fail(`${slug} is not installed in ${project.paths.ui}`)
+    }
+    targets = slugs
+  } else {
+    targets = [...installed].filter((s) => registry.components[s]).sort()
+    if (!targets.length) fail(`no vanillin components found in ${project.paths.ui}`)
+  }
+
+  let updated = 0
+  let conflicted = 0
+
+  for (const slug of targets) {
+    const diff = diffComponent(project, registry, slug)
+    const entry = registry.components[slug]
+    const targetDir = join(project.root, project.paths.ui, slug)
+    const dir = `${project.paths.ui}/${slug}`
+
+    const actionable = diff.files.filter((f) => f.state !== "current" && f.state !== "absent" && f.state !== "edited")
+    if (!actionable.length) continue
+
+    const versionNote = diff.tracked ? dim(` (v${diff.kitVersion} → v${registry.kitVersion})`) : ""
+    say(`${bold(slug)}${versionNote}`)
+
+    let clean = true
+    const newHashes = {}
+
+    for (const f of diff.files) {
+      const contents = kitFileContent(project, slug, f.rel)
+
+      switch (f.state) {
+        case "current":
+        case "absent":
+          break
+
+        case "edited":
+          say(`  ${dim("=")} ${f.rel} ${dim("edited locally, upstream unchanged")}`)
+          break
+
+        case "upstream-changed": {
+          if (!flags.dryRun) writeFileAtomic(join(targetDir, f.rel), contents)
+          newHashes[f.rel] = hashBytes(contents)
+          say(`  ${green("~")} ${dir}/${f.rel} ${dim("updated")}`)
+          updated++
+          break
+        }
+
+        case "diverged": {
+          if (flags.overwrite) {
+            if (!flags.dryRun) writeFileAtomic(join(targetDir, f.rel), contents)
+            newHashes[f.rel] = hashBytes(contents)
+            say(`  ${green("~")} ${dir}/${f.rel} ${dim("overwritten")}`)
+            updated++
+            break
+          }
+          const base = getBaseContent(project, slug, f.rel, diff.kitVersion)
+          if (!base) {
+            say(`  ${red("!")} ${dir}/${f.rel} ${dim(`diverged — no base at v${diff.kitVersion}, use --overwrite`)}`)
+            clean = false
+            conflicted++
+            break
+          }
+          const local = readFileSync(join(targetDir, f.rel))
+          const merged = mergeFile(base, local, contents)
+          if (!flags.dryRun) writeFileAtomic(join(targetDir, f.rel), merged.content)
+          if (merged.clean) {
+            newHashes[f.rel] = hashBytes(merged.content)
+            say(`  ${green("~")} ${dir}/${f.rel} ${dim("merged")}`)
+            updated++
+          } else {
+            say(`  ${red("!")} ${dir}/${f.rel} ${dim("merged with conflicts")}`)
+            clean = false
+            conflicted++
+          }
+          break
+        }
+
+        case "deleted":
+          say(`  ${dim("-")} ${f.rel} ${dim("deleted locally, skipped")}`)
+          break
+
+        case "untracked":
+          say(`  ${dim("?")} ${f.rel} ${dim("not recorded, skipped")}`)
+          break
+      }
+    }
+
+    if (!flags.dryRun && clean && Object.keys(newHashes).length) {
+      const manifest = readManifest(targetDir) || {}
+      const files = { ...manifest.files }
+      for (const [rel, hash] of Object.entries(newHashes)) files[rel] = hash
+      writeManifest(targetDir, {
+        ...manifest,
+        name: slug,
+        kitVersion: registry.kitVersion,
+        source: registry.source,
+        requires: entry.requires,
+        files,
+      })
+    }
+  }
+
+  const libClosure = new Set()
+  const libQueue = targets.flatMap((s) => registry.components[s].lib)
+  const libSeen = new Set()
+  while (libQueue.length) {
+    const file = libQueue.shift()
+    if (libSeen.has(file)) continue
+    libSeen.add(file)
+    libClosure.add(file)
+    if (registry.lib[file]) libQueue.push(...registry.lib[file])
+  }
+  for (const file of [...libClosure].sort()) {
+    const contents = readFileSync(join(kitRoot, "lib", file))
+    const to = join(project.root, project.paths.lib, file)
+    const state = fileState(contents, to)
+    if (state === "identical") continue
+    if (state === "missing") {
+      if (!flags.dryRun) writeFileAtomic(to, contents)
+      say(`  ${green("+")} ${project.paths.lib}/${file} ${dim("new")}`)
+      updated++
+    } else if (flags.overwrite) {
+      if (!flags.dryRun) writeFileAtomic(to, contents)
+      say(`  ${green("~")} ${project.paths.lib}/${file} ${dim("overwritten")}`)
+      updated++
+    } else {
+      say(`  ${dim("=")} ${project.paths.lib}/${file} ${dim("differs, use --overwrite")}`)
+    }
+  }
+
+  if (flags.dryRun) {
+    if (updated || conflicted) {
+      say("")
+      say(dim("--dry-run: nothing written"))
+    } else {
+      say(`${green("✓")} all components up to date`)
+    }
+    return
+  }
+
+  if (!updated && !conflicted) {
+    say(`${green("✓")} all components up to date`)
+    return
+  }
+
+  say("")
+  if (updated) say(`${green("✓")} ${updated} file${updated === 1 ? "" : "s"} updated`)
+  if (conflicted) {
+    console.error(`${red(conflicted + " conflict" + (conflicted === 1 ? "" : "s"))} — resolve manually`)
+    process.exit(1)
+  }
+}
+
 function cmdBuild(project) {
   if (!project.hasConfig) {
     fail(`no ${CONFIG_FILE} in ${project.root} — run \`van init\` first`)
@@ -680,14 +885,15 @@ const USAGE = `${bold("van")} — zero-dependency React components, copied into 
 
   van init                  scaffold ${CONFIG_FILE} and the stylesheets
   van add <slug…>           copy components and their dependencies
+  van update [slug…]        merge upstream changes into installed components
   van diff [slug]           show local edits vs upstream changes
   van build                 regenerate the theme CSS from ${CONFIG_FILE}
   van list                  list components, marking installed ones
 
 Flags
   --cwd <dir>               run against another directory
-  --dry-run                 (add) print what would be written, write nothing
-  --overwrite               (add) replace files you have edited
+  --dry-run                 (add, update) print what would be written, write nothing
+  --overwrite               (add, update) replace files you have edited
   --yes                     assume yes for prompts
   --silent                  suppress non-error output
   --no-color                disable ANSI colour
@@ -729,6 +935,9 @@ export function main(argv = process.argv.slice(2)) {
       break
     case "init":
       cmdInit(project)
+      break
+    case "update":
+      cmdUpdate(project, parsed.args)
       break
     case "diff":
       cmdDiff(project, parsed.args)

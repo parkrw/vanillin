@@ -354,6 +354,152 @@ test("a stateless component gets no directive even under rsc", (dir) => {
   )
 })
 
+// ── update ─────────────────────────────────────────────────────────
+
+test("update reports up-to-date when nothing changed", (dir) => {
+  project(dir)
+  van(dir, "add", "badge")
+  const r = van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /up to date/)
+})
+
+test("update overwrites upstream-changed files and bumps the manifest", (dir) => {
+  project(dir)
+  van(dir, "add", "badge")
+  const target = join(dir, "ui/badge/badge.css")
+
+  // Simulate: local file matches what was installed (consumer didn't edit),
+  // but upstream has moved on.
+  appendFileSync(target, "/* pretend this came from the kit */\n")
+  const sidecarPath = join(dir, "ui/badge/.van.json")
+  const sidecar = JSON.parse(readFileSync(sidecarPath, "utf8"))
+  sidecar.files["badge.css"] = hashFile(target)
+  sidecar.kitVersion = "0.0.1"
+  writeFileSync(sidecarPath, JSON.stringify(sidecar, null, 2) + "\n")
+
+  const r = van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /badge\.css.*updated/)
+
+  assert.equal(
+    readFileSync(target, "utf8"),
+    readFileSync(join(repoRoot, "ui/badge/badge.css"), "utf8"),
+    "file was not brought up to date",
+  )
+  const after = JSON.parse(readFileSync(sidecarPath, "utf8"))
+  assert.notEqual(after.kitVersion, "0.0.1", "manifest kitVersion not bumped")
+})
+
+test("update skips files the consumer edited when upstream is unchanged", (dir) => {
+  project(dir)
+  van(dir, "add", "badge")
+  const target = join(dir, "ui/badge/badge.css")
+  appendFileSync(target, "/* my edit */\n")
+
+  const r = van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.match(readFileSync(target, "utf8"), /my edit/, "consumer edit was clobbered")
+})
+
+test("update --dry-run writes nothing", (dir) => {
+  project(dir)
+  van(dir, "add", "badge")
+  const target = join(dir, "ui/badge/badge.css")
+  const sidecarPath = join(dir, "ui/badge/.van.json")
+
+  // Make it look upstream-changed.
+  appendFileSync(target, "/* old kit */\n")
+  const sidecar = JSON.parse(readFileSync(sidecarPath, "utf8"))
+  sidecar.files["badge.css"] = hashFile(target)
+  writeFileSync(sidecarPath, JSON.stringify(sidecar, null, 2) + "\n")
+
+  const before = readFileSync(target, "utf8")
+  const r = van(dir, "update", "--dry-run")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /nothing written/)
+  assert.equal(readFileSync(target, "utf8"), before, "--dry-run wrote files")
+})
+
+test("update with no args updates all installed components", (dir) => {
+  project(dir)
+  van(dir, "add", "badge", "separator")
+
+  // Make both look upstream-changed.
+  for (const slug of ["badge", "separator"]) {
+    const css = join(dir, `ui/${slug}/${slug}.css`)
+    appendFileSync(css, "/* old */\n")
+    const sp = join(dir, `ui/${slug}/.van.json`)
+    const s = JSON.parse(readFileSync(sp, "utf8"))
+    s.files[`${slug}.css`] = hashFile(css)
+    writeFileSync(sp, JSON.stringify(s, null, 2) + "\n")
+  }
+
+  const r = van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /badge\.css.*updated/)
+  assert.match(r.out, /separator\.css.*updated/)
+})
+
+test("update --overwrite replaces diverged files", (dir) => {
+  project(dir)
+  van(dir, "add", "badge")
+  const target = join(dir, "ui/badge/badge.css")
+  appendFileSync(target, "/* my edit */\n")
+
+  // Fake a different recorded hash so it looks diverged (local ≠ kit ≠ recorded).
+  const sidecarPath = join(dir, "ui/badge/.van.json")
+  const sidecar = JSON.parse(readFileSync(sidecarPath, "utf8"))
+  sidecar.files["badge.css"] = "sha256-something-old"
+  writeFileSync(sidecarPath, JSON.stringify(sidecar, null, 2) + "\n")
+
+  const r = van(dir, "update", "--overwrite")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /badge\.css.*overwritten/)
+  assert.doesNotMatch(readFileSync(target, "utf8"), /my edit/, "edit survived --overwrite")
+})
+
+test("update reports diverged files when no git base is available", (dir) => {
+  project(dir)
+  van(dir, "add", "badge")
+  appendFileSync(join(dir, "ui/badge/badge.css"), "/* my edit */\n")
+
+  const sidecarPath = join(dir, "ui/badge/.van.json")
+  const sidecar = JSON.parse(readFileSync(sidecarPath, "utf8"))
+  sidecar.files["badge.css"] = "sha256-something-old"
+  sidecar.kitVersion = "0.0.0-nonexistent"
+  writeFileSync(sidecarPath, JSON.stringify(sidecar, null, 2) + "\n")
+
+  const r = van(dir, "update")
+  assert.equal(r.code, 1, "should exit non-zero on unresolvable conflicts")
+  assert.match(r.all, /diverged.*no base/)
+  assert.match(r.all, /conflict/)
+})
+
+test("update rejects an unknown slug", (dir) => {
+  project(dir)
+  const r = van(dir, "update", "nope")
+  assert.equal(r.code, 1)
+  assert.match(r.all, /unknown component/)
+})
+
+test("update rejects a slug that is not installed", (dir) => {
+  project(dir)
+  const r = van(dir, "update", "badge")
+  assert.equal(r.code, 1)
+  assert.match(r.all, /not installed/)
+})
+
+test("update copies missing lib deps", (dir) => {
+  project(dir)
+  van(dir, "add", "dialog")
+  rmSync(join(dir, "lib/scroll-lock.js"))
+
+  const r = van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.ok(existsSync(join(dir, "lib/scroll-lock.js")), "missing lib file was not restored")
+})
+
 // ── summary ─────────────────────────────────────────────────────────
 
 rmSync(scratch, { recursive: true, force: true })
