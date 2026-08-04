@@ -95,6 +95,17 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(await trigger.getAttribute("data-state"), "closed", "data-state closed")
   })
 
+  await test("content is anchored below the trigger", async () => {
+    await trigger.hover()
+    const card = await waitOpen()
+    eq(await card.getAttribute("data-side"), "bottom", "data-side is bottom")
+    eq(await card.getAttribute("data-align"), "center", "data-align is center")
+    const triggerBox = await trigger.boundingBox()
+    const cardBox = await page.locator(".hover-card:popover-open").boundingBox()
+    eq(cardBox.y > triggerBox.y, true, "card is below the trigger")
+    await cleanup()
+  })
+
   await test("controlled open/onOpenChange", async () => {
     const readout = page.locator('[data-pg="controlled-hover-card-state"]')
     eq(await readout.textContent(), "closed", "initially closed")

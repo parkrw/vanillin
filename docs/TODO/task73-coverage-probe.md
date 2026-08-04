@@ -40,4 +40,26 @@ npm run build               # clean
 
 ## Handoff
 
-**Status:** NOT STARTED  **Updated:** 2026-08-02
+**Status:** SUB-TASKS 1-3 IN PROGRESS, 4 DONE (5 tests written)  **Updated:** 2026-08-04
+
+### Probe results so far
+
+**Probed ~20 components.** 5 gaps found, all tests written and passing (735 total, 731 green — 4 pre-existing flakes: cursor/F4, drawer/G2).
+
+**Gap class 1 — anchor positioning (4 components):**
+`useAnchorPosition` neutered → suite passes. Content opens/closes correctly but is not positioned near its trigger. No `data-side`/`data-align` or bounding-rect assertion.
+- `hover-card` (7/7 passed neutered) → test added: `tests/hover-card.test.mjs`
+- `tooltip` (8/8 passed neutered) → test added: `tests/tooltip.test.mjs`
+- `combobox` (18/18 passed neutered) → test added: `tests/combobox.test.mjs`
+- `navigation-menu` per-item panels (21/21 passed neutered) → test added: `tests/navigation-menu.test.mjs`
+
+Positioning IS caught in: popover (2/10 fail on `data-side`), select (1/17), dropdown-menu (5/28), context-menu (has explicit position tests).
+
+**Gap class 2 — caret management (1 component):**
+- `input-otp` caretToEnd neutered → 9/9 passed. Tests check slot content but not cursor position. → test added: `tests/input-otp.test.mjs`
+
+**Caught (no gap):** dialog return-focus, scroll-area sync, accordion ARIA, carousel keyboard, tabs roving-focus, slider keyboard, collapsible usePresence, nav-menu indicator, toast swipe, highlight ranges, resizable autoSaveId.
+
+### Remaining probe work
+- Tier 2/3 probes incomplete — ~25 components not yet probed. The positioning gap class is the headline finding; remaining probes are unlikely to find a new class but may find one-offs like input-otp.
+- Drawer probes timed out (G2 flakes); skipped.

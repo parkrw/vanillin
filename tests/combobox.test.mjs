@@ -332,6 +332,21 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(result.includes("rs"), true, "form submitted with value")
   })
 
+  await test("dropdown is anchored below the input", async () => {
+    await input.click()
+    await waitOpen()
+    const content = page.locator('[data-pg="cbx-content"]:popover-open')
+    eq(await content.getAttribute("data-side"), "bottom", "data-side is bottom")
+    const anchorBox = await input.evaluate((el) => {
+      const rect = el.closest(".combobox-input-group").getBoundingClientRect()
+      return { y: rect.y, height: rect.height }
+    })
+    const contentBox = await content.boundingBox()
+    eq(contentBox.y >= anchorBox.y + anchorBox.height - 2, true, "dropdown is below the input")
+    await page.keyboard.press("Escape")
+    await waitAllClosed()
+  })
+
   await test("setCustomValidity surfaces a custom message via ref", async () => {
     // Click the "Set custom error" button
     await page.locator('[data-pg="cbx-req-custom"]').click()

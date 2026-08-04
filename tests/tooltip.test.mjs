@@ -121,6 +121,16 @@ export default async function run({ page, baseUrl, test, eq }) {
     await cleanup()
   })
 
+  await test("content is anchored near the trigger", async () => {
+    await trigger.hover()
+    const tip = await waitOpen()
+    eq(await tip.getAttribute("data-side"), "top", "data-side is set")
+    const triggerBox = await trigger.boundingBox()
+    const tipBox = await page.locator(".tooltip:popover-open").boundingBox()
+    eq(tipBox.y + tipBox.height <= triggerBox.y + 2, true, "tip is above or adjacent to trigger")
+    await cleanup()
+  })
+
   await test("controlled open/onOpenChange", async () => {
     const readout = page.locator('[data-pg="controlled-tooltip-state"]')
     eq(await readout.textContent(), "closed", "initially closed")

@@ -118,4 +118,17 @@ export default async function run({ page, baseUrl, test, eq }) {
     })
     eq(matches, true, "invalid slot border is --destructive")
   })
+
+  await test("caret parks at the end of the typed value", async () => {
+    await input.focus()
+    await page.keyboard.type("12")
+    const sel = await input.evaluate((el) => ({
+      start: el.selectionStart,
+      end: el.selectionEnd,
+      len: el.value.length,
+    }))
+    eq(sel.start, sel.len, "selectionStart is at value end")
+    eq(sel.end, sel.len, "selectionEnd is at value end")
+    await input.evaluate((el) => { el.value = ""; el.dispatchEvent(new Event("input", { bubbles: true })) })
+  })
 }

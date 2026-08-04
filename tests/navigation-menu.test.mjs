@@ -458,4 +458,17 @@ export default async function run({ page, baseUrl, test, eq }) {
     })
     eq(viewportInSection, null, "no viewport element in per-item mode")
   })
+
+  await test("viewport={false}: per-item panel is anchored below its trigger", async () => {
+    const trigger = page.locator('[data-pg="nm"] .navigation-menu-trigger').first()
+    await trigger.click()
+    const content = page.locator('[data-pg="nm-content-learn"]:popover-open')
+    await content.waitFor({ timeout: 5000 })
+    eq(await content.getAttribute("data-side"), "bottom", "data-side is bottom")
+    const triggerBox = await trigger.boundingBox()
+    const contentBox = await content.boundingBox()
+    eq(contentBox.y >= triggerBox.y + triggerBox.height - 2, true, "panel is below the trigger")
+    await page.mouse.click(0, 0)
+    await page.waitForTimeout(300)
+  })
 }
