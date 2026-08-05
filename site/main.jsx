@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client"
 import "../styles/globals.css"
+import "../styles/typeset.css"
 import "./site.css"
 // styles/van.css is deliberately NOT imported. It is the generator's
 // output for the sample van.config.json — a consumer's theme. Importing it

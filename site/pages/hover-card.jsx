@@ -71,7 +71,7 @@ export default function HoverCardPage() {
             <PreviewCard />
           </HoverCardContent>
         </HoverCard>
-        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+        <p className="pg-desc">
           state: <span data-pg="controlled-hover-card-state">{open ? "open" : "closed"}</span>
         </p>
       </section>

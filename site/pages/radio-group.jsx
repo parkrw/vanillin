@@ -54,7 +54,7 @@ export default function RadioGroupPage() {
             <Label htmlFor="rgc-comfortable">Comfortable</Label>
           </div>
         </RadioGroup>
-        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>Selected: {value}</p>
+        <p className="pg-desc">Selected: {value}</p>
       </section>
 
       <section className="pg-section">

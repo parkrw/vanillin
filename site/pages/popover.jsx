@@ -61,7 +61,7 @@ export default function PopoverPage() {
             </PopoverHeader>
           </PopoverContent>
         </Popover>
-        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+        <p className="pg-desc">
           state: <span data-pg="controlled-popover-state">{open ? "open" : "closed"}</span>
         </p>
       </section>

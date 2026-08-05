@@ -73,7 +73,7 @@ export default function DropdownMenuPage() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+        <p className="pg-desc">
           Last action: <span data-pg="dropdown-readout">{lastAction}</span>
         </p>
       </section>
@@ -103,7 +103,7 @@ export default function DropdownMenuPage() {
             </DropdownMenuCheckboxItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+        <p className="pg-desc">
           <span data-pg="cb-readout">
             statusbar:{statusBar ? "on" : "off"} activity:{activityBar ? "on" : "off"}
           </span>
@@ -126,7 +126,7 @@ export default function DropdownMenuPage() {
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
         </DropdownMenu>
-        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+        <p className="pg-desc">
           Position: <span data-pg="radio-readout">{position}</span>
         </p>
       </section>

@@ -10,6 +10,8 @@ import {
   THEME_KEYS,
   MOTION_KEYS,
   FONT_KEYS,
+  TYPESET_FONT_KEYS,
+  TYPESET_LEADING_RANGE,
   DENSITY_PRESETS,
   DENSITY_RANGE,
   MOTION_SCALE_RANGE,
@@ -108,6 +110,33 @@ for (const key of THEME_KEYS) {
         properties: fontProps,
       }
       break
+    case "typeset": {
+      const typesetFontProps = {}
+      for (const k of TYPESET_FONT_KEYS) {
+        typesetFontProps[k] = { type: "string" }
+      }
+      const presetRhythm = {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          size: { type: "string" },
+          leading: { type: "number", minimum: TYPESET_LEADING_RANGE[0], maximum: TYPESET_LEADING_RANGE[1] },
+          flow: { type: "string" },
+        },
+      }
+      themeProps.typeset = {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          size: { type: "string", description: "Base font-size (e.g. \"1rem\")" },
+          leading: { type: "number", minimum: TYPESET_LEADING_RANGE[0], maximum: TYPESET_LEADING_RANGE[1], description: "Base line-height multiplier" },
+          flow: { type: "string", description: "Block spacing (e.g. \"1.5rem\")" },
+          font: { type: "object", additionalProperties: false, properties: typesetFontProps },
+          presets: { type: "object", additionalProperties: presetRhythm },
+        },
+      }
+      break
+    }
     case "light":
     case "dark":
       themeProps[key] = {

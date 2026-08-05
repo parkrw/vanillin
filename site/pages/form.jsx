@@ -237,10 +237,10 @@ function EnginePathDemo() {
         {result && (
           <pre
             data-pg="form-engine-result"
+            className="pg-detail"
             style={{
               marginTop: "1rem",
               padding: "0.75rem",
-              fontSize: "0.8125rem",
               borderRadius: "var(--radius)",
               background: "var(--muted)",
               overflow: "auto",
@@ -331,10 +331,10 @@ function FieldArrayDemo() {
         {result && (
           <pre
             data-pg="form-array-result"
+            className="pg-detail"
             style={{
               marginTop: "1rem",
               padding: "0.75rem",
-              fontSize: "0.8125rem",
               borderRadius: "var(--radius)",
               background: "var(--muted)",
               overflow: "auto",
@@ -515,9 +515,9 @@ function Docs() {
 
         <h4>Anatomy</h4>
         <table
+          className="pg-desc"
           style={{
             width: "100%",
-            fontSize: "0.875rem",
             borderCollapse: "collapse",
           }}
         >

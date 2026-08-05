@@ -111,6 +111,12 @@
 
 @property --motion-scale { syntax: "<number>"; inherits: true; initial-value: 1; }
 @property --density-scale { syntax: "<number>"; inherits: true; initial-value: 1; }
+@property --typeset-leading { syntax: "<number>"; inherits: true; initial-value: 1.75; }
+
+/* ---- @property: typeset tokens ---- */
+
+@property --typeset-size { syntax: "<length>"; inherits: true; initial-value: 1rem; }
+@property --typeset-flow { syntax: "<length>"; inherits: true; initial-value: 1.5rem; }
 
 /* ---- Token machinery ----
  *

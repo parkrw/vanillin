@@ -92,7 +92,7 @@ export default function ContextMenuPage() {
             </ContextMenuRadioGroup>
           </ContextMenuContent>
         </ContextMenu>
-        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+        <p className="pg-desc">
           Last action: <span data-pg="context-readout">{lastAction}</span>{" "}
           bookmarks:<span data-pg="ctx-cb-readout">{showBookmarks ? "on" : "off"}</span>{" "}
           person:<span data-pg="ctx-radio-readout">{person}</span>

@@ -41,8 +41,9 @@ All CLI tests pass. Manual: `npx . add` in a project with some components instal
 
 ## Handoff
 
-**Status:** DONE — all 3 sub-tasks complete, 41/41 CLI + 87/87 config-schema tests green.
+**Status:** COMPLETE
+**Branch:** feat/cli-picker (merged)  **PR:** none (local merge)  **Updated:** 2026-08-05
 
-- Picker: raw-mode ANSI multi-select with scrolling viewport (~90 lines). State machine is pure and exported for testing.
-- `van add` with no args: shows picker (TTY), errors (non-TTY), or selects all (`--yes`).
-- 9 new tests: state transitions (cursor wrap, toggle, toggle-all, scroll, confirm, cancel), render output, non-TTY fallback, `--yes` integration.
+- **Landed:** `van add` with no args shows a raw-mode ANSI multi-select picker with scrolling viewport. `--yes` selects all not-installed. Non-TTY falls back to error. 9 new tests (41 CLI total).
+- **Repo state:** clean, on main.
+- **Next:** task 69 (docs-site-dogfood) — the site uses its own kit components instead of raw HTML.

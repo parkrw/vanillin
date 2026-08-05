@@ -61,7 +61,7 @@ export default function TooltipPage() {
             <TooltipContent>Controlled tooltip text</TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+        <p className="pg-desc">
           state: <span data-pg="controlled-tooltip-state">{open ? "open" : "closed"}</span>
         </p>
       </section>

@@ -1,0 +1,219 @@
+/*
+ * Typeset — prose container driven by three rhythm variables.
+ *
+ * Wrap any block of rendered HTML/markdown in .typeset and every heading,
+ * paragraph, list, table, blockquote and code block picks up consistent
+ * sizing and spacing derived from:
+ *
+ *   --typeset-size     base font-size
+ *   --typeset-leading  line-height (unitless multiplier)
+ *   --typeset-flow     vertical block spacing
+ *
+ * Font stacks default to the theme fonts and are overridable per-scope:
+ *   --typeset-font-body, --typeset-font-heading, --typeset-font-mono
+ *
+ * Presets (.typeset-docs, .typeset-chat, …) override the rhythm vars.
+ * Consumers define more in van.config.json → theme.typeset.presets; the
+ * generator emits them into van.css.
+ *
+ * Opt out per-element: .not-typeset or [data-not-typeset].
+ */
+
+/* ---- Base ---- */
+
+.typeset {
+  font-size: var(--typeset-size);
+  line-height: var(--typeset-leading);
+  font-family: var(--typeset-font-body);
+}
+
+/* ---- Headings ---- */
+
+.typeset h1 {
+  font-size: calc(var(--typeset-size) * 2.25);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  font-family: var(--typeset-font-heading);
+  margin: 0;
+}
+
+.typeset h2 {
+  font-size: calc(var(--typeset-size) * 1.875);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  font-family: var(--typeset-font-heading);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  margin-top: calc(var(--typeset-flow) * 1.67);
+  margin-bottom: 0;
+}
+
+.typeset h3 {
+  font-size: calc(var(--typeset-size) * 1.5);
+  font-weight: 600;
+  line-height: 1.33;
+  letter-spacing: -0.025em;
+  font-family: var(--typeset-font-heading);
+  margin-top: calc(var(--typeset-flow) * 1.33);
+  margin-bottom: 0;
+}
+
+.typeset h4 {
+  font-size: calc(var(--typeset-size) * 1.25);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.025em;
+  font-family: var(--typeset-font-heading);
+  margin-top: var(--typeset-flow);
+  margin-bottom: 0;
+}
+
+/* ---- Block elements ---- */
+
+.typeset p {
+  line-height: var(--typeset-leading);
+  margin-top: var(--typeset-flow);
+  margin-bottom: 0;
+}
+
+.typeset blockquote {
+  border-inline-start: 2px solid var(--border);
+  padding-inline-start: 1.5rem;
+  font-style: italic;
+  margin: var(--typeset-flow) 0 0;
+  color: var(--muted-foreground);
+}
+
+.typeset hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: var(--typeset-flow) 0 0;
+}
+
+/* ---- Table ---- */
+
+.typeset table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--typeset-flow);
+}
+
+.typeset th {
+  text-align: start;
+  font-weight: 600;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.typeset td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.typeset tr:last-child td {
+  border-bottom: none;
+}
+
+/* ---- Lists ---- */
+
+.typeset ul,
+.typeset ol {
+  margin: var(--typeset-flow) 0 0;
+  padding-inline-start: 1.5rem;
+}
+
+.typeset ul {
+  list-style-type: disc;
+}
+
+.typeset ol {
+  list-style-type: decimal;
+}
+
+.typeset li {
+  margin-top: calc(var(--typeset-flow) * 0.33);
+  line-height: var(--typeset-leading);
+}
+
+/* ---- Code ---- */
+
+.typeset code {
+  font-family: var(--typeset-font-mono);
+  font-size: 0.875em;
+  font-weight: 500;
+  background-color: var(--muted);
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+}
+
+.typeset pre {
+  margin-top: var(--typeset-flow);
+  margin-bottom: 0;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background-color: var(--muted);
+  padding: 1rem;
+}
+
+.typeset pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.875em;
+}
+
+/* ---- Semantic helpers ---- */
+
+.typeset .lead {
+  font-size: calc(var(--typeset-size) * 1.25);
+  line-height: var(--typeset-leading);
+  color: var(--muted-foreground);
+}
+
+.typeset .large {
+  font-size: calc(var(--typeset-size) * 1.125);
+  font-weight: 600;
+  line-height: var(--typeset-leading);
+}
+
+.typeset .small {
+  font-size: calc(var(--typeset-size) * 0.875);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.typeset .muted {
+  font-size: calc(var(--typeset-size) * 0.875);
+  color: var(--muted-foreground);
+}
+
+/* ---- Presets ----
+ * Shipped defaults; consumers override via theme.typeset.presets in
+ * van.config.json (generated into van.css, which wins on source order). */
+
+.typeset-docs {
+  --typeset-size: 1rem;
+  --typeset-leading: 1.8;
+  --typeset-flow: 1.75rem;
+}
+
+.typeset-chat {
+  --typeset-size: 0.875rem;
+  --typeset-leading: 1.5;
+  --typeset-flow: 0.75rem;
+}
+
+/* ---- Opt-out ---- */
+
+:where(.typeset) :where(.not-typeset, [data-not-typeset]) {
+  font-size: revert;
+  line-height: revert;
+  letter-spacing: revert;
+  font-family: revert;
+}
+
+:where(.typeset) :where(.not-typeset, [data-not-typeset]) * {
+  margin-top: revert;
+}

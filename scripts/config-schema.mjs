@@ -33,11 +33,14 @@ export const DENSITY_PRESETS = { compact: 0.875, comfortable: 1, spacious: 1.25 
 export const DENSITY_RANGE = [0.75, 1.5]
 export const MOTION_SCALE_RANGE = [0, 3]
 
-export const THEME_KEYS = new Set(["brand", "radius", "density", "motion", "font", "light", "dark"])
+export const THEME_KEYS = new Set(["brand", "radius", "density", "motion", "font", "typeset", "light", "dark"])
 /** Keys allowed in the object form of theme.brand. */
 export const BRAND_KEYS = new Set(["primary", "secondary", "accent", "neutral"])
 export const MOTION_KEYS = new Set(["scale", "ease"])
 export const FONT_KEYS = new Set(["sans", "mono"])
+export const TYPESET_KEYS = new Set(["size", "leading", "flow", "font", "presets"])
+export const TYPESET_FONT_KEYS = new Set(["body", "heading", "mono"])
+export const TYPESET_LEADING_RANGE = [1, 3]
 export const COMPONENT_SECTION_KEYS = new Set(["tokens", "variants", "sizes"])
 
 /**
@@ -331,6 +334,99 @@ export function validate(config, { colorTokens, knownComponents } = {}) {
                 errors.push(`theme.font.${k} contains unsafe characters`)
               } else {
                 out.theme.font[k] = t.font[k]
+              }
+            }
+          }
+        }
+      }
+
+      // typeset
+      if (t.typeset !== undefined) {
+        if (!isPlainObject(t.typeset)) {
+          errors.push("theme.typeset must be an object")
+        } else {
+          out.theme.typeset = {}
+          for (const k of Object.keys(t.typeset)) {
+            if (!TYPESET_KEYS.has(k)) errors.push(`unknown typeset key "${k}"`)
+          }
+          if (t.typeset.size !== undefined) {
+            if (typeof t.typeset.size !== "string") {
+              errors.push("theme.typeset.size must be a string")
+            } else if (!isSafeCSSValue(t.typeset.size)) {
+              errors.push("theme.typeset.size contains unsafe characters")
+            } else {
+              out.theme.typeset.size = t.typeset.size
+            }
+          }
+          if (t.typeset.leading !== undefined) {
+            if (typeof t.typeset.leading !== "number") {
+              errors.push("theme.typeset.leading must be a number")
+            } else {
+              out.theme.typeset.leading = clamp(t.typeset.leading, ...TYPESET_LEADING_RANGE)
+            }
+          }
+          if (t.typeset.flow !== undefined) {
+            if (typeof t.typeset.flow !== "string") {
+              errors.push("theme.typeset.flow must be a string")
+            } else if (!isSafeCSSValue(t.typeset.flow)) {
+              errors.push("theme.typeset.flow contains unsafe characters")
+            } else {
+              out.theme.typeset.flow = t.typeset.flow
+            }
+          }
+          if (t.typeset.font !== undefined) {
+            if (!isPlainObject(t.typeset.font)) {
+              errors.push("theme.typeset.font must be an object")
+            } else {
+              out.theme.typeset.font = {}
+              for (const k of Object.keys(t.typeset.font)) {
+                if (!TYPESET_FONT_KEYS.has(k)) errors.push(`unknown typeset font key "${k}"`)
+              }
+              for (const k of TYPESET_FONT_KEYS) {
+                if (t.typeset.font[k] !== undefined) {
+                  if (typeof t.typeset.font[k] !== "string") {
+                    errors.push(`theme.typeset.font.${k} must be a string`)
+                  } else if (!isSafeCSSValue(t.typeset.font[k])) {
+                    errors.push(`theme.typeset.font.${k} contains unsafe characters`)
+                  } else {
+                    out.theme.typeset.font[k] = t.typeset.font[k]
+                  }
+                }
+              }
+            }
+          }
+          if (t.typeset.presets !== undefined) {
+            if (!isPlainObject(t.typeset.presets)) {
+              errors.push("theme.typeset.presets must be an object")
+            } else {
+              out.theme.typeset.presets = {}
+              for (const [name, preset] of Object.entries(t.typeset.presets)) {
+                if (!isPlainObject(preset)) {
+                  errors.push(`theme.typeset.presets.${name} must be an object`)
+                  continue
+                }
+                const p = {}
+                for (const pk of Object.keys(preset)) {
+                  if (!new Set(["size", "leading", "flow"]).has(pk)) {
+                    errors.push(`theme.typeset.presets.${name}: unknown key "${pk}"`)
+                  }
+                }
+                if (preset.size !== undefined) {
+                  if (typeof preset.size !== "string" || !isSafeCSSValue(preset.size)) {
+                    errors.push(`theme.typeset.presets.${name}.size must be a safe CSS string`)
+                  } else p.size = preset.size
+                }
+                if (preset.leading !== undefined) {
+                  if (typeof preset.leading !== "number") {
+                    errors.push(`theme.typeset.presets.${name}.leading must be a number`)
+                  } else p.leading = clamp(preset.leading, ...TYPESET_LEADING_RANGE)
+                }
+                if (preset.flow !== undefined) {
+                  if (typeof preset.flow !== "string" || !isSafeCSSValue(preset.flow)) {
+                    errors.push(`theme.typeset.presets.${name}.flow must be a safe CSS string`)
+                  } else p.flow = preset.flow
+                }
+                out.theme.typeset.presets[name] = p
               }
             }
           }

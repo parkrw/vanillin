@@ -21,7 +21,7 @@ function Readout() {
   const { currentAnchorId, visibleMessageIds } = useMessageScrollerVisibility()
   const { start, end } = useMessageScrollerScrollable()
   return (
-    <p style={{ fontSize: "0.8125rem", color: "var(--muted-foreground)" }}>
+    <p className="pg-detail">
       anchor <output aria-label="Current anchor">{currentAnchorId}</output> · visible{" "}
       <output aria-label="Visible messages">{visibleMessageIds.join(" ")}</output> · scrollable{" "}
       <output aria-label="Scrollable">{`start:${start} end:${end}`}</output>

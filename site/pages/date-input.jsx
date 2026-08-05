@@ -45,7 +45,7 @@ export default function DateInputPage() {
   return (
     <>
       <h2>Date Input</h2>
-      <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginBlockEnd: "1rem" }}>
+      <p className="pg-desc" style={{ marginBlockEnd: "1rem" }}>
         A text field that parses natural-language dates on blur, using a zero-dependency
         parser over <code>Intl</code>. Pairs with <code>Calendar</code> in a popover, or with{" "}
         <code>TimePicker</code> for a full datetime.
@@ -53,7 +53,7 @@ export default function DateInputPage() {
 
       <section className="pg-section">
         <h3>Typeable date input + calendar</h3>
-        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginBlockEnd: "0.5rem" }}>
+        <p className="pg-desc" style={{ marginBlockEnd: "0.5rem" }}>
           Type a natural date (<code>tomorrow</code>, <code>next fri</code>, <code>3/4/25</code>)
           and blur to parse. The calendar syncs.
         </p>
@@ -87,7 +87,7 @@ export default function DateInputPage() {
             </PopoverContent>
           </Popover>
         </div>
-        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+        <p className="pg-desc">
           Selected:{" "}
           <span data-pg="dp-typed-state">
             {typedDate ? typedDate.toISOString().slice(0, 10) : "none"}
@@ -97,7 +97,7 @@ export default function DateInputPage() {
 
       <section className="pg-section">
         <h3>Datetime (date input + time picker)</h3>
-        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginBlockEnd: "0.5rem" }}>
+        <p className="pg-desc" style={{ marginBlockEnd: "0.5rem" }}>
           Compose DateInput and TimePicker for a full datetime value.
         </p>
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "start", flexWrap: "wrap" }}>
@@ -128,7 +128,7 @@ export default function DateInputPage() {
             data-pg="dp-dt-time"
           />
         </div>
-        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+        <p className="pg-desc">
           Value:{" "}
           <span data-pg="dp-dt-state">
             {dtDate
@@ -140,7 +140,7 @@ export default function DateInputPage() {
 
       <section className="pg-section">
         <h3>Parser reference</h3>
-        <div style={{ fontSize: "0.8125rem", color: "var(--muted-foreground)", lineHeight: 1.6 }}>
+        <div className="pg-detail" style={{ lineHeight: 1.6 }}>
           <p><strong>Accepted grammar</strong> (case-insensitive):</p>
           <ul style={{ paddingInlineStart: "1.25rem", marginBlock: "0.5rem" }}>
             <li><code>today</code>, <code>tomorrow</code>, <code>yesterday</code></li>

@@ -119,6 +119,61 @@
             }
           }
         },
+        "typeset": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "size": {
+              "type": "string",
+              "description": "Base font-size (e.g. \"1rem\")"
+            },
+            "leading": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 3,
+              "description": "Base line-height multiplier"
+            },
+            "flow": {
+              "type": "string",
+              "description": "Block spacing (e.g. \"1.5rem\")"
+            },
+            "font": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "body": {
+                  "type": "string"
+                },
+                "heading": {
+                  "type": "string"
+                },
+                "mono": {
+                  "type": "string"
+                }
+              }
+            },
+            "presets": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "size": {
+                    "type": "string"
+                  },
+                  "leading": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 3
+                  },
+                  "flow": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
         "light": {
           "type": "object",
           "additionalProperties": {

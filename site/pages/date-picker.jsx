@@ -55,7 +55,7 @@ export default function DatePickerPage() {
   return (
     <>
       <h2>Date Picker</h2>
-      <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginBlockEnd: "1rem" }}>
+      <p className="pg-desc" style={{ marginBlockEnd: "1rem" }}>
         A composition of <code>Popover</code> + <code>Calendar</code> + <code>Button</code> (no
         standalone component).
       </p>
@@ -87,7 +87,7 @@ export default function DatePickerPage() {
             />
           </PopoverContent>
         </Popover>
-        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+        <p className="pg-desc">
           Selected:{" "}
           <span data-pg="dp-single-state">
             {single ? single.toISOString().slice(0, 10) : "none"}
@@ -128,7 +128,7 @@ export default function DatePickerPage() {
             />
           </PopoverContent>
         </Popover>
-        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+        <p className="pg-desc">
           Range:{" "}
           <span data-pg="dp-range-state">
             {range?.from
@@ -168,7 +168,7 @@ export default function DatePickerPage() {
             />
           </PopoverContent>
         </Popover>
-        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+        <p className="pg-desc">
           Selected:{" "}
           <span data-pg="dp-dob-state">
             {dob ? dob.toISOString().slice(0, 10) : "none"}

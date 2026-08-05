@@ -23,10 +23,9 @@ npm run build
 
 ## Handoff
 
-**Status:** DONE — awaiting full suite confirmation
+**Status:** COMPLETE
+**Branch:** feat/docs-site-dogfood (merged)  **PR:** none (local merge)  **Updated:** 2026-08-05
 
-All 5 sub-tasks complete. 41 raw `<button>` → `<Button>` across 10 pages. Breadcrumb added to shell. Introduction page rebuilt as component showcase. NavigationMenu skipped (horizontal-only, doesn't fit vertical sidebar). Two test files updated (VT selectors `.pg-vt-*` → `data-pg`, resizable `button.pg-button` → `data-pg`). Deleted dead `pg-vt-back`/`pg-vt-wipe` CSS. One `type="button"` correctness fix caught by the suite — every non-submit Button inside a form now has explicit `type="button"`.
-
-**VT cards stay raw:** The view-transitions card buttons are styled as cards (`pg-vt-card`), not as UI buttons. Using `<Button>` there would conflict with the card CSS. The `<button>` tag is semantic (clickable), not visual.
-
-**Primitives roving demo stays raw:** `<button data-roving>` is what `useRovingFocus` binds to. Using `<Button>` works but the `data-roving` attribute is the hook's contract.
+- **Landed:** 41 raw `<button>` → `<Button>` across 10 pages; breadcrumb in site shell; introduction page rebuilt as live component showcase; NavigationMenu skipped (horizontal-only). Suite 733/735 (2 pre-existing slider cursor flakes).
+- **Repo state:** clean on main, 2 unstaged TODO bookkeeping changes (README resume pointer + task67 handoff text).
+- **Next:** task 70 (typography-system) — a typeset scale for the docs site, then task 30 (docs-content) proofreads everything.

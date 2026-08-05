@@ -107,7 +107,7 @@ export default function MenubarPage() {
             </MenubarContent>
           </MenubarMenu>
         </Menubar>
-        <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+        <p className="pg-desc">
           Last action: <span data-pg="mb-readout">{lastAction}</span> · bookmarks:{" "}
           <span data-pg="mb-cb-readout">{showBookmarks ? "on" : "off"}</span> · profile:{" "}
           <span data-pg="mb-radio-readout">{profile}</span>

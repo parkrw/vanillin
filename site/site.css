@@ -118,6 +118,15 @@
   border-left: 2px solid var(--pg-accent);
 }
 
+.pg-desc {
+  color: var(--muted-foreground);
+}
+
+.pg-detail {
+  font-size: calc(var(--typeset-size) * 0.8125);
+  color: var(--muted-foreground);
+}
+
 .pg-row {
   display: flex;
   flex-wrap: wrap;

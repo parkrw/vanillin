@@ -454,10 +454,10 @@ function BoundFormDemo() {
         {result && (
           <pre
             data-pg="ff-result"
+            className="pg-detail"
             style={{
               marginTop: "1rem",
               padding: "0.75rem",
-              fontSize: "0.8125rem",
               borderRadius: "var(--radius)",
               background: "var(--muted)",
               overflow: "auto",

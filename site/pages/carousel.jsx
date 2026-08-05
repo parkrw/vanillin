@@ -265,11 +265,10 @@ function ApiDemo() {
       </Carousel>
       <p
         data-pg="c-api-counter"
+        className="pg-desc"
         style={{
           textAlign: "center",
           marginBlockStart: "0.5rem",
-          fontSize: "0.875rem",
-          color: "var(--muted-foreground)",
         }}
       >
         Slide {current} of {count}

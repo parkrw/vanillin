@@ -441,6 +441,19 @@ export function generate(config, { root, tokenSources, source, uiDir = "ui", glo
       if (cfg.theme.font.mono) rootProps.set("--font-mono", cfg.theme.font.mono)
     }
 
+    // Typeset
+    if (cfg.theme.typeset) {
+      const ts = cfg.theme.typeset
+      if (ts.size) rootProps.set("--typeset-size", ts.size)
+      if (ts.leading !== undefined) rootProps.set("--typeset-leading", String(ts.leading))
+      if (ts.flow) rootProps.set("--typeset-flow", ts.flow)
+      if (ts.font) {
+        if (ts.font.body) rootProps.set("--typeset-font-body", ts.font.body)
+        if (ts.font.heading) rootProps.set("--typeset-font-heading", ts.font.heading)
+        if (ts.font.mono) rootProps.set("--typeset-font-mono", ts.font.mono)
+      }
+    }
+
     // Light/dark overrides -- literal wins over derivation.
     // For each overridden token, we need both mode values to emit light-dark().
     // If only one mode is specified, the other comes from globals.css defaults.
@@ -484,6 +497,20 @@ export function generate(config, { root, tokenSources, source, uiDir = "ui", glo
     }
     lines.push("}")
     sections.push(lines.join("\n"))
+  }
+
+  // Typeset presets (sorted by name for determinism)
+  if (cfg.theme?.typeset?.presets) {
+    for (const name of Object.keys(cfg.theme.typeset.presets).sort()) {
+      const preset = cfg.theme.typeset.presets[name]
+      const props = []
+      if (preset.size) props.push(`  --typeset-size: ${preset.size};`)
+      if (preset.leading !== undefined) props.push(`  --typeset-leading: ${preset.leading};`)
+      if (preset.flow) props.push(`  --typeset-flow: ${preset.flow};`)
+      if (props.length > 0) {
+        sections.push(`\n.typeset-${name} {\n${props.join("\n")}\n}`)
+      }
+    }
   }
 
   // Component sections (sorted by slug for determinism)
