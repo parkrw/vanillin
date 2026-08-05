@@ -1,0 +1,102 @@
+/* CodeBlock — monospace pre/code with copy button */
+
+.pg-code-block {
+  position: relative;
+  border-radius: var(--radius-md);
+  background: var(--muted);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.pg-code-pre {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+  color: var(--foreground);
+  tab-size: 2;
+}
+
+.pg-code-pre > code {
+  font: inherit;
+  white-space: pre;
+}
+
+.pg-code-copy {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--motion-ease),
+    background var(--motion-fast) var(--motion-ease);
+}
+
+.pg-code-block:hover .pg-code-copy,
+.pg-code-copy:focus-visible {
+  opacity: 1;
+}
+
+.pg-code-copy:hover {
+  background: color-mix(in oklab, var(--foreground) 10%, transparent);
+  color: var(--foreground);
+}
+
+/* ComponentPreview — bordered card with preview/code tabs */
+
+.pg-preview {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.pg-preview-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--muted);
+}
+
+.pg-preview-toolbar .tabs-list {
+  background: transparent;
+  padding: 0;
+  height: auto;
+}
+
+.pg-preview-toolbar .tabs-trigger {
+  font-size: 0.75rem;
+  height: 1.75rem;
+  padding-inline: 0.75rem;
+}
+
+.pg-preview-panel {
+  padding: 0;
+}
+
+.pg-preview-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 10rem;
+  padding: 2rem;
+}
+
+.pg-preview-code .pg-code-block {
+  border: none;
+  border-radius: 0;
+}

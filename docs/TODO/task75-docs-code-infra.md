@@ -4,16 +4,16 @@
 
 ## Sub-tasks
 
-- [ ] 1. **`<CodeBlock>`** — monospace pre/code with a copy-to-clipboard button. No syntax highlighting library (zero deps) — use CSS classes for basic keyword colouring if feasible, otherwise plain monospace is fine. Supports a `language` prop for future use. Dark/light theme-aware via `--code-*` tokens in `site/site.css`.
+- [x] 1. **`<CodeBlock>`** — monospace pre/code with a copy-to-clipboard button. No syntax highlighting (zero deps). `language` prop for future use (stored as `data-language`). Themed via site tokens (`--muted`, `--border`, `--foreground`). Copy button fades in on hover.
   - files: `site/code-example.jsx`, `site/code-example.css`
 
-- [ ] 2. **`<ComponentPreview>`** — card with two tabs: "Preview" (rendered demo) and "Code" (source in `<CodeBlock>`). Preview renders children; source comes from a `code` string prop. Defaults to preview open. The card uses `ui/card` or a styled `<div>` with the site's border token.
+- [x] 2. **`<ComponentPreview>`** — bordered card with `ui/tabs` toggle: "Preview" (renders children centered) and "Code" (source in `<CodeBlock>`). Toolbar styled compactly over the content area.
   - files: `site/code-example.jsx`, `site/code-example.css`
 
-- [ ] 3. **`<InstallSnippet>`** — given a `slug`, renders `npx github:parkrw/vanillin add <slug>` in a `<CodeBlock>` with a "CLI" label. If the component has `requires` deps in the registry, show them as a note. Compact — one line.
+- [x] 3. **`<InstallSnippet>`** — given a `slug`, renders `npx github:parkrw/vanillin add <slug>` in a compact `<CodeBlock>`. Auto-derives `requires` from `registry.json` and shows linked deps below.
   - files: `site/install-snippet.jsx`, `site/install-snippet.css`
 
-- [ ] 4. **`<ApiReference>`** — renders a props table from a declarative array: `[{ name, type, default, description }]`. Styled with `ui/table` conventions. Supports a `title` prop (defaults to "API Reference"). Each row shows prop name in `<code>`, type in `<code>`, default value, and description.
+- [x] 4. **`<ApiReference>`** — renders a props table from `[{ name, type, default, description }]` using `ui/table`. `title` prop defaults to "API Reference". Heading styled to match `.pg-section > h3`.
   - files: `site/api-reference.jsx`, `site/api-reference.css`
 
 - [ ] 5. **Docs page layout convention** — document the per-component page structure as a pattern (not a wrapper component): description → install → basic usage → examples → API reference. Write a brief comment in the first component that uses it (task 76) so the pattern is discoverable.
@@ -35,4 +35,17 @@ Observable:
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** IN PROGRESS — sub-tasks 1–4 done, sub-task 5 is convention only (task 76 applies it)
+**Branch:** `docs/code-infra`  **PR:** none  **Updated:** 2026-08-05
+
+- **Landed:** `CodeBlock` (monospace + hover-reveal copy), `ComponentPreview` (tabs-based preview/code card using `ui/tabs`), `InstallSnippet` (auto-derives requires from `registry.json`), `ApiReference` (props table using `ui/table`). Build clean.
+- **Page layout convention for task 76:** description → install snippet → basic usage (ComponentPreview) → variant/example sections (more ComponentPreviews) → API reference table. Not a wrapper — each page composes the building blocks in this order.
+- **Usage from a component page:**
+  ```jsx
+  import { ComponentPreview, CodeBlock } from "../code-example.jsx"
+  import { InstallSnippet } from "../install-snippet.jsx"
+  import { ApiReference } from "../api-reference.jsx"
+  import "../code-example.css"
+  import "../install-snippet.css"
+  import "../api-reference.css"
+  ```

@@ -1,0 +1,33 @@
+/* ApiReference — props table */
+
+.pg-api-ref > h3 {
+  font-size: 0.875rem;
+  color: color-mix(in oklab, var(--foreground) 80%, var(--background));
+  margin-bottom: 0.75rem;
+  padding-left: 0.5rem;
+  border-left: 2px solid var(--pg-accent);
+}
+
+.pg-api-table {
+  font-size: 0.8125rem;
+}
+
+.pg-api-prop {
+  font-weight: 500;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.pg-api-type {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+}
+
+.pg-api-default {
+  font-size: 0.75rem;
+}
+
+.pg-api-none {
+  color: var(--muted-foreground);
+}
