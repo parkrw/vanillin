@@ -34,10 +34,10 @@ is planned. Items marked **verified** were checked against the tree at
 across code, tests and docs. Suite 667/667, build clean.
 
 **Naming decision:** there is no separate site brand. The product is
-**Vanillin**, the CLI and config are **`van`**, and the documentation site is
+**vanillin**, the CLI and config are **`van`**, and the documentation site is
 just the product's site — the way upstream, Radix and Base UI all do it. A
 sub-brand ("Van Kit", "Workbench") is the pet-project tell we were trying to
-remove. `<title>` is now `Vanillin`.
+remove. `<title>` is now `vanillin`.
 
 **Deliberately not renamed:** the `pg-` CSS prefix and `data-pg` test hooks.
 They are internal, invisible to consumers, and renaming them would touch every

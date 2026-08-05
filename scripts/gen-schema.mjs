@@ -149,7 +149,7 @@ for (const key of THEME_KEYS) {
 
 const schema = {
   $schema: "http://json-schema.org/draft-07/schema#",
-  title: "Vanillin Config",
+  title: "vanillin Config",
   type: "object",
   additionalProperties: false,
   properties: {

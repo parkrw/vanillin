@@ -25,15 +25,14 @@ export default function IntroductionPage() {
       <h2>Introduction</h2>
 
       <p>
-        <strong>Zero dependencies.</strong> React components with vanilla JS,
-        JSX, and CSS. No Tailwind, no Radix, no Floating UI — only React is
+        <strong>Zero dependencies</strong> React components with vanilla JS,
+        JSX, and CSS. No Tailwind, no Radix, no Floating UI only React is
         required.
       </p>
 
       <p>
         Copy-paste, not install. Components are code you copy into your project
-        and own. Names match upstream (shadcn) closely; docs and examples mostly
-        map 1:1.
+        and own. Inspired by shadcn.
       </p>
 
       <Separator style={{ margin: "1.5rem 0" }} />

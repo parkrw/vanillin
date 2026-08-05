@@ -1,5 +1,5 @@
 /**
- * Vanillin config schema and validator.
+ * vanillin config schema and validator.
  *
  * Validates van.config.json structure, rejects CSS injection vectors,
  * clamps numeric ranges, expands property shorthands, and enforces

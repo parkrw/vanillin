@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Vanillin theme generator.
+ * vanillin theme generator.
  *
  * Two jobs, same code path:
  *

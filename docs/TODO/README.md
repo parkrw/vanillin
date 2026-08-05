@@ -2,9 +2,9 @@
 
 **Resume:** Tasks 65–70 done. Next ready: **30** (docs-content, final consistency/gap pass). Task **74** (narrow-viewport reflow, split out of 71's findings) still needs a scope call before it is detailed. See `docs/TODO/task71-docs-site-sweep.md` for what the sweep tools do and how to re-run them.
 
-## Handoff — task 73 (in progress)
+## Handoff — task 70 (complete)
 
-See `docs/TODO/task73-coverage-probe.md` → Handoff for full state. 5 gaps found and fixed (anchor positioning × 4, input-otp caret × 1). ~25 components unprobed in tier 2/3. Suite 735 total.
+See `docs/TODO/task70-typography-system.md` → Handoff. Typeset rhythm system landed, all inline font sizes consolidated. Suite 744/746 (2 pre-existing).
 
 Two notes for reading anything below: the docs site directory is **`site/`** (renamed 2026-07-27), so older prose here saying `playground/` means `site/`. And `docs/HANDOFF.md` is gone — its durable content is in `AGENTS.md`, `docs/QUIRKS.md` and `docs/DECISIONS.md`; live state belongs in each task file's `## Handoff`.
 

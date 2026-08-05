@@ -1120,7 +1120,7 @@ export default function DataTablePage() {
         <h3>table-layout: fixed</h3>
         <p>
           Predictable column sizing requires{" "}
-          <code>table-layout:&nbsp;fixed</code>. Vanillin ships this as an
+          <code>table-layout:&nbsp;fixed</code>. vanillin ships this as an
           opt-in class: add <code>className="data-table-sized"</code> to your{" "}
           <code>&lt;Table&gt;</code>. Without it the table keeps the browser's
           intrinsic <code>auto</code> layout and renders identically to before —
@@ -1170,7 +1170,7 @@ export default function DataTablePage() {
         <p>
           TanStack exposes <code>getLeftHeaderGroups</code> /{" "}
           <code>getCenterHeaderGroups</code> /{" "}
-          <code>getRightHeaderGroups</code>. Vanillin deliberately omits these.
+          <code>getRightHeaderGroups</code>. vanillin deliberately omits these.
           A single <code>getHeaderGroups()</code> returns columns in pinning
           order (left, center, right), and <code>position:&nbsp;sticky</code>{" "}
           does the visual work with far less machinery. The ordered column list
