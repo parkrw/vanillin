@@ -24,25 +24,156 @@
   --pg-accent: oklch(0.87 0.19 168);
 }
 
+/* ------------------------------------------------------------------ */
+/*  Shell: topnav / (sidebar | main)                                   */
+/* ------------------------------------------------------------------ */
+
 .pg {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.pg-body {
   display: grid;
   grid-template-columns: 220px 1fr;
-  min-height: 100vh;
+  flex: 1;
+  min-height: 0;
 }
+
+/* When home page is shown, no sidebar — main spans full width */
+.pg-body:has(.pg-main--home) {
+  grid-template-columns: 1fr;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Top navbar                                                         */
+/* ------------------------------------------------------------------ */
+
+.pg-topnav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+  flex-shrink: 0;
+}
+
+.pg-logo {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--pg-accent);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+
+.pg-logo:hover {
+  opacity: 0.8;
+}
+
+.pg-topnav-menu {
+  flex: 0 0 auto;
+}
+
+.pg-topnav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-inline-start: auto;
+}
+
+/* Search trigger — styled like shadcn's search bar */
+.pg-search-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 2rem;
+  min-width: 16rem;
+  justify-content: space-between;
+  font-weight: 400;
+}
+
+.pg-search-trigger-text {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.pg-search-kbd {
+  font-size: 0.6875rem;
+  font-family: inherit;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+/* Navigation menu dropdown for component categories */
+.pg-topnav-dropdown {
+  width: max-content;
+  max-width: 42rem;
+}
+
+.pg-topnav-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+  list-style: none;
+  margin: 0;
+}
+
+.pg-topnav-cat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.pg-topnav-cat-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-foreground);
+  margin-bottom: 0.25rem;
+}
+
+.pg-topnav-cat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.pg-topnav-cat-link {
+  display: block;
+  padding: 0.2rem 0;
+  font-size: 0.8125rem;
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.pg-topnav-cat-link:hover {
+  color: var(--pg-accent);
+}
+
+.pg-topnav-cat-more {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sidebar                                                            */
+/* ------------------------------------------------------------------ */
 
 .pg-nav {
   border-right: 1px solid var(--border);
   padding: 1rem 0.75rem;
-  position: sticky;
-  top: 0;
-  height: 100vh;
   overflow-y: auto;
-}
-
-.pg-nav h1 {
-  font-size: 1rem;
-  margin: 0 0.5rem 0.75rem;
-  color: var(--pg-accent);
 }
 
 .pg-nav-group {
@@ -93,9 +224,19 @@
   pointer-events: none;
 }
 
+/* ------------------------------------------------------------------ */
+/*  Main content                                                       */
+/* ------------------------------------------------------------------ */
+
 .pg-main {
   padding: 2rem 2.5rem;
   max-width: 56rem;
+  overflow-y: auto;
+}
+
+.pg-main--home {
+  max-width: 72rem;
+  margin: 0 auto;
 }
 
 .pg-breadcrumb {
@@ -147,14 +288,84 @@
    comes from mode-toggle.css, so the site cannot drift from the component it
    documents. `.pg-theme-toggle` survives as the test hook. */
 .pg-theme-toggle {
-  margin: 0 0.5rem 1rem;
+  flex-shrink: 0;
 }
 
 .pg-theme-toggle:hover {
   color: var(--pg-accent);
 }
 
-/* View Transitions — theme toggle circular wipe */
+/* ------------------------------------------------------------------ */
+/*  Home page                                                          */
+/* ------------------------------------------------------------------ */
+
+.pg-home {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.pg-hero {
+  text-align: center;
+  padding: 4rem 0 2rem;
+}
+
+.pg-hero-badge {
+  margin-bottom: 1rem;
+}
+
+.pg-hero-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin: 0.5rem 0;
+  color: var(--pg-accent);
+}
+
+.pg-hero-desc {
+  font-size: 1.125rem;
+  color: var(--muted-foreground);
+  max-width: 36rem;
+  margin: 1rem auto 2rem;
+  line-height: 1.6;
+}
+
+.pg-hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.pg-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+}
+
+.pg-home-components > h2 {
+  margin-top: 0;
+}
+
+.pg-home-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pg-home-cat-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.pg-home-cat-tags a {
+  text-decoration: none;
+}
+
+/* ------------------------------------------------------------------ */
+/*  View Transitions — theme toggle circular wipe                      */
+/* ------------------------------------------------------------------ */
 
 /* The group keeps its own UA animation unless told otherwise, and at the UA
    default of 250ms it outlasts our --motion-medium reveal — the sweep finishes,
@@ -191,7 +402,9 @@
   animation-timing-function: var(--motion-ease);
 }
 
-/* View Transitions demo page — list/detail cards */
+/* ------------------------------------------------------------------ */
+/*  View Transitions demo page — list/detail cards                     */
+/* ------------------------------------------------------------------ */
 
 .pg-vt-list {
   display: grid;

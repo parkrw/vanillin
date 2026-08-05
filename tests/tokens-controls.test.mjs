@@ -56,7 +56,7 @@ export default async function run({ page, baseUrl, test, eq }) {
 
   /* ---- Button: padding responds to density-scale ---- */
   await page.goto(`${baseUrl}#button`);
-  await page.waitForSelector(".btn");
+  await page.waitForSelector(".btn--sm");
 
   await test("button padding scales with --density-scale", async () => {
     const at1 = await paddingAt(".btn", 1);

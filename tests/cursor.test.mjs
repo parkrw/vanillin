@@ -1,10 +1,10 @@
 export default async function run({ page, baseUrl, repoRoot, test, eq, near }) {
   // ---- button ----
   await page.goto(`${baseUrl}/#button`)
-  await page.waitForSelector(".btn")
+  await page.waitForSelector(".pg-main .btn")
 
   await test("button shows pointer cursor", async () => {
-    const cursor = await page.locator(".btn").first().evaluate(
+    const cursor = await page.locator(".pg-main .btn").first().evaluate(
       (el) => getComputedStyle(el).cursor,
     )
     eq(cursor, "pointer")
@@ -12,10 +12,10 @@ export default async function run({ page, baseUrl, repoRoot, test, eq, near }) {
 
   // ---- dropdown-menu (menuitem) ----
   await page.goto(`${baseUrl}/#dropdown-menu`)
-  await page.waitForSelector(".btn")
+  await page.waitForSelector(".pg-main .btn")
 
   await test("menu item shows pointer cursor", async () => {
-    await page.locator(".btn").first().click()
+    await page.locator(".pg-main .btn").first().click()
     await page.waitForSelector('[role="menuitem"]')
     const cursor = await page.locator('[role="menuitem"]').first().evaluate(
       (el) => getComputedStyle(el).cursor,
