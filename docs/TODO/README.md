@@ -1,6 +1,6 @@
-# Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–61)
+# Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–78)
 
-**Resume:** Tasks 65–70 done. Next ready: **30** (docs-content, final consistency/gap pass). Task **74** (narrow-viewport reflow, split out of 71's findings) still needs a scope call before it is detailed. See `docs/TODO/task71-docs-site-sweep.md` for what the sweep tools do and how to re-run them.
+**Resume:** Tasks 65–70 done. Next ready: **30** (site-chrome — shell overhaul: navbar, command palette, home page, component categories). Then 75 → 76 → 77 (+78 parallel). Task **74** (narrow-viewport reflow) still needs a scope call. See `docs/TODO/task71-docs-site-sweep.md` for sweep tools.
 
 ## Handoff — task 70 (complete)
 
@@ -46,7 +46,7 @@ platform features upstream cannot adopt (Tailwind/Radix/React-18 bound).
 | 27           | sidebar             | ~L  | [x]    | all 24 exports real; mobile = sheet; Cmd+B; sidebar_state cookie                                  |
 | 28           | dark-mode-pass      | ~M  | [x]    | axe contrast sweep + screenshot QA; `--input-background` token                                    |
 | 29           | docs-shell          | ~M  | [x]    | grouped nav (Get started / Components); intro + install/theming stubs; empty hash → #introduction |
-| 30 (do last) | docs-content        | ~M  | [ ]    | **runs last**, after 70; consistency/gap pass + the docs half of `docs/ISSUES.md` (A3, B1–B6)       |
+| 30           | site-chrome          | ~L  | [ ]    | shell overhaul: top navbar (navigation-menu), ⌘K command palette, home page, component categories, breadcrumbs |
 
 ## Phase 2 — config, form, parity, platform
 
@@ -55,7 +55,7 @@ Tasks are detailed just-in-time; only the rows below are durable.
 **Order from here (settled 2026-07-27, after 38 landed):**
 
 ```
-39 ✓ → 68 ✓ → 71 ✓ → 72 (bugs) → 73 (coverage) → 65 → 66 → 67 → 69 → 70 → 30 → 74? → console kit
+39 ✓ → 68 ✓ → 71 ✓ → 72 ✓ → 73 ✓ → 65 ✓ → 66 ✓ → 67 ✓ → 69 ✓ → 70 ✓ → 30 → 75 → 76 (+78 parallel) → 77 (spawn) → 74? → console kit
 ```
 
 - **39 landed 2026-07-27 and unblocked everything after it.** It ran alone on the
@@ -71,12 +71,15 @@ Tasks are detailed just-in-time; only the rows below are durable.
   anyway. **73 is the one row here that can slide right** if the CLI is wanted
   sooner — it is test quality, not a user-visible defect. 71 and 72 should not.
 - **69 and 70 before 30.** They rewrite the docs pages that 30 then proofreads.
-- **30 is last and absorbs the docs half of `docs/ISSUES.md`** — A3 (code
-  examples on every component page) and B1–B6 (per-component config
-  undocumented, density examples, `ui/command` unexplained, drawer swipe
-  undiscoverable, form docs recommending zod over `lib/schema.js`, `ui/form` vs
-  `ui/form-fields`) are its checklist, not a separate list.
-- **The console kit comes after 30** — new components want settled docs
+- **30 is now the site chrome overhaul** (top navbar, ⌘K palette, home page,
+  component categories, breadcrumbs), not a consistency pass. The docs-content
+  work that was task 30 is now split across 75–78. A3 (code examples) is 75+76+77;
+  B1–B6 are distributed across 76 (B5, B6, C8), 77 (B2–B4, C7), and 78 (B1, A5).
+- **75 → 76 → 77 is the critical path.** 78 (Get Started, config reference,
+  voice pass) can run in parallel with 76 — their `Owns` globs are disjoint
+  (78 owns `site/pages/docs/*.jsx`, 76 owns the 15 component pages).
+- **77 is spawn-ready** — ~59 pages, disjoint files, 3-4 workers by category.
+- **The console kit comes after 77** — new components want settled docs
   conventions and post-39 CSS. Cheap now: 64 + 38 generate the manifest,
   registry entry and sidecar.
 
@@ -111,8 +114,9 @@ third-party registries, and distribution was settled in task 38's own spec. See
 
 **Every task writes its own docs** (2026-07-26) — prose lands in the same PR as
 the code, on the component's docs-site page or the relevant
-`site/pages/docs/` page. Task 30 is no longer where documentation gets
-written; it is a final consistency and gap pass.
+`site/pages/docs/` page. Tasks 75–78 are the docs site rebuild: code display
+infrastructure (75), per-component shadcn-style docs (76+77), and content/Get
+Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 
 | #   | Slug                     | Est | Status | Notes                                                                  |
 | --- | ------------------------ | --- | ------ | ---------------------------------------------------------------------- |
@@ -160,6 +164,10 @@ written; it is a final consistency and gap pass.
 | 72  | bug-batch-2              | ~M  | [x]    | merged 2026-08-02, no PR (local merge); all 11 sub-tasks; +F7/D14/D15 filed [^72] |
 | 74  | site-responsive          | ~L  | [ ]    | ISSUES K1 — 73 of 79 pages overflow at 380px; needs a scope call [^74]  |
 | 73  | coverage-probe           | ~L  | [x]    | 26 probed, 5 gaps fixed, 20 caught, 1 skipped; suite 735 [^73]          |
+| 75  | docs-code-infra          | ~M  | [ ]    | deps: 30; `<ComponentPreview>`, `<CodeBlock>`, `<InstallSnippet>`, `<ApiReference>` [^75] |
+| 76  | docs-pages-core          | ~L  | [ ]    | deps: 75; template applied to 15 key components (button, input, dialog, card, etc.) [^76] |
+| 77  | docs-pages-rest          | ~XL | [ ]    | deps: 76; template applied to remaining ~59 pages; spawn-ready [^77]     |
+| 78  | docs-content             | ~M  | [ ]    | deps: 75; Get Started refresh, config reference (B1), voice pass (A5) [^78] |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -361,6 +369,26 @@ written; it is a final consistency and gap pass.
     edited component — and the easiest to make destructive. Own task, own
     tests.
 
+[^75]: deps: 30; reusable page building blocks for shadcn-style component docs.
+    `<ComponentPreview>` (demo + source toggle), `<CodeBlock>` (monospace +
+    copy), `<InstallSnippet>` (`van add <slug>`), `<ApiReference>` (props
+    table). Zero deps — no Prism/Shiki.
+
+[^76]: deps: 75; 15 key components get the full docs template: description,
+    install snippet, usage code, variant examples with preview+source, 1-2
+    creative compositions, API reference table. Establishes the pattern task 77
+    replicates. Also addresses B5, B6, C8 in their respective pages.
+
+[^77]: deps: 76; same template applied to remaining ~59 component pages.
+    Spawn-ready — disjoint files per worker, batched by category (Forms,
+    Overlay+Nav, Data+Layout+Disclosure, Platform). Addresses B2-B4, C7 in
+    their respective pages.
+
+[^78]: deps: 75; Get Started refresh (introduction + installation rewrite),
+    new configuration reference page (B1 — full `van.config.json` docs), schema
+    page update, theming page update, voice pass (A5). Owns `site/pages/docs/`
+    exclusively — parallel-safe with 76/77.
+
 **Browser-support gate:** 33, 39, 54, 55, 57 depend on features that were
 partially supported at plan time (relative color syntax, `light-dark()`,
 container queries, View Transitions, Custom Highlight API, Speculation Rules,
@@ -428,3 +456,4 @@ just-in-time. Rough order of usefulness:
 - **2026-08-05 — task 67 done.** Interactive multi-select picker for bare `van add`. Raw-mode ANSI with scrolling viewport, ~90 lines. `--yes` selects all not-installed. Non-TTY falls back to error. 9 new tests (41 total CLI).
 - **2026-08-05 — task 69 done.** 41 raw `<button>` → `<Button>` across 10 site pages, breadcrumb in shell, introduction page rebuilt as live component showcase. NavigationMenu skipped (horizontal-only, doesn't fit vertical sidebar). VT card buttons kept raw (styled as cards). Suite 733/735 (2 pre-existing).
 - **2026-08-05 — task 70 done.** Typeset system: three rhythm vars (`--typeset-size`, `--typeset-leading`, `--typeset-flow`) + font tokens generated into `defaults.css`; `styles/typeset.css` hand-written prose container with presets and opt-out; `ui/typography` retrofitted to derive from typeset vars; inline `fontSize` replaced with `.pg-desc`/`.pg-detail` across ~18 pages. 11 new tests. Suite 744/746 (2 pre-existing).
+- **2026-08-05 — task 30 rescoped, tasks 75–78 added.** Task 30 was a `~M` docs consistency/gap pass. User wants a full shadcn-grade docs site rebuild: home page, top navbar (navigation-menu), ⌘K command palette in shell, component categories, per-component install/usage/examples/API-reference docs, code display infrastructure. Rescoped 30 to `~L` site-chrome overhaul. Split the rest into: 75 (code display infra, `~M`), 76 (15 core component pages, `~L`), 77 (remaining ~59 pages, `~XL`, spawn-ready), 78 (Get Started + config reference + voice pass, `~M`). B1–B6 and A3/A5 distributed across 76–78. Order: 30 → 75 → 76 (+78 parallel) → 77 (spawn) → 74? → console kit.
