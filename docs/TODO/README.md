@@ -1,6 +1,6 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–78)
 
-**Resume:** Tasks 65–70 done. Next ready: **30** (site-chrome — shell overhaul: navbar, command palette, home page, component categories). Then 75 → 76 → 77 (+78 parallel). Task **74** (narrow-viewport reflow) still needs a scope call. See `docs/TODO/task71-docs-site-sweep.md` for sweep tools.
+**Resume:** `docs/TODO/task30-site-chrome.md` → Handoff (COMPLETE). All 6 sub-tasks done. Next: 75 → 76 → 77 (+78 parallel). Task **74** (narrow-viewport reflow) still needs a scope call.
 
 ## Handoff — task 70 (complete)
 
@@ -46,7 +46,7 @@ platform features upstream cannot adopt (Tailwind/Radix/React-18 bound).
 | 27           | sidebar             | ~L  | [x]    | all 24 exports real; mobile = sheet; Cmd+B; sidebar_state cookie                                  |
 | 28           | dark-mode-pass      | ~M  | [x]    | axe contrast sweep + screenshot QA; `--input-background` token                                    |
 | 29           | docs-shell          | ~M  | [x]    | grouped nav (Get started / Components); intro + install/theming stubs; empty hash → #introduction |
-| 30           | site-chrome          | ~L  | [ ]    | shell overhaul: top navbar (navigation-menu), ⌘K command palette, home page, component categories, breadcrumbs |
+| 30           | site-chrome          | ~L  | [x]    | shell overhaul: top navbar (navigation-menu), ⌘K command palette, home page, component categories, breadcrumbs |
 
 ## Phase 2 — config, form, parity, platform
 
