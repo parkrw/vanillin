@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Vanillin Config",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "framework": {
+      "type": "string",
+      "enum": [
+        "next-app",
+        "next-pages",
+        "vite",
+        "remix",
+        "astro",
+        "unknown"
+      ]
+    },
+    "rsc": {
+      "type": "boolean"
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ui": {
+          "type": "string",
+          "default": "ui"
+        },
+        "lib": {
+          "type": "string",
+          "default": "lib"
+        },
+        "styles": {
+          "type": "string",
+          "default": "styles"
+        },
+        "css": {
+          "type": "string",
+          "default": "styles/van.css"
+        }
+      }
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "brand": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "oklch colour (shorthand for { primary })"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "primary": {
+                  "type": "string"
+                },
+                "secondary": {
+                  "type": "string"
+                },
+                "accent": {
+                  "type": "string"
+                },
+                "neutral": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        },
+        "radius": {
+          "type": "string"
+        },
+        "density": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "compact",
+                "comfortable",
+                "spacious"
+              ]
+            },
+            {
+              "type": "number",
+              "minimum": 0.75,
+              "maximum": 1.5
+            }
+          ]
+        },
+        "motion": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "scale": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "ease": {
+              "type": "string"
+            }
+          }
+        },
+        "font": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sans": {
+              "type": "string"
+            },
+            "mono": {
+              "type": "string"
+            }
+          }
+        },
+        "light": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "dark": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tokens": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "variants": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "sizes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

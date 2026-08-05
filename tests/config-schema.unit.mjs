@@ -14,6 +14,16 @@ import {
   parseColorTokens,
   expandProperty,
   DENSITY_PRESETS,
+  DENSITY_RANGE,
+  MOTION_SCALE_RANGE,
+  FRAMEWORKS,
+  PATH_KEYS,
+  PATH_DEFAULTS,
+  BRAND_KEYS,
+  THEME_KEYS,
+  MOTION_KEYS,
+  FONT_KEYS,
+  COMPONENT_SECTION_KEYS,
 } from "../scripts/config-schema.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -511,6 +521,99 @@ test("validate: framework and rsc", () => {
   assert.ok(!bad.ok)
   assert.ok(bad.errors.some((e) => e.startsWith("framework:")))
   assert.ok(bad.errors.some((e) => e.startsWith("rsc")))
+})
+
+// ---------------------------------------------------------------------------
+// validate: $schema passthrough
+// ---------------------------------------------------------------------------
+
+test("validate: $schema key accepted without error", () => {
+  const r = validate({ $schema: "./van.schema.json" })
+  assert.ok(r.ok, r.errors.join("; "))
+})
+
+test("validate: $schema with other keys accepted", () => {
+  const r = validate({ $schema: "./van.schema.json", framework: "vite", rsc: false })
+  assert.ok(r.ok, r.errors.join("; "))
+})
+
+// ---------------------------------------------------------------------------
+// van.schema.json — structural round-trip against config-schema.mjs constants
+// ---------------------------------------------------------------------------
+
+const schema = JSON.parse(readFileSync(resolve(ROOT, "van.schema.json"), "utf-8"))
+
+test("schema: top-level is object with additionalProperties false", () => {
+  assert.equal(schema.type, "object")
+  assert.equal(schema.additionalProperties, false)
+})
+
+test("schema: framework enum matches FRAMEWORKS", () => {
+  const enumValues = schema.properties.framework.enum
+  assert.deepEqual(new Set(enumValues), FRAMEWORKS)
+})
+
+test("schema: rsc is boolean", () => {
+  assert.equal(schema.properties.rsc.type, "boolean")
+})
+
+test("schema: paths properties match PATH_KEYS with correct defaults", () => {
+  const pathProps = schema.properties.paths.properties
+  assert.deepEqual(new Set(Object.keys(pathProps)), PATH_KEYS)
+  for (const [k, v] of Object.entries(PATH_DEFAULTS)) {
+    assert.equal(pathProps[k].default, v, `paths.${k} default`)
+  }
+})
+
+test("schema: density accepts preset strings and number range", () => {
+  const density = schema.properties.theme.properties.density
+  assert.equal(density.oneOf.length, 2)
+  const strOption = density.oneOf.find((o) => o.type === "string")
+  const numOption = density.oneOf.find((o) => o.type === "number")
+  assert.deepEqual(new Set(strOption.enum), new Set(Object.keys(DENSITY_PRESETS)))
+  assert.equal(numOption.minimum, DENSITY_RANGE[0])
+  assert.equal(numOption.maximum, DENSITY_RANGE[1])
+})
+
+test("schema: motion.scale range matches MOTION_SCALE_RANGE", () => {
+  const scale = schema.properties.theme.properties.motion.properties.scale
+  assert.equal(scale.minimum, MOTION_SCALE_RANGE[0])
+  assert.equal(scale.maximum, MOTION_SCALE_RANGE[1])
+})
+
+test("schema: brand oneOf covers string and object with BRAND_KEYS", () => {
+  const brand = schema.properties.theme.properties.brand
+  assert.equal(brand.oneOf.length, 2)
+  const objOption = brand.oneOf.find((o) => o.type === "object")
+  assert.deepEqual(new Set(Object.keys(objOption.properties)), BRAND_KEYS)
+})
+
+test("schema: theme properties match THEME_KEYS", () => {
+  assert.deepEqual(new Set(Object.keys(schema.properties.theme.properties)), THEME_KEYS)
+})
+
+test("schema: motion properties match MOTION_KEYS", () => {
+  assert.deepEqual(
+    new Set(Object.keys(schema.properties.theme.properties.motion.properties)),
+    MOTION_KEYS,
+  )
+})
+
+test("schema: font properties match FONT_KEYS", () => {
+  assert.deepEqual(
+    new Set(Object.keys(schema.properties.theme.properties.font.properties)),
+    FONT_KEYS,
+  )
+})
+
+test("schema: component sections match COMPONENT_SECTION_KEYS", () => {
+  const compDef = schema.properties.components.additionalProperties
+  assert.deepEqual(new Set(Object.keys(compDef.properties)), COMPONENT_SECTION_KEYS)
+})
+
+test("schema: kit van.config.json has $schema pointing at van.schema.json", () => {
+  const kitConfig = JSON.parse(readFileSync(resolve(ROOT, "van.config.json"), "utf-8"))
+  assert.equal(kitConfig.$schema, "./van.schema.json")
 })
 
 // ---------------------------------------------------------------------------

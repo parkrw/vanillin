@@ -454,6 +454,7 @@ export function initialConfig(layout, detected = { framework: "unknown", rsc: fa
     if (v !== PATH_DEFAULTS[k]) paths[k] = v
   }
   const config = {
+    $schema: "./van.schema.json",
     framework: detected.framework,
     rsc: detected.rsc,
     paths,

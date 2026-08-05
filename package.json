@@ -13,7 +13,8 @@
     "test": "node tests/run.mjs",
     "contracts": "node scripts/manifest.mjs --write && node scripts/build-registry.mjs --write",
     "theme": "node scripts/build-theme.mjs",
-    "theme:defaults": "node scripts/build-theme.mjs --defaults"
+    "theme:defaults": "node scripts/build-theme.mjs --defaults",
+    "schema": "node scripts/gen-schema.mjs"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.4.1",

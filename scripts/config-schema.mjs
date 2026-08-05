@@ -33,12 +33,12 @@ export const DENSITY_PRESETS = { compact: 0.875, comfortable: 1, spacious: 1.25 
 export const DENSITY_RANGE = [0.75, 1.5]
 export const MOTION_SCALE_RANGE = [0, 3]
 
-const THEME_KEYS = new Set(["brand", "radius", "density", "motion", "font", "light", "dark"])
+export const THEME_KEYS = new Set(["brand", "radius", "density", "motion", "font", "light", "dark"])
 /** Keys allowed in the object form of theme.brand. */
 export const BRAND_KEYS = new Set(["primary", "secondary", "accent", "neutral"])
-const MOTION_KEYS = new Set(["scale", "ease"])
-const FONT_KEYS = new Set(["sans", "mono"])
-const COMPONENT_SECTION_KEYS = new Set(["tokens", "variants", "sizes"])
+export const MOTION_KEYS = new Set(["scale", "ease"])
+export const FONT_KEYS = new Set(["sans", "mono"])
+export const COMPONENT_SECTION_KEYS = new Set(["tokens", "variants", "sizes"])
 
 /**
  * Project-relative locations the CLI reads and writes. Persisted by `van init`
@@ -55,7 +55,7 @@ export const PATH_DEFAULTS = { ui: "ui", lib: "lib", styles: "styles", css: "sty
  */
 export const FRAMEWORKS = new Set(["next-app", "next-pages", "vite", "remix", "astro", "unknown"])
 
-const TOP_LEVEL_KEYS = new Set(["theme", "components", "paths", "framework", "rsc"])
+const TOP_LEVEL_KEYS = new Set(["$schema", "theme", "components", "paths", "framework", "rsc"])
 
 /** Shorthand token names -> CSS property names. */
 const PROPERTY_SHORTHANDS = {

@@ -40,4 +40,10 @@ All existing CLI tests pass + new update tests pass.
 
 ## Handoff
 
-**Status:** DONE — merged 2026-08-04, no PR (local merge). 10 new tests, suite 735.
+**Status:** COMPLETE
+**Branch:** feat/component-update (merged)  **PR:** none (local merge)  **Updated:** 2026-08-04
+
+- **Landed:** `van update [slug...]` — overwrites upstream-changed files, 3-way merges diverged via `git merge-file`, skips consumer-edited. Base retrieval from git tags, degrades gracefully. Supports `--dry-run`, `--overwrite`.
+- **Repo state:** `docs/task65-checkpoint` branch has the docs checkpoint commit, needs merge to main.
+- **Next:** task 66 (config-schema-json) — generated `van.schema.json` for editor autocomplete.
+- **Gotchas:** 3-way merge path untestable end-to-end until the kit has a second version tag. The diverged-no-base fallback path IS tested.

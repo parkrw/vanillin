@@ -1,4 +1,5 @@
 {
+  "$schema": "./van.schema.json",
   "theme": {
     "brand": "oklch(0.55 0.2 265)",
     "radius": "0.5rem",
