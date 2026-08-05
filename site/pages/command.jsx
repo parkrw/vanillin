@@ -12,6 +12,8 @@ import {
   CommandShortcut,
 } from "../../ui/command/command.jsx"
 import "../../ui/command/command.css"
+import { Button } from "../../ui/button/button.jsx"
+import "../../ui/button/button.css"
 
 function CalendarIcon() {
   return (
@@ -146,9 +148,9 @@ export default function CommandPage() {
 
       <section className="pg-section">
         <h3>Dialog palette (⌘K / Ctrl+K)</h3>
-        <button type="button" className="btn btn--outline" onClick={() => setDialogOpen(true)} data-pg="cmd-dialog-trigger">
+        <Button variant="outline" onClick={() => setDialogOpen(true)} data-pg="cmd-dialog-trigger">
           Open palette
-        </button>
+        </Button>
         <CommandDialog open={dialogOpen} onOpenChange={setDialogOpen} data-pg="cmd-dialog">
           <CommandInput placeholder="Type a command or search..." data-pg="cmd-dialog-input" />
           <CommandList data-pg="cmd-dialog-list">

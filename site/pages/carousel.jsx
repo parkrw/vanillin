@@ -8,6 +8,7 @@ import {
 } from "../../ui/carousel/carousel.jsx"
 import { Autoplay } from "../../ui/carousel/plugins/autoplay.js"
 import "../../ui/carousel/carousel.css"
+import { Button } from "../../ui/button/button.jsx"
 import "../../ui/button/button.css"
 
 const card = (h = "12rem") => ({
@@ -92,17 +93,18 @@ export default function CarouselPage() {
               {Array.from({ length: 3 }, (_, i) => (
                 <CarouselItem key={i}>
                   <div style={card()}>
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       data-pg="c-click-btn"
                       data-clicks="0"
                       onClick={(e) => {
                         const n = Number(e.currentTarget.dataset.clicks) + 1
                         e.currentTarget.dataset.clicks = String(n)
                       }}
-                      className="btn btn--outline btn--sm"
                     >
                       Click me
-                    </button>
+                    </Button>
                   </div>
                 </CarouselItem>
               ))}

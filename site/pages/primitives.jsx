@@ -5,6 +5,8 @@ import { useDismissableLayer } from "../../lib/use-dismissable-layer.js"
 import { usePresence } from "../../lib/use-presence.js"
 import { useReturnFocus } from "../../lib/use-return-focus.js"
 import { useRovingFocus } from "../../lib/use-roving-focus.js"
+import { Button } from "../../ui/button/button.jsx"
+import "../../ui/button/button.css"
 
 function DemoPopover({ side }) {
   const [open, setOpen] = useState(false)
@@ -21,9 +23,9 @@ function DemoPopover({ side }) {
 
   return (
     <>
-      <button ref={triggerRef} onClick={() => setOpen((o) => !o)}>
+      <Button variant="outline" ref={triggerRef} onClick={() => setOpen((o) => !o)}>
         popover: {side}
-      </button>
+      </Button>
       {open && (
         <Portal>
           <div
@@ -67,7 +69,7 @@ function DemoPresence() {
   const present = usePresence(open, ref)
   return (
     <div className="pg-row">
-      <button onClick={() => setOpen((o) => !o)}>{open ? "hide" : "show"}</button>
+      <Button variant="outline" onClick={() => setOpen((o) => !o)}>{open ? "hide" : "show"}</Button>
       {present && (
         <div
           ref={ref}
@@ -92,7 +94,7 @@ export default function PrimitivesPage() {
   return (
     <>
       <h2>Primitives</h2>
-      <p>Smoke tests for the shared lib/ modules every component builds on.</p>
+      <p>The shared <code>lib/</code> hooks every component builds on. Use them directly when building custom components that need anchored positioning, keyboard navigation, animated mount/unmount, or layer dismissal.</p>
 
       <section className="pg-section">
         <h3>Anchor positioning + dismissable layer + return focus</h3>

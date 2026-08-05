@@ -12,6 +12,8 @@ import {
   SelectValue,
 } from "../../ui/select/select.jsx"
 import "../../ui/select/select.css"
+import { Button } from "../../ui/button/button.jsx"
+import "../../ui/button/button.css"
 
 export default function SelectPage() {
   const [pet, setPet] = useState("")
@@ -198,17 +200,18 @@ function FormDemo({ pet, setPet }) {
             <SelectItem value="hamster">Hamster</SelectItem>
           </SelectContent>
         </Select>
-        <button type="submit" data-pg="sel-submit" style={{ marginInlineStart: "0.5rem" }}>
+        <Button type="submit" data-pg="sel-submit" style={{ marginInlineStart: "0.5rem" }}>
           Submit
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           data-pg="sel-custom-error"
           onClick={handleCustomError}
           style={{ marginInlineStart: "0.5rem" }}
         >
           Set custom error
-        </button>
+        </Button>
       </form>
       <p>
         Value: <span data-pg="sel-ctrl-state">{pet === "" ? "none" : pet}</span>

@@ -33,6 +33,7 @@ import "../../ui/label/label.css"
 import "../../ui/checkbox/checkbox.css"
 import "../../ui/switch/switch.css"
 import "../../ui/select/select.css"
+import { Button } from "../../ui/button/button.jsx"
 import "../../ui/button/button.css"
 
 /* ================================================================== */
@@ -214,23 +215,22 @@ function EnginePathDemo() {
           />
 
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button
+            <Button
               type="submit"
-              className="button"
               data-pg="form-engine-submit"
             >
               Save profile
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="button button--outline"
+              variant="outline"
               onClick={() => {
                 reset()
                 setResult(null)
               }}
             >
               Reset
-            </button>
+            </Button>
           </div>
         </Form>
 
@@ -296,14 +296,14 @@ function FieldArrayDemo() {
                       required: "Tag cannot be empty",
                     })}
                   />
-                  <button
+                  <Button
                     type="button"
-                    className="button button--outline"
+                    variant="outline"
                     onClick={() => remove(index)}
                     data-pg={`form-tag-remove-${index}`}
                   >
                     Remove
-                  </button>
+                  </Button>
                 </div>
                 <FormMessage />
               </FormItem>
@@ -311,21 +311,20 @@ function FieldArrayDemo() {
           ))}
 
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button
+            <Button
               type="button"
-              className="button button--outline"
+              variant="outline"
               onClick={() => append({ value: "" })}
               data-pg="form-tag-add"
             >
               Add tag
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className="button"
               data-pg="form-array-submit"
             >
               Submit tags
-            </button>
+            </Button>
           </div>
         </Form>
 
@@ -640,9 +639,9 @@ function EngineAgnosticDemo() {
           </FormField>
 
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button
+            <Button
               type="button"
-              className="button button--destructive"
+              variant="destructive"
               data-pg="form-agnostic-trigger-error"
               onClick={() =>
                 setErrors({
@@ -651,15 +650,15 @@ function EngineAgnosticDemo() {
               }
             >
               Inject error
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="button button--outline"
+              variant="outline"
               data-pg="form-agnostic-clear"
               onClick={() => setErrors({})}
             >
               Clear
-            </button>
+            </Button>
           </div>
         </Form>
       </div>

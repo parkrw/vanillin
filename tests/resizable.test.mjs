@@ -360,7 +360,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(mountText.includes("expanded"), true, "on mount: sidebar is expanded (no spurious callback)")
 
     // Collapse via imperative button
-    const btn = page.locator('button.pg-button')
+    const btn = page.locator('[data-pg="rsz-toggle"]')
     await btn.click()
     const afterCollapse = await stateText.textContent()
     eq(afterCollapse.includes("collapsed"), true, "onCollapse fired via imperative collapse()")
@@ -385,7 +385,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(startSize, 30, "starts at 30")
 
     // Collapse via the demo button
-    const btn = page.locator('button.pg-button')
+    const btn = page.locator('[data-pg="rsz-toggle"]')
     await btn.click()
     eq(await sidebarPanel.getAttribute("data-state"), "collapsed", "collapsed after click")
     eq(Number(await h.getAttribute("aria-valuenow")), 0, "size is 0 when collapsed")

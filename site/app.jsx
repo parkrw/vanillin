@@ -1,9 +1,18 @@
 import { Suspense, useEffect, useState } from "react"
 import { ModeToggle } from "../ui/mode-toggle/mode-toggle.jsx"
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage,
+} from "../ui/breadcrumb/breadcrumb.jsx"
 import { setSiteDark, useSiteDark } from "./color-scheme.js"
 import { docs, registry } from "./registry.js"
 
 import "../ui/mode-toggle/mode-toggle.css"
+import "../ui/breadcrumb/breadcrumb.css"
 
 const sections = [
   { label: "Get started", entries: docs },
@@ -55,6 +64,19 @@ export function App() {
         ))}
       </nav>
       <main className="pg-main">
+        <Breadcrumb className="pg-breadcrumb">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href={`#${route in docs ? "introduction" : Object.keys(registry)[0]}`}>
+                {route in docs ? "Get started" : "Components"}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{entry?.title ?? route}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
         {entry?.page ? (
           <Suspense fallback={null}>
             <entry.page />

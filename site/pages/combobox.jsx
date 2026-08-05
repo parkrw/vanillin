@@ -10,6 +10,8 @@ import {
   ComboboxList,
 } from "../../ui/combobox/combobox.jsx"
 import "../../ui/combobox/combobox.css"
+import { Button } from "../../ui/button/button.jsx"
+import "../../ui/button/button.css"
 
 const frameworks = [
   { value: "next", label: "Next.js" },
@@ -202,17 +204,18 @@ export default function ComboboxPage() {
               </ComboboxList>
             </ComboboxContent>
           </Combobox>
-          <button type="submit" data-pg="cbx-req-submit" style={{ marginInlineStart: "0.5rem" }}>
+          <Button type="submit" data-pg="cbx-req-submit" style={{ marginInlineStart: "0.5rem" }}>
             Submit
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outline"
             data-pg="cbx-req-custom"
             style={{ marginInlineStart: "0.5rem" }}
             onClick={() => comboRef.current?.setCustomValidity("Custom error")}
           >
             Set custom error
-          </button>
+          </Button>
         </form>
         {submitted && (
           <p data-pg="cbx-req-result">

@@ -33,6 +33,7 @@ import "../../ui/switch/switch.css"
 import "../../ui/select/select.css"
 import "../../ui/radio-group/radio-group.css"
 import "../../ui/slider/slider.css"
+import { Button } from "../../ui/button/button.jsx"
 import "../../ui/button/button.css"
 
 /* ================================================================== */
@@ -261,13 +262,9 @@ function ProviderPathDemo() {
               rules={{ required: "Nickname is required" }}
               data-pg="ff-provider-nickname"
             />
-            <button
-              type="submit"
-              className="button"
-              data-pg="ff-provider-submit"
-            >
+            <Button type="submit" data-pg="ff-provider-submit">
               Submit
-            </button>
+            </Button>
           </Form>
         </FormProvider>
 
@@ -329,9 +326,9 @@ function EscapeHatchDemo() {
             )}
           />
 
-          <button type="submit" className="button" data-pg="ff-hatch-submit">
+          <Button type="submit" data-pg="ff-hatch-submit">
             Submit
-          </button>
+          </Button>
         </Form>
 
         {result && (
@@ -437,12 +434,12 @@ function BoundFormDemo() {
           />
 
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button type="submit" className="button" data-pg="ff-submit">
+            <Button type="submit" data-pg="ff-submit">
               Save profile
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="button button--outline"
+              variant="outline"
               data-pg="ff-reset"
               onClick={() => {
                 reset()
@@ -450,7 +447,7 @@ function BoundFormDemo() {
               }}
             >
               Reset
-            </button>
+            </Button>
           </div>
         </Form>
 
@@ -526,9 +523,9 @@ function ParityDemo() {
             </FormItem>
           </FormField>
 
-          <button type="submit" className="button" data-pg="ff-parity-submit">
+          <Button type="submit" data-pg="ff-parity-submit">
             Validate both
-          </button>
+          </Button>
         </Form>
       </div>
     </section>

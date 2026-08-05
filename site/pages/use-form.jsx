@@ -7,6 +7,8 @@ import {
   useFormContextSafe,
   useFieldArray,
 } from "../../lib/use-form.js"
+import { Button } from "../../ui/button/button.jsx"
+import "../../ui/button/button.css"
 
 /* ================================================================== */
 /*  Section 1 — Render-isolation test                                  */
@@ -38,9 +40,9 @@ function RenderIsolation() {
       >
         <IsolatedField name="fieldA" register={register} />
         <IsolatedField name="fieldB" register={register} />
-        <button type="submit" data-pg="uf-isolation-submit">
+        <Button type="submit" data-pg="uf-isolation-submit">
           Submit
-        </button>
+        </Button>
       </form>
       {submitted && (
         <pre data-pg="uf-isolation-result">
@@ -108,11 +110,13 @@ function BuiltInValidation() {
             <span data-pg="uf-builtin-err-age">{errors.age.message}</span>
           )}
         </div>
-        <button type="submit" data-pg="uf-builtin-submit">
+        <Button type="submit" data-pg="uf-builtin-submit">
           Submit
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           data-pg="uf-builtin-set-error"
           onClick={() =>
             setError("username", {
@@ -122,21 +126,25 @@ function BuiltInValidation() {
           }
         >
           Set error
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           data-pg="uf-builtin-clear"
           onClick={() => clearErrors("username")}
         >
           Clear error
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           data-pg="uf-builtin-trigger"
           onClick={() => trigger("username")}
         >
           Trigger
-        </button>
+        </Button>
       </form>
       {result && <pre data-pg="uf-builtin-result">{result}</pre>}
     </section>
@@ -158,24 +166,30 @@ function WatchDemo() {
       <input data-pg="uf-watch-first" {...register("first")} />
       <input data-pg="uf-watch-last" {...register("last")} />
       <span data-pg="uf-watch-value">{first}</span>
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         data-pg="uf-watch-setval"
         onClick={() =>
           setValue("first", "Updated", { shouldDirty: true })
         }
       >
         setValue
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         data-pg="uf-watch-reset"
         onClick={() => reset()}
       >
         Reset
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         data-pg="uf-watch-getvals"
         onClick={() => {
           const v = getValues()
@@ -183,7 +197,7 @@ function WatchDemo() {
         }}
       >
         getValues
-      </button>
+      </Button>
       <span data-pg="uf-watch-getvals-out"></span>
     </section>
   )
@@ -250,9 +264,9 @@ function ControllerDemo() {
             />
           )}
         />
-        <button type="submit" data-pg="uf-controller-submit">
+        <Button type="submit" data-pg="uf-controller-submit">
           Submit
-        </button>
+        </Button>
       </form>
       {result && <pre data-pg="uf-controller-result">{result}</pre>}
     </section>
@@ -288,7 +302,7 @@ function ContextDemo() {
         <form onSubmit={methods.handleSubmit((d) => setResult(JSON.stringify(d)))}>
           <ContextChild />
           <SafeContextProbe hook="uf-ctx-safe-inside" />
-          <button type="submit" data-pg="uf-ctx-submit">Submit</button>
+          <Button type="submit" data-pg="uf-ctx-submit">Submit</Button>
         </form>
       </FormProvider>
       {result && <pre data-pg="uf-ctx-result">{result}</pre>}
@@ -321,47 +335,57 @@ function FieldArrayDemo() {
               data-pg={`uf-fa-item-${i}`}
               {...register(`items.${i}.name`)}
             />
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               data-pg={`uf-fa-remove-${i}`}
               onClick={() => remove(i)}
             >
               X
-            </button>
+            </Button>
           </div>
         ))}
         <span data-pg="uf-fa-count">{fields.length}</span>
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           data-pg="uf-fa-append"
           onClick={() => append({ name: "" })}
         >
           Append
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           data-pg="uf-fa-prepend"
           onClick={() => prepend({ name: "prepended" })}
         >
           Prepend
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           data-pg="uf-fa-swap"
           onClick={() => { if (fields.length >= 2) swap(0, 1) }}
         >
           Swap 0,1
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           data-pg="uf-fa-move"
           onClick={() => { if (fields.length >= 2) move(0, fields.length - 1) }}
         >
           Move 0→end
-        </button>
-        <button type="submit" data-pg="uf-fa-submit">
+        </Button>
+        <Button type="submit" data-pg="uf-fa-submit">
           Submit
-        </button>
+        </Button>
       </form>
       {result && <pre data-pg="uf-fa-result">{result}</pre>}
     </section>
@@ -391,11 +415,13 @@ function NestedPaths() {
           data-pg="uf-nested-zip"
           {...register("user.address.zip")}
         />
-        <button type="submit" data-pg="uf-nested-submit">
+        <Button type="submit" data-pg="uf-nested-submit">
           Submit
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           data-pg="uf-nested-setval"
           onClick={() =>
             setValue("user.address.city", "Seattle", {
@@ -404,7 +430,7 @@ function NestedPaths() {
           }
         >
           Set city
-        </button>
+        </Button>
       </form>
       {result && <pre data-pg="uf-nested-result">{result}</pre>}
     </section>
@@ -489,7 +515,7 @@ function ResolverDemo() {
         {errors.address?.city && (
           <span data-pg="uf-resolver-err-city">{errors.address.city.message}</span>
         )}
-        <button type="submit" data-pg="uf-resolver-submit">Submit</button>
+        <Button type="submit" data-pg="uf-resolver-submit">Submit</Button>
       </form>
       {result && <pre data-pg="uf-resolver-result">{result}</pre>}
       <pre data-pg="uf-resolver-opts" style={{ display: "none" }}>
@@ -536,9 +562,9 @@ function ValidationModes() {
         <div>
           isValid: <span data-pg="uf-modes-valid">{String(isValid)}</span>
         </div>
-        <button type="submit" data-pg="uf-modes-submit">
+        <Button type="submit" data-pg="uf-modes-submit">
           Submit
-        </button>
+        </Button>
       </form>
     </section>
   )

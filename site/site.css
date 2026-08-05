@@ -8,9 +8,6 @@
  * "docs site". Same for the `data-pg="..."` attributes in `site/pages/` —
  * those are Playwright selectors, so tests survive restyling.
  *
- * One exception worth knowing: `.pg-button` is a hand-rolled button that
- * predates the kit documenting itself properly. It should be deleted in
- * favour of `ui/button`, not renamed. See docs/ISSUES.md A2.
  */
 
 /* Docs-site accent — neon green/teal, darker in light mode for contrast. */
@@ -101,6 +98,10 @@
   max-width: 56rem;
 }
 
+.pg-breadcrumb {
+  margin-bottom: 1rem;
+}
+
 .pg-main > h2 {
   margin-top: 0;
 }
@@ -189,20 +190,7 @@
   gap: 0.75rem;
 }
 
-.pg-vt-wipe {
-  padding: 0.4rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--card);
-  color: var(--card-foreground);
-  font-size: 0.8125rem;
-  cursor: pointer;
-  transition: border-color var(--motion-fast) var(--motion-ease);
-}
 
-.pg-vt-wipe:hover {
-  border-color: var(--pg-accent);
-}
 
 .pg-vt-card {
   padding: 1.25rem 1rem;
@@ -232,20 +220,6 @@
   margin-top: 0.5rem;
 }
 
-.pg-vt-back {
-  font-size: 0.8125rem;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--background);
-  color: var(--foreground);
-  cursor: pointer;
-}
-
-.pg-vt-back:hover {
-  border-color: var(--pg-accent);
-  color: var(--pg-accent);
-}
 
 /* Container queries demo — the panels differ only in width. Their widths are
    fixed and the row scrolls, because a demo whose panels resize with the

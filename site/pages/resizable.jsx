@@ -5,6 +5,8 @@ import {
   ResizableHandle,
 } from "../../ui/resizable/resizable.jsx"
 import "../../ui/resizable/resizable.css"
+import { Button } from "../../ui/button/button.jsx"
+import "../../ui/button/button.css"
 
 const panelStyle = {
   display: "flex",
@@ -158,9 +160,10 @@ export default function ResizablePage() {
           <span style={{ color: "var(--muted-foreground)" }}>
             Sidebar is {sidebarState}.{" "}
           </span>
-          <button
-            type="button"
-            className="pg-button"
+          <Button
+            variant="outline"
+            size="sm"
+            data-pg="rsz-toggle"
             onClick={() =>
               sidebarState === "collapsed"
                 ? sidebarRef.current?.expand()
@@ -168,7 +171,7 @@ export default function ResizablePage() {
             }
           >
             {sidebarState === "collapsed" ? "Expand" : "Collapse"}
-          </button>
+          </Button>
         </div>
       </section>
 

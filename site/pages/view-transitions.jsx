@@ -1,6 +1,8 @@
 import { useCallback, useRef, useState } from "react"
 import { withViewTransition, setTransitionName } from "../../lib/view-transition.js"
 import { setSiteDark, useSiteDark } from "../color-scheme.js"
+import { Button } from "../../ui/button/button.jsx"
+import "../../ui/button/button.css"
 
 const items = [
   { id: "alpha", label: "Alpha", detail: "First item. The shared-element transition morphs this card from its list position to the detail view." },
@@ -29,8 +31,10 @@ function ListDetailDemo() {
         className="pg-vt-detail"
         style={{ viewTransitionName: "shared-element" }}
       >
-        <button
-          className="pg-vt-back"
+        <Button
+          variant="outline"
+          size="sm"
+          data-pg="vt-back"
           onClick={() => {
             const el = document.querySelector(".pg-vt-detail")
             const cleanup = el ? setTransitionName(el, "shared-element") : null
@@ -39,7 +43,7 @@ function ListDetailDemo() {
           }}
         >
           Back to list
-        </button>
+        </Button>
         <h3>{item.label}</h3>
         <p>{item.detail}</p>
       </div>
@@ -74,8 +78,9 @@ function ListDetailDemo() {
 function WipeDemo() {
   const isDark = useSiteDark()
   return (
-    <button
-      className="pg-vt-wipe"
+    <Button
+      variant="outline"
+      data-pg="vt-wipe"
       onClick={(event) => {
         const rect = event.currentTarget.getBoundingClientRect()
         withViewTransition(() => setSiteDark(!isDark), {
@@ -87,7 +92,7 @@ function WipeDemo() {
       }}
     >
       Wipe to {isDark ? "light" : "dark"}
-    </button>
+    </Button>
   )
 }
 
