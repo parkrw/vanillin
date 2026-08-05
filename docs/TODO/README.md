@@ -1,6 +1,6 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–61)
 
-**Resume:** Task 73 done (coverage probe — 26 probed, 5 gaps fixed). Next ready: **65** (component update). Task **74** (narrow-viewport reflow, split out of 71's findings) still needs a scope call before it is detailed. See `docs/TODO/task71-docs-site-sweep.md` for what the sweep tools do and how to re-run them.
+**Resume:** Task 65 done (van update — 3-way merge). Next ready: **66** (config-schema-json). Task **74** (narrow-viewport reflow, split out of 71's findings) still needs a scope call before it is detailed. See `docs/TODO/task71-docs-site-sweep.md` for what the sweep tools do and how to re-run them.
 
 ## Handoff — task 73 (in progress)
 
@@ -150,7 +150,7 @@ written; it is a final consistency and gap pass.
 | 62  | schema-core              | ~L  | [x]    | `lib/schema.js` — zod-shaped validation + resolver [^62]               |
 | 63  | composition-pass         | ~M  | [x]    | reuse only where the relationship is **semantic** [^63]                |
 | 64  | component-contracts      | ~L  | [x]    | per-copy `.van.json` manifest + conformance suite [^64]                |
-| 65  | component-update          | ~L  | [ ]    | deps: 64, 38; `van update`  [^65]                      |
+| 65  | component-update          | ~L  | [x]    | deps: 64, 38; `van update` — 3-way merge via git merge-file [^65] |
 | 66  | config-schema-json       | ~M  | [ ]    | deps: 38; generated `van.schema.json` + `$schema` [^66]                |
 | 67  | cli-picker               | ~S  | [ ]    | deps: 38; interactive multi-select for a bare `add` [^67]              |
 | 68  | bug-batch                | ~M  | [x]    | deps: 39; all 9 done and merged; suite 708/708 [^68]                    |
@@ -423,3 +423,4 @@ just-in-time. Rough order of usefulness:
 
 - **2026-08-04 — task 73 scope narrowed.** Replaced sub-tasks 1-4 (probe all 68 components + write tests) with: sub-tasks 1-2 done (20 probed, 5 tests written), sub-task 3 finishes 6 remaining high-value probes (sidebar, message-scroller, command, menubar, form, radio-group), tier 3 skipped (re-exports/CSS-only/meta — no JS to probe). Rationale: 14/15 non-skip probes caught, the one systematic gap class (anchor positioning) is found and fixed, diminishing returns on remaining ~25 low-risk components.
 - **2026-08-04 — task 73 done.** All 6 final probes caught (no new gaps). 26 components probed total, 5 gaps fixed, 20 caught, 1 skipped. Suite 735.
+- **2026-08-04 — task 65 done.** `van update` landed: 3-way merge via `git merge-file` for diverged files, overwrite for upstream-changed, skip for consumer-edited. Base retrieval from git tags (`v${kitVersion}`), degrades to skip+report when tag unavailable. 10 new CLI tests (32 total). Suite 735 (2 pre-existing slider cursor failures).

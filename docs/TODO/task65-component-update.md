@@ -3,10 +3,10 @@
 **Owns:** `bin/van.mjs`, `tests/cli.unit.mjs`
 
 ## Sub-tasks
-- [ ] 1. Base retrieval + 3-way merge utility — `getBaseContent()` via `git show v${kitVersion}:…`, `mergeFile()` via `git merge-file`, RSC transform on base; files: `bin/van.mjs`
-- [ ] 2. `planUpdate` + `cmdUpdate` — classify installed components via `diffComponent`, apply overwrite/merge/skip per state, update manifests, summary output; files: `bin/van.mjs`
-- [ ] 3. CLI wiring — switch case, USAGE string, update command word; files: `bin/van.mjs`
-- [ ] 4. Tests — all file states, merge paths, --overwrite, --dry-run, no-args-updates-all; files: `tests/cli.unit.mjs`
+- [x] 1. Base retrieval + 3-way merge utility — `getBaseContent()` via `git show v${kitVersion}:…`, `mergeFile()` via `git merge-file`, RSC transform on base; files: `bin/van.mjs`
+- [x] 2. `planUpdate` + `cmdUpdate` — classify installed components via `diffComponent`, apply overwrite/merge/skip per state, update manifests, summary output; files: `bin/van.mjs`
+- [x] 3. CLI wiring — switch case, USAGE string, update command word; files: `bin/van.mjs`
+- [x] 4. Tests — all file states, merge paths, --overwrite, --dry-run, no-args-updates-all; files: `tests/cli.unit.mjs`
 
 ## Design
 
@@ -40,4 +40,4 @@ All existing CLI tests pass + new update tests pass.
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** DONE — merged 2026-08-04, no PR (local merge). 10 new tests, suite 735.
