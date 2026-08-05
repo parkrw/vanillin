@@ -17,7 +17,7 @@
  */
 
 import { spawnSync } from "node:child_process"
-import { readFileSync, existsSync, readdirSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs"
+import { readFileSync, readSync, existsSync, readdirSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { resolve, dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -522,12 +522,161 @@ function describe(state) {
   return { missing: "new", unmodified: "updated", identical: "unchanged", edited: "you edited this" }[state]
 }
 
+// ── interactive picker ─────────────────────────────────────────────
+
+export function createPickerState(slugs, installed, viewSize = 20) {
+  const items = slugs.map((s) => ({ slug: s, installed: installed.has(s) }))
+  const first = items.findIndex((i) => !i.installed)
+  return {
+    items,
+    cursor: first >= 0 ? first : 0,
+    selected: new Set(),
+    viewStart: 0,
+    viewSize: Math.min(viewSize, items.length),
+    done: false,
+    cancelled: false,
+  }
+}
+
+export function pickerHandleKey(state, key) {
+  const { items, cursor, selected } = state
+  const next = { ...state, selected: new Set(selected) }
+
+  switch (key) {
+    case "up":
+      next.cursor = cursor > 0 ? cursor - 1 : items.length - 1
+      break
+    case "down":
+      next.cursor = cursor < items.length - 1 ? cursor + 1 : 0
+      break
+    case "space":
+      if (!items[cursor].installed) {
+        if (next.selected.has(cursor)) next.selected.delete(cursor)
+        else next.selected.add(cursor)
+      }
+      break
+    case "a": {
+      const selectable = []
+      for (let i = 0; i < items.length; i++) if (!items[i].installed) selectable.push(i)
+      const allSelected = selectable.every((i) => selected.has(i))
+      next.selected = allSelected ? new Set() : new Set(selectable)
+      break
+    }
+    case "enter":
+      next.done = true
+      return next
+    case "escape":
+    case "q":
+      next.cancelled = true
+      next.done = true
+      return next
+    default:
+      return state
+  }
+
+  if (next.cursor < next.viewStart) next.viewStart = next.cursor
+  if (next.cursor >= next.viewStart + next.viewSize) next.viewStart = next.cursor - next.viewSize + 1
+  return next
+}
+
+export function pickerLines(state) {
+  const { items, cursor, selected, viewStart, viewSize } = state
+  const lines = []
+  const end = Math.min(viewStart + viewSize, items.length)
+  for (let i = viewStart; i < end; i++) {
+    const item = items[i]
+    const arrow = i === cursor ? ">" : " "
+    if (item.installed) {
+      lines.push(`${arrow} ✓  ${item.slug}`)
+    } else {
+      const check = selected.has(i) ? "[x]" : "[ ]"
+      lines.push(`${arrow} ${check} ${item.slug}`)
+    }
+  }
+  return lines
+}
+
+function parsePickerKey(buf, n) {
+  if (n === 3 && buf[0] === 0x1b && buf[1] === 0x5b) {
+    if (buf[2] === 0x41) return "up"
+    if (buf[2] === 0x42) return "down"
+    return null
+  }
+  if (n === 1) {
+    const b = buf[0]
+    if (b === 0x20) return "space"
+    if (b === 0x0d || b === 0x0a) return "enter"
+    if (b === 0x1b) return "escape"
+    if (b === 0x03) return "ctrl-c"
+    if (b === 0x71) return "q"
+    if (b === 0x61) return "a"
+  }
+  return null
+}
+
+function runPicker(slugs, installed) {
+  const viewSize = Math.min((process.stdout.rows || 24) - 6, slugs.length)
+  let state = createPickerState(slugs, installed, viewSize)
+  const header = "van add — select components (space toggle, enter confirm, q cancel)"
+  let linesWritten = 0
+
+  function render() {
+    if (linesWritten) process.stdout.write(`\x1b[${linesWritten}A\x1b[J`)
+    const rows = pickerLines(state)
+    const count = state.selected.size
+    const scroll = state.items.length > state.viewSize ? " · scroll for more" : ""
+    const footer = dim(`${count} selected${scroll} · ↑↓ move · space toggle · a all · enter confirm`)
+    const out = [header, "", ...rows, "", footer]
+    process.stdout.write(out.join("\n") + "\n")
+    linesWritten = out.length
+  }
+
+  process.stdin.setRawMode(true)
+  process.stdout.write("\x1b[?25l")
+  render()
+
+  const buf = Buffer.alloc(16)
+  try {
+    while (!state.done) {
+      const n = readSync(0, buf, 0, buf.length)
+      const key = parsePickerKey(buf, n)
+      if (key === "ctrl-c") {
+        state = { ...state, cancelled: true, done: true }
+        break
+      }
+      if (!key) continue
+      state = pickerHandleKey(state, key)
+      render()
+    }
+  } finally {
+    process.stdin.setRawMode(false)
+    process.stdout.write("\x1b[?25h\n")
+  }
+
+  if (state.cancelled) return []
+  return [...state.selected].map((i) => state.items[i].slug)
+}
+
 function cmdAdd(project, slugs) {
   const registry = loadRegistry()
 
   if (!slugs.length) {
-    // Task 67 replaces this with an interactive multi-select.
-    fail("nothing to add — pass component names, or run `van list` to see them")
+    if (flags.yes) {
+      const installed = installedSlugs(project)
+      slugs = Object.keys(registry.components).sort().filter((s) => !installed.has(s))
+      if (!slugs.length) fail("all components are already installed")
+    } else if (!process.stdin.isTTY) {
+      fail("nothing to add — pass component names, or run `van list` to see them")
+    } else {
+      const installed = installedSlugs(project)
+      const allSlugs = Object.keys(registry.components).sort()
+      if (allSlugs.every((s) => installed.has(s))) fail("all components are already installed")
+      slugs = runPicker(allSlugs, installed)
+      if (!slugs.length) {
+        say(dim("cancelled"))
+        return
+      }
+    }
   }
 
   let plan

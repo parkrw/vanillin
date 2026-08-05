@@ -14,6 +14,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { hashFile } from "../scripts/manifest.mjs"
+import { createPickerState, pickerHandleKey, pickerLines } from "../bin/van.mjs"
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))
 const VAN = join(repoRoot, "bin", "van.mjs")
@@ -498,6 +499,118 @@ test("update copies missing lib deps", (dir) => {
   const r = van(dir, "update")
   assert.equal(r.code, 0, r.all)
   assert.ok(existsSync(join(dir, "lib/scroll-lock.js")), "missing lib file was not restored")
+})
+
+// ── picker state machine ───────────────────────────────────────────
+
+test("picker: initial state starts cursor on first non-installed", (dir) => {
+  const slugs = ["alpha", "beta", "gamma"]
+  const installed = new Set(["alpha"])
+  const state = createPickerState(slugs, installed, 10)
+  assert.equal(state.cursor, 1)
+  assert.equal(state.items[0].installed, true)
+  assert.equal(state.items[1].installed, false)
+})
+
+test("picker: up/down wraps around", (dir) => {
+  const state = createPickerState(["a", "b", "c"], new Set(), 10)
+  const down3 = [state, "down", "down", "down"].reduce((s, k) =>
+    typeof k === "string" ? pickerHandleKey(s, k) : s,
+  )
+  assert.equal(down3.cursor, 0, "down wraps to top")
+
+  const up1 = pickerHandleKey(state, "up")
+  assert.equal(up1.cursor, 2, "up wraps to bottom")
+})
+
+test("picker: space toggles selection, skips installed", (dir) => {
+  const state = createPickerState(["a", "b"], new Set(["a"]), 10)
+  assert.equal(state.cursor, 1)
+
+  const toggled = pickerHandleKey(state, "space")
+  assert.ok(toggled.selected.has(1))
+
+  const untoggled = pickerHandleKey(toggled, "space")
+  assert.ok(!untoggled.selected.has(1))
+
+  const atInstalled = { ...state, cursor: 0 }
+  const noToggle = pickerHandleKey(atInstalled, "space")
+  assert.ok(!noToggle.selected.has(0), "installed item should not toggle")
+})
+
+test("picker: 'a' toggles all selectable", (dir) => {
+  const state = createPickerState(["a", "b", "c"], new Set(["b"]), 10)
+  const allOn = pickerHandleKey(state, "a")
+  assert.ok(allOn.selected.has(0))
+  assert.ok(!allOn.selected.has(1), "installed item not selected")
+  assert.ok(allOn.selected.has(2))
+
+  const allOff = pickerHandleKey(allOn, "a")
+  assert.equal(allOff.selected.size, 0)
+})
+
+test("picker: enter sets done, escape sets cancelled", (dir) => {
+  const state = createPickerState(["a"], new Set(), 10)
+  const entered = pickerHandleKey(state, "enter")
+  assert.ok(entered.done)
+  assert.ok(!entered.cancelled)
+
+  const escaped = pickerHandleKey(state, "escape")
+  assert.ok(escaped.done)
+  assert.ok(escaped.cancelled)
+
+  const quit = pickerHandleKey(state, "q")
+  assert.ok(quit.done)
+  assert.ok(quit.cancelled)
+})
+
+test("picker: viewport scrolls with cursor", (dir) => {
+  const state = createPickerState(["a", "b", "c", "d", "e"], new Set(), 3)
+  assert.equal(state.viewStart, 0)
+  assert.equal(state.viewSize, 3)
+
+  let s = state
+  s = pickerHandleKey(s, "down") // cursor 1
+  s = pickerHandleKey(s, "down") // cursor 2 — still in viewport [0,3)
+  assert.equal(s.viewStart, 0)
+  s = pickerHandleKey(s, "down") // cursor 3 — scrolls
+  assert.equal(s.viewStart, 1)
+  s = pickerHandleKey(s, "down") // cursor 4
+  assert.equal(s.viewStart, 2)
+
+  s = pickerHandleKey(s, "up") // cursor 3
+  s = pickerHandleKey(s, "up") // cursor 2 — scrolls back
+  assert.equal(s.viewStart, 2)
+  s = pickerHandleKey(s, "up") // cursor 1
+  assert.equal(s.viewStart, 1)
+})
+
+test("picker: pickerLines renders correctly", (dir) => {
+  const state = createPickerState(["a", "b", "c"], new Set(["b"]), 10)
+  const lines = pickerLines(state)
+  assert.equal(lines.length, 3)
+  assert.match(lines[0], />\s+\[ \]\s+a/, "cursor on first selectable")
+  assert.match(lines[1], /✓\s+b/, "installed shown with checkmark")
+  assert.match(lines[2], /\[ \]\s+c/)
+
+  const toggled = pickerHandleKey(state, "space")
+  const lines2 = pickerLines(toggled)
+  assert.match(lines2[0], />\s+\[x\]\s+a/, "toggled item shows [x]")
+})
+
+test("picker: non-TTY add with no args fails", (dir) => {
+  project(dir)
+  const r = van(dir, "add")
+  assert.equal(r.code, 1)
+  assert.match(r.all, /nothing to add/)
+})
+
+test("picker: --yes selects all not-installed", (dir) => {
+  project(dir)
+  const r = van(dir, "add", "--yes", "--dry-run")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /button/, "should include button")
+  assert.match(r.out, /nothing written/)
 })
 
 // ── summary ─────────────────────────────────────────────────────────
