@@ -1,10 +1,8 @@
 import { useState } from "react"
 import { Slider } from "../../ui/slider/slider.jsx"
 import "../../ui/slider/slider.css"
-import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
-import "../code-example.css"
 import "../install-snippet.css"
 import "../api-reference.css"
 
@@ -16,18 +14,6 @@ export default function SliderPage() {
       <p>Selects a value or range from a continuous scale — drag, click the track, or use arrow keys.</p>
 
       <InstallSnippet slug="slider" />
-
-      <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview code={`import { Slider } from "./ui/slider/slider"
-import "./ui/slider/slider.css"
-
-<Slider defaultValue={[33]} aria-label="Volume" />`}>
-          <div style={{ width: "60%" }}>
-            <Slider defaultValue={[50]} aria-label="Usage demo" />
-          </div>
-        </ComponentPreview>
-      </section>
 
       <section className="pg-section">
         <h3>Default</h3>
