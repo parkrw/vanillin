@@ -1,8 +1,10 @@
 import { useState } from "react"
 import { Slider } from "../../ui/slider/slider.jsx"
 import "../../ui/slider/slider.css"
+import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
 import "../install-snippet.css"
 import "../api-reference.css"
 
@@ -50,6 +52,18 @@ export default function SliderPage() {
         <div className="pg-row" style={{ height: "12rem" }}>
           <Slider defaultValue={[30]} orientation="vertical" aria-label="Vertical" />
         </div>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { Slider } from "./ui/slider/slider"
+import "./ui/slider/slider.css"
+
+<Slider defaultValue={[33]} aria-label="Volume" />`}>
+          <div style={{ width: "60%" }}>
+            <Slider defaultValue={[50]} aria-label="Usage demo" />
+          </div>
+        </ComponentPreview>
       </section>
 
       <ApiReference props={[

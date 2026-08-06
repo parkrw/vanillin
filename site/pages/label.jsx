@@ -20,7 +20,7 @@ export default function LabelPage() {
         <ComponentPreview code={`import { Label } from "./ui/label/label"
 import "./ui/label/label.css"
 
-<Label htmlFor="email">Email address</Label>`}>
+<Label>Email address</Label>`}>
           <Label>Email address</Label>
         </ComponentPreview>
       </section>

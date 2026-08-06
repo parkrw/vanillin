@@ -85,8 +85,14 @@ import "./ui/radio-group/radio-group.css"
         <ComponentPreview code={`const [value, setValue] = useState("comfortable")
 
 <RadioGroup value={value} onValueChange={setValue}>
-  <RadioGroupItem value="default" id="rgc-default" />
-  <RadioGroupItem value="comfortable" id="rgc-comfortable" />
+  <div className="pg-row">
+    <RadioGroupItem value="default" id="rgc-default" />
+    <Label htmlFor="rgc-default">Default</Label>
+  </div>
+  <div className="pg-row">
+    <RadioGroupItem value="comfortable" id="rgc-comfortable" />
+    <Label htmlFor="rgc-comfortable">Comfortable</Label>
+  </div>
 </RadioGroup>
 <p>Selected: {value}</p>`}>
           <RadioGroup value={value} onValueChange={setValue}>
