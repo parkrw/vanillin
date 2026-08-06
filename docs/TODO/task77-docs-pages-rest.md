@@ -41,4 +41,4 @@ npm run build        # build clean
 
 ## Handoff
 
-**Status:** IN PROGRESS — A (forms) and B (overlay+nav) spawned 2026-08-06 as batch 2 with task 79; see their task files' Handoffs. C and D remain for batch 3.
+**Status:** IN PROGRESS — A and B landed 2026-08-06 (branches `docs/pages-rest-a`, `docs/pages-rest-b`, one rework round each; see their task files' Handoffs). C and D remain for batch 3 — rebalance 26+6 into ~16/16. Batch-3 fixture rule, learned twice: pages with viewport-coordinate or flush-edge tests (see ISSUES C9) must not add height above their fixtures; put Usage/InstallSnippet/ApiReference below them or fix C9 first.

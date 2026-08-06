@@ -269,6 +269,20 @@ reader is trying to read a value. Docs-page markup, not a component bug.
 as a broken demo rather than a prose aside. Compare `site/pages/density.jsx`,
 which shows the same idea with controls.
 
+### C9. `.dialog { position: relative }` defeats `:modal` viewport positioning
+
+`ui/dialog/dialog.css:7` overrides the UA's `:modal { position: fixed }`, so
+an open dialog — and therefore every drawer and sheet — anchors to the
+**document**, not the viewport. On any page taller than the viewport, a
+bottom drawer renders at the document's bottom edge, off-screen (measured:
+flush-bottom expected 720, got 170 once the page gained an InstallSnippet).
+Found during task 77b: the drawer and sheet docs pages cannot carry the full
+docs template (InstallSnippet/ApiReference add height), and the drawer/sheet
+tests only pass because those fixture pages stay shorter than the viewport.
+Any consumer page with a drawer below the fold hits this. The `position:
+relative` exists for the `container-type: inline-size` container (task 39) —
+the fix needs to keep the container without breaking `:modal`.
+
 ---
 
 ## D. Contrast and visual defects
@@ -597,6 +611,20 @@ recording instead of fixing):
   then passed **21/21 twice in isolation on an unmodified tree**. Same shape as
   G2: a timing-sensitive delay assertion that only breaks under CPU load. New
   2026-07-30.
+- **G5.** `slider: onValueCommit fires on pointerup and keydown` —
+  `page.evaluate` fails with *Failed to fetch dynamically imported module*
+  on the `/@fs/` slider URL. Unlike G2/G4 it is **deterministic within a
+  window**: during batch 2 it failed 6+ consecutive runs across two worktrees
+  (including the untouched base) and then passed everywhere an hour later on
+  identical code. The same URL fetches fine (200) from a hand-driven page in
+  the same worktree, so the trigger is somewhere in harness/vite state, not
+  the page. Historically alternates with `vertical orientation + keys` as the
+  suite's third failure. New 2026-08-06.
+- **G6.** One full-suite run under heavy parallel load (batch 2 supervision,
+  2026-08-06) failed `scroll-area: thumb parks at end` and two `toast` timing
+  tests (promise transition, held-still velocity); all passed 34/34 in
+  isolation immediately after on identical code. G2-shaped load sensitivity,
+  logged so the next full-suite reader doesn't re-investigate.
 
 ---
 
