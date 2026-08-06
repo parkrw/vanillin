@@ -15,7 +15,7 @@ import "../../ui/card/card.css"
 import "../../ui/button/button.css"
 import "../../ui/input/input.css"
 import "../../ui/label/label.css"
-import { ComponentPreview } from "../code-example.jsx"
+import { ComponentPreview, CodeBlock } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
 import "../code-example.css"
@@ -31,36 +31,59 @@ export default function TabsPage() {
       <InstallSnippet slug="tabs" />
 
       <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview code={`import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs/tabs"
+        <h3>Default</h3>
+        <Tabs defaultValue="account" style={{ maxWidth: "24rem" }}>
+          <TabsList>
+            <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="password">Password</TabsTrigger>
+          </TabsList>
+          <TabsContent value="account">
+            <Card>
+              <CardHeader>
+                <CardTitle>Account</CardTitle>
+                <CardDescription>Make changes to your account here.</CardDescription>
+              </CardHeader>
+              <CardContent style={{ display: "grid", gap: "0.75rem" }}>
+                <div style={{ display: "grid", gap: "0.375rem" }}>
+                  <Label htmlFor="tabs-name">Name</Label>
+                  <Input id="tabs-name" defaultValue="Pedro Duarte" />
+                </div>
+                <div style={{ display: "grid", gap: "0.375rem" }}>
+                  <Label htmlFor="tabs-username">Username</Label>
+                  <Input id="tabs-username" defaultValue="@peduarte" />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button>Save changes</Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          <TabsContent value="password">
+            <Card>
+              <CardHeader>
+                <CardTitle>Password</CardTitle>
+                <CardDescription>Change your password here.</CardDescription>
+              </CardHeader>
+              <CardContent style={{ display: "grid", gap: "0.75rem" }}>
+                <div style={{ display: "grid", gap: "0.375rem" }}>
+                  <Label htmlFor="tabs-current">Current password</Label>
+                  <Input id="tabs-current" type="password" />
+                </div>
+                <div style={{ display: "grid", gap: "0.375rem" }}>
+                  <Label htmlFor="tabs-new">New password</Label>
+                  <Input id="tabs-new" type="password" />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button>Save password</Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+        </Tabs>
+        <CodeBlock code={`import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs/tabs"
 import "./ui/tabs/tabs.css"
 
-<Tabs defaultValue="one">
-  <TabsList>
-    <TabsTrigger value="one">Tab 1</TabsTrigger>
-    <TabsTrigger value="two">Tab 2</TabsTrigger>
-  </TabsList>
-  <TabsContent value="one">Content 1</TabsContent>
-  <TabsContent value="two">Content 2</TabsContent>
-</Tabs>`}>
-          <Tabs defaultValue="one" style={{ maxWidth: "24rem" }}>
-            <TabsList>
-              <TabsTrigger value="one">Tab 1</TabsTrigger>
-              <TabsTrigger value="two">Tab 2</TabsTrigger>
-            </TabsList>
-            <TabsContent value="one">
-              <p style={{ fontSize: "0.875rem" }}>First tab content.</p>
-            </TabsContent>
-            <TabsContent value="two">
-              <p style={{ fontSize: "0.875rem" }}>Second tab content.</p>
-            </TabsContent>
-          </Tabs>
-        </ComponentPreview>
-      </section>
-
-      <section className="pg-section">
-        <h3>Tabs with Cards</h3>
-        <ComponentPreview code={`<Tabs defaultValue="account">
+<Tabs defaultValue="account">
   <TabsList>
     <TabsTrigger value="account">Account</TabsTrigger>
     <TabsTrigger value="password">Password</TabsTrigger>
@@ -78,79 +101,29 @@ import "./ui/tabs/tabs.css"
       <CardFooter><Button>Save changes</Button></CardFooter>
     </Card>
   </TabsContent>
-</Tabs>`}>
-          <Tabs defaultValue="account" style={{ maxWidth: "24rem" }}>
-            <TabsList>
-              <TabsTrigger value="account">Account</TabsTrigger>
-              <TabsTrigger value="password">Password</TabsTrigger>
-            </TabsList>
-            <TabsContent value="account">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Account</CardTitle>
-                  <CardDescription>Make changes to your account here.</CardDescription>
-                </CardHeader>
-                <CardContent style={{ display: "grid", gap: "0.75rem" }}>
-                  <div style={{ display: "grid", gap: "0.375rem" }}>
-                    <Label htmlFor="tabs-name">Name</Label>
-                    <Input id="tabs-name" defaultValue="Pedro Duarte" />
-                  </div>
-                  <div style={{ display: "grid", gap: "0.375rem" }}>
-                    <Label htmlFor="tabs-username">Username</Label>
-                    <Input id="tabs-username" defaultValue="@peduarte" />
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button>Save changes</Button>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-            <TabsContent value="password">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Password</CardTitle>
-                  <CardDescription>Change your password here.</CardDescription>
-                </CardHeader>
-                <CardContent style={{ display: "grid", gap: "0.75rem" }}>
-                  <div style={{ display: "grid", gap: "0.375rem" }}>
-                    <Label htmlFor="tabs-current">Current password</Label>
-                    <Input id="tabs-current" type="password" />
-                  </div>
-                  <div style={{ display: "grid", gap: "0.375rem" }}>
-                    <Label htmlFor="tabs-new">New password</Label>
-                    <Input id="tabs-new" type="password" />
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button>Save password</Button>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </ComponentPreview>
+</Tabs>`} language="jsx" />
       </section>
 
       <section className="pg-section">
         <h3>Disabled Trigger</h3>
-        <ComponentPreview code={`<Tabs defaultValue="active">
+        <Tabs defaultValue="active">
+          <TabsList>
+            <TabsTrigger value="active">Active</TabsTrigger>
+            <TabsTrigger value="disabled" disabled>
+              Disabled
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="active">
+            <p style={{ fontSize: "0.875rem" }}>The other tab is disabled.</p>
+          </TabsContent>
+        </Tabs>
+        <CodeBlock code={`<Tabs defaultValue="active">
   <TabsList>
     <TabsTrigger value="active">Active</TabsTrigger>
     <TabsTrigger value="disabled" disabled>Disabled</TabsTrigger>
   </TabsList>
   <TabsContent value="active">The other tab is disabled.</TabsContent>
-</Tabs>`}>
-          <Tabs defaultValue="active">
-            <TabsList>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="disabled" disabled>
-                Disabled
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="active">
-              <p style={{ fontSize: "0.875rem" }}>The other tab is disabled.</p>
-            </TabsContent>
-          </Tabs>
-        </ComponentPreview>
+</Tabs>`} language="jsx" />
       </section>
 
       <section className="pg-section">
