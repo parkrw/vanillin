@@ -1,15 +1,21 @@
+import { CodeBlock } from "../../code-example.jsx"
+import "../../code-example.css"
+
 export default function ThemingPage() {
   return (
     <>
       <h2>Theming</h2>
 
       <p>
-        Design tokens are split by kind across two files.{" "}
-        <code>styles/defaults.css</code> holds every token <em>value</em> and is
-        generated; <code>styles/globals.css</code> holds the{" "}
-        <em>machinery</em> and is hand-written. Retheme by editing{" "}
-        <code>van.defaults.json</code>, or by generating your own overrides
-        into a <code>van.css</code> imported after <code>globals.css</code>.
+        Design tokens live in two files.{" "}
+        <code>styles/defaults.css</code> holds every token value and is
+        generated from <code>van.defaults.json</code>.{" "}
+        <code>styles/globals.css</code> holds the machinery — registrations,
+        derivation ramps, forced-colors repair — and is hand-written.
+        Retheme by editing <code>van.config.json</code> and
+        running <code>van build</code>, which generates
+        a <code>van.css</code> imported after <code>globals.css</code>.
+        See <a href="#configuration">Configuration</a> for the full reference.
       </p>
 
       <h3>The kit&apos;s own theme is generator output</h3>
@@ -61,13 +67,11 @@ export default function ThemingPage() {
         Everything is unlayered and plain source order decides:
       </p>
 
-      <pre>
-{`1. defaults.css       generated token values
+      <CodeBlock language="text" code={`1. defaults.css       generated token values
 2. forced-colors.css  repair layer — overrides (1)
 3. globals.css        machinery + base element styles
 4. component CSS      imported per component
-5. your van.css       imported after globals.css`}
-      </pre>
+5. your van.css       imported after globals.css`} />
 
       <p>
         Your own <code>van.css</code> comes last and wins. Note that it wins
@@ -113,12 +117,10 @@ export default function ThemingPage() {
         modes in a single declaration:
       </p>
 
-      <pre>
-{`:root {
+      <CodeBlock language="css" code={`:root {
   color-scheme: light;
   --primary: light-dark(oklch(0.205 0 0), oklch(0.922 0 0));
-}`}
-      </pre>
+}`} />
 
       <p>
         The <code>.dark</code> class on <code>&lt;html&gt;</code> is still
@@ -146,11 +148,9 @@ export default function ThemingPage() {
         override it:
       </p>
 
-      <pre>
-{`:root {
+      <CodeBlock language="css" code={`:root {
   --primary: light-dark(oklch(0.37 0.2 280), oklch(0.75 0.15 280));
-}`}
-      </pre>
+}`} />
 
       <p>
         Because tokens are registered with <code>@property</code>, a
@@ -168,9 +168,7 @@ export default function ThemingPage() {
         automatically:
       </p>
 
-      <pre>
-{`--primary-hover: oklch(from var(--primary) calc(l - 0.05) c h);`}
-      </pre>
+      <CodeBlock language="css" code="--primary-hover: oklch(from var(--primary) calc(l - 0.05) c h);" />
 
       <p>
         The same pattern is used for <code>--secondary-hover</code>,{" "}
@@ -189,14 +187,12 @@ export default function ThemingPage() {
         form takes up to four keys:
       </p>
 
-      <pre>
-{`"brand": {
+      <CodeBlock language="json" code={`"brand": {
   "primary":   "oklch(0.55 0.2 265)",
   "secondary": "oklch(0.65 0.14 190)",
   "accent":    "oklch(0.7 0.15 320)",
   "neutral":   "oklch(0.55 0.02 265)"
-}`}
-      </pre>
+}`} />
 
       <ul>
         <li>
@@ -244,6 +240,59 @@ export default function ThemingPage() {
         tokens resolve to.
       </p>
 
+      <h3>Per-component customisation</h3>
+
+      <p>
+        The <code>components</code> section
+        in <code>van.config.json</code> overrides tokens, adds variants,
+        and defines sizes for individual components. All values are CSS
+        property maps — the generator expands shorthands
+        (<code>bg</code>, <code>fg</code>, <code>radius</code>) and
+        emits scoped custom properties in <code>van.css</code>.
+      </p>
+
+      <CodeBlock language="json" code={`"components": {
+  "button": {
+    "tokens": {
+      "border-radius": "9999px"
+    },
+    "variants": {
+      "brand": {
+        "bg": "color-mix(in oklab, var(--primary) 15%, var(--background))",
+        "fg": "var(--primary)",
+        "border-radius": "9999px"
+      }
+    },
+    "sizes": {
+      "xs": {
+        "height": "1.75rem",
+        "padding-inline": "0.5rem",
+        "font-size": "0.75rem"
+      }
+    }
+  }
+}`} />
+
+      <ul>
+        <li>
+          <strong><code>tokens</code></strong> — base property overrides
+          applied to the component root.
+        </li>
+        <li>
+          <strong><code>variants</code></strong> — named property maps
+          applied when a variant is active.
+        </li>
+        <li>
+          <strong><code>sizes</code></strong> — named property maps keyed
+          by size name, same structure as variants.
+        </li>
+      </ul>
+
+      <p>
+        See <a href="#configuration">Configuration</a> for the full{" "}
+        <code>components</code> reference and validation rules.
+      </p>
+
       <h3>Density modes</h3>
 
       <p>
@@ -251,11 +300,9 @@ export default function ThemingPage() {
         <code>--space-*</code> token ramp:
       </p>
 
-      <pre>
-{`[data-density="compact"]     { --density-scale: 0.875; }
+      <CodeBlock language="css" code={`[data-density="compact"]     { --density-scale: 0.875; }
 [data-density="comfortable"] { --density-scale: 1; }
-[data-density="spacious"]    { --density-scale: 1.25; }`}
-      </pre>
+[data-density="spacious"]    { --density-scale: 1.25; }`} />
 
       <p>
         Apply them with the <code>&lt;Density&gt;</code> component or set{" "}
