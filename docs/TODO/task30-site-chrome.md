@@ -42,8 +42,9 @@ Observable:
 ## Handoff
 
 **Status:** COMPLETE
-**Branch:** `docs/site-chrome-plan`  **PR:** none  **Updated:** 2026-08-05
+**Branch:** `fix/docs-nav-rework` (unmerged, carries 30 polish + 75's code)  **PR:** none  **Updated:** 2026-08-05
 
-- **Landed:** Top navbar (navigation-menu + command palette + mode toggle), categorized sidebar (8 categories), home/landing page, enhanced breadcrumbs (Home > Components > Category > Component). Layout fixed to `height: 100vh; overflow: hidden` to prevent document scroll from shifting modal dialogs. Tests 748/751 (3 pre-existing). Build clean.
-- **Visual QA passed:** Navbar, sidebar categories, breadcrumbs, command palette, home page all verified at 1280 and 768 in both light and dark mode. No regressions.
-- **Gotchas:** The navbar `.btn` (search trigger) resolves before lazy-loaded page content — any test `waitForSelector(".btn")` must scope to `.pg-main` to avoid matching the navbar. Three tests were fixed for this (`cursor`, `tokens-controls`, `docs-shell`).
+- **Landed:** Polish pass on the overhaul — description dropdowns (Get started / Components / Docs), sticky blur-on-scroll topnav, resizable sidebar with animated collapsible categories + Docs group, two-column live-component hero, `--motion-scale` 1.75. Plus `fix(select)`: item-aligned bottom-clamp double-shift (`573e69d`). Suite 753/755 (2 pre-existing slider-cursor), build clean, visual QA both themes.
+- **Repo state:** clean; two commits await the user's merge (`573e69d` select fix, `dc46a70` site polish).
+- **Next:** user merges the branch, then task 76 (+78 parallel). 75's remaining sub-task 5 is convention-only — 76 applies it.
+- **Gotchas:** The window is now the scroll container — the previous `overflow: hidden` shell (added to stop document scroll shifting modal dialogs) is gone; suite is green, but if dialog-shift reports return, start there. Navbar `.btn` still resolves before lazy page content — scope test waits to `.pg-main`. `cli` slug in `site/registry.js` has no page until 78. Dark `--input` at 40% white is task 72's WCAG fix — not polish material.

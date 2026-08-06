@@ -16,7 +16,7 @@
 - [x] 4. **`<ApiReference>`** — renders a props table from `[{ name, type, default, description }]` using `ui/table`. `title` prop defaults to "API Reference". Heading styled to match `.pg-section > h3`.
   - files: `site/api-reference.jsx`, `site/api-reference.css`
 
-- [ ] 5. **Docs page layout convention** — document the per-component page structure as a pattern (not a wrapper component): description → install → basic usage → examples → API reference. Write a brief comment in the first component that uses it (task 76) so the pattern is discoverable.
+- [ ] 5. **Docs page layout convention** → delegated to task 76 — document the per-component page structure as a pattern (not a wrapper component): description → install → basic usage → examples → API reference. Write a brief comment in the first component that uses it (task 76) so the pattern is discoverable.
   - files: none (convention, verified by task 76)
 
 ## Verify / done
@@ -35,8 +35,8 @@ Observable:
 
 ## Handoff
 
-**Status:** IN PROGRESS — sub-tasks 1–4 done, sub-task 5 is convention only (task 76 applies it)
-**Branch:** `docs/code-infra`  **PR:** none  **Updated:** 2026-08-05
+**Status:** COMPLETE — sub-tasks 1–4 landed; sub-task 5 is convention only, delegated to task 76
+**Branch:** `fix/docs-nav-rework` (landed as `27a1410`, unmerged — user merges)  **PR:** none  **Updated:** 2026-08-05
 
 - **Landed:** `CodeBlock` (monospace + hover-reveal copy), `ComponentPreview` (tabs-based preview/code card using `ui/tabs`), `InstallSnippet` (auto-derives requires from `registry.json`), `ApiReference` (props table using `ui/table`). Build clean.
 - **Page layout convention for task 76:** description → install snippet → basic usage (ComponentPreview) → variant/example sections (more ComponentPreviews) → API reference table. Not a wrapper — each page composes the building blocks in this order.

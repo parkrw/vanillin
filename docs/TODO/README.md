@@ -1,6 +1,6 @@
-# Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–78)
+# Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–79)
 
-**Resume:** `docs/TODO/task30-site-chrome.md` → Handoff (COMPLETE). All 6 sub-tasks done. Next: 75 → 76 → 77 (+78 parallel). Task **74** (narrow-viewport reflow) still needs a scope call.
+**Resume:** `docs/TODO/task30-site-chrome.md` → Handoff (COMPLETE, branch `fix/docs-nav-rework` unmerged — user merges). 75 is `[x]` on that branch too (sub-task 5 is convention-only, 76 applies it). **The merge gates 76/78** — 75's components only exist on the unmerged branch, so 76 and 78 branch from post-merge main. Next: 76 (+78 parallel) → 77 (spawn). Task **74** (narrow-viewport reflow) still needs a scope call.
 
 ## Handoff — task 70 (complete)
 
@@ -55,7 +55,7 @@ Tasks are detailed just-in-time; only the rows below are durable.
 **Order from here (settled 2026-07-27, after 38 landed):**
 
 ```
-39 ✓ → 68 ✓ → 71 ✓ → 72 ✓ → 73 ✓ → 65 ✓ → 66 ✓ → 67 ✓ → 69 ✓ → 70 ✓ → 30 → 75 → 76 (+78 parallel) → 77 (spawn) → 74? → console kit
+39 ✓ → 68 ✓ → 71 ✓ → 72 ✓ → 73 ✓ → 65 ✓ → 66 ✓ → 67 ✓ → 69 ✓ → 70 ✓ → 30 ✓ → 75 ✓ → 76 (+78 parallel) → 77 (spawn; 79 can join the batch — Owns disjoint) → 74? → console kit
 ```
 
 - **39 landed 2026-07-27 and unblocked everything after it.** It ran alone on the
@@ -164,7 +164,7 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 72  | bug-batch-2              | ~M  | [x]    | merged 2026-08-02, no PR (local merge); all 11 sub-tasks; +F7/D14/D15 filed [^72] |
 | 74  | site-responsive          | ~L  | [ ]    | ISSUES K1 — 73 of 79 pages overflow at 380px; needs a scope call [^74]  |
 | 73  | coverage-probe           | ~L  | [x]    | 26 probed, 5 gaps fixed, 20 caught, 1 skipped; suite 735 [^73]          |
-| 75  | docs-code-infra          | ~M  | [ ]    | deps: 30; `<ComponentPreview>`, `<CodeBlock>`, `<InstallSnippet>`, `<ApiReference>` [^75] |
+| 75  | docs-code-infra          | ~M  | [x]    | landed on `fix/docs-nav-rework` (`27a1410`); sub-task 5 (page convention) delegated to 76 [^75] |
 | 76  | docs-pages-core          | ~L  | [ ]    | deps: 75; template applied to 15 key components (button, input, dialog, card, etc.) [^76] |
 | 77  | docs-pages-rest          | ~XL | [ ]    | deps: 76; template applied to remaining ~59 pages; spawn-ready [^77]     |
 | 78  | docs-content             | ~M  | [ ]    | deps: 75; Get Started refresh, config reference (B1), voice pass (A5) [^78] |
@@ -457,6 +457,8 @@ just-in-time. Rough order of usefulness:
   work because of it.
 
 ## Adjustments log
+
+- **2026-08-05 — --adjust reconcile.** 75 ticked `[x]` — its four components landed with the nav polish on `fix/docs-nav-rework` (`27a1410`); sub-task 5 (page layout convention) delegated to 76, which applies it. 79 slotted into the order at 77's spawn slot (Owns — `site/app.jsx`, `site/site.css`, `site/toc.jsx` — disjoint from 77's page files; "after 76" satisfied). Resume note added: the user's merge of `fix/docs-nav-rework` gates 76/78, which branch from post-merge main.
 
 - **2026-08-05 — nav/site-chrome polish pass (follow-up to 30), task 79 added.** Topnav dropdowns rebuilt shadcn-style (Get started / Components / Docs, title + description rows); registry gained `docsGroups` and per-category `desc`; sidebar gained a Docs group, animated collapsible categories (grid-rows trick), and drag-resize; the window is now the scroll container (sticky topnav with scrolled-blur, sticky sidebar); hero is a two-column live-component showcase; `--motion-scale` 2.5 → 1.75 (snapshot updated). Exposed and fixed a real `ui/select` bug: item-aligned bottom-clamp double-shifted the item off the trigger whenever the trigger sat below the item's natural offset — now shrinks the box instead; regression test added. `resizable` vertical-drag test was fold-position-dependent — now scrolls the handle into view. Right rail + scroll-synced TOC planned as task 79.
 
