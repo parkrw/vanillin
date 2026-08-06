@@ -21,7 +21,7 @@ Each page gets rewritten to follow this layout:
 
 ## Sub-tasks
 
-- [ ] 1. **button** — 6 variants, 3 sizes, states, density, `as` prop. Composition: button inside card footer, button-group with badge count.
+- [x] 1. **button** — 6 variants, 3 sizes, states, density, `as` prop. Composition: button inside card footer, button-group with badge count.
   - files: `site/pages/button.jsx`
 
 - [ ] 2. **input** — default, disabled, with label, file input, density. Composition: input inside card with form field. Fix C8 (empty density section) here.
@@ -83,4 +83,10 @@ Observable:
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
+**Branch:** `docs/pages-core`  **PR:** none  **Updated:** 2026-08-06
+
+- **Landed:** All 15 pages rewritten with docs template (description → install → usage → examples with source → API reference). B5/B6/C8 fixed. Convention comment in `button.jsx` (task 75 sub-task 5). Suite 753/755 (2 pre-existing slider-cursor).
+- **Repo state:** clean (only `package-lock.json` unstaged, unrelated)
+- **Next:** task 78 or task 77 (spawn-ready)
+- **Gotchas:** ComponentPreview uses `ui/tabs` internally, so pages whose tests select by `[role="tablist"]` or `.tabs-trigger` must render fixture demos directly (not inside ComponentPreview). Tabs page does this; any future page with tab fixtures needs the same treatment.
