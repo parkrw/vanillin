@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react"
+import { lazy, Suspense, useEffect, useRef, useState } from "react"
 import { ModeToggle } from "../ui/mode-toggle/mode-toggle.jsx"
 import {
   Breadcrumb,
@@ -27,7 +27,7 @@ import {
 } from "../ui/command/command.jsx"
 import { Button } from "../ui/button/button.jsx"
 import { setSiteDark, useSiteDark } from "./color-scheme.js"
-import { docs, categories, registry } from "./registry.js"
+import { docs, docsGroups, categories, registry } from "./registry.js"
 
 import "../ui/mode-toggle/mode-toggle.css"
 import "../ui/breadcrumb/breadcrumb.css"
@@ -79,13 +79,15 @@ function CommandPalette({ open, onOpenChange }) {
       <CommandInput placeholder="Search components and docs..." data-pg="cmd-palette-input" />
       <CommandList data-pg="cmd-palette-list">
         <CommandEmpty>No results found.</CommandEmpty>
-        <CommandGroup heading="Get started">
-          {Object.entries(docs).map(([slug, { title }]) => (
-            <CommandItem key={slug} value={title} onSelect={() => navigate(slug)}>
-              {title}
-            </CommandItem>
-          ))}
-        </CommandGroup>
+        {docsGroups.map(({ label, entries }) => (
+          <CommandGroup key={label} heading={label}>
+            {Object.entries(entries).map(([slug, { title, page }]) => (
+              <CommandItem key={slug} value={title} disabled={!page} onSelect={() => navigate(slug)}>
+                {title}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        ))}
         {categories.map(({ label, entries }) => (
           <CommandGroup key={label} heading={label}>
             {Object.entries(entries).map(([slug, { title }]) => (
@@ -100,47 +102,69 @@ function CommandPalette({ open, onOpenChange }) {
   )
 }
 
-function TopNav({ dark, onPaletteOpen }) {
+function useScrolled() {
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+  return scrolled
+}
+
+function DocsGroupItem({ group: { label, entries } }) {
   return (
-    <header className="pg-topnav">
+    <NavigationMenuItem value={label}>
+      <NavigationMenuTrigger>{label}</NavigationMenuTrigger>
+      <NavigationMenuContent>
+        <ul className="pg-menu-list">
+          {Object.entries(entries).map(([slug, { title, desc, page }]) => (
+            <li key={slug}>
+              <NavigationMenuLink href={`#${slug}`} className="pg-menu-link" data-todo={!page}>
+                <span className="pg-menu-link-title">{title}</span>
+                <span className="pg-menu-link-desc">{desc}</span>
+              </NavigationMenuLink>
+            </li>
+          ))}
+        </ul>
+      </NavigationMenuContent>
+    </NavigationMenuItem>
+  )
+}
+
+function TopNav({ dark, onPaletteOpen }) {
+  const scrolled = useScrolled()
+
+  return (
+    <header className="pg-topnav" data-scrolled={scrolled}>
       <a href="#home" className="pg-logo" data-pg="logo">vanillin</a>
 
       <NavigationMenu className="pg-topnav-menu">
         <NavigationMenuList>
-          <NavigationMenuItem>
-            <NavigationMenuLink href="#introduction">Docs</NavigationMenuLink>
-          </NavigationMenuItem>
+          <DocsGroupItem group={docsGroups[0]} />
           <NavigationMenuItem value="components">
             <NavigationMenuTrigger>Components</NavigationMenuTrigger>
-            <NavigationMenuContent className="pg-topnav-dropdown">
-              <ul className="pg-topnav-grid">
-                {categories.map(({ label, entries }) => (
-                  <li key={label} className="pg-topnav-cat">
-                    <div className="pg-topnav-cat-label">{label}</div>
-                    <ul className="pg-topnav-cat-list">
-                      {Object.entries(entries).slice(0, 6).map(([slug, { title }]) => (
-                        <li key={slug}>
-                          <NavigationMenuLink href={`#${slug}`} className="pg-topnav-cat-link">
-                            {title}
-                          </NavigationMenuLink>
-                        </li>
-                      ))}
-                      {Object.keys(entries).length > 6 && (
-                        <li>
-                          <NavigationMenuLink
-                            href={`#${Object.keys(entries)[0]}`}
-                            className="pg-topnav-cat-link pg-topnav-cat-more"
-                          >
-                            +{Object.keys(entries).length - 6} more
-                          </NavigationMenuLink>
-                        </li>
-                      )}
-                    </ul>
+            <NavigationMenuContent>
+              <ul className="pg-menu-list pg-menu-list--grid">
+                {categories.map(({ label, desc, entries }) => (
+                  <li key={label}>
+                    <NavigationMenuLink
+                      href={`#${Object.keys(entries)[0]}`}
+                      className="pg-menu-link"
+                    >
+                      <span className="pg-menu-link-title">
+                        {label}
+                        <span className="pg-menu-link-count">{Object.keys(entries).length}</span>
+                      </span>
+                      <span className="pg-menu-link-desc">{desc}</span>
+                    </NavigationMenuLink>
                   </li>
                 ))}
               </ul>
             </NavigationMenuContent>
           </NavigationMenuItem>
+          <DocsGroupItem group={docsGroups[1]} />
         </NavigationMenuList>
         <NavigationMenuViewport />
       </NavigationMenu>
@@ -157,55 +181,141 @@ function TopNav({ dark, onPaletteOpen }) {
   )
 }
 
-function Sidebar({ route }) {
-  const inDocs = route in docs || route === "home"
+function NavLinkList({ entries, route }) {
+  return (
+    <ul className="pg-nav-list">
+      {Object.entries(entries).map(([slug, { title, page }]) => (
+        <li key={slug}>
+          <a
+            className="pg-nav-link"
+            href={`#${slug}`}
+            data-active={route === slug}
+            data-todo={!page}
+          >
+            {title}
+          </a>
+        </li>
+      ))}
+    </ul>
+  )
+}
 
-  if (inDocs) {
-    return (
-      <nav className="pg-nav" aria-label="Docs navigation">
-        <section className="pg-nav-group" aria-label="Get started">
-          <div className="pg-nav-label">Get started</div>
-          <ul className="pg-nav-list">
-            {Object.entries(docs).map(([slug, { title, page }]) => (
-              <li key={slug}>
-                <a
-                  className="pg-nav-link"
-                  href={`#${slug}`}
-                  data-active={route === slug}
-                  data-todo={!page}
-                >
-                  {title}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </nav>
-    )
+const SIDEBAR_MIN = 180
+const SIDEBAR_MAX = 400
+const SIDEBAR_DEFAULT = 230
+
+function Sidebar({ route }) {
+  const [openCats, setOpenCats] = useState(() => {
+    const initial = new Set()
+    const cat = categoryForSlug(route)
+    if (cat) initial.add(cat)
+    return initial
+  })
+  const [width, setWidth] = useState(() => {
+    const stored = Number(localStorage.getItem("pg-sidebar-width"))
+    return stored >= SIDEBAR_MIN && stored <= SIDEBAR_MAX ? stored : SIDEBAR_DEFAULT
+  })
+  const widthRef = useRef(width)
+
+  useEffect(() => {
+    const cat = categoryForSlug(route)
+    if (cat) {
+      setOpenCats(prev => {
+        if (prev.has(cat)) return prev
+        const next = new Set(prev)
+        next.add(cat)
+        return next
+      })
+    }
+  }, [route])
+
+  const toggleCat = (label) => {
+    setOpenCats(prev => {
+      const next = new Set(prev)
+      if (next.has(label)) next.delete(label)
+      else next.add(label)
+      return next
+    })
+  }
+
+  const startResize = (e) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const startWidth = widthRef.current
+    const onMove = (ev) => {
+      const next = Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, startWidth + ev.clientX - startX))
+      widthRef.current = next
+      setWidth(next)
+    }
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove)
+      window.removeEventListener("pointerup", onUp)
+      document.body.style.removeProperty("cursor")
+      document.body.style.removeProperty("user-select")
+      localStorage.setItem("pg-sidebar-width", String(widthRef.current))
+    }
+    document.body.style.cursor = "col-resize"
+    document.body.style.userSelect = "none"
+    window.addEventListener("pointermove", onMove)
+    window.addEventListener("pointerup", onUp)
   }
 
   return (
-    <nav className="pg-nav" aria-label="Components navigation">
-      {categories.map(({ label, entries }) => (
-        <section className="pg-nav-group" key={label} aria-label={label}>
-          <div className="pg-nav-label">{label}</div>
-          <ul className="pg-nav-list">
-            {Object.entries(entries).map(([slug, { title, page }]) => (
-              <li key={slug}>
-                <a
-                  className="pg-nav-link"
-                  href={`#${slug}`}
-                  data-active={route === slug}
-                  data-todo={!page}
-                >
-                  {title}
-                </a>
-              </li>
-            ))}
-          </ul>
+    <aside className="pg-sidebar" style={{ width }}>
+      <nav className="pg-nav" aria-label="Docs navigation">
+        <section className="pg-nav-group" aria-label="Get started">
+          <div className="pg-nav-label">Get started</div>
+          <NavLinkList entries={docsGroups[0].entries} route={route} />
         </section>
-      ))}
-    </nav>
+
+        <section className="pg-nav-group" aria-label="Components">
+          <div className="pg-nav-label">Components</div>
+          {categories.map(({ label, entries }) => {
+            const isOpen = openCats.has(label)
+            return (
+              <div key={label} className="pg-nav-cat" data-open={isOpen}>
+                <button
+                  className="pg-nav-cat-btn"
+                  onClick={() => toggleCat(label)}
+                  data-active={route in entries}
+                  aria-expanded={isOpen}
+                >
+                  {label}
+                  <svg
+                    className="pg-nav-cat-chevron"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 4.5 6 7.5 9 4.5" />
+                  </svg>
+                </button>
+                <div className="pg-nav-cat-items">
+                  <NavLinkList entries={entries} route={route} />
+                </div>
+              </div>
+            )
+          })}
+        </section>
+
+        <section className="pg-nav-group" aria-label="Docs">
+          <div className="pg-nav-label">Docs</div>
+          <NavLinkList entries={docsGroups[1].entries} route={route} />
+        </section>
+      </nav>
+      <div
+        className="pg-sidebar-handle"
+        onPointerDown={startResize}
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize sidebar"
+        data-pg="sidebar-handle"
+      />
+    </aside>
   )
 }
 
@@ -269,6 +379,12 @@ export function App() {
     document.addEventListener("keydown", onKeyDown)
     return () => document.removeEventListener("keydown", onKeyDown)
   }, [])
+
+  // The window is the scroll container now (sticky topnav needs it) — hash
+  // routing alone never resets it between pages.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [route])
 
   const isHome = route === "home"
 

@@ -168,6 +168,7 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 76  | docs-pages-core          | ~L  | [ ]    | deps: 75; template applied to 15 key components (button, input, dialog, card, etc.) [^76] |
 | 77  | docs-pages-rest          | ~XL | [ ]    | deps: 76; template applied to remaining ~59 pages; spawn-ready [^77]     |
 | 78  | docs-content             | ~M  | [ ]    | deps: 75; Get Started refresh, config reference (B1), voice pass (A5) [^78] |
+| 79  | docs-right-rail          | ~M  | [ ]    | deps: 75 (76 ideally); scroll-synced TOC rail + resizable code panel [^79]   |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -387,7 +388,15 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 [^78]: deps: 75; Get Started refresh (introduction + installation rewrite),
     new configuration reference page (B1 — full `van.config.json` docs), schema
     page update, theming page update, voice pass (A5). Owns `site/pages/docs/`
-    exclusively — parallel-safe with 76/77.
+    exclusively — parallel-safe with 76/77. **The nav rework of 2026-08-05 added
+    a `cli` slug to `site/registry.js` with no page — the CLI docs page lands
+    here and turns that entry live.**
+
+[^79]: right-hand rail on docs pages: scroll-synced "On this page" TOC,
+    resizable via the same drag pattern as the left sidebar, stretch goal of a
+    pinned code-example panel. Planned during the 2026-08-05 nav polish pass at
+    the user's request; sequenced after 76 so the page anatomy it indexes is
+    settled.
 
 **Browser-support gate:** 33, 39, 54, 55, 57 depend on features that were
 partially supported at plan time (relative color syntax, `light-dark()`,
@@ -448,6 +457,8 @@ just-in-time. Rough order of usefulness:
   work because of it.
 
 ## Adjustments log
+
+- **2026-08-05 — nav/site-chrome polish pass (follow-up to 30), task 79 added.** Topnav dropdowns rebuilt shadcn-style (Get started / Components / Docs, title + description rows); registry gained `docsGroups` and per-category `desc`; sidebar gained a Docs group, animated collapsible categories (grid-rows trick), and drag-resize; the window is now the scroll container (sticky topnav with scrolled-blur, sticky sidebar); hero is a two-column live-component showcase; `--motion-scale` 2.5 → 1.75 (snapshot updated). Exposed and fixed a real `ui/select` bug: item-aligned bottom-clamp double-shifted the item off the trigger whenever the trigger sat below the item's natural offset — now shrinks the box instead; regression test added. `resizable` vertical-drag test was fold-position-dependent — now scrolls the handle into view. Right rail + scroll-synced TOC planned as task 79.
 
 - **2026-08-04 — task 73 scope narrowed.** Replaced sub-tasks 1-4 (probe all 68 components + write tests) with: sub-tasks 1-2 done (20 probed, 5 tests written), sub-task 3 finishes 6 remaining high-value probes (sidebar, message-scroller, command, menubar, form, radio-group), tier 3 skipped (re-exports/CSS-only/meta — no JS to probe). Rationale: 14/15 non-skip probes caught, the one systematic gap class (anchor positioning) is found and fixed, diminishing returns on remaining ~25 low-risk components.
 - **2026-08-04 — task 73 done.** All 6 final probes caught (no new gaps). 26 components probed total, 5 gaps fixed, 20 caught, 1 skipped. Suite 735.

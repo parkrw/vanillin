@@ -1,16 +1,55 @@
 import { lazy } from "react"
 
-export const docs = {
-  introduction: { title: "Introduction", page: lazy(() => import("./pages/docs/introduction.jsx")) },
-  installation: { title: "Installation", page: lazy(() => import("./pages/docs/installation.jsx")) },
-  theming: { title: "Theming", page: lazy(() => import("./pages/docs/theming.jsx")) },
-  schema: { title: "Schema", page: lazy(() => import("./pages/docs/schema.jsx")) },
-  contracts: { title: "Component contracts", page: lazy(() => import("./pages/docs/contracts.jsx")) },
-}
+export const docsGroups = [
+  {
+    label: "Get started",
+    entries: {
+      introduction: {
+        title: "Introduction",
+        desc: "What vanillin is, and why copy-paste beats a dependency.",
+        page: lazy(() => import("./pages/docs/introduction.jsx")),
+      },
+      installation: {
+        title: "Installation",
+        desc: "Add components to your project with the CLI or by hand.",
+        page: lazy(() => import("./pages/docs/installation.jsx")),
+      },
+    },
+  },
+  {
+    label: "Docs",
+    entries: {
+      cli: {
+        title: "CLI",
+        desc: "init, add, diff, update — the tool that copies components in.",
+      },
+      theming: {
+        title: "Theming",
+        desc: "Design tokens, van.config.json, dark mode, and density.",
+        page: lazy(() => import("./pages/docs/theming.jsx")),
+      },
+      schema: {
+        title: "Schema",
+        desc: "Zero-dep validation and the resolver behind the config.",
+        page: lazy(() => import("./pages/docs/schema.jsx")),
+      },
+      contracts: {
+        title: "Component contracts",
+        desc: "Manifests and hashes — how van diff tells kit changes from yours.",
+        page: lazy(() => import("./pages/docs/contracts.jsx")),
+      },
+    },
+  },
+]
+
+export const docs = Object.fromEntries(
+  docsGroups.flatMap(({ entries }) => Object.entries(entries))
+)
 
 export const categories = [
   {
     label: "Forms",
+    desc: "Inputs, selects, pickers, and the form engine that binds them.",
     entries: {
       button: { title: "Button", page: lazy(() => import("./pages/button.jsx")) },
       "button-group": { title: "Button Group", page: lazy(() => import("./pages/button-group.jsx")) },
@@ -38,6 +77,7 @@ export const categories = [
   },
   {
     label: "Data Display",
+    desc: "Tables, badges, avatars, and read-only presentation.",
     entries: {
       table: { title: "Table", page: lazy(() => import("./pages/table.jsx")) },
       "data-table": { title: "Data Table", page: lazy(() => import("./pages/data-table.jsx")) },
@@ -56,6 +96,7 @@ export const categories = [
   },
   {
     label: "Layout",
+    desc: "Cards, separators, scroll areas, and resizable panels.",
     entries: {
       card: { title: "Card", page: lazy(() => import("./pages/card.jsx")) },
       separator: { title: "Separator", page: lazy(() => import("./pages/separator.jsx")) },
@@ -68,6 +109,7 @@ export const categories = [
   },
   {
     label: "Navigation",
+    desc: "Breadcrumbs, tabs, menus, and sidebars.",
     entries: {
       breadcrumb: { title: "Breadcrumb", page: lazy(() => import("./pages/breadcrumb.jsx")) },
       pagination: { title: "Pagination", page: lazy(() => import("./pages/pagination.jsx")) },
@@ -79,6 +121,7 @@ export const categories = [
   },
   {
     label: "Overlay",
+    desc: "Dialogs, popovers, tooltips — everything on the top layer.",
     entries: {
       dialog: { title: "Dialog", page: lazy(() => import("./pages/dialog.jsx")) },
       "alert-dialog": { title: "Alert Dialog", page: lazy(() => import("./pages/alert-dialog.jsx")) },
@@ -95,6 +138,7 @@ export const categories = [
   },
   {
     label: "Disclosure",
+    desc: "Accordions, collapsibles, toggles, and alerts.",
     entries: {
       accordion: { title: "Accordion", page: lazy(() => import("./pages/accordion.jsx")) },
       collapsible: { title: "Collapsible", page: lazy(() => import("./pages/collapsible.jsx")) },
@@ -105,6 +149,7 @@ export const categories = [
   },
   {
     label: "Communication",
+    desc: "Chat bubbles, messages, and attachments.",
     entries: {
       bubble: { title: "Bubble", page: lazy(() => import("./pages/bubble.jsx")) },
       attachment: { title: "Attachment", page: lazy(() => import("./pages/attachment.jsx")) },
@@ -114,6 +159,7 @@ export const categories = [
   },
   {
     label: "Platform",
+    desc: "Primitives and platform features — view transitions, density, direction.",
     entries: {
       primitives: { title: "Primitives (lib/)", page: lazy(() => import("./pages/primitives.jsx")) },
       "mode-toggle": { title: "Mode Toggle", page: lazy(() => import("./pages/mode-toggle.jsx")) },

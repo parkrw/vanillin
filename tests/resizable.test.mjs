@@ -240,6 +240,9 @@ export default async function run({ page, baseUrl, test, eq, near }) {
   await test("vertical drag resizes panels", async () => {
     await resetPage()
     const h = handle("r-vertical")
+    // Raw mouse events don't auto-scroll like locator clicks do, and the
+    // handle sits right at the fold — position depends on chrome height.
+    await h.scrollIntoViewIfNeeded()
     const box = await h.boundingBox()
     const cx = box.x + box.width / 2
     const cy = box.y + box.height / 2
