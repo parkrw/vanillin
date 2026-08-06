@@ -1,3 +1,6 @@
+import { CodeBlock } from "../../code-example.jsx"
+import "../../code-example.css"
+
 export default function ContractsPage() {
   return (
     <>
@@ -19,8 +22,7 @@ export default function ContractsPage() {
         keeps its provenance &mdash; that is the copy-paste property.
       </p>
 
-      <pre>
-{`{
+      <CodeBlock language="json" code={`{
   "name": "data-table",
   "kitVersion": "0.1.0",
   "source": "github:parkrw/vanillin@v0.1.0",
@@ -30,8 +32,7 @@ export default function ContractsPage() {
     "data-table.jsx": "sha256-…",
     "data-table.css": "sha256-…"
   }
-}`}
-      </pre>
+}`} />
 
       <ul>
         <li>
