@@ -35,9 +35,13 @@ import "../../ui/radio-group/radio-group.css"
 import "../../ui/slider/slider.css"
 import { Button } from "../../ui/button/button.jsx"
 import "../../ui/button/button.css"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 /* ================================================================== */
-/*  Schema — the resolver from lib/schema.js (task 62)                 */
+/*  Schema                                                             */
 /* ================================================================== */
 
 const ROLES = [
@@ -66,7 +70,54 @@ const profileSchema = s.object({
 })
 
 /* ================================================================== */
-/*  Docs                                                               */
+/*  Form vs Form-Fields explainer (ISSUES B6)                          */
+/* ================================================================== */
+
+function FormVsFormFields() {
+  return (
+    <section className="pg-section">
+      <h3>form vs form-fields</h3>
+      <div className="pg-description" style={{ maxWidth: "42rem" }}>
+        <p>
+          Three layers, each for a different job:
+        </p>
+        <ul style={{ paddingInlineStart: "1.25rem", marginBlock: "0.5rem" }}>
+          <li>
+            <strong><code>ui/form</code></strong> — engine-agnostic field
+            primitives (<code>FormField</code>, <code>FormItem</code>,{" "}
+            <code>FormLabel</code>, <code>FormControl</code>,{" "}
+            <code>FormDescription</code>, <code>FormMessage</code>). Copying
+            this into your project does <em>not</em> pull{" "}
+            <code>lib/use-form.js</code> — it inlines its own path helper on
+            purpose.
+          </li>
+          <li>
+            <strong><code>ui/form-fields</code></strong> — one-element
+            bindings (<code>TextField</code>, <code>SelectField</code>,
+            etc.) that wire <code>ui/form</code> to{" "}
+            <code>lib/use-form.js</code>. Copying this <em>does</em> bring
+            the engine along. Reach for it when a field is label + control +
+            description + error and nothing unusual.
+          </li>
+          <li>
+            <strong><code>lib/use-form</code></strong> — the form engine
+            itself (react-hook-form-shaped). Use it alone when there is no
+            field UI at all: a search box, a filter bar, a form styled from
+            scratch.
+          </li>
+        </ul>
+        <p>
+          Mixing them is normal. A bound field and a hand-written one sit in the
+          same <code>&lt;Form&gt;</code> and produce identical markup — see the
+          parity demo below.
+        </p>
+      </div>
+    </section>
+  )
+}
+
+/* ================================================================== */
+/*  API docs                                                           */
 /* ================================================================== */
 
 function Docs() {
@@ -74,14 +125,6 @@ function Docs() {
     <section className="pg-section">
       <h3>API</h3>
       <div className="pg-description" style={{ maxWidth: "42rem" }}>
-        <p>
-          <code>ui/form-fields/</code> is the layer that knows about both{" "}
-          <code>lib/use-form.js</code> and <code>ui/form/</code>. It exists
-          because those two deliberately do not know about each other:{" "}
-          <code>ui/form</code> is engine-agnostic and inlines its own path
-          helper rather than importing the engine. Something has to join them,
-          and this is it.
-        </p>
         <p>
           A bound field is one element. It renders{" "}
           <code>FormField → FormItem → FormLabel → FormControl → control →
@@ -101,29 +144,13 @@ function Docs() {
 
         <h4>Which layer to reach for</h4>
         <p>
-          <strong>
-            <code>ui/form-fields</code>
-          </strong>{" "}
-          for ordinary fields — a label, a control, a description, an error.
-          That is most of them.{" "}
-          <strong>
-            <code>ui/form</code>
-          </strong>{" "}
-          when the layout is unusual (two controls in one item, a label that is
-          not text, a field whose control is chosen at runtime) or when you are
-          driving it with a different engine — React Hook Form, or React 19
-          Actions via <code>&lt;Form action&gt;</code>, neither of which this
-          layer knows about.{" "}
-          <strong>
-            <code>lib/use-form</code>
-          </strong>{" "}
-          alone when there is no field UI at all: a search box, a filter bar, a
-          form you are styling from scratch.
-        </p>
-        <p>
-          Mixing them is normal and expected. A bound field and a hand-written
-          one sit in the same <code>&lt;Form&gt;</code> and produce the same
-          markup — see below.
+          <strong><code>ui/form-fields</code></strong>{" "}
+          for ordinary fields — a label, a control, a description, an error.{" "}
+          <strong><code>ui/form</code></strong>{" "}
+          when the layout is unusual or you are driving it with a different
+          engine.{" "}
+          <strong><code>lib/use-form</code></strong>{" "}
+          alone when there is no field UI at all.
         </p>
 
         <h4>Why its own directory</h4>
@@ -540,12 +567,35 @@ export default function FormFieldsPage() {
   return (
     <>
       <h2>Form Fields</h2>
+      <p>One-element bindings that wire <code>ui/form</code> to <code>lib/use-form</code> — a label, a control, a description, and an error in a single component.</p>
+
+      <InstallSnippet slug="form-fields" />
+
+      <FormVsFormFields />
       <Docs />
       <BoundFormDemo />
       <ReplacesDemo />
       <ParityDemo />
       <ProviderPathDemo />
       <EscapeHatchDemo />
+
+      <ApiReference title="TextField / TextareaField / SelectField / …" props={[
+        { name: "name", type: "string", description: "Field name in the form (required)" },
+        { name: "control", type: "Control", description: "From useForm — omit if inside a FormProvider" },
+        { name: "label", type: "string", description: "Field label text" },
+        { name: "description", type: "string", description: "Help text below the control" },
+        { name: "rules", type: "RegisterOptions", description: "Validation rules (passed to register or Controller)" },
+        { name: "…rest", type: "", description: "Forwarded to the underlying control (placeholder, rows, items, etc.)" },
+      ]} />
+
+      <ApiReference title="FormFieldBinding" props={[
+        { name: "name", type: "string", description: "Field name in the form (required)" },
+        { name: "control", type: "Control", description: "From useForm — omit if inside a FormProvider" },
+        { name: "label", type: "string", description: "Field label text" },
+        { name: "description", type: "string", description: "Help text below the control" },
+        { name: "controlled", type: "boolean", description: "Use Controller instead of register (set for non-native controls)" },
+        { name: "render", type: "({ field }) => ReactNode", description: "Render function for the control" },
+      ]} />
     </>
   )
 }

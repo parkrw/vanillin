@@ -2,75 +2,84 @@ import { Textarea } from "../../ui/textarea/textarea.jsx"
 import "../../ui/textarea/textarea.css"
 import { Label } from "../../ui/label/label.jsx"
 import "../../ui/label/label.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
-/**
- * ## autoResize
- *
- * The `autoResize` prop enables CSS `field-sizing: content` so the textarea
- * grows with its content. It is opt-in rather than default because a textarea
- * that grows in a fixed-height panel would break surrounding layouts.
- *
- * When `autoResize` is set, `rows` sets the minimum visible height and a
- * `max-height` cap (20 rem) prevents unbounded growth; once the cap is reached
- * the textarea scrolls normally.
- *
- * `field-sizing: content` is progressive enhancement: where the browser does
- * not support it, the textarea falls back to its standard fixed-height,
- * manual-resize behaviour with no visual breakage.
- */
 export default function TextareaPage() {
   return (
     <>
       <h2>Textarea</h2>
+      <p>Multi-line text input with optional auto-resize via CSS <code>field-sizing: content</code>.</p>
+
+      <InstallSnippet slug="textarea" />
 
       <section className="pg-section">
         <h3>Default</h3>
-        <div style={{ maxWidth: "24rem" }}>
-          <Textarea placeholder="Type your message..." />
-        </div>
+        <ComponentPreview code={`import { Textarea } from "./ui/textarea/textarea"
+import "./ui/textarea/textarea.css"
+
+<Textarea placeholder="Type your message..." />`}>
+          <div style={{ maxWidth: "24rem" }}>
+            <Textarea placeholder="Type your message..." />
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
-        <h3>With label</h3>
-        <div style={{ maxWidth: "24rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-          <Label htmlFor="ta-bio">Bio</Label>
-          <Textarea id="ta-bio" placeholder="Tell us about yourself" />
-        </div>
+        <h3>With Label</h3>
+        <ComponentPreview code={`<Label htmlFor="bio">Bio</Label>
+<Textarea id="bio" placeholder="Tell us about yourself" />`}>
+          <div style={{ maxWidth: "24rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <Label htmlFor="ta-bio">Bio</Label>
+            <Textarea id="ta-bio" placeholder="Tell us about yourself" />
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Auto resize</h3>
-        <div style={{ maxWidth: "24rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          <Textarea
-            autoResize
-            rows={3}
-            placeholder="Grows with content (rows=3 minimum)..."
-            aria-label="Auto resize"
-          />
-          <Textarea
-            autoResize
-            rows={2}
-            placeholder="Empty auto-resize (rows=2)"
-            aria-label="Auto resize empty"
-          />
-        </div>
+        <ComponentPreview code={`{/* Grows with content; rows sets minimum height */}
+<Textarea autoResize rows={3} placeholder="Grows with content..." />
+
+{/* max-height (20rem) caps unbounded growth */}
+<Textarea autoResize rows={2} placeholder="Empty auto-resize" />`}>
+          <div style={{ maxWidth: "24rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            <Textarea
+              autoResize
+              rows={3}
+              placeholder="Grows with content (rows=3 minimum)..."
+              aria-label="Auto resize"
+            />
+            <Textarea
+              autoResize
+              rows={2}
+              placeholder="Empty auto-resize (rows=2)"
+              aria-label="Auto resize empty"
+            />
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>States</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "24rem" }}>
-          <Textarea placeholder="Disabled" disabled />
-          <Textarea placeholder="Invalid" aria-invalid="true" />
-        </div>
+        <ComponentPreview code={`<Textarea placeholder="Disabled" disabled />
+<Textarea placeholder="Invalid" aria-invalid="true" />`}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "24rem" }}>
+            <Textarea placeholder="Disabled" disabled />
+            <Textarea placeholder="Invalid" aria-invalid="true" />
+          </div>
+        </ComponentPreview>
       </section>
 
-      <section className="pg-section">
-        <h3>Density</h3>
-        <p>
-          Padding scales with <code>--density-scale</code> via the{" "}
-          <code>--space-*</code> ramp.
-        </p>
-      </section>
+      <ApiReference props={[
+        { name: "autoResize", type: "boolean", default: "false", description: "Enable CSS field-sizing: content so the textarea grows with its content" },
+        { name: "rows", type: "number", description: "Minimum visible rows (standard HTML attribute)" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
     </>
   )
 }

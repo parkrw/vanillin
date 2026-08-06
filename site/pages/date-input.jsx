@@ -10,8 +10,13 @@ import { DateInput } from "../../ui/date-input/date-input.jsx"
 import { TimePicker } from "../../ui/time-picker/time-picker.jsx"
 import "../../ui/date-input/date-input.css"
 import "../../ui/time-picker/time-picker.css"
-/* .date-picker-popover is the shared popover-around-a-calendar pattern class. */
 import "../../ui/date-picker/date-picker.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 function CalendarIcon() {
   return (
@@ -37,7 +42,6 @@ export default function DateInputPage() {
   const [typedDate, setTypedDate] = useState(null)
   const [typedOpen, setTypedOpen] = useState(false)
 
-  /* Datetime composition */
   const [dtDate, setDtDate] = useState(null)
   const [dtTime, setDtTime] = useState({ hour: 9, minute: 0, second: 0 })
   const [dtOpen, setDtOpen] = useState(false)
@@ -45,97 +49,110 @@ export default function DateInputPage() {
   return (
     <>
       <h2>Date Input</h2>
-      <p className="pg-desc" style={{ marginBlockEnd: "1rem" }}>
-        A text field that parses natural-language dates on blur, using a zero-dependency
-        parser over <code>Intl</code>. Pairs with <code>Calendar</code> in a popover, or with{" "}
-        <code>TimePicker</code> for a full datetime.
-      </p>
+      <p>A text field that parses natural-language and numeric dates on blur, using a zero-dependency parser over <code>Intl</code>. Pairs with <code>Calendar</code> in a popover, or with <code>TimePicker</code> for a full datetime.</p>
+
+      <InstallSnippet slug="date-input" />
 
       <section className="pg-section">
         <h3>Typeable date input + calendar</h3>
-        <p className="pg-desc" style={{ marginBlockEnd: "0.5rem" }}>
-          Type a natural date (<code>tomorrow</code>, <code>next fri</code>, <code>3/4/25</code>)
-          and blur to parse. The calendar syncs.
-        </p>
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "start" }}>
-          <DateInput
-            value={typedDate}
-            onChange={(d) => {
-              setTypedDate(d)
-              if (d) setTypedOpen(false)
-            }}
-            placeholder="Type a date…"
-            data-pg="dp-typed-input"
-            style={{ minInlineSize: "15rem" }}
-          />
-          <Popover open={typedOpen} onOpenChange={setTypedOpen}>
-            <PopoverTrigger as={Button} variant="outline" size="icon" data-pg="dp-typed-trigger">
-              <CalendarIcon />
-            </PopoverTrigger>
-            <PopoverContent className="date-picker-popover" align="start" data-pg="dp-typed-content">
-              <Calendar
-                mode="single"
-                selected={typedDate}
-                onSelect={(d) => {
+        <ComponentPreview code={`import { DateInput } from "./ui/date-input/date-input"
+import "./ui/date-input/date-input.css"
+
+const [date, setDate] = useState(null)
+
+<DateInput
+  value={date}
+  onChange={setDate}
+  placeholder="Type a date…"
+/>`}>
+          <div>
+            <p className="pg-desc" style={{ marginBlockEnd: "0.5rem" }}>
+              Type a natural date (<code>tomorrow</code>, <code>next fri</code>, <code>3/4/25</code>)
+              and blur to parse. The calendar syncs.
+            </p>
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "start" }}>
+              <DateInput
+                value={typedDate}
+                onChange={(d) => {
                   setTypedDate(d)
-                  setTypedOpen(false)
+                  if (d) setTypedOpen(false)
                 }}
-                defaultMonth={typedDate ?? new Date(2026, 0, 1)}
-                locale="en-US"
-                data-pg="dp-typed-calendar"
+                placeholder="Type a date…"
+                data-pg="dp-typed-input"
+                style={{ minInlineSize: "15rem" }}
               />
-            </PopoverContent>
-          </Popover>
-        </div>
-        <p className="pg-desc">
-          Selected:{" "}
-          <span data-pg="dp-typed-state">
-            {typedDate ? typedDate.toISOString().slice(0, 10) : "none"}
-          </span>
-        </p>
+              <Popover open={typedOpen} onOpenChange={setTypedOpen}>
+                <PopoverTrigger as={Button} variant="outline" size="icon" data-pg="dp-typed-trigger">
+                  <CalendarIcon />
+                </PopoverTrigger>
+                <PopoverContent className="date-picker-popover" align="start" data-pg="dp-typed-content">
+                  <Calendar
+                    mode="single"
+                    selected={typedDate}
+                    onSelect={(d) => {
+                      setTypedDate(d)
+                      setTypedOpen(false)
+                    }}
+                    defaultMonth={typedDate ?? new Date(2026, 0, 1)}
+                    locale="en-US"
+                    data-pg="dp-typed-calendar"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <p className="pg-desc">
+              Selected:{" "}
+              <span data-pg="dp-typed-state">
+                {typedDate ? typedDate.toISOString().slice(0, 10) : "none"}
+              </span>
+            </p>
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Datetime (date input + time picker)</h3>
-        <p className="pg-desc" style={{ marginBlockEnd: "0.5rem" }}>
-          Compose DateInput and TimePicker for a full datetime value.
-        </p>
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "start", flexWrap: "wrap" }}>
-          <DateInput
-            value={dtDate}
-            onChange={setDtDate}
-            placeholder="Date…"
-            data-pg="dp-dt-date"
-            style={{ minInlineSize: "12rem" }}
-          />
-          <Popover open={dtOpen} onOpenChange={setDtOpen}>
-            <PopoverTrigger as={Button} variant="outline" size="icon" data-pg="dp-dt-cal-trigger">
-              <CalendarIcon />
-            </PopoverTrigger>
-            <PopoverContent className="date-picker-popover" align="start">
-              <Calendar
-                mode="single"
-                selected={dtDate}
-                onSelect={(d) => { setDtDate(d); setDtOpen(false) }}
-                defaultMonth={dtDate ?? new Date(2026, 0, 1)}
-                locale="en-US"
+        <ComponentPreview code={`<DateInput value={dtDate} onChange={setDtDate} placeholder="Date…" />
+<TimePicker value={dtTime} onChange={setDtTime} />`}>
+          <div>
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "start", flexWrap: "wrap" }}>
+              <DateInput
+                value={dtDate}
+                onChange={setDtDate}
+                placeholder="Date…"
+                data-pg="dp-dt-date"
+                style={{ minInlineSize: "12rem" }}
               />
-            </PopoverContent>
-          </Popover>
-          <TimePicker
-            value={dtTime}
-            onChange={setDtTime}
-            data-pg="dp-dt-time"
-          />
-        </div>
-        <p className="pg-desc">
-          Value:{" "}
-          <span data-pg="dp-dt-state">
-            {dtDate
-              ? `${dtDate.toISOString().slice(0, 10)} ${String(dtTime.hour).padStart(2, "0")}:${String(dtTime.minute).padStart(2, "0")}`
-              : "no date"}
-          </span>
-        </p>
+              <Popover open={dtOpen} onOpenChange={setDtOpen}>
+                <PopoverTrigger as={Button} variant="outline" size="icon" data-pg="dp-dt-cal-trigger">
+                  <CalendarIcon />
+                </PopoverTrigger>
+                <PopoverContent className="date-picker-popover" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dtDate}
+                    onSelect={(d) => { setDtDate(d); setDtOpen(false) }}
+                    defaultMonth={dtDate ?? new Date(2026, 0, 1)}
+                    locale="en-US"
+                  />
+                </PopoverContent>
+              </Popover>
+              <TimePicker
+                value={dtTime}
+                onChange={setDtTime}
+                data-pg="dp-dt-time"
+              />
+            </div>
+            <p className="pg-desc">
+              Value:{" "}
+              <span data-pg="dp-dt-state">
+                {dtDate
+                  ? `${dtDate.toISOString().slice(0, 10)} ${String(dtTime.hour).padStart(2, "0")}:${String(dtTime.minute).padStart(2, "0")}`
+                  : "no date"}
+              </span>
+            </p>
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
@@ -152,9 +169,7 @@ export default function DateInputPage() {
 
           <p><strong>Two-digit years</strong> use a sliding window: current year −80 to +20. In 2026, <code>46</code> resolves to 2046 and <code>47</code> to 1947.</p>
 
-          <p><strong>Blur canonicalisation:</strong> on blur, the field reformats to the locale's
-          medium date style (e.g. "Mar 4, 2025" in en-US). Unparseable text stays as typed,
-          the field shows <code>aria-invalid</code>, and a live region announces "Unrecognised date format".</p>
+          <p><strong>Blur canonicalisation:</strong> on blur, the field reformats to the locale's medium date style (e.g. "Mar 4, 2025" in en-US). Unparseable text stays as typed, the field shows <code>aria-invalid</code>, and a live region announces "Unrecognised date format".</p>
 
           <p style={{ marginBlockStart: "0.5rem" }}><strong>Deliberately out of scope:</strong></p>
           <ul style={{ paddingInlineStart: "1.25rem", marginBlock: "0.25rem" }}>
@@ -164,10 +179,19 @@ export default function DateInputPage() {
             <li>Languages beyond what <code>Intl</code> month/weekday names provide</li>
           </ul>
 
-          <p style={{ marginBlockStart: "0.5rem" }}><strong>Timezones:</strong> everything is local-time <code>Date</code>. A timezone-aware picker
-          needs <code>Temporal</code>; that is a future task, not half-solved here.</p>
+          <p style={{ marginBlockStart: "0.5rem" }}><strong>Timezones:</strong> everything is local-time <code>Date</code>. A timezone-aware picker needs <code>Temporal</code>; that is a future task, not half-solved here.</p>
         </div>
       </section>
+
+      <ApiReference props={[
+        { name: "value", type: "Date | null", description: "Controlled date value" },
+        { name: "defaultValue", type: "Date | null", description: "Initial value (uncontrolled)" },
+        { name: "onChange", type: "(date: Date | null) => void", description: "Called when the parsed date changes" },
+        { name: "locale", type: "string", default: '"en-US"', description: "BCP 47 locale for parsing and formatting" },
+        { name: "placeholder", type: "string", default: '"Type a date…"', description: "Input placeholder" },
+        { name: "disabled", type: "boolean", description: "Disables the input" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
     </>
   )
 }

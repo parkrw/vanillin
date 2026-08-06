@@ -9,10 +9,11 @@ import {
 } from "../../lib/use-form.js"
 import { Button } from "../../ui/button/button.jsx"
 import "../../ui/button/button.css"
+import { ApiReference } from "../api-reference.jsx"
+import "../api-reference.css"
 
 /* ================================================================== */
 /*  Section 1 — Render-isolation test                                  */
-/*  Typing in one registered field must NOT re-render siblings.        */
 /* ================================================================== */
 
 const IsolatedField = memo(function IsolatedField({ name, register }) {
@@ -33,8 +34,12 @@ function RenderIsolation() {
   })
   const [submitted, setSubmitted] = useState(null)
   return (
-    <section data-pg="uf-isolation">
+    <section className="pg-section" data-pg="uf-isolation">
       <h3>Render isolation</h3>
+      <p className="pg-desc">
+        Typing in one registered field does not re-render siblings — values live
+        in a mutable ref, not React state.
+      </p>
       <form
         onSubmit={handleSubmit((data) => setSubmitted(data))}
       >
@@ -72,7 +77,7 @@ function BuiltInValidation() {
   const [result, setResult] = useState(null)
 
   return (
-    <section data-pg="uf-builtin">
+    <section className="pg-section" data-pg="uf-builtin">
       <h3>Built-in validation</h3>
       <form
         onSubmit={handleSubmit(
@@ -110,41 +115,43 @@ function BuiltInValidation() {
             <span data-pg="uf-builtin-err-age">{errors.age.message}</span>
           )}
         </div>
-        <Button type="submit" data-pg="uf-builtin-submit">
-          Submit
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          data-pg="uf-builtin-set-error"
-          onClick={() =>
-            setError("username", {
-              type: "manual",
-              message: "Already taken",
-            })
-          }
-        >
-          Set error
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          data-pg="uf-builtin-clear"
-          onClick={() => clearErrors("username")}
-        >
-          Clear error
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          data-pg="uf-builtin-trigger"
-          onClick={() => trigger("username")}
-        >
-          Trigger
-        </Button>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBlockStart: "0.5rem" }}>
+          <Button type="submit" data-pg="uf-builtin-submit">
+            Submit
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            data-pg="uf-builtin-set-error"
+            onClick={() =>
+              setError("username", {
+                type: "manual",
+                message: "Already taken",
+              })
+            }
+          >
+            Set error
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            data-pg="uf-builtin-clear"
+            onClick={() => clearErrors("username")}
+          >
+            Clear error
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            data-pg="uf-builtin-trigger"
+            onClick={() => trigger("username")}
+          >
+            Trigger
+          </Button>
+        </div>
       </form>
       {result && <pre data-pg="uf-builtin-result">{result}</pre>}
     </section>
@@ -161,50 +168,54 @@ function WatchDemo() {
   })
   const first = watch("first")
   return (
-    <section data-pg="uf-watch">
+    <section className="pg-section" data-pg="uf-watch">
       <h3>Watch / setValue / reset</h3>
-      <input data-pg="uf-watch-first" {...register("first")} />
-      <input data-pg="uf-watch-last" {...register("last")} />
-      <span data-pg="uf-watch-value">{first}</span>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        data-pg="uf-watch-setval"
-        onClick={() =>
-          setValue("first", "Updated", { shouldDirty: true })
-        }
-      >
-        setValue
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        data-pg="uf-watch-reset"
-        onClick={() => reset()}
-      >
-        Reset
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        data-pg="uf-watch-getvals"
-        onClick={() => {
-          const v = getValues()
-          document.querySelector('[data-pg="uf-watch-getvals-out"]').textContent = JSON.stringify(v)
-        }}
-      >
-        getValues
-      </Button>
-      <span data-pg="uf-watch-getvals-out"></span>
+      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+        <input data-pg="uf-watch-first" {...register("first")} />
+        <input data-pg="uf-watch-last" {...register("last")} />
+        <span>watched: </span><span data-pg="uf-watch-value">{first}</span>
+      </div>
+      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBlockStart: "0.5rem" }}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          data-pg="uf-watch-setval"
+          onClick={() =>
+            setValue("first", "Updated", { shouldDirty: true })
+          }
+        >
+          setValue
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          data-pg="uf-watch-reset"
+          onClick={() => reset()}
+        >
+          Reset
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          data-pg="uf-watch-getvals"
+          onClick={() => {
+            const v = getValues()
+            document.querySelector('[data-pg="uf-watch-getvals-out"]').textContent = JSON.stringify(v)
+          }}
+        >
+          getValues
+        </Button>
+        <span data-pg="uf-watch-getvals-out"></span>
+      </div>
     </section>
   )
 }
 
 /* ================================================================== */
-/*  Section 4 — formState (dirty / touched)                            */
+/*  Section 4 — formState (dirty / touched) — C7 fix: labeled lines    */
 /* ================================================================== */
 
 function FormStateDemo() {
@@ -213,10 +224,10 @@ function FormStateDemo() {
     formState: { isDirty, dirtyFields, touchedFields },
   } = useForm({ defaultValues: { color: "red" } })
   return (
-    <section data-pg="uf-formstate">
+    <section className="pg-section" data-pg="uf-formstate">
       <h3>formState</h3>
       <input data-pg="uf-formstate-color" {...register("color")} />
-      <div>
+      <div style={{ marginBlockStart: "0.5rem" }}>
         isDirty: <span data-pg="uf-formstate-dirty">{String(isDirty)}</span>
       </div>
       <div>
@@ -245,8 +256,12 @@ function ControllerDemo() {
   })
   const [result, setResult] = useState(null)
   return (
-    <section data-pg="uf-controller">
+    <section className="pg-section" data-pg="uf-controller">
       <h3>Controller</h3>
+      <p className="pg-desc">
+        Escape hatch for controlled components that own their state and don't
+        expose a DOM node for <code>register</code> to read.
+      </p>
       <form onSubmit={handleSubmit((d) => setResult(JSON.stringify(d)))}>
         <Controller
           name="rating"
@@ -296,7 +311,7 @@ function ContextDemo() {
   const methods = useForm({ defaultValues: { email: "" } })
   const [result, setResult] = useState(null)
   return (
-    <section data-pg="uf-context">
+    <section className="pg-section" data-pg="uf-context">
       <h3>FormProvider</h3>
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit((d) => setResult(JSON.stringify(d)))}>
@@ -326,7 +341,7 @@ function FieldArrayDemo() {
     useFieldArray({ control, name: "items" })
   const [result, setResult] = useState(null)
   return (
-    <section data-pg="uf-fieldarray">
+    <section className="pg-section" data-pg="uf-fieldarray">
       <h3>useFieldArray</h3>
       <form onSubmit={handleSubmit((d) => setResult(JSON.stringify(d)))}>
         {fields.map((f, i) => (
@@ -347,45 +362,47 @@ function FieldArrayDemo() {
           </div>
         ))}
         <span data-pg="uf-fa-count">{fields.length}</span>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          data-pg="uf-fa-append"
-          onClick={() => append({ name: "" })}
-        >
-          Append
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          data-pg="uf-fa-prepend"
-          onClick={() => prepend({ name: "prepended" })}
-        >
-          Prepend
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          data-pg="uf-fa-swap"
-          onClick={() => { if (fields.length >= 2) swap(0, 1) }}
-        >
-          Swap 0,1
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          data-pg="uf-fa-move"
-          onClick={() => { if (fields.length >= 2) move(0, fields.length - 1) }}
-        >
-          Move 0→end
-        </Button>
-        <Button type="submit" data-pg="uf-fa-submit">
-          Submit
-        </Button>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBlockStart: "0.5rem" }}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            data-pg="uf-fa-append"
+            onClick={() => append({ name: "" })}
+          >
+            Append
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            data-pg="uf-fa-prepend"
+            onClick={() => prepend({ name: "prepended" })}
+          >
+            Prepend
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            data-pg="uf-fa-swap"
+            onClick={() => { if (fields.length >= 2) swap(0, 1) }}
+          >
+            Swap 0,1
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            data-pg="uf-fa-move"
+            onClick={() => { if (fields.length >= 2) move(0, fields.length - 1) }}
+          >
+            Move 0→end
+          </Button>
+          <Button type="submit" data-pg="uf-fa-submit">
+            Submit
+          </Button>
+        </div>
       </form>
       {result && <pre data-pg="uf-fa-result">{result}</pre>}
     </section>
@@ -397,14 +414,14 @@ function FieldArrayDemo() {
 /* ================================================================== */
 
 function NestedPaths() {
-  const { register, handleSubmit, setValue, getValues } = useForm({
+  const { register, handleSubmit, setValue } = useForm({
     defaultValues: {
       user: { address: { city: "Portland", zip: "97201" } },
     },
   })
   const [result, setResult] = useState(null)
   return (
-    <section data-pg="uf-nested">
+    <section className="pg-section" data-pg="uf-nested">
       <h3>Nested paths</h3>
       <form onSubmit={handleSubmit((d) => setResult(JSON.stringify(d)))}>
         <input
@@ -415,22 +432,24 @@ function NestedPaths() {
           data-pg="uf-nested-zip"
           {...register("user.address.zip")}
         />
-        <Button type="submit" data-pg="uf-nested-submit">
-          Submit
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          data-pg="uf-nested-setval"
-          onClick={() =>
-            setValue("user.address.city", "Seattle", {
-              shouldDirty: true,
-            })
-          }
-        >
-          Set city
-        </Button>
+        <div style={{ display: "flex", gap: "0.5rem", marginBlockStart: "0.5rem" }}>
+          <Button type="submit" data-pg="uf-nested-submit">
+            Submit
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            data-pg="uf-nested-setval"
+            onClick={() =>
+              setValue("user.address.city", "Seattle", {
+                shouldDirty: true,
+              })
+            }
+          >
+            Set city
+          </Button>
+        </div>
       </form>
       {result && <pre data-pg="uf-nested-result">{result}</pre>}
     </section>
@@ -438,33 +457,24 @@ function NestedPaths() {
 }
 
 /* ================================================================== */
-/*  Section 9 — Resolver (hand-written, same shape as zodResolver)     */
+/*  Section 9 — Resolver                                               */
 /* ================================================================== */
 
-/**
- * Hand-written resolver in the exact @hookform/resolvers output shape.
- * Validates email (required + format), age (required, coerced to number),
- * and address.city (required, nested path).
- * Stashes the options it receives so the test can inspect them.
- */
 let lastResolverOptions = null
 
 async function demoResolver(values, _context, options) {
   lastResolverOptions = options
   const errors = {}
-  // email: required + basic format
   if (!values.email) {
     errors.email = { type: "required", message: "Email required" }
   } else if (!/\S+@\S+\.\S+/.test(values.email)) {
     errors.email = { type: "format", message: "Invalid email" }
   }
-  // age: required, coerce to number
   if (values.age === "" || values.age == null) {
     errors.age = { type: "required", message: "Age required" }
   } else if (isNaN(Number(values.age)) || Number(values.age) < 1) {
     errors.age = { type: "min", message: "Min 1" }
   }
-  // address.city: required (nested path)
   const city = values.address?.city
   if (!city) {
     if (!errors.address) errors.address = {}
@@ -473,7 +483,6 @@ async function demoResolver(values, _context, options) {
 
   const hasErrors = Object.keys(errors).length > 0
   if (hasErrors) return { values: {}, errors }
-  // Coerce age to number in returned values (like zod coerce would)
   return {
     values: { ...values, age: Number(values.age) },
     errors: {},
@@ -491,7 +500,7 @@ function ResolverDemo() {
   })
   const [result, setResult] = useState(null)
   return (
-    <section data-pg="uf-resolver">
+    <section className="pg-section" data-pg="uf-resolver">
       <h3>Resolver</h3>
       <form
         onSubmit={handleSubmit(
@@ -531,7 +540,7 @@ function ResolverDemo() {
 }
 
 /* ================================================================== */
-/*  Section 10 — Validation modes                                      */
+/*  Section 10 — Validation modes — C7 fix: labeled lines              */
 /* ================================================================== */
 
 function ValidationModes() {
@@ -545,7 +554,7 @@ function ValidationModes() {
     reValidateMode: "onChange",
   })
   return (
-    <section data-pg="uf-modes">
+    <section className="pg-section" data-pg="uf-modes">
       <h3>Validation modes (onBlur)</h3>
       <form onSubmit={handleSubmit(() => {})}>
         <input
@@ -555,14 +564,15 @@ function ValidationModes() {
         {errors.field && (
           <span data-pg="uf-modes-err">{errors.field.message}</span>
         )}
-        <div>
+        <div style={{ marginBlockStart: "0.5rem" }}>
           isSubmitted:{" "}
           <span data-pg="uf-modes-submitted">{String(isSubmitted)}</span>
         </div>
         <div>
-          isValid: <span data-pg="uf-modes-valid">{String(isValid)}</span>
+          isValid:{" "}
+          <span data-pg="uf-modes-valid">{String(isValid)}</span>
         </div>
-        <Button type="submit" data-pg="uf-modes-submit">
+        <Button type="submit" data-pg="uf-modes-submit" style={{ marginBlockStart: "0.5rem" }}>
           Submit
         </Button>
       </form>
@@ -571,15 +581,15 @@ function ValidationModes() {
 }
 
 /* ================================================================== */
-/*  Page root                                                          */
+/*  Docs                                                               */
 /* ================================================================== */
 
 function Docs() {
   return (
-    <section style={{ maxWidth: 720, lineHeight: 1.6 }}>
+    <section className="pg-section" style={{ maxWidth: 720, lineHeight: 1.6 }}>
       <p>
         <code>lib/use-form.js</code> is a zero-dependency form engine shaped
-        like <b>react-hook-form</b>. It replaces RHF the same way{" "}
+        like <strong>react-hook-form</strong>. It replaces RHF the same way{" "}
         <code>lib/use-data-table.js</code> replaces <code>@tanstack/react-table</code>:
         matching the public API so consumers can swap in either engine without
         changing their form components.
@@ -587,7 +597,7 @@ function Docs() {
 
       <h3>Supported API surface</h3>
       <p>
-        <code>useForm({"{"} defaultValues, mode, reValidateMode, resolver {"}"})</code>{" "}
+        <code>{"useForm({ defaultValues, mode, reValidateMode, resolver })"}</code>{" "}
         returns: <code>register</code>, <code>handleSubmit</code>,{" "}
         <code>watch</code>, <code>getValues</code>, <code>setValue</code>,{" "}
         <code>reset</code>, <code>setError</code>, <code>clearErrors</code>,{" "}
@@ -606,88 +616,44 @@ function Docs() {
         <code>useFieldArray</code>, and the <code>FormContext</code> object
         itself.
       </p>
-      <p>
-        <code>useFormContext</code> throws outside a provider;{" "}
-        <code>useFormContextSafe</code> returns <code>null</code>. Reach for the
-        safe one when a component accepts an explicit <code>control</code> prop
-        as an alternative to context — that is what <code>ui/form-fields</code>{" "}
-        does.
-      </p>
-      <p>
-        Path helpers <code>getByPath</code>, <code>setByPath</code>,{" "}
-        <code>unsetByPath</code> are exported for reuse (dotted paths like{" "}
-        <code>user.address.city</code> and array indices like{" "}
-        <code>items.2.name</code>).
-      </p>
-
-      <h3>Out of scope (deviations from RHF)</h3>
-      <p>
-        <code>shouldUnregister</code>, <code>criteriaMode: "all"</code>,{" "}
-        <code>setFocus</code>, <code>getFieldState</code> subscriptions,{" "}
-        <code>delayError</code>, devtools integration, native validation mode.
-        These are documented deviations; consumers using any of these features
-        must keep the real RHF.
-      </p>
 
       <h3>register vs Controller</h3>
       <p>
-        <code>register</code> returns <code>{"{"} name, ref, onChange, onBlur {"}"}</code>{" "}
-        and reads values from the DOM element. This is the performance
-        property: typing in one registered field does <b>not</b> re-render
-        siblings (values live in a mutable ref, not React state).
-      </p>
-      <p>
+        <code>register</code> returns <code>{"{ name, ref, onChange, onBlur }"}</code>{" "}
+        and reads values from the DOM element — typing in one registered field
+        does <strong>not</strong> re-render siblings.{" "}
         <code>Controller</code> is the escape hatch for controlled components
-        that own their state and don't expose a DOM node for{" "}
-        <code>register</code> to read. Our <code>Select</code>,{" "}
-        <code>Combobox</code>, <code>Calendar</code>, and <code>Checkbox</code>{" "}
-        (all <code>useControllableState</code>-based) need{" "}
-        <code>Controller</code>.
+        that own their state and don't expose a DOM node.
       </p>
 
       <h3>Resolver contract</h3>
       <p>
-        <code>async (values, context, options) =&gt; {"{"} values, errors {"}"}</code>.{" "}
+        <code>{"async (values, context, options) => { values, errors }"}</code>.{" "}
         <code>options</code> includes <code>fields</code>, <code>names</code>,{" "}
         <code>criteriaMode</code>, <code>shouldUseNativeValidation</code>.
-        Errors are nested objects keyed by dotted path, each{" "}
-        <code>{"{"} type, message {"}"}</code>.
-      </p>
-      <p>
-        <b>Verified once, on 2026-07-26:</b> <code>@hookform/resolvers</code>{" "}
-        <code>zodResolver</code> ran unmodified against this contract
-        (<code>@hookform/resolvers</code> 5.5.3, <code>zod</code> 4.4.3). Zod
-        coercion (e.g. <code>z.coerce.number()</code>) works and nested error
-        paths resolve correctly. Neither package is a dependency of this repo —
-        vanillin stays zero-dependency, and our own tests exercise the contract
-        with a hand-written resolver.
-      </p>
-      <p>
-        If you want zod validation, install{" "}
-        <code>@hookform/resolvers</code> and <code>zod</code> in{" "}
-        <i>your</i> app. You will also need <code>react-hook-form</code>{" "}
-        present, because <code>@hookform/resolvers</code> imports{" "}
-        <code>appendErrors</code> from it at module level (used only for{" "}
-        <code>criteriaMode: "all"</code>, which is out of scope here).
       </p>
 
       <h3>useFieldArray</h3>
       <p>
-        <code>useFieldArray({"{"} control, name {"}"} )</code> returns{" "}
-        <code>fields</code> (array with auto-generated <code>id</code> keys),{" "}
-        <code>append</code>, <code>prepend</code>, <code>remove</code>,{" "}
-        <code>insert</code>, <code>swap</code>, <code>move</code>,{" "}
-        <code>update</code>, <code>replace</code>. Register nested fields
-        with dotted paths: <code>register(`items.${"{"}i{"}"}.name`)</code>.
+        <code>{"useFieldArray({ control, name })"}</code> returns{" "}
+        <code>fields</code>, <code>append</code>, <code>prepend</code>,{" "}
+        <code>remove</code>, <code>insert</code>, <code>swap</code>,{" "}
+        <code>move</code>, <code>update</code>, <code>replace</code>.
       </p>
     </section>
   )
 }
 
+/* ================================================================== */
+/*  Page root                                                          */
+/* ================================================================== */
+
 export default function UseFormPage() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24, padding: 16 }}>
+    <>
       <h2>useForm</h2>
+      <p>Zero-dependency form engine shaped like react-hook-form — <code>register</code> for DOM inputs, <code>Controller</code> for controlled components, validation, field arrays, and nested paths.</p>
+
       <Docs />
       <RenderIsolation />
       <BuiltInValidation />
@@ -699,6 +665,18 @@ export default function UseFormPage() {
       <NestedPaths />
       <ResolverDemo />
       <ValidationModes />
-    </div>
+
+      <ApiReference title="useForm" props={[
+        { name: "defaultValues", type: "object", description: "Initial field values" },
+        { name: "mode", type: '"onSubmit" | "onBlur" | "onChange" | "onTouched"', default: '"onSubmit"', description: "When to validate" },
+        { name: "reValidateMode", type: '"onSubmit" | "onBlur" | "onChange"', default: '"onChange"', description: "When to re-validate after first submit" },
+        { name: "resolver", type: "async (values, ctx, opts) => { values, errors }", description: "External validation resolver (zod, yup, etc.)" },
+      ]} />
+
+      <ApiReference title="useFieldArray" props={[
+        { name: "control", type: "Control", description: "From useForm" },
+        { name: "name", type: "string", description: "Path to the array field" },
+      ]} />
+    </>
   )
 }
