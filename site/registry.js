@@ -14,6 +14,11 @@ export const docsGroups = [
         desc: "Add components to your project with the CLI or by hand.",
         page: lazy(() => import("./pages/docs/installation.jsx")),
       },
+      configuration: {
+        title: "Configuration",
+        desc: "van.config.json — theme, components, paths, and validation.",
+        page: lazy(() => import("./pages/docs/configuration.jsx")),
+      },
     },
   },
   {
@@ -22,6 +27,7 @@ export const docsGroups = [
       cli: {
         title: "CLI",
         desc: "init, add, diff, update — the tool that copies components in.",
+        page: lazy(() => import("./pages/docs/cli.jsx")),
       },
       theming: {
         title: "Theming",
