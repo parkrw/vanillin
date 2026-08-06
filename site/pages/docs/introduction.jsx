@@ -25,15 +25,55 @@ export default function IntroductionPage() {
       <h2>Introduction</h2>
 
       <p>
-        <strong>Zero dependencies</strong> React components with vanilla JS,
-        JSX, and CSS. No Tailwind, no Radix, no Floating UI only React is
-        required.
+        Vanillin is a React component kit. You copy the source into your
+        project and own it — no package to install, no version to track, no
+        upgrade that can break your app. Every component is vanilla JSX and
+        CSS with React as the only runtime dependency.
       </p>
 
+      <h3>Why it exists</h3>
+
       <p>
-        Copy-paste, not install. Components are code you copy into your project
-        and own. Inspired by shadcn.
+        shadcn/ui proved that copy-paste distribution works. But it locks
+        you into Tailwind for styling and Radix for behaviour, and both
+        carry weight: Tailwind means a build step and a utility vocabulary
+        your whole team must learn; Radix means a dozen packages behind
+        every overlay. Vanillin keeps the distribution model and the API
+        surface, replaces both dependencies with vanilla CSS and
+        framework-free primitives, and adds React 19 support from day one.
       </p>
+
+      <h3>What you get</h3>
+
+      <ul>
+        <li>
+          <strong>Zero runtime dependencies</strong> — only React.
+          Overlays use native <code>&lt;dialog&gt;</code> and popover.
+          Focus trapping, roving focus, dismissable layers, anchor
+          positioning, and safe triangles are all in <code>lib/</code>,
+          framework-free.
+        </li>
+        <li>
+          <strong>Plain CSS</strong> — design tokens
+          in <code>globals.css</code>, scoped component styles
+          in <code>.css</code> files. No utility classes, no build
+          plugin required beyond what your bundler already does.
+        </li>
+        <li>
+          <strong>Full ownership</strong> — the files are yours once
+          copied. Edit them, delete them, fork them.
+          A <code>.van.json</code> sidecar tracks what you were given so
+          the CLI can tell your edits from upstream changes.
+        </li>
+        <li>
+          <strong>Theming through config</strong> — edit{" "}
+          <code>van.config.json</code>, run <code>van build</code>, and
+          the generated <code>van.css</code> re-themes everything.
+          Brand colours, radius, density, motion, fonts, and per-component
+          variant and size overrides.
+          See <a href="#configuration">Configuration</a>.
+        </li>
+      </ul>
 
       <Separator style={{ margin: "1.5rem 0" }} />
 
@@ -99,8 +139,8 @@ export default function IntroductionPage() {
       </Tabs>
 
       <p>
-        Pick a component in the sidebar to see it live — every page renders the
-        real thing.
+        Every page in this site renders the real component — pick one in
+        the sidebar to see it live.
       </p>
     </>
   )
