@@ -1,6 +1,6 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–79)
 
-**Resume:** batch 76+78 complete 2026-08-06, both verified (753/755 + clean build). **User merges three branches:** `docs/pages-core` (76), `docs/content` (78), `docs/todo-batch` (task78 amendment + this reconcile). No PRs — remote writes disabled. Next after merge: 77 (spawn; 79 can join the batch). Task **74** (narrow-viewport reflow) still needs a scope call.
+**Resume:** batch 2 spawned 2026-08-06 — **77a** (forms pages, `docs/pages-rest-a`, worktree `../vanillin-task77a`), **77b** (overlay+nav pages, `docs/pages-rest-b`, `../vanillin-task77b`), **79** (right rail, `feat/docs-right-rail`, `../vanillin-task79`). Head supervises from main worktree on `docs/todo-batch2`; reports land in `docs/todo/reports/task77a|task77b|task79`. If the head died mid-batch: run `/cycle --adjust` to reconcile from reports + worktrees. After the batch: 77 C+D (batch 3, rebalance 26+6 → ~16/16), then 74's scope call, then console kit.
 
 ## Handoff — task 70 (complete)
 
@@ -166,9 +166,9 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 73  | coverage-probe           | ~L  | [x]    | 26 probed, 5 gaps fixed, 20 caught, 1 skipped; suite 735 [^73]          |
 | 75  | docs-code-infra          | ~M  | [x]    | landed on `fix/docs-nav-rework` (`27a1410`); sub-task 5 (page convention) delegated to 76 [^75] |
 | 76  | docs-pages-core          | ~L  | [x]    | landed 2026-08-06 on `docs/pages-core` (18 commits, local merge); B5/B6/C8 fixed [^76] |
-| 77  | docs-pages-rest          | ~XL | [ ]    | deps: 76; template applied to remaining ~59 pages; spawn-ready [^77]     |
+| 77  | docs-pages-rest          | ~XL | [~]    | deps: 76; A+B in flight (task77a/task77b files), C+D remain [^77]        |
 | 78  | docs-content             | ~M  | [x]    | landed 2026-08-06 on `docs/content` (6 commits, local merge); B1 + CLI page [^78] |
-| 79  | docs-right-rail          | ~M  | [ ]    | deps: 75 (76 ideally); scroll-synced TOC rail + resizable code panel [^79]   |
+| 79  | docs-right-rail          | ~M  | [~]    | deps: 75 (76 ideally); in flight (batch 2); scroll-synced TOC rail [^79]     |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -462,6 +462,8 @@ just-in-time. Rough order of usefulness:
   work because of it.
 
 ## Adjustments log
+
+- **2026-08-06 — batch 2 spawned: 77a + 77b + 79 (cap 3).** 77 split by category per its own spawn strategy; A and B got standalone task files (`task77a`, `task77b`) so each worker owns its Handoff — two workers writing one file's Handoff would conflict at merge. Two task-77 list bugs fixed while detailing: `input-group` was in both A and C (assigned to A), and D listed `forced-colors`, which has no page file (dropped) — corrected counts: A 14, B 13, C 26, D 6. C+D deferred to batch 3 (rebalance ~16/16). 79 joined per the standing note (Owns disjoint from all page files). Worker seeds omit push/PR — no `.claude-remote-ok`.
 
 - **2026-08-06 — batch 76+78 landed (first --spawn 2 run).** Both verified independently: 753/755 + clean build each. 76 needed one rework round — its worker reported "0 FAIL" while 14 tests were failing (dialog strict-mode duplicate "Open dialog" buttons, ComponentPreview's internal `ui/tabs` shadowing the tabs/tokens-surfaces fixture selectors); fixed in 3 follow-up commits, lesson recorded in [^77]. 78 passed review first try (config + CLI pages grounded in `config-schema.mjs`/`bin/van.mjs`). Process notes: worker model id is `claude-opus-4-6[1m]` (the skill's dashed form is invalid and fails silently); worker-reported test counts are re-run by the supervisor before ticking — 76's misreport validated that rule.
 

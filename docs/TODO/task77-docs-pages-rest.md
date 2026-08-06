@@ -17,21 +17,19 @@ Same template as task 76:
 
 ## Spawn strategy
 
-Batch into 3-4 workers by category (disjoint files):
-- **Worker A:** Forms — combobox, date-input, date-picker, field, form-fields, input-group, input-otp, label, native-select, radio-group, slider, textarea, time-picker, use-form
-- **Worker B:** Overlay + Navigation — alert-dialog, command, context-menu, drawer, dropdown-menu, hover-card, menubar, navigation-menu, pagination, popover, sheet, tooltip, breadcrumb
-- **Worker C:** Data + Layout + Disclosure — aspect-ratio, attachment, bubble, button-group, calendar, carousel, collapsible, container-queries, data-table, empty, format, input-group, item, kbd, marker, message, message-scroller, progress, resizable, scroll-area, separator, skeleton, spinner, status-dot, toggle, toggle-group, typography
-- **Worker D:** Platform — density, direction, forced-colors, mode-toggle, primitives, sidebar, view-transitions
+Batch into workers by category (disjoint files). **A and B split into their own task files 2026-08-06** (`task77a-docs-pages-forms.md`, `task77b-docs-pages-overlay-nav.md`) and spawned as batch 2 alongside task 79. Two list fixes made then: `input-group` was listed under both A and C (one file — it is A's), and D listed `forced-colors`, which has no `site/pages/` file (dropped).
+- **Worker A:** → `task77a-docs-pages-forms.md` (14 pages)
+- **Worker B:** → `task77b-docs-pages-overlay-nav.md` (13 pages)
+- **Worker C:** Data + Layout + Disclosure — aspect-ratio, attachment, bubble, button-group, calendar, carousel, collapsible, container-queries, data-table, empty, format, item, kbd, marker, message, message-scroller, progress, resizable, scroll-area, separator, skeleton, spinner, status-dot, toggle, toggle-group, typography (26 pages — rebalance with D into ~16/16 when batch 3 is sized)
+- **Worker D:** Platform — density, direction, mode-toggle, primitives, sidebar, view-transitions (6 pages)
 
 Each worker reads `site/pages/button.jsx` (from task 76) as the reference pattern.
 
 ## Content notes for specific pages
 
-- **command** (B3): add "how to wire your own actions" section, explain what search searches
-- **drawer** (B4): add visible grab handle affordance to demos
+Notes for A/B pages moved into their task files. Remaining here for batch 3:
+
 - **density** (B2): add code examples to all sections
-- **form-fields** (B6): add form vs form-fields explainer at top
-- **use-form** (C7): fix adjacent `<span>`s that render as one unreadable token
 
 ## Verify / done
 
@@ -43,4 +41,4 @@ npm run build        # build clean
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** IN PROGRESS — A (forms) and B (overlay+nav) spawned 2026-08-06 as batch 2 with task 79; see their task files' Handoffs. C and D remain for batch 3.
