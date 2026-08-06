@@ -1,6 +1,6 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–79)
 
-**Resume:** batch 2 complete 2026-08-06, all three verified (77a 753/755, 77b 753/755 + 41/41 targeted twice, 79 docs-shell 16/16). **User merges four branches:** `docs/pages-rest-a` (77a), `docs/pages-rest-b` (77b), `feat/docs-right-rail` (79), `docs/todo-batch2` (task files + this reconcile + ISSUES C9/G5/G6). No PRs — remote writes disabled. Worktrees `../vanillin-task77{a,b}` and `../vanillin-task79` stay until merged. Next: 77 C+D as batch 3 (rebalance 26+6 → ~16/16), then 74's scope call, then console kit. New kit bug worth an early slot: **C9** (dialog anchors to document, not viewport — bit 77b hard).
+**Resume:** `docs/TODO/task77-docs-pages-rest.md` → Handoff (IN PROGRESS). Batch 2 complete 2026-08-06, all three verified (77a 753/755, 77b 753/755 + 41/41 targeted twice, 79 docs-shell 16/16). **User merges four branches:** `docs/pages-rest-a` (77a), `docs/pages-rest-b` (77b), `feat/docs-right-rail` (79), `docs/todo-batch2` (task files + this reconcile + ISSUES C9/G5/G6). No PRs — remote writes disabled. Worktrees `../vanillin-task77{a,b}` and `../vanillin-task79` stay until merged. Next after merge: batch 3 = **80** (C9 dialog fix, row added 2026-08-06) + **77 C+D** (rebalance 26+6 → ~16/16) — Owns disjoint, spawnable together. Then 74's scope call, then console kit.
 
 ## Handoff — task 70 (complete)
 
@@ -55,7 +55,7 @@ Tasks are detailed just-in-time; only the rows below are durable.
 **Order from here (settled 2026-07-27, after 38 landed):**
 
 ```
-39 ✓ → 68 ✓ → 71 ✓ → 72 ✓ → 73 ✓ → 65 ✓ → 66 ✓ → 67 ✓ → 69 ✓ → 70 ✓ → 30 ✓ → 75 ✓ → 76 ✓ → 78 ✓ → 77 (spawn; 79 can join the batch — Owns disjoint) → 74? → console kit
+39 ✓ → 68 ✓ → 71 ✓ → 72 ✓ → 73 ✓ → 65 ✓ → 66 ✓ → 67 ✓ → 69 ✓ → 70 ✓ → 30 ✓ → 75 ✓ → 76 ✓ → 78 ✓ → 77 A+B ✓ + 79 ✓ (batch 2) → 80 + 77 C+D (batch 3 — Owns disjoint) → 74? → console kit
 ```
 
 - **39 landed 2026-07-27 and unblocked everything after it.** It ran alone on the
@@ -169,6 +169,7 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 77  | docs-pages-rest          | ~XL | [~]    | deps: 76; A+B landed 2026-08-06 (1 rework round each), C+D remain [^77]  |
 | 78  | docs-content             | ~M  | [x]    | landed 2026-08-06 on `docs/content` (6 commits, local merge); B1 + CLI page [^78] |
 | 79  | docs-right-rail          | ~M  | [x]    | landed 2026-08-06 on `feat/docs-right-rail`; TOC rail + drag resize; stretch (code panel) skipped [^79] |
+| 80  | dialog-modal-positioning | ~M  | [ ]    | ISSUES C9 — `.dialog` position:relative defeats `:modal` fixed; before batch 3 [^80] |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -396,6 +397,17 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
     exclusively — parallel-safe with 76/77. **The nav rework of 2026-08-05 added
     a `cli` slug to `site/registry.js` with no page — the CLI docs page lands
     here and turns that entry live.**
+
+[^80]: ISSUES C9, found in 77b's rework. `ui/dialog/dialog.css:7` sets
+    `position: relative` (for the task-39 `container-type` container), which
+    overrides the UA's `:modal { position: fixed }` — open dialogs/drawers/
+    sheets anchor to document height, so a bottom drawer on a page taller than
+    the viewport renders off-screen. Fix must keep the container query working.
+    Scope includes the follow-ups the bug forced: restore InstallSnippet +
+    ApiReference on `site/pages/{drawer,sheet}.jsx` (skipped in 77b), and add a
+    regression test that opens a drawer on a taller-than-viewport page.
+    **Owns:** `ui/dialog/**`, `site/pages/{drawer,sheet}.jsx`,
+    `tests/{dialog,drawer,sheet}.test.mjs` — disjoint from 77 C+D.
 
 [^79]: right-hand rail on docs pages: scroll-synced "On this page" TOC,
     resizable via the same drag pattern as the left sidebar, stretch goal of a
