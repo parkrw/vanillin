@@ -413,16 +413,13 @@ export function SelectContent({
             top = padding
           }
 
-          // Clamp to viewport bottom.
+          // Clamp to viewport bottom by shrinking the box, not by shifting
+          // it — shifting up while also scrolling moves the item twice and
+          // breaks the alignment the mode exists for.
           const contentHeight = el.offsetHeight
           const bottomOverflow = top + contentHeight - (vh - padding)
           if (bottomOverflow > 0) {
-            top -= bottomOverflow
-            scrollTop += bottomOverflow
-            if (top < padding) {
-              scrollTop += padding - top
-              top = padding
-            }
+            el.style.maxBlockSize = `${contentHeight - bottomOverflow}px`
           }
 
           const maxScroll = el.scrollHeight - el.clientHeight

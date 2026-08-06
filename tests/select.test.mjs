@@ -165,7 +165,45 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await waitAllClosed()
   })
 
+  await test("item-aligned mode holds alignment when the trigger sits low in the viewport", async () => {
+    // Regression: the bottom-viewport clamp used to shift the box up AND
+    // scroll the content — a double shift that moved the item off the
+    // trigger by 2× the overflow. Only reproduces with the trigger below
+    // the selected item's natural offset, so pin it near the fold.
+    await page.evaluate(() => {
+      const trigger = document.querySelector('[data-pg="sel-aligned-trigger"]')
+      const r = trigger.getBoundingClientRect()
+      window.scrollTo(0, window.scrollY + r.bottom - window.innerHeight + 60)
+    })
+    const alignedTrigger = page.locator('[data-pg="sel-aligned-trigger"]')
+    await alignedTrigger.click()
+    await waitOpen("sel-aligned-content")
+
+    const m = await page.evaluate(() => {
+      const trigger = document.querySelector('[data-pg="sel-aligned-trigger"]')
+      const item = document.querySelector('[data-pg="sel-aligned-item-15"]')
+      const content = document.querySelector('[data-pg="sel-aligned-content"]')
+      return {
+        diff: Math.abs(trigger.getBoundingClientRect().top - item.getBoundingClientRect().top),
+        bottom: content.getBoundingClientRect().bottom,
+        vh: window.innerHeight,
+      }
+    })
+    eq(m.diff < 10, true, `selected item within 10px of trigger (got ${m.diff.toFixed(1)})`)
+    eq(m.bottom <= m.vh, true, `content bottom within viewport (${m.bottom} <= ${m.vh})`)
+
+    await page.keyboard.press("Escape")
+    await waitAllClosed()
+    await page.evaluate(() => window.scrollTo(0, 0))
+  })
+
   await test("item-aligned mode clamps to viewport and enables scroll buttons", async () => {
+    // Scroll buttons on both ends need the content scrolled, which needs the
+    // trigger above the selected item's natural offset — pin it high.
+    await page.evaluate(() => {
+      const trigger = document.querySelector('[data-pg="sel-aligned-trigger"]')
+      window.scrollTo(0, window.scrollY + trigger.getBoundingClientRect().top - 250)
+    })
     const alignedTrigger = page.locator('[data-pg="sel-aligned-trigger"]')
     await alignedTrigger.click()
     await waitOpen("sel-aligned-content")
