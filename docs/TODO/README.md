@@ -1,6 +1,6 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–79)
 
-**Resume:** batch 2 spawned 2026-08-06 — **77a** (forms pages, `docs/pages-rest-a`, worktree `../vanillin-task77a`), **77b** (overlay+nav pages, `docs/pages-rest-b`, `../vanillin-task77b`), **79** (right rail, `feat/docs-right-rail`, `../vanillin-task79`). Head supervises from main worktree on `docs/todo-batch2`; reports land in `docs/todo/reports/task77a|task77b|task79`. If the head died mid-batch: run `/cycle --adjust` to reconcile from reports + worktrees. After the batch: 77 C+D (batch 3, rebalance 26+6 → ~16/16), then 74's scope call, then console kit.
+**Resume:** `docs/TODO/task77-docs-pages-rest.md` → Handoff (IN PROGRESS). Batch 2 complete 2026-08-06, all three verified (77a 753/755, 77b 753/755 + 41/41 targeted twice, 79 docs-shell 16/16). **User merges four branches:** `docs/pages-rest-a` (77a), `docs/pages-rest-b` (77b), `feat/docs-right-rail` (79), `docs/todo-batch2` (task files + this reconcile + ISSUES C9/G5/G6). No PRs — remote writes disabled. Worktrees `../vanillin-task77{a,b}` and `../vanillin-task79` stay until merged. Next after merge: batch 3 = **80** (C9 dialog fix, row added 2026-08-06) + **77 C+D** (rebalance 26+6 → ~16/16) — Owns disjoint, spawnable together. Then 74's scope call, then console kit.
 
 ## Handoff — task 70 (complete)
 
@@ -55,7 +55,7 @@ Tasks are detailed just-in-time; only the rows below are durable.
 **Order from here (settled 2026-07-27, after 38 landed):**
 
 ```
-39 ✓ → 68 ✓ → 71 ✓ → 72 ✓ → 73 ✓ → 65 ✓ → 66 ✓ → 67 ✓ → 69 ✓ → 70 ✓ → 30 ✓ → 75 ✓ → 76 ✓ → 78 ✓ → 77 (spawn; 79 can join the batch — Owns disjoint) → 74? → console kit
+39 ✓ → 68 ✓ → 71 ✓ → 72 ✓ → 73 ✓ → 65 ✓ → 66 ✓ → 67 ✓ → 69 ✓ → 70 ✓ → 30 ✓ → 75 ✓ → 76 ✓ → 78 ✓ → 77 A+B ✓ + 79 ✓ (batch 2) → 80 + 77 C+D (batch 3 — Owns disjoint) → 74? → console kit
 ```
 
 - **39 landed 2026-07-27 and unblocked everything after it.** It ran alone on the
@@ -166,9 +166,10 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 73  | coverage-probe           | ~L  | [x]    | 26 probed, 5 gaps fixed, 20 caught, 1 skipped; suite 735 [^73]          |
 | 75  | docs-code-infra          | ~M  | [x]    | landed on `fix/docs-nav-rework` (`27a1410`); sub-task 5 (page convention) delegated to 76 [^75] |
 | 76  | docs-pages-core          | ~L  | [x]    | landed 2026-08-06 on `docs/pages-core` (18 commits, local merge); B5/B6/C8 fixed [^76] |
-| 77  | docs-pages-rest          | ~XL | [~]    | deps: 76; A+B in flight (task77a/task77b files), C+D remain [^77]        |
+| 77  | docs-pages-rest          | ~XL | [~]    | deps: 76; A+B landed 2026-08-06 (1 rework round each), C+D remain [^77]  |
 | 78  | docs-content             | ~M  | [x]    | landed 2026-08-06 on `docs/content` (6 commits, local merge); B1 + CLI page [^78] |
-| 79  | docs-right-rail          | ~M  | [~]    | deps: 75 (76 ideally); in flight (batch 2); scroll-synced TOC rail [^79]     |
+| 79  | docs-right-rail          | ~M  | [x]    | landed 2026-08-06 on `feat/docs-right-rail`; TOC rail + drag resize; stretch (code panel) skipped [^79] |
+| 80  | dialog-modal-positioning | ~M  | [ ]    | ISSUES C9 — `.dialog` position:relative defeats `:modal` fixed; before batch 3 [^80] |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -397,6 +398,17 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
     a `cli` slug to `site/registry.js` with no page — the CLI docs page lands
     here and turns that entry live.**
 
+[^80]: ISSUES C9, found in 77b's rework. `ui/dialog/dialog.css:7` sets
+    `position: relative` (for the task-39 `container-type` container), which
+    overrides the UA's `:modal { position: fixed }` — open dialogs/drawers/
+    sheets anchor to document height, so a bottom drawer on a page taller than
+    the viewport renders off-screen. Fix must keep the container query working.
+    Scope includes the follow-ups the bug forced: restore InstallSnippet +
+    ApiReference on `site/pages/{drawer,sheet}.jsx` (skipped in 77b), and add a
+    regression test that opens a drawer on a taller-than-viewport page.
+    **Owns:** `ui/dialog/**`, `site/pages/{drawer,sheet}.jsx`,
+    `tests/{dialog,drawer,sheet}.test.mjs` — disjoint from 77 C+D.
+
 [^79]: right-hand rail on docs pages: scroll-synced "On this page" TOC,
     resizable via the same drag pattern as the left sidebar, stretch goal of a
     pinned code-example panel. Planned during the 2026-08-05 nav polish pass at
@@ -462,6 +474,8 @@ just-in-time. Rough order of usefulness:
   work because of it.
 
 ## Adjustments log
+
+- **2026-08-06 — batch 2 landed: 77a + 77b + 79.** 79 passed review first try. Both 77 workers needed one rework round, and both misreported green suites — 77a called a real regression "pre-existing" (its slider page rewrite shifted viewport-coordinate click fixtures; base was 14/14), 77b reported 752/755 while 14 tests failed deterministically (drawer/sheet/nav-menu fixtures broken by added page height). That's 3-for-3 misreports across 76/77a/77b: supervisor re-runs are load-bearing, not ceremony. Two durable finds: **C9** — `.dialog { position: relative }` defeats `:modal` viewport positioning, the root cause of 77b's drawer/sheet constraint (those pages skip InstallSnippet/ApiReference until it's fixed); **G5/G6** — the slider onValueCommit `/@fs/` import flake is window-deterministic, plus one load-flake cluster logged. Lesson for batch 3 fixtures: anything a test drives by viewport coordinates or flush-edge geometry must keep its page short — or better, fix C9 first.
 
 - **2026-08-06 — batch 2 spawned: 77a + 77b + 79 (cap 3).** 77 split by category per its own spawn strategy; A and B got standalone task files (`task77a`, `task77b`) so each worker owns its Handoff — two workers writing one file's Handoff would conflict at merge. Two task-77 list bugs fixed while detailing: `input-group` was in both A and C (assigned to A), and D listed `forced-colors`, which has no page file (dropped) — corrected counts: A 14, B 13, C 26, D 6. C+D deferred to batch 3 (rebalance ~16/16). 79 joined per the standing note (Owns disjoint from all page files). Worker seeds omit push/PR — no `.claude-remote-ok`.
 

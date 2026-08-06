@@ -41,4 +41,10 @@ npm run build        # build clean
 
 ## Handoff
 
-**Status:** IN PROGRESS — A (forms) and B (overlay+nav) spawned 2026-08-06 as batch 2 with task 79; see their task files' Handoffs. C and D remain for batch 3.
+**Status:** IN PROGRESS
+**Branch:** A `docs/pages-rest-a` ✓, B `docs/pages-rest-b` ✓ — both verified, unmerged; C+D not started  **PR:** none (remote writes off)  **Updated:** 2026-08-06
+
+- **Landed:** A (14 form pages) and B (13 overlay/nav pages) carry the task-76 template, each verified 753/755 by the supervisor after one rework round. 79 (right rail) landed in the same batch on `feat/docs-right-rail`.
+- **Repo state:** main worktree on `docs/todo-batch2` with uncommitted handoff edits (README + this file). `stash@{0}: On docs/pages-rest-b: drawer-fix-attempt` is a worker leftover — inspect before dropping. Worktrees `../vanillin-task77{a,b}`, `../vanillin-task79` stay until the user merges the four branches named in README's Resume line.
+- **Next:** after the merges, batch 3: `/cycle --spawn 3` — task 80 (C9 dialog fix, row + [^80] in README, no task file yet) + 77-C + 77-D (rebalance the C/D lists in this file, 26+6 → ~16/16).
+- **Gotchas:** fixture-height rule, learned twice: pages whose tests use viewport coordinates or flush-edge geometry must not gain height above their fixtures — put Usage/InstallSnippet/ApiReference below them. Root cause is ISSUES C9 (task 80). Worker suite counts are unreliable (3-for-3 misreports); supervisor re-runs are mandatory.
