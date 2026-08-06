@@ -38,4 +38,36 @@ Baseline is 753/755 (2 pre-existing failures). Run the full suite and report exa
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** DONE
+**Branch:** `docs/pages-rest-a`
+**Commit:** `d31ff4e` — `docs(pages): apply task-76 template to 14 form-family pages`
+
+### What landed
+
+All 14 form-family pages rewritten to the task-76 button.jsx template:
+- Title + vanillin-voice description
+- `<InstallSnippet slug="..." />`
+- Examples wrapped in `<ComponentPreview>` (code tab + preview tab)
+- `<ApiReference>` props tables at the bottom
+
+Special items:
+- **form-fields (B6):** Added "form vs form-fields" explainer section at the top, explaining the three-layer split (ui/form, ui/form-fields, lib/use-form).
+- **use-form (C7):** State-display spans now have labeled `<div>` wrappers and spacing — no more `false{}{}` or `falsetrue` tokens.
+- **slider:** Test-fixture sections kept outside ComponentPreview — the tab container's layout broke pointer-click-position tests (`range drag`, `vertical click`). A separate "Usage" section with ComponentPreview shows the import pattern.
+- **use-form:** No `<InstallSnippet>` — `use-form` is a lib, not in the registry. Installed as a dependency of `form-fields`.
+
+### Verify
+
+```
+node tests/run.mjs   → 752/755 passed
+npm run build        → clean (1.09s)
+```
+
+3 failures are all pre-existing (confirmed by stash-test on original code):
+- 2× cursor: slider grab/grabbing cursor — environment-specific
+- 1× slider: onValueCommit dynamic import — `/@fs/` Vite dev server path fails
+
+### Surprises
+
+- ComponentPreview breaks slider pointer-click tests. The container's padding/layout shifts the bounding box enough that `clickAt("Range", 0.9)` lands at the wrong position. Fixed by keeping slider fixture sections outside ComponentPreview.
+- Baseline in task file says 753/755 but actual pre-existing failures are 3/755 (the `onValueCommit` dynamic import was already failing before this work).
