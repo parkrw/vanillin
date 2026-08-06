@@ -19,150 +19,221 @@ import { DirectionProvider } from "../../lib/direction.jsx"
 import { Button } from "../../ui/button/button.jsx"
 import "../../ui/dropdown-menu/dropdown-menu.css"
 import "../../ui/button/button.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 export default function DropdownMenuPage() {
   const [lastAction, setLastAction] = useState("")
 
-  // Checkbox state
   const [statusBar, setStatusBar] = useState(false)
   const [activityBar, setActivityBar] = useState(true)
 
-  // Radio state
   const [position, setPosition] = useState("bottom")
 
   return (
     <>
       <h2>Dropdown Menu</h2>
+      <p>A menu of actions anchored to a trigger button — groups, shortcuts, disabled items, submenus, checkbox and radio items.</p>
+
+      <InstallSnippet slug="dropdown-menu" />
 
       <section className="pg-section">
-        <h3>Default</h3>
-        <DropdownMenu>
-          <DropdownMenuTrigger as={Button} variant="outline" data-pg="dropdown-trigger">
-            Actions
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem onSelect={() => setLastAction("profile")}>
-                Profile
-                <DropdownMenuShortcut>Ctrl+P</DropdownMenuShortcut>
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut } from "./ui/dropdown-menu/dropdown-menu"
+import "./ui/dropdown-menu/dropdown-menu.css"
+
+<DropdownMenu>
+  <DropdownMenuTrigger as={Button} variant="outline">
+    Actions
+  </DropdownMenuTrigger>
+  <DropdownMenuContent>
+    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+    <DropdownMenuSeparator />
+    <DropdownMenuItem onSelect={() => handleAction("profile")}>
+      Profile
+      <DropdownMenuShortcut>Ctrl+P</DropdownMenuShortcut>
+    </DropdownMenuItem>
+    <DropdownMenuItem onSelect={() => handleAction("logout")}>
+      Log out
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>`}>
+          <DropdownMenu>
+            <DropdownMenuTrigger as={Button} variant="outline" data-pg="dropdown-trigger">
+              Actions
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem onSelect={() => setLastAction("profile")}>
+                  Profile
+                  <DropdownMenuShortcut>Ctrl+P</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setLastAction("settings")}>
+                  Settings
+                  <DropdownMenuShortcut>Ctrl+,</DropdownMenuShortcut>
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled>
+                  Billing (disabled)
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                data-pg="prevent-close-item"
+                onSelect={(e) => {
+                  e.preventDefault()
+                  setLastAction("toggled (stays open)")
+                }}
+              >
+                Toggle option (stays open)
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setLastAction("settings")}>
-                Settings
-                <DropdownMenuShortcut>Ctrl+,</DropdownMenuShortcut>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setLastAction("logout")}>
+                Log out
+                <DropdownMenuShortcut>Ctrl+Q</DropdownMenuShortcut>
               </DropdownMenuItem>
-              <DropdownMenuItem disabled>
-                Billing (disabled)
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              data-pg="prevent-close-item"
-              onSelect={(e) => {
-                e.preventDefault()
-                setLastAction("toggled (stays open)")
-              }}
-            >
-              Toggle option (stays open)
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => setLastAction("logout")}>
-              Log out
-              <DropdownMenuShortcut>Ctrl+Q</DropdownMenuShortcut>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <p className="pg-desc">
-          Last action: <span data-pg="dropdown-readout">{lastAction}</span>
-        </p>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <p className="pg-desc">
+            Last action: <span data-pg="dropdown-readout">{lastAction}</span>
+          </p>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Checkbox Items</h3>
-        <DropdownMenu>
-          <DropdownMenuTrigger as={Button} variant="outline" data-pg="checkbox-trigger">
-            View
-          </DropdownMenuTrigger>
-          <DropdownMenuContent data-pg="checkbox-menu">
-            <DropdownMenuLabel>Panels</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem
-              data-pg="cb-statusbar"
-              checked={statusBar}
-              onCheckedChange={setStatusBar}
-            >
-              Status Bar
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              data-pg="cb-activity"
-              checked={activityBar}
-              onCheckedChange={setActivityBar}
-            >
-              Activity Bar
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <p className="pg-desc">
-          <span data-pg="cb-readout">
-            statusbar:{statusBar ? "on" : "off"} activity:{activityBar ? "on" : "off"}
-          </span>
-        </p>
+        <ComponentPreview code={`<DropdownMenu>
+  <DropdownMenuTrigger as={Button} variant="outline">View</DropdownMenuTrigger>
+  <DropdownMenuContent>
+    <DropdownMenuLabel>Panels</DropdownMenuLabel>
+    <DropdownMenuSeparator />
+    <DropdownMenuCheckboxItem checked={statusBar} onCheckedChange={setStatusBar}>
+      Status Bar
+    </DropdownMenuCheckboxItem>
+    <DropdownMenuCheckboxItem checked={activityBar} onCheckedChange={setActivityBar}>
+      Activity Bar
+    </DropdownMenuCheckboxItem>
+  </DropdownMenuContent>
+</DropdownMenu>`}>
+          <DropdownMenu>
+            <DropdownMenuTrigger as={Button} variant="outline" data-pg="checkbox-trigger">
+              View
+            </DropdownMenuTrigger>
+            <DropdownMenuContent data-pg="checkbox-menu">
+              <DropdownMenuLabel>Panels</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                data-pg="cb-statusbar"
+                checked={statusBar}
+                onCheckedChange={setStatusBar}
+              >
+                Status Bar
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                data-pg="cb-activity"
+                checked={activityBar}
+                onCheckedChange={setActivityBar}
+              >
+                Activity Bar
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <p className="pg-desc">
+            <span data-pg="cb-readout">
+              statusbar:{statusBar ? "on" : "off"} activity:{activityBar ? "on" : "off"}
+            </span>
+          </p>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Radio Group</h3>
-        <DropdownMenu>
-          <DropdownMenuTrigger as={Button} variant="outline" data-pg="radio-trigger">
-            Position
-          </DropdownMenuTrigger>
-          <DropdownMenuContent data-pg="radio-menu">
-            <DropdownMenuLabel>Panel Position</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup value={position} onValueChange={setPosition}>
-              <DropdownMenuRadioItem value="top">Top</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="bottom">Bottom</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="right">Right</DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <p className="pg-desc">
-          Position: <span data-pg="radio-readout">{position}</span>
-        </p>
+        <ComponentPreview code={`<DropdownMenu>
+  <DropdownMenuTrigger as={Button} variant="outline">Position</DropdownMenuTrigger>
+  <DropdownMenuContent>
+    <DropdownMenuLabel>Panel Position</DropdownMenuLabel>
+    <DropdownMenuSeparator />
+    <DropdownMenuRadioGroup value={position} onValueChange={setPosition}>
+      <DropdownMenuRadioItem value="top">Top</DropdownMenuRadioItem>
+      <DropdownMenuRadioItem value="bottom">Bottom</DropdownMenuRadioItem>
+      <DropdownMenuRadioItem value="right">Right</DropdownMenuRadioItem>
+    </DropdownMenuRadioGroup>
+  </DropdownMenuContent>
+</DropdownMenu>`}>
+          <DropdownMenu>
+            <DropdownMenuTrigger as={Button} variant="outline" data-pg="radio-trigger">
+              Position
+            </DropdownMenuTrigger>
+            <DropdownMenuContent data-pg="radio-menu">
+              <DropdownMenuLabel>Panel Position</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup value={position} onValueChange={setPosition}>
+                <DropdownMenuRadioItem value="top">Top</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="bottom">Bottom</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="right">Right</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <p className="pg-desc">
+            Position: <span data-pg="radio-readout">{position}</span>
+          </p>
+        </ComponentPreview>
       </section>
+
       <section className="pg-section">
         <h3>Submenu</h3>
-        <DropdownMenu>
-          <DropdownMenuTrigger as={Button} variant="outline" data-pg="submenu-trigger">
-            Invite
-          </DropdownMenuTrigger>
-          <DropdownMenuContent data-pg="submenu-menu">
-            <DropdownMenuItem onSelect={() => setLastAction("email")}>
-              Email
-            </DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger data-pg="sub-trigger">
-                Invite users
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent data-pg="sub-content">
-                <DropdownMenuItem onSelect={() => setLastAction("sub-email")}>
-                  Email
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setLastAction("sub-message")}>
-                  Message
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => setLastAction("sub-more")}>
-                  More...
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem data-pg="after-sub-item" onSelect={() => setLastAction("other")}>
-              Other action
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <ComponentPreview code={`<DropdownMenu>
+  <DropdownMenuTrigger as={Button} variant="outline">Invite</DropdownMenuTrigger>
+  <DropdownMenuContent>
+    <DropdownMenuItem>Email</DropdownMenuItem>
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger>Invite users</DropdownMenuSubTrigger>
+      <DropdownMenuSubContent>
+        <DropdownMenuItem>Email</DropdownMenuItem>
+        <DropdownMenuItem>Message</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>More...</DropdownMenuItem>
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
+  </DropdownMenuContent>
+</DropdownMenu>`}>
+          <DropdownMenu>
+            <DropdownMenuTrigger as={Button} variant="outline" data-pg="submenu-trigger">
+              Invite
+            </DropdownMenuTrigger>
+            <DropdownMenuContent data-pg="submenu-menu">
+              <DropdownMenuItem onSelect={() => setLastAction("email")}>
+                Email
+              </DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger data-pg="sub-trigger">
+                  Invite users
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent data-pg="sub-content">
+                  <DropdownMenuItem onSelect={() => setLastAction("sub-email")}>
+                    Email
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setLastAction("sub-message")}>
+                    Message
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => setLastAction("sub-more")}>
+                    More...
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem data-pg="after-sub-item" onSelect={() => setLastAction("other")}>
+                Other action
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
@@ -186,6 +257,15 @@ export default function DropdownMenuPage() {
           </DropdownMenu>
         </DirectionProvider>
       </section>
+
+      <ApiReference props={[
+        { name: "onSelect", type: "(event) => void", description: "On DropdownMenuItem — fires on activation; preventDefault keeps the menu open" },
+        { name: "disabled", type: "boolean", default: "false", description: "On DropdownMenuItem — skipped by arrow nav, not activatable" },
+        { name: "checked", type: "boolean", description: "On DropdownMenuCheckboxItem — controlled checked state" },
+        { name: "onCheckedChange", type: "(checked: boolean) => void", description: "On DropdownMenuCheckboxItem — called when toggled" },
+        { name: "value", type: "string", description: "On DropdownMenuRadioGroup — the currently selected radio value" },
+        { name: "onValueChange", type: "(value: string) => void", description: "On DropdownMenuRadioGroup — called when a radio item is selected" },
+      ]} />
     </>
   )
 }
