@@ -1,6 +1,6 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–79)
 
-**Resume:** `docs/TODO/task30-site-chrome.md` → Handoff (COMPLETE, branch `fix/docs-nav-rework` unmerged — user merges). 75 is `[x]` on that branch too (sub-task 5 is convention-only, 76 applies it). **The merge gates 76/78** — 75's components only exist on the unmerged branch, so 76 and 78 branch from post-merge main. Next: 76 (+78 parallel) → 77 (spawn). Task **74** (narrow-viewport reflow) still needs a scope call.
+**Resume:** batch 76+78 complete 2026-08-06, both verified (753/755 + clean build). **User merges three branches:** `docs/pages-core` (76), `docs/content` (78), `docs/todo-batch` (task78 amendment + this reconcile). No PRs — remote writes disabled. Next after merge: 77 (spawn; 79 can join the batch). Task **74** (narrow-viewport reflow) still needs a scope call.
 
 ## Handoff — task 70 (complete)
 
@@ -55,7 +55,7 @@ Tasks are detailed just-in-time; only the rows below are durable.
 **Order from here (settled 2026-07-27, after 38 landed):**
 
 ```
-39 ✓ → 68 ✓ → 71 ✓ → 72 ✓ → 73 ✓ → 65 ✓ → 66 ✓ → 67 ✓ → 69 ✓ → 70 ✓ → 30 ✓ → 75 ✓ → 76 (+78 parallel) → 77 (spawn; 79 can join the batch — Owns disjoint) → 74? → console kit
+39 ✓ → 68 ✓ → 71 ✓ → 72 ✓ → 73 ✓ → 65 ✓ → 66 ✓ → 67 ✓ → 69 ✓ → 70 ✓ → 30 ✓ → 75 ✓ → 76 ✓ → 78 ✓ → 77 (spawn; 79 can join the batch — Owns disjoint) → 74? → console kit
 ```
 
 - **39 landed 2026-07-27 and unblocked everything after it.** It ran alone on the
@@ -165,9 +165,9 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 74  | site-responsive          | ~L  | [ ]    | ISSUES K1 — 73 of 79 pages overflow at 380px; needs a scope call [^74]  |
 | 73  | coverage-probe           | ~L  | [x]    | 26 probed, 5 gaps fixed, 20 caught, 1 skipped; suite 735 [^73]          |
 | 75  | docs-code-infra          | ~M  | [x]    | landed on `fix/docs-nav-rework` (`27a1410`); sub-task 5 (page convention) delegated to 76 [^75] |
-| 76  | docs-pages-core          | ~L  | [ ]    | deps: 75; template applied to 15 key components (button, input, dialog, card, etc.) [^76] |
+| 76  | docs-pages-core          | ~L  | [x]    | landed 2026-08-06 on `docs/pages-core` (18 commits, local merge); B5/B6/C8 fixed [^76] |
 | 77  | docs-pages-rest          | ~XL | [ ]    | deps: 76; template applied to remaining ~59 pages; spawn-ready [^77]     |
-| 78  | docs-content             | ~M  | [ ]    | deps: 75; Get Started refresh, config reference (B1), voice pass (A5) [^78] |
+| 78  | docs-content             | ~M  | [x]    | landed 2026-08-06 on `docs/content` (6 commits, local merge); B1 + CLI page [^78] |
 | 79  | docs-right-rail          | ~M  | [ ]    | deps: 75 (76 ideally); scroll-synced TOC rail + resizable code panel [^79]   |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
@@ -383,7 +383,12 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 [^77]: deps: 76; same template applied to remaining ~59 component pages.
     Spawn-ready — disjoint files per worker, batched by category (Forms,
     Overlay+Nav, Data+Layout+Disclosure, Platform). Addresses B2-B4, C7 in
-    their respective pages.
+    their respective pages. **Lesson from 76:** `ComponentPreview` uses
+    `ui/tabs` internally — any page whose tests select `[role="tablist"]` or
+    `.tabs-trigger` must render its fixture demos directly on the page (source
+    in a plain `CodeBlock`), not inside `ComponentPreview`, or the preview's own
+    tabs shadow the selectors. Also avoid duplicate visible button labels on one
+    page — locator strict mode fails on `has-text` collisions.
 
 [^78]: deps: 75; Get Started refresh (introduction + installation rewrite),
     new configuration reference page (B1 — full `van.config.json` docs), schema
@@ -457,6 +462,8 @@ just-in-time. Rough order of usefulness:
   work because of it.
 
 ## Adjustments log
+
+- **2026-08-06 — batch 76+78 landed (first --spawn 2 run).** Both verified independently: 753/755 + clean build each. 76 needed one rework round — its worker reported "0 FAIL" while 14 tests were failing (dialog strict-mode duplicate "Open dialog" buttons, ComponentPreview's internal `ui/tabs` shadowing the tabs/tokens-surfaces fixture selectors); fixed in 3 follow-up commits, lesson recorded in [^77]. 78 passed review first try (config + CLI pages grounded in `config-schema.mjs`/`bin/van.mjs`). Process notes: worker model id is `claude-opus-4-6[1m]` (the skill's dashed form is invalid and fails silently); worker-reported test counts are re-run by the supervisor before ticking — 76's misreport validated that rule.
 
 - **2026-08-05 — --adjust reconcile.** 75 ticked `[x]` — its four components landed with the nav polish on `fix/docs-nav-rework` (`27a1410`); sub-task 5 (page layout convention) delegated to 76, which applies it. 79 slotted into the order at 77's spawn slot (Owns — `site/app.jsx`, `site/site.css`, `site/toc.jsx` — disjoint from 77's page files; "after 76" satisfied). Resume note added: the user's merge of `fix/docs-nav-rework` gates 76/78, which branch from post-merge main.
 
