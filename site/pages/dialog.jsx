@@ -49,34 +49,12 @@ export default function DialogPage() {
       <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview code={`import { Dialog, DialogTrigger, DialogContent, DialogHeader,
-  DialogTitle, DialogDescription } from "./ui/dialog/dialog"
+  DialogFooter, DialogTitle, DialogDescription, DialogClose }
+  from "./ui/dialog/dialog"
 import "./ui/dialog/dialog.css"
 
 <Dialog>
-  <DialogTrigger as={Button}>Open</DialogTrigger>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Title</DialogTitle>
-      <DialogDescription>Description text.</DialogDescription>
-    </DialogHeader>
-  </DialogContent>
-</Dialog>`}>
-          <Dialog>
-            <DialogTrigger as={Button} variant="outline">Open dialog</DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Basic dialog</DialogTitle>
-                <DialogDescription>This is a basic dialog example.</DialogDescription>
-              </DialogHeader>
-            </DialogContent>
-          </Dialog>
-        </ComponentPreview>
-      </section>
-
-      <section className="pg-section">
-        <h3>Edit Profile</h3>
-        <ComponentPreview code={`<Dialog>
-  <DialogTrigger as={Button} variant="outline">Edit profile</DialogTrigger>
+  <DialogTrigger as={Button} variant="outline">Open dialog</DialogTrigger>
   <DialogContent>
     <DialogHeader>
       <DialogTitle>Edit profile</DialogTitle>
@@ -84,6 +62,7 @@ import "./ui/dialog/dialog.css"
         Make changes to your profile here. Click save when you're done.
       </DialogDescription>
     </DialogHeader>
+    <p>Update your display name below.</p>
     <Field>
       <FieldLabel htmlFor="name">Name</FieldLabel>
       <Input id="name" defaultValue="Pedro Duarte" />
