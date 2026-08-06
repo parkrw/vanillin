@@ -40,7 +40,13 @@ Baseline is 753/755 (2 pre-existing failures). Run the full suite and report exa
 
 **Status:** DONE
 **Branch:** `docs/pages-rest-a`
-**Commit:** `d31ff4e` — `docs(pages): apply task-76 template to 14 form-family pages`
+
+### Commits
+
+- `d31ff4e` — `docs(pages): apply task-76 template to 14 form-family pages`
+- `3ca4981` — `docs(slider): drop unused ComponentPreview import`
+- `68168fd` — `docs(todo): task77a handoff`
+- `dc271ee` — `docs(pages): fix slider viewport regression, code-tab drifts`
 
 ### What landed
 
@@ -53,21 +59,21 @@ All 14 form-family pages rewritten to the task-76 button.jsx template:
 Special items:
 - **form-fields (B6):** Added "form vs form-fields" explainer section at the top, explaining the three-layer split (ui/form, ui/form-fields, lib/use-form).
 - **use-form (C7):** State-display spans now have labeled `<div>` wrappers and spacing — no more `false{}{}` or `falsetrue` tokens.
-- **slider:** Test-fixture sections kept outside ComponentPreview — the tab container's layout broke pointer-click-position tests (`range drag`, `vertical click`). A separate "Usage" section with ComponentPreview shows the import pattern.
+- **slider:** Usage ComponentPreview placed AFTER test-fixture sections to avoid shifting viewport coordinates for pointer-click tests.
 - **use-form:** No `<InstallSnippet>` — `use-form` is a lib, not in the registry. Installed as a dependency of `form-fields`.
 
 ### Verify
 
 ```
-node tests/run.mjs   → 752/755 passed
-npm run build        → clean (1.09s)
+node tests/run.mjs   → 753/755 passed
+npm run build        → clean (1.05s)
 ```
 
-3 failures are all pre-existing (confirmed by stash-test on original code):
-- 2× cursor: slider grab/grabbing cursor — environment-specific
-- 1× slider: onValueCommit dynamic import — `/@fs/` Vite dev server path fails
+2 failures are the documented pre-existing cursor tests:
+- cursor: slider thumb shows grab cursor at rest
+- cursor: slider thumb shows grabbing cursor during drag
 
 ### Surprises
 
-- ComponentPreview breaks slider pointer-click tests. The container's padding/layout shifts the bounding box enough that `clickAt("Range", 0.9)` lands at the wrong position. Fixed by keeping slider fixture sections outside ComponentPreview.
-- Baseline in task file says 753/755 but actual pre-existing failures are 3/755 (the `onValueCommit` dynamic import was already failing before this work).
+- Any content above the slider test fixtures shifts their viewport coordinates. The Vertical slider's `clickAt` uses `page.mouse.click` which operates in viewport space — extra height above pushes it below the fold. Fixed by placing the Usage ComponentPreview after all fixture sections.
+- Code-tab strings must include every element the rendered JSX shows (Labels, wrappers). Omitting them makes the copyable code produce inaccessible markup.
