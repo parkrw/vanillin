@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react"
+import { TableOfContents } from "./toc.jsx"
 import { ModeToggle } from "../ui/mode-toggle/mode-toggle.jsx"
 import {
   Breadcrumb,
@@ -407,6 +408,7 @@ export function App() {
             <p>Not built yet.</p>
           )}
         </main>
+        {!isHome && <TableOfContents route={route} />}
       </div>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </div>
