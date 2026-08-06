@@ -1,6 +1,6 @@
 # task78: docs-content
-**Goal:** Get Started refresh, config reference page, voice pass, remaining content fixes from ISSUES B1-B6 + A5 + C7/C8 not addressed by tasks 76-77.  **Branch:** `docs/content`  **Deps:** 75
-**Owns:** `site/pages/docs/*.jsx`
+**Goal:** Get Started refresh, config reference page, CLI page, voice pass, remaining content fixes from ISSUES B1-B6 + A5 + C7/C8 not addressed by tasks 76-77.  **Branch:** `docs/content`  **Deps:** 75
+**Owns:** `site/pages/docs/*.jsx`, `site/registry.js`
 
 ## Sub-tasks
 
@@ -20,6 +20,9 @@
 
 - [ ] 5. **Voice pass (A5)** — skim all docs/ pages for upstream-verbatim prose. Rewrite in vanillin's own voice. The kit is similar to upstream, not the same — reads as a clone when the prose is identical.
   - files: `site/pages/docs/*.jsx`
+
+- [ ] 6. **CLI docs page** — new `site/pages/docs/cli.jsx` documenting `bin/van.mjs`: init, add (incl. bare-add picker), diff, update (3-way merge), build, list; `van.config.json` pointer to the configuration page. The `cli` entry in `site/registry.js` (line ~22) exists page-less — add its `page:` import to turn it live.
+  - files: `site/pages/docs/cli.jsx`, `site/registry.js`
 
 ## Verify / done
 
