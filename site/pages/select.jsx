@@ -203,9 +203,9 @@ import "./ui/select/select.css"
 
       <section className="pg-section">
         <h3>Disabled</h3>
-        <ComponentPreview code={`<Select disabled defaultValue="apple">
+        <ComponentPreview code={`<Select disabled defaultValue="apple" items={[{ value: "apple", label: "Apple" }]}>
   <SelectTrigger style={{ width: "180px" }}>
-    <SelectValue />
+    <SelectValue placeholder="Select a fruit" />
   </SelectTrigger>
   <SelectContent>
     <SelectItem value="apple">Apple</SelectItem>

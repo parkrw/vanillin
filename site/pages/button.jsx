@@ -75,7 +75,7 @@ import "./ui/button/button.css"
       <section className="pg-section">
         <h3>States</h3>
         <ComponentPreview code={`<Button disabled>Disabled</Button>
-<Button as="a" href="/about">As link</Button>`}>
+<Button as="a" href="#button">As link</Button>`}>
           <div className="pg-row">
             <Button disabled>Disabled</Button>
             <Button as="a" href="#button">
