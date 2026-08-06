@@ -1,8 +1,20 @@
 import { useState } from "react"
 import { Badge, Chip } from "../../ui/badge/badge.jsx"
 import { Button } from "../../ui/button/button.jsx"
+import { Card, CardHeader, CardTitle, CardContent } from "../../ui/card/card.jsx"
+import {
+  Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
+} from "../../ui/table/table.jsx"
 import "../../ui/badge/badge.css"
 import "../../ui/button/button.css"
+import "../../ui/card/card.css"
+import "../../ui/table/table.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 const initialChips = ["Design", "Engineering", "Ops"]
 
@@ -12,99 +24,163 @@ export default function BadgePage() {
   return (
     <>
       <h2>Badge</h2>
+      <p>A small label for status, counts, or categories.</p>
+
+      <InstallSnippet slug="badge" />
 
       <section className="pg-section">
-        <h3>Variants</h3>
-        <p>
-          Four base variants. <code>destructive</code> is a
-          solid red badge — high contrast, meant for critical actions and
-          destructive confirmations.
-        </p>
-        <div className="pg-row">
-          <Badge>Default</Badge>
-          <Badge variant="secondary">Secondary</Badge>
-          <Badge variant="destructive">Destructive</Badge>
-          <Badge variant="outline">Outline</Badge>
-        </div>
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { Badge } from "./ui/badge/badge"
+import "./ui/badge/badge.css"
+
+<Badge>Default</Badge>
+<Badge variant="secondary">Secondary</Badge>`}>
+          <div className="pg-row">
+            <Badge>Default</Badge>
+            <Badge variant="secondary">Secondary</Badge>
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
-        <h3>Status variants (soft)</h3>
+        <h3>Variants</h3>
+        <ComponentPreview code={`<Badge>Default</Badge>
+<Badge variant="secondary">Secondary</Badge>
+<Badge variant="destructive">Destructive</Badge>
+<Badge variant="outline">Outline</Badge>`}>
+          <div className="pg-row">
+            <Badge>Default</Badge>
+            <Badge variant="secondary">Secondary</Badge>
+            <Badge variant="destructive">Destructive</Badge>
+            <Badge variant="outline">Outline</Badge>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Status Variants</h3>
         <p>
-          Status variants use a soft treatment — tinted background, coloured
-          text, tinted border — so they stay readable when badges cluster in
-          dense table rows. Each maps to the <code>--success</code>,{" "}
-          <code>--warning</code>, <code>--info</code>, and{" "}
-          <code>--destructive</code> token families.
+          Soft treatment — tinted background, coloured text, tinted border — so
+          they stay readable in dense table rows.
         </p>
-        <p>
-          The original <code>destructive</code> variant is kept as-is (solid)
-          for backward compatibility. <code>destructive-soft</code> provides
-          the same visual weight as the other status variants — use it when
-          you want a red badge that sits alongside <code>success</code> or{" "}
-          <code>warning</code> badges without dominating the row.
-        </p>
-        <p>
-          Note: <code>StatusDot</code> calls this semantic state{" "}
-          <code>error</code> (the console convention); Badge keeps{" "}
-          <code>destructive</code>, the name the variant has always had.
-        </p>
-        <div className="pg-row" data-pg="badge-status">
-          <Badge variant="success">Success</Badge>
-          <Badge variant="warning">Warning</Badge>
-          <Badge variant="info">Info</Badge>
-          <Badge variant="destructive-soft">Destructive soft</Badge>
-        </div>
+        <ComponentPreview code={`<Badge variant="success">Success</Badge>
+<Badge variant="warning">Warning</Badge>
+<Badge variant="info">Info</Badge>
+<Badge variant="destructive-soft">Destructive soft</Badge>`}>
+          <div className="pg-row" data-pg="badge-status">
+            <Badge variant="success">Success</Badge>
+            <Badge variant="warning">Warning</Badge>
+            <Badge variant="info">Info</Badge>
+            <Badge variant="destructive-soft">Destructive soft</Badge>
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Chip</h3>
         <p>
-          <code>Chip</code> is a badge with a dismiss affordance: it renders{" "}
-          <code>&lt;Badge variant="secondary" className="badge--chip"&gt;</code>{" "}
-          plus a truncating label and an optional remove button. It lives here
-          rather than in its own slug because a chip <em>is</em> a badge — same
-          primitive, same meaning — and the kit had drifted into two
-          implementations of it (<code>ui/combobox</code> had its own).{" "}
-          <code>ui/combobox</code> now imports this one.
+          <code>Chip</code> is a badge with a dismiss button. Pass{" "}
+          <code>onRemove</code> for the button; omit for a static chip.
         </p>
-        <p>
-          Pass <code>onRemove</code> for the button; omit it for a static chip.
-          The button is <code>tabIndex={"{-1}"}</code> on purpose — Tab must not
-          walk eight chips to reach the control they sit in, so pair it with a
-          Backspace shortcut the way combobox does. Its accessible name
-          defaults to <code>Remove &lt;label&gt;</code>; override with{" "}
-          <code>removeLabel</code> when the child is not a plain string. Long
-          labels ellipsis at <code>10rem</code>.
-        </p>
-        <div className="pg-row" data-pg="badge-chips">
-          <Chip>Static</Chip>
-          {chips.map((c) => (
-            <Chip key={c} onRemove={() => setChips(chips.filter((x) => x !== c))}>
-              {c}
+        <ComponentPreview code={`import { Chip } from "./ui/badge/badge"
+
+<Chip>Static</Chip>
+<Chip onRemove={() => handleRemove(id)}>Removable</Chip>
+<Chip onRemove={() => {}} disabled>Disabled</Chip>`}>
+          <div className="pg-row" data-pg="badge-chips">
+            <Chip>Static</Chip>
+            {chips.map((c) => (
+              <Chip key={c} onRemove={() => setChips(chips.filter((x) => x !== c))}>
+                {c}
+              </Chip>
+            ))}
+            <Chip onRemove={() => {}} disabled>
+              Disabled
             </Chip>
-          ))}
-          <Chip onRemove={() => {}} disabled>
-            Disabled
-          </Chip>
-          <Chip onRemove={() => {}}>
-            A label long enough to be truncated by the chip
-          </Chip>
-        </div>
-        <div className="pg-row">
-          <Button variant="outline" size="sm" onClick={() => setChips(initialChips)}>
-            Reset chips
-          </Button>
-        </div>
+            <Chip onRemove={() => {}}>
+              A label long enough to be truncated by the chip
+            </Chip>
+          </div>
+          <div className="pg-row">
+            <Button variant="outline" size="sm" onClick={() => setChips(initialChips)}>
+              Reset chips
+            </Button>
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
-        <h3>Density</h3>
-        <p>
-          Padding and gap scale with <code>--density-scale</code> via the{" "}
-          <code>--space-*</code> ramp.
-        </p>
+        <h3>Badge in Card Header</h3>
+        <ComponentPreview code={`<Card>
+  <CardHeader>
+    <CardTitle>Deployment</CardTitle>
+    <Badge variant="success">Live</Badge>
+  </CardHeader>
+  <CardContent>
+    <p>Last deployed 2 minutes ago.</p>
+  </CardContent>
+</Card>`}>
+          <Card style={{ width: "100%", maxWidth: "22rem" }}>
+            <CardHeader>
+              <CardTitle>Deployment</CardTitle>
+              <Badge variant="success">Live</Badge>
+            </CardHeader>
+            <CardContent>
+              <p style={{ margin: 0 }}>Last deployed 2 minutes ago.</p>
+            </CardContent>
+          </Card>
+        </ComponentPreview>
       </section>
+
+      <section className="pg-section">
+        <h3>Badge in Table Cell</h3>
+        <ComponentPreview code={`<Table>
+  <TableBody>
+    <TableRow>
+      <TableCell>api-server</TableCell>
+      <TableCell><Badge variant="success">Healthy</Badge></TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>worker</TableCell>
+      <TableCell><Badge variant="warning">Degraded</Badge></TableCell>
+    </TableRow>
+  </TableBody>
+</Table>`}>
+          <Table style={{ maxWidth: "22rem" }}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Service</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell>api-server</TableCell>
+                <TableCell><Badge variant="success">Healthy</Badge></TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>worker</TableCell>
+                <TableCell><Badge variant="warning">Degraded</Badge></TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>scheduler</TableCell>
+                <TableCell><Badge variant="destructive-soft">Down</Badge></TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </ComponentPreview>
+      </section>
+
+      <ApiReference title="Badge" props={[
+        { name: "variant", type: '"default" | "secondary" | "destructive" | "outline" | "success" | "warning" | "info" | "destructive-soft"', default: '"default"', description: "Visual variant" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
+
+      <ApiReference title="Chip" props={[
+        { name: "onRemove", type: "() => void", description: "Callback for the dismiss button; omit for a static chip" },
+        { name: "removeLabel", type: "string", description: 'Accessible label for the remove button (default: "Remove <label>")' },
+        { name: "disabled", type: "boolean", description: "Disable the chip and its remove button" },
+      ]} />
     </>
   )
 }
