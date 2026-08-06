@@ -14,6 +14,12 @@ import {
 import "../../ui/command/command.css"
 import { Button } from "../../ui/button/button.jsx"
 import "../../ui/button/button.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 function CalendarIcon() {
   return (
@@ -84,7 +90,6 @@ export default function CommandPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [highlighted, setHighlighted] = useState("")
 
-  // ⌘K / Ctrl+K opens the palette (the conventional shortcut).
   useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
@@ -104,94 +109,155 @@ export default function CommandPage() {
   return (
     <>
       <h2>Command</h2>
+      <p>A searchable command palette for actions, navigation, and fuzzy-filtered lists — the building block behind ⌘K interfaces.</p>
+
+      <InstallSnippet slug="command" />
+
       <p>
         Last selected: <span data-pg="cmd-last">{last}</span>
       </p>
 
       <section className="pg-section">
-        <h3>Default (groups, shortcuts, disabled item)</h3>
-        <Command className="command--bordered" data-pg="cmd-root">
-          <CommandInput placeholder="Type a command or search..." data-pg="cmd-input" />
-          <CommandList data-pg="cmd-list">
-            <CommandEmpty data-pg="cmd-empty">No results found.</CommandEmpty>
-            <CommandGroup heading="Suggestions" data-pg="cmd-group-suggestions">
-              <CommandItem value="calendar" onSelect={select} data-pg="cmd-item-calendar">
-                <CalendarIcon />
-                Calendar
-              </CommandItem>
-              <CommandItem value="emoji" onSelect={select} data-pg="cmd-item-emoji">
-                Search Emoji
-              </CommandItem>
-              <CommandItem value="launch" disabled onSelect={select} data-pg="cmd-item-launch">
-                Launch (unavailable)
-              </CommandItem>
-            </CommandGroup>
-            <CommandSeparator data-pg="cmd-separator" />
-            <CommandGroup heading="Settings" data-pg="cmd-group-settings">
-              <CommandItem
-                value="profile"
-                keywords={["account", "me"]}
-                onSelect={select}
-                data-pg="cmd-item-profile"
-              >
-                Profile
-                <CommandShortcut>⌘P</CommandShortcut>
-              </CommandItem>
-              <CommandItem value="billing" onSelect={select} data-pg="cmd-item-billing">
-                Billing
-                <CommandShortcut>⌘B</CommandShortcut>
-              </CommandItem>
-            </CommandGroup>
-          </CommandList>
-        </Command>
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandShortcut, CommandSeparator } from "./ui/command/command"
+import "./ui/command/command.css"
+
+<Command className="command--bordered">
+  <CommandInput placeholder="Type a command or search..." />
+  <CommandList>
+    <CommandEmpty>No results found.</CommandEmpty>
+    <CommandGroup heading="Suggestions">
+      <CommandItem value="calendar" onSelect={handleSelect}>
+        Calendar
+      </CommandItem>
+    </CommandGroup>
+    <CommandSeparator />
+    <CommandGroup heading="Settings">
+      <CommandItem value="profile" onSelect={handleSelect}>
+        Profile
+        <CommandShortcut>⌘P</CommandShortcut>
+      </CommandItem>
+    </CommandGroup>
+  </CommandList>
+</Command>`}>
+          <Command className="command--bordered" data-pg="cmd-root">
+            <CommandInput placeholder="Type a command or search..." data-pg="cmd-input" />
+            <CommandList data-pg="cmd-list">
+              <CommandEmpty data-pg="cmd-empty">No results found.</CommandEmpty>
+              <CommandGroup heading="Suggestions" data-pg="cmd-group-suggestions">
+                <CommandItem value="calendar" onSelect={select} data-pg="cmd-item-calendar">
+                  <CalendarIcon />
+                  Calendar
+                </CommandItem>
+                <CommandItem value="emoji" onSelect={select} data-pg="cmd-item-emoji">
+                  Search Emoji
+                </CommandItem>
+                <CommandItem value="launch" disabled onSelect={select} data-pg="cmd-item-launch">
+                  Launch (unavailable)
+                </CommandItem>
+              </CommandGroup>
+              <CommandSeparator data-pg="cmd-separator" />
+              <CommandGroup heading="Settings" data-pg="cmd-group-settings">
+                <CommandItem
+                  value="profile"
+                  keywords={["account", "me"]}
+                  onSelect={select}
+                  data-pg="cmd-item-profile"
+                >
+                  Profile
+                  <CommandShortcut>⌘P</CommandShortcut>
+                </CommandItem>
+                <CommandItem value="billing" onSelect={select} data-pg="cmd-item-billing">
+                  Billing
+                  <CommandShortcut>⌘B</CommandShortcut>
+                </CommandItem>
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>What the search matches</h3>
+        <p>
+          The built-in filter scores against the item's <code>value</code> prop, any <code>keywords</code> array entries, and the rendered text content. All three are folded into a single fuzzy match. In the demo above, typing <strong>"account"</strong> surfaces "Profile" because <code>keywords=&#123;["account", "me"]&#125;</code>.
+        </p>
       </section>
 
       <section className="pg-section">
         <h3>Dialog palette (⌘K / Ctrl+K)</h3>
-        <Button variant="outline" onClick={() => setDialogOpen(true)} data-pg="cmd-dialog-trigger">
-          Open palette
-        </Button>
-        <CommandDialog open={dialogOpen} onOpenChange={setDialogOpen} data-pg="cmd-dialog">
-          <CommandInput placeholder="Type a command or search..." data-pg="cmd-dialog-input" />
-          <CommandList data-pg="cmd-dialog-list">
-            <CommandEmpty>No results found.</CommandEmpty>
-            <CommandGroup heading="Navigation">
-              <CommandItem value="go-home" onSelect={select} data-pg="cmd-item-go-home">
-                Go to Home
-              </CommandItem>
-              <CommandItem value="go-docs" onSelect={select} data-pg="cmd-item-go-docs">
-                Go to Docs
-              </CommandItem>
-            </CommandGroup>
-          </CommandList>
-        </CommandDialog>
+        <ComponentPreview code={`<CommandDialog open={open} onOpenChange={setOpen}>
+  <CommandInput placeholder="Type a command or search..." />
+  <CommandList>
+    <CommandEmpty>No results found.</CommandEmpty>
+    <CommandGroup heading="Navigation">
+      <CommandItem value="go-home" onSelect={select}>Go to Home</CommandItem>
+      <CommandItem value="go-docs" onSelect={select}>Go to Docs</CommandItem>
+    </CommandGroup>
+  </CommandList>
+</CommandDialog>`}>
+          <Button variant="outline" onClick={() => setDialogOpen(true)} data-pg="cmd-dialog-trigger">
+            Open palette
+          </Button>
+          <CommandDialog open={dialogOpen} onOpenChange={setDialogOpen} data-pg="cmd-dialog">
+            <CommandInput placeholder="Type a command or search..." data-pg="cmd-dialog-input" />
+            <CommandList data-pg="cmd-dialog-list">
+              <CommandEmpty>No results found.</CommandEmpty>
+              <CommandGroup heading="Navigation">
+                <CommandItem value="go-home" onSelect={select} data-pg="cmd-item-go-home">
+                  Go to Home
+                </CommandItem>
+                <CommandItem value="go-docs" onSelect={select} data-pg="cmd-item-go-docs">
+                  Go to Docs
+                </CommandItem>
+              </CommandGroup>
+            </CommandList>
+          </CommandDialog>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Wire your own actions</h3>
+        <p>
+          Each <code>CommandItem</code> fires <code>onSelect(value)</code> when activated via Enter or click. Wire it to your app's router, state, or side effects — there is no built-in action system. The dialog variant calls <code>onOpenChange(false)</code> on selection so the palette closes automatically.
+        </p>
       </section>
 
       <section className="pg-section">
         <h3>Controlled highlight + loop</h3>
-        <Command
-          className="command--bordered"
-          loop
-          value={highlighted}
-          onValueChange={setHighlighted}
-        >
-          <CommandInput placeholder="Wraps at both ends" data-pg="cmd-loop-input" />
-          <CommandList data-pg="cmd-loop-list">
-            <CommandEmpty>No results found.</CommandEmpty>
-            <CommandItem value="one" onSelect={select} data-pg="cmd-item-one">
-              One
-            </CommandItem>
-            <CommandItem value="two" onSelect={select} data-pg="cmd-item-two">
-              Two
-            </CommandItem>
-            <CommandItem value="three" onSelect={select} data-pg="cmd-item-three">
-              Three
-            </CommandItem>
-          </CommandList>
-        </Command>
-        <p>
-          Highlighted: <span data-pg="cmd-loop-state">{highlighted}</span>
-        </p>
+        <ComponentPreview code={`<Command loop value={highlighted} onValueChange={setHighlighted}>
+  <CommandInput placeholder="Wraps at both ends" />
+  <CommandList>
+    <CommandEmpty>No results found.</CommandEmpty>
+    <CommandItem value="one" onSelect={select}>One</CommandItem>
+    <CommandItem value="two" onSelect={select}>Two</CommandItem>
+    <CommandItem value="three" onSelect={select}>Three</CommandItem>
+  </CommandList>
+</Command>`}>
+          <Command
+            className="command--bordered"
+            loop
+            value={highlighted}
+            onValueChange={setHighlighted}
+          >
+            <CommandInput placeholder="Wraps at both ends" data-pg="cmd-loop-input" />
+            <CommandList data-pg="cmd-loop-list">
+              <CommandEmpty>No results found.</CommandEmpty>
+              <CommandItem value="one" onSelect={select} data-pg="cmd-item-one">
+                One
+              </CommandItem>
+              <CommandItem value="two" onSelect={select} data-pg="cmd-item-two">
+                Two
+              </CommandItem>
+              <CommandItem value="three" onSelect={select} data-pg="cmd-item-three">
+                Three
+              </CommandItem>
+            </CommandList>
+          </Command>
+          <p>
+            Highlighted: <span data-pg="cmd-loop-state">{highlighted}</span>
+          </p>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
@@ -218,8 +284,7 @@ export default function CommandPage() {
       <section className="pg-section">
         <h3>Fuzzy scoring and re-sort</h3>
         <p>
-          Filtering now uses a fuzzy scorer (ported from cmdk's{" "}
-          <code>command-score</code>, MIT) that ranks candidates by match
+          Filtering uses a fuzzy scorer that ranks candidates by match
           quality and re-sorts the list via CSS <code>order</code>. Try
           typing <strong>"gp"</strong> — "Git Push" surfaces first because
           both initials match at word boundaries, even though "Grep" is
@@ -303,6 +368,15 @@ export default function CommandPage() {
         </p>
         <AsyncCommandDemo onSelect={select} />
       </section>
+
+      <ApiReference props={[
+        { name: "value", type: "string", description: "Controlled highlighted item value" },
+        { name: "onValueChange", type: "(value: string) => void", description: "Called when the highlighted item changes" },
+        { name: "filter", type: "(value, search, keywords?) => number", description: "Custom filter returning 0–1 score (0 hides the item)" },
+        { name: "shouldFilter", type: "boolean", default: "true", description: "Set false to disable built-in filtering and scoring" },
+        { name: "loop", type: "boolean", default: "false", description: "Arrow keys wrap from last item to first and vice-versa" },
+        { name: "vimBindings", type: "boolean", default: "true", description: "Ctrl+N/P/J/K move the highlight" },
+      ]} />
     </>
   )
 }

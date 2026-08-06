@@ -38,4 +38,8 @@ Baseline is 753/755 (2 pre-existing failures). Run the full suite and report exa
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** DONE
+
+All 13 pages rewritten to task-76 template: title + description, InstallSnippet, ComponentPreview usage/examples, ApiReference props table. Navigation-menu left unwrapped (demos too interactive for preview tabs). ISSUES B3 (command: "wire your own actions" + search-match explanation) and B4 (drawer: grab-handle documented) addressed.
+
+Suite: 752/755 (3 pre-existing: 2 cursor/slider-thumb, 1 slider/onValueCommit flake). All 151 target-component tests pass. Build clean.

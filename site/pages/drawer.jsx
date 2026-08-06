@@ -20,12 +20,14 @@ export default function DrawerPage() {
       <section className="pg-section">
         <h3>Swipe to dismiss</h3>
         <p>
-          The drawer dismisses on <strong>drag distance</strong> (past 25% of
-          its size) <em>or</em> <strong>flick velocity</strong> (above 1 px/ms
-          in the dismiss direction). The two gates are independent — a fast
-          short flick dismisses the same as a slow long drag. Under reduced
+          A touch-first panel that slides in from any edge and dismisses with a
+          swipe. The drawer closes on <strong>drag distance</strong> (past 25%
+          of its size) <em>or</em> <strong>flick velocity</strong> (above
+          1 px/ms in the dismiss direction). The two gates are independent — a
+          fast short flick dismisses the same as a slow long drag. Under reduced
           motion the drawer still dismisses; only the slide animation is
-          suppressed.
+          suppressed. The grab handle (<code>.drawer-handle</code>) renders by
+          default to signal the gesture; set <code>showSwipeHandle=&#123;false&#125;</code> to hide it.
         </p>
       </section>
 

@@ -11,6 +11,10 @@ import {
   navigationMenuTriggerStyle,
 } from "../../ui/navigation-menu/navigation-menu.jsx"
 import "../../ui/navigation-menu/navigation-menu.css"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 const components = [
   { title: "Alert Dialog", description: "A modal dialog that interrupts the user with important content." },
@@ -25,6 +29,7 @@ export default function NavigationMenuPage() {
   return (
     <>
       <h2>Navigation Menu</h2>
+      <p>A site navigation bar with hover-triggered dropdown panels, directional content animations, and full keyboard support.</p>
 
       <section className="pg-section">
         <h3>Viewport mode (default)</h3>
@@ -91,7 +96,6 @@ export default function NavigationMenuPage() {
           Each trigger anchors its own popover panel. Better for wide menus
           where panel widths vary significantly. Pass <code>viewport=&#123;false&#125;</code>.
         </p>
-        {/* delays shortened for test speed (defaults: 200/150) */}
         <NavigationMenu viewport={false} delayDuration={100} closeDelay={100} data-pg="nm">
           <NavigationMenuList>
             <NavigationMenuItem value="learn">
@@ -168,6 +172,16 @@ export default function NavigationMenuPage() {
           Open item: <span data-pg="nm-ctrl-state">{value === "" ? "none" : value}</span>
         </p>
       </section>
+
+      <InstallSnippet slug="navigation-menu" />
+
+      <ApiReference props={[
+        { name: "value", type: "string", description: "Controlled open item value" },
+        { name: "onValueChange", type: "(value: string) => void", description: "Called when the open item changes" },
+        { name: "viewport", type: "boolean", default: "true", description: "Use a shared viewport (true) or per-item popovers (false)" },
+        { name: "delayDuration", type: "number", default: "200", description: "Milliseconds before opening on hover" },
+        { name: "closeDelay", type: "number", default: "150", description: "Milliseconds grace period before closing on leave" },
+      ]} />
     </>
   )
 }
