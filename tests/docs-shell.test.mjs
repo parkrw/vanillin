@@ -108,4 +108,57 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.waitForSelector(".btn")
     eq(await page.locator(".pg-main > h2").count(), 1)
   })
+
+  await test("rail present on component pages with TOC entries", async () => {
+    await page.goto(`${baseUrl}/#button`)
+    await page.waitForSelector('[data-pg="rail"]')
+    const links = await page.locator(".pg-rail-link").allTextContents()
+    eq(links.length > 0, true, `expected TOC links, got ${links.length}`)
+    eq(links.includes("Usage"), true, `expected "Usage" in TOC, got: ${links.join(", ")}`)
+  })
+
+  await test("rail absent on home page", async () => {
+    await page.goto(`${baseUrl}/#home`)
+    await page.waitForSelector(".pg-home")
+    eq(await page.locator('[data-pg="rail"]').count(), 0)
+  })
+
+  await test("rail TOC tracks scroll position", async () => {
+    await page.goto(`${baseUrl}/#button`)
+    await page.waitForSelector('[data-pg="rail"]')
+    const lastLink = page.locator(".pg-rail-link").last()
+    const lastText = await lastLink.textContent()
+    await page.evaluate((text) => {
+      const links = document.querySelectorAll(".pg-rail-link")
+      for (const link of links) {
+        if (link.textContent === text) {
+          const id = link.getAttribute("href").slice(1)
+          document.getElementById(id)?.scrollIntoView({ behavior: "instant" })
+          break
+        }
+      }
+    }, lastText)
+    await page.waitForFunction(
+      (text) => document.querySelector('.pg-rail-link[data-active="true"]')?.textContent === text,
+      lastText,
+      { timeout: 5000 }
+    )
+  })
+
+  await test("rail resizes by dragging the handle", async () => {
+    await page.goto(`${baseUrl}/#button`)
+    await page.waitForSelector('[data-pg="rail"]')
+    const rail = page.locator('[data-pg="rail"]')
+    const before = (await rail.boundingBox()).width
+    const handle = await page.locator('[data-pg="rail-handle"]').boundingBox()
+    const x = handle.x + handle.width / 2
+    const y = handle.y + handle.height / 2
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.move(x - 60, y)
+    await page.mouse.up()
+    const after = (await rail.boundingBox()).width
+    eq(after > before, true, `expected rail to grow, ${before} → ${after}`)
+    await page.evaluate(() => localStorage.removeItem("pg-rail-width"))
+  })
 }
