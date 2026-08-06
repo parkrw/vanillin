@@ -31,8 +31,6 @@ export default function NavigationMenuPage() {
       <h2>Navigation Menu</h2>
       <p>A site navigation bar with hover-triggered dropdown panels, directional content animations, and full keyboard support.</p>
 
-      <InstallSnippet slug="navigation-menu" />
-
       <section className="pg-section">
         <h3>Viewport mode (default)</h3>
         <p style={{ fontSize: "0.8125rem", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
@@ -174,6 +172,8 @@ export default function NavigationMenuPage() {
           Open item: <span data-pg="nm-ctrl-state">{value === "" ? "none" : value}</span>
         </p>
       </section>
+
+      <InstallSnippet slug="navigation-menu" />
 
       <ApiReference props={[
         { name: "value", type: "string", description: "Controlled open item value" },
