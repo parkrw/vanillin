@@ -4,16 +4,16 @@
 
 ## Sub-tasks
 
-- [ ] 1. **Shell grid gains a third column** — `sidebar | main | rail`, rail hidden below ~72rem viewport and on `#home`. Rail is sticky under the topnav like `.pg-sidebar` (see the left-sidebar pattern from the 2026-08-05 nav rework: sticky wrapper + window scroll).
+- [x] 1. **Shell grid gains a third column** — `sidebar | main | rail`, rail hidden below ~72rem viewport and on `#home`. Rail is sticky under the topnav like `.pg-sidebar` (see the left-sidebar pattern from the 2026-08-05 nav rework: sticky wrapper + window scroll).
   - files: `site/app.jsx`, `site/site.css`
 
-- [ ] 2. **Table of contents** — derive entries from the rendered page's `.pg-section > h3` headings after route change (the pages already follow one-`h2`-plus-`h3`-sections structure; no per-page data needed). Render as an "On this page" list.
+- [x] 2. **Table of contents** — derive entries from the rendered page's `.pg-section > h3` headings after route change (the pages already follow one-`h2`-plus-`h3`-sections structure; no per-page data needed). Render as an "On this page" list.
   - files: `site/toc.jsx`
 
-- [ ] 3. **Scroll sync** — `IntersectionObserver` with a top rootMargin band marks the active heading; active link gets the `--pg-accent` treatment. Clicking scrolls to the heading (`scroll-margin-top: var(--pg-topnav-h)` on sections).
+- [x] 3. **Scroll sync** — `IntersectionObserver` with a top rootMargin band marks the active heading; active link gets the `--pg-accent` treatment. Clicking scrolls to the heading (`scroll-margin-top: var(--pg-topnav-h)` on sections).
   - files: `site/toc.jsx`, `site/site.css`
 
-- [ ] 4. **Resizable rail** — reuse the pointer-drag pattern from `Sidebar`'s `startResize` (`site/app.jsx`), handle on the rail's left edge, width persisted to `localStorage` (`pg-rail-width`). Consider extracting the shared drag hook once there are two callers.
+- [x] 4. **Resizable rail** — reuse the pointer-drag pattern from `Sidebar`'s `startResize` (`site/app.jsx`), handle on the rail's left edge, width persisted to `localStorage` (`pg-rail-width`). Consider extracting the shared drag hook once there are two callers.
   - files: `site/app.jsx`, `site/site.css`
 
 - [ ] 5. **(Stretch) code-example panel** — a mode where the rail pins the active section's `<CodeBlock>`/source alongside the demo, updating as the TOC active section changes. Scope call needed: this may compete with `<ComponentPreview>`'s inline code tabs from 75 — decide whether the rail replaces or supplements them before building.
@@ -33,4 +33,15 @@ Observable:
 
 ## Handoff
 
-**Status:** NOT STARTED — planned 2026-08-05 during the nav/site-chrome polish pass, per user request ("use of the right side of the page").
+**Status:** SUB-TASKS 1-4 DONE — stretch goal 5 skipped per task spec.
+
+**What landed:**
+- Three-column grid (`sidebar | main | rail`) in `site/app.jsx` + `site/site.css`; rail hidden below 72rem and on `#home`
+- `site/toc.jsx`: TOC derived from `.pg-section > h3` via MutationObserver (handles lazy-loaded pages), IntersectionObserver scroll sync, pointer-drag resize persisted to `localStorage("pg-rail-width")`
+- Four new tests in `tests/docs-shell.test.mjs`: rail presence, absence on home, scroll tracking, drag resize
+
+**Surprises:**
+- IntersectionObserver rejects `rem` in `rootMargin` — only `px` and `%` accepted. Used element `.offsetHeight` instead of reading the `--pg-topnav-h` CSS custom property.
+- Heading derivation via `setTimeout(0)` races with Suspense lazy loading — the timeout fires before the chunk resolves, so headings are never found. Replaced with MutationObserver on `.pg-main` that re-derives when the lazy content mounts.
+
+**Not extracted:** the drag-resize logic is duplicated between `Sidebar.startResize` and `TableOfContents.startResize`. A shared hook could be extracted once patterns stabilize.
