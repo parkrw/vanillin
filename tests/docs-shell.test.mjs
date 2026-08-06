@@ -110,7 +110,8 @@ export default async function run({ page, baseUrl, test, eq }) {
   })
 
   await test("rail present on component pages with TOC entries", async () => {
-    await page.goto(`${baseUrl}/#button`)
+    await page.goto(`${baseUrl}/#checkbox`)
+    await page.waitForSelector(".pg-section > h3")
     await page.waitForSelector('[data-pg="rail"]')
     const links = await page.locator(".pg-rail-link").allTextContents()
     eq(links.length > 0, true, `expected TOC links, got ${links.length}`)
@@ -124,7 +125,8 @@ export default async function run({ page, baseUrl, test, eq }) {
   })
 
   await test("rail TOC tracks scroll position", async () => {
-    await page.goto(`${baseUrl}/#button`)
+    await page.goto(`${baseUrl}/#checkbox`)
+    await page.waitForSelector(".pg-section > h3")
     await page.waitForSelector('[data-pg="rail"]')
     const lastLink = page.locator(".pg-rail-link").last()
     const lastText = await lastLink.textContent()
@@ -146,7 +148,8 @@ export default async function run({ page, baseUrl, test, eq }) {
   })
 
   await test("rail resizes by dragging the handle", async () => {
-    await page.goto(`${baseUrl}/#button`)
+    await page.goto(`${baseUrl}/#checkbox`)
+    await page.waitForSelector(".pg-section > h3")
     await page.waitForSelector('[data-pg="rail"]')
     const rail = page.locator('[data-pg="rail"]')
     const before = (await rail.boundingBox()).width
