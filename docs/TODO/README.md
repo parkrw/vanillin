@@ -2,14 +2,14 @@
 
 **Resume:** batch 3 complete and verified 2026-08-07 — 80 (759/761), 77c (757/759, 2 rework rounds), 77d (756/759, 1 rework round), all builds clean; the only failures are the two pre-existing slider-cursor tests plus an intermittent `navigation-menu` hover flake. **Task 77 is done — all 59 remaining component pages now carry the docs template.** *User merges four branches:* `fix/dialog-modal-positioning` (80), `docs/pages-rest-c` (77c), `docs/pages-rest-d` (77d), `docs/todo-batch3` (task files + this reconcile + ISSUES H3). No PRs — remote writes disabled. Worktrees `../vanillin-task{80,77c,77d}` stay until merged. **Next: 74's scope call** (is the docs site meant to work on a phone? — see [^74]), then the console kit.
 
-## Handoff — batch 3 (complete, unmerged)
+## Handoff — batch 3 merged, batch 4 ready to spawn
 
-**Status:** COMPLETE  **Branch:** `docs/todo-batch3`  **PR:** none (remote writes off)  **Updated:** 2026-08-07
+**Status:** COMPLETE (batch 3)  **Branch:** `docs/todo-batch4`  **PR:** none (remote writes off)  **Updated:** 2026-08-07
 
-- **Landed:** ISSUES C9 is fixed — dialogs, drawers and sheets anchor to the viewport again on pages taller than the fold, which was breaking any drawer below the fold in consumer code, not just the docs site. And **task 77 is done**: all 59 remaining component pages carry the docs template, so every component in the kit now has a real docs page.
-- **Repo state:** working tree clean. Four unmerged branches, all verified by the supervisor: `fix/dialog-modal-positioning` (759/761), `docs/pages-rest-c` (757/759), `docs/pages-rest-d` (756/759), `docs/todo-batch3` (this reconcile). Worktrees `../vanillin-task{80,77c,77d}` still exist — remove after merging. The two `On main:` stashes are old and unrelated.
-- **Next:** task 74 needs a **scope call from the user before it can be detailed** — is the docs site meant to work on a phone? 73 of 79 pages force a horizontal scroll at 380px. If yes it is demo-layout work across most of `site/pages/`, not kit CSS. See [^74]. After 74, the console kit.
-- **Gotchas:** the task files for 80, 77c and 77d read `NOT STARTED` in this worktree — each worker wrote its handoff on its own branch, so the real `DONE` state only appears after the merge. Don't re-run those tasks. Suite baseline is **759**, and the noise floor is two slider-cursor failures plus an intermittent `navigation-menu` hover flake.
+- **Landed:** batch 3 is merged into `main` (`7fbb916`) — ISSUES C9 fixed, so dialogs/drawers/sheets anchor to the viewport again on tall pages (this broke consumer code, not just the docs site), and **task 77 is done**: every component in the kit has a templated docs page. Merged suite **758/761**, build clean.
+- **Repo state:** clean. Worktrees `../vanillin-task{80,77c,77d}` and their merged branches are safe to remove — offered, not yet done. The two `On main:` stashes are old and unrelated.
+- **Next:** **batch 4 — `/cycle --spawn 2` for tasks 81 + 82.** Both are detailed and their `Owns` are disjoint (81: `site/site.css`/`app.jsx`/`toc.jsx`; 82: `site/pages/**`). 81 leads with a one-line fix: `.pg-main` (`site/site.css:471`) has a `max-width` but no `margin: 0 auto`, so the content column pins left of a wide `1fr` track. **Both tasks grew 2026-08-07** from a second user review — 81 takes the topnav border/opacity, 82 takes the home page, the em-dash sweep and four pages needing examples. See the top entry in the adjustments log.
+- **Gotchas:** 77 templated every page but did **not** make the site look finished — that gap is what 81+82 exist to close, so treat neither as a redo. **`button.jsx` and `combobox.jsx` are the standard the user named**: 7 previews each, every example rendered, zero bare `CodeBlock`. Only 4 of 75 pages meet it; 29 sit at 0-1 previews. Suite baseline is **761**; noise floor is two slider-cursor failures plus an intermittent `navigation-menu` hover flake. Task **74** is no longer blocked — its scope call is answered (mobile via kit sheet/drawer) — but it **deps on 81** since both own the shell files.
 
 Two notes for reading anything below: the docs site directory is **`site/`** (renamed 2026-07-27), so older prose here saying `playground/` means `site/`. And `docs/HANDOFF.md` is gone — its durable content is in `AGENTS.md`, `docs/QUIRKS.md` and `docs/DECISIONS.md`; live state belongs in each task file's `## Handoff`.
 
@@ -60,8 +60,15 @@ Tasks are detailed just-in-time; only the rows below are durable.
 **Order from here (settled 2026-07-27, after 38 landed):**
 
 ```
-39 ✓ → 68 ✓ → 71 ✓ → 72 ✓ → 73 ✓ → 65 ✓ → 66 ✓ → 67 ✓ → 69 ✓ → 70 ✓ → 30 ✓ → 75 ✓ → 76 ✓ → 78 ✓ → 77 A+B ✓ + 79 ✓ (batch 2) → 80 + 77 C+D (batch 3 — Owns disjoint) → 74? → console kit
+39 ✓ → 68 ✓ → 71 ✓ → 72 ✓ → 73 ✓ → 65 ✓ → 66 ✓ → 67 ✓ → 69 ✓ → 70 ✓ → 30 ✓ → 75 ✓ → 76 ✓ → 78 ✓ → 77 A+B ✓ + 79 ✓ (batch 2) → 80 ✓ + 77 C+D ✓ (batch 3) → 81 + 82 (batch 4 — Owns disjoint) → 74 (mobile, deps 81) → console kit
 ```
+
+**Batch 4 = 81 + 82**, added 2026-08-07 after the user reviewed the finished docs
+site. 77 templated every page; it did not make the site *look* finished. The two
+tasks split cleanly by the shell/content seam — 81 owns the layout files, 82 owns
+`site/pages/**` — so they spawn together. **Neither is a redo of 77**: 81 is
+geometry nobody owned, and 82 is the pages 76/77 never reached plus the system
+pages whose licensed deviation read as neglect.
 
 - **39 landed 2026-07-27 and unblocked everything after it.** It ran alone on the
   premise that it rewrites every component's CSS; in the event it touched six
@@ -167,7 +174,7 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 70  | typography-system        | ~L  | [x]    | ISSUES A4 — a real typeset scale, not per-page sizes [^70]               |
 | 71  | docs-site-sweep          | ~M  | [x]    | all 79 pages swept; 2 tools committed; D/F collapse to 4 causes [^71]  |
 | 72  | bug-batch-2              | ~M  | [x]    | merged 2026-08-02, no PR (local merge); all 11 sub-tasks; +F7/D14/D15 filed [^72] |
-| 74  | site-responsive          | ~L  | [ ]    | ISSUES K1 — 73 of 79 pages overflow at 380px; needs a scope call [^74]  |
+| 74  | mobile-views             | ~L  | [ ]    | deps: 81; scope call answered — mobile via kit sheet/drawer [^74]       |
 | 73  | coverage-probe           | ~L  | [x]    | 26 probed, 5 gaps fixed, 20 caught, 1 skipped; suite 735 [^73]          |
 | 75  | docs-code-infra          | ~M  | [x]    | landed on `fix/docs-nav-rework` (`27a1410`); sub-task 5 (page convention) delegated to 76 [^75] |
 | 76  | docs-pages-core          | ~L  | [x]    | landed 2026-08-06 on `docs/pages-core` (18 commits, local merge); B5/B6/C8 fixed [^76] |
@@ -175,6 +182,8 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 78  | docs-content             | ~M  | [x]    | landed 2026-08-06 on `docs/content` (6 commits, local merge); B1 + CLI page [^78] |
 | 79  | docs-right-rail          | ~M  | [x]    | landed 2026-08-06 on `feat/docs-right-rail`; TOC rail + drag resize; stretch (code panel) skipped [^79] |
 | 80  | dialog-modal-positioning | ~M  | [x]    | landed 2026-08-07 on `fix/dialog-modal-positioning`; one-line CSS fix, 2 new tests [^80] |
+| 81  | docs-layout-measure      | ~M  | [ ]    | `.pg-main` never centred; column measure + rhythm + topnav border/opacity [^81] |
+| 82  | docs-completeness        | ~L  | [ ]    | 9 unfinished pages + home/hero + 353 em dashes + `docs/` reference [^82] |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -357,9 +366,22 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
     viewport (nothing overflows at 1280); worst is `container-queries` at
     1116px, which is the page whose subject is fitting a container. **Needs a
     scope call before it is worth detailing:** is the docs site meant to work on
-    a phone at all? If yes it is demo-layout work across most of
-    `site/pages/`, not kit CSS, and belongs after 30 with the other docs-site
-    passes rather than in a bug batch.
+    a phone at all?
+    **Answered 2026-08-07: yes — and the mobile views are built from the kit's
+    own sheet and drawer**, not bespoke media queries, because the site is the
+    kit's showcase and its chrome should demonstrate those components carrying a
+    real app's navigation. That reframes the finding: the 73-page overflow is
+    **one defect, not 73**. `site/app.jsx` has no `Sheet`, no `Drawer`, no
+    `matchMedia` and no mobile branch at all, so the shell renders its
+    three-column desktop grid at every width and lets the viewport clip it. The
+    guess above — "demo-layout work across most of `site/pages/`" — was wrong in
+    the expensive direction. Build the shell's mobile layout first, re-measure,
+    and hand whatever genuinely remains to 82. `ui/sidebar` already has a
+    sheet-backed mobile mode (task 27) to start from, and the TOC rail is
+    *hidden outright* below 72rem (`site/site.css:460-464`), so a phone has no
+    route to a page's contents at all. **Deps on 81** — both own `site/app.jsx`
+    and `site/site.css`, so they serialise; 81's desktop geometry lands first.
+    Task file: `docs/TODO/task74-mobile-views.md`.
 
 [^73]: ISSUES H2. H1 asked whether assertions hold for the wrong *reason*; this
     asks which features have **no real test at all**. `ui/scroll-area`'s
@@ -424,6 +446,54 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
     regression test that opens a drawer on a taller-than-viewport page.
     **Owns:** `ui/dialog/**`, `site/pages/{drawer,sheet}.jsx`,
     `tests/{dialog,drawer,sheet}.test.mjs` — disjoint from 77 C+D.
+
+[^81]: Added 2026-08-07 from the user's report that the docs "still don't all
+    look great — funky placing". Root cause found while scoping: `.pg-main`
+    (`site/site.css:471`) caps at `56rem` but has **no `margin: 0 auto`**, while
+    the shell grid is `auto 1fr auto` — so the content column pins to the left of
+    a much wider track on any large display, stranding space before the TOC rail.
+    `.pg-main--home` has the centring; the base rule never got it.
+    **Grew 2026-08-07** with the topnav, from the user's second review: the
+    scrolled bar's `border-bottom-color: var(--border)` is the 1.26:1 token 71
+    measured and 72 never fixed (D9's fix went to `--input`), and its
+    `--background 82%` backdrop lets content read through the bar. Both are the
+    one rule at `site/site.css:78-82`, and both are shell, so they land here.
+    Scope is the
+    shell only: centring, a deliberate re-measure of the cap (prose wants 65-75
+    characters, but this column also carries code blocks and previews), the three
+    overlapping breakpoints at `:52`/`:460`/`:565`, and one section-spacing
+    contract to replace the per-page margin overrides four different workers
+    introduced. **Owns is disjoint from 82** — 81 owns `site/site.css` +
+    `site/app.jsx` + `site/toc.jsx`, 82 owns `site/pages/**` — so the two are
+    spawnable together. Distinct from **74**, which is the ≤380px overflow and
+    still needs its scope call.
+
+[^82]: Added 2026-08-07, same report: pages that are "not even done". Measured on
+    `main` at `7fbb916`, not guessed. Nine component pages are genuinely
+    incomplete: `use-form` (682 lines) and `form-fields` (601) carry no
+    `ComponentPreview` at all despite being the two largest pages in the site;
+    `drawer` (74) and `sheet` (70) are the thinnest, because task 80 restored
+    their InstallSnippet/ApiReference after the C9 fix but never gave them
+    examples; `navigation-menu` was deliberately left unwrapped by 77b and needs
+    that decision re-confirmed rather than reversed. The six **system pages**
+    (`container-queries`, `density`, `direction`, `primitives`, `typography`,
+    `view-transitions`) are a subtler case — 77d correctly licensed them to drop
+    InstallSnippet/ApiReference since they document a system rather than a
+    component, but "different template" landed as "unfinished", so they need one
+    consistent alternative page type. Plus the seven `site/pages/docs/` pages,
+    of which **`contracts.jsx` has never been in any task's scope**. Sub-task 1
+    is an audit against the running site, because the visual defects are the ones
+    source-reading misses.
+    **Grew 2026-08-07** with the rest of the user's second review, all of it
+    `site/pages/**`: the **home page** (a `success` "deploy passed" badge sitting
+    beside `<Progress value={80}>` at `home.jsx:61-62`, so the demo reads as a
+    broken component; the `Zero dependencies` claim rendered as a bare outline
+    `Badge`; and the hero showcase generally), **353 em dashes** across the page
+    prose, and **six pages the user named as needing examples** — `form-fields`
+    (601 lines, 0 previews) and `container-queries` (261, 0) were already on the
+    list, `data-table` (1251 lines, **3** previews) and `sidebar` (339, 3) are
+    new, and `command` (7) and `accordion` (9) get an audit before any edit since
+    their counts do not look like the defect.
 
 [^79]: right-hand rail on docs pages: scroll-synced "On this page" TOC,
     resizable via the same drag pattern as the left sidebar, stretch goal of a
@@ -490,6 +560,12 @@ just-in-time. Rough order of usefulness:
   work because of it.
 
 ## Adjustments log
+
+- **2026-08-07 — batch 4 grew, from the user's second review of the site.** Six more defects, none of them a new task: they split along the same shell/content seam 81 and 82 already own, and neither task has started. **To 81:** the scrolled topnav's bottom border is invisible and its 82% backdrop lets content read through the bar — one rule, `site/site.css:78-82`. The border is `var(--border)`, the 1.26:1 token task 71 measured; 72's D9 fix went to `--input` instead, so this is the first thing to actually trip over that. Fix it topnav-locally — 227 surface call sites ride on the global token. **To 82:** the home page (progress/badge mismatch, the zero-dependencies badge, the hero), 353 em dashes across `site/pages/`, and examples for `data-table` (1251 lines carrying 3 previews) and `sidebar` (24 exports, 3 previews). **Two calls worth recording.** The progress bar is not a `ui/progress` bug — `home.jsx:61` puts a `success` badge reading "deploy passed" next to `<Progress value={80}>`, so the component is drawing exactly what it was told and the demo is what is wrong; check the component before believing a demo. And the em-dash sweep is sub-task **8 of 9**, deliberately last: every earlier sub-task writes new prose, so sweeping first means sweeping twice.
+
+- **2026-08-07 — the standard got named, and 74's scope call was answered.** Two decisions from the user, both of which sharpened work that was previously vague. **(1) `button.jsx` and `combobox.jsx` are how every page should look.** Measured, that is a precise bar rather than a taste: 7 `ComponentPreview`s each, exactly one `InstallSnippet` and one `ApiReference`, and **zero bare `CodeBlock`** — every code sample sits beside a working demo. `combobox` is twice `button`'s length at the same preview count, so prose is free and missing demos are the defect. A census of all 75 pages against it: **12 pages have zero previews, 17 have one, and only 4 reach 7+.** `data-table` is 1251 lines carrying a single preview. That census is now 82's worklist, ordered worst-first, and it explains "not even done" far better than the earlier reading did. Also from the same review: **Usage sections should open on the Code tab** (`site/code-example.jsx:52` hardcodes `defaultValue="preview"`) — the reader at Usage wants the snippet to copy, not a render of a button they can already see; examples keep opening on Preview. **(2) Mobile is in scope, built from the kit's own sheet and drawer.** This turns task 74 from a deferred question into a specified task and inverts its shape: the 73-page 380px overflow is **one defect, not 73**, because `site/app.jsx` has no `Sheet`, `Drawer`, `matchMedia` or mobile branch whatsoever — the shell renders its desktop grid at every width. Build the shell's mobile layout, re-measure, hand the genuine remainder to 82. 74 now **deps on 81** (both own `site/app.jsx` and `site/site.css`), so it follows batch 4 rather than joining it.
+
+- **2026-08-07 — batch 4 added: 81 + 82, from the user's review of the finished docs site.** The report was "still don't all look great — funky placing, and not even done in some" across components, Get Started and docs. Scoping found one structural cause and one coverage gap, which is why this is two tasks rather than a polish pass. **Structural:** `.pg-main` (`site/site.css:471`) caps at 56rem with no `margin: 0 auto` inside an `auto 1fr auto` grid, so every page's content has been pinned to the left of a wide track on large displays — `.pg-main--home` has the centring, the base rule never did. **Coverage:** 77 templated all 59 remaining pages, but nine were left genuinely incomplete (`use-form` and `form-fields` at 682 and 601 lines with no `ComponentPreview` at all; `drawer`/`sheet` at ~70 lines because task 80 restored their sections without adding examples), `contracts.jsx` was never in any task's scope, and the six system pages 77d correctly licensed to skip InstallSnippet/ApiReference now read as neglected rather than deliberate. **The lesson worth keeping: "every page has the template" and "the site looks finished" are different claims, and 77's verification only ever tested the first.** A per-page checklist cannot see column geometry or a page type that is consistent with itself but inconsistent with its neighbours. Split at the shell/content seam so the two spawn together; 74 stays separate since it is still awaiting a scope call.
 
 - **2026-08-07 — batch 3 landed: 80 + 77c + 77d.** 80 passed first try; the task file's lead was right, and the fix is the single deletion of `position: relative` — `container-type: inline-size` applies `contain: layout`, which was already doing the containing-block job that declaration was credited with. Both 77 workers needed rework, but for a **new failure mode**: their test counts were accurate this time (first batch with no misreport), and what the suite could not see was content. 77c had deleted ~46 lines of behavioural prose from `format.jsx` and comparable detail from `carousel`, `resizable` and `scroll-area` — replaced by ApiReference tables that list prop names and document no behaviour. 77d had three code-tab drifts where the copyable source did not match the rendered preview. **The lesson generalises: a green suite proves the docs still work, never that they still say anything.** Template application is additive — a rewrite that reduces net prose is a regression until proven otherwise, and `git show <base>:<file>` is the check. Two items outgrew the batch: **H3** (`tests/empty.test.mjs` counts page-global `.empty`, so documenting the component fails its own test — the `empty` page still shows a placeholder until it is fixed) and the standing `navigation-menu` hover flake, which now joins the slider pair in the noise floor. Real baseline is **759 tests**, not the 753/755 the workers were seeded with; re-measure it per batch rather than inheriting it from the last handoff.
 
