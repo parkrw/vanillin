@@ -212,6 +212,34 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await page.waitForSelector(".drawer", { state: "detached" })
   })
 
+  await test("bottom drawer is viewport-anchored on a tall page", async () => {
+    await page.evaluate(() => {
+      const spacer = document.createElement("div")
+      spacer.id = "t80-spacer"
+      spacer.style.height = `${window.innerHeight * 2}px`
+      document.body.appendChild(spacer)
+    })
+    const isTall = await page.evaluate(
+      () => document.body.scrollHeight > window.innerHeight * 1.5
+    )
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await page.locator('button:has-text("Open down")').click()
+    await page.waitForSelector('.drawer[data-state="open"]')
+    await settle(drawer)
+    const isModal = await drawer.evaluate((el) => el.matches(":modal"))
+    const [bottom, viewport] = await drawer.evaluate((el) => [
+      el.getBoundingClientRect().bottom,
+      window.innerHeight,
+    ])
+    // Clean up before asserting so later tests start clean on failure
+    await page.keyboard.press("Escape")
+    await page.waitForSelector(".drawer", { state: "detached" })
+    await page.evaluate(() => document.getElementById("t80-spacer")?.remove())
+    eq(isTall, true, "precondition: page is taller than viewport")
+    eq(isModal, true, "modal")
+    near(bottom, viewport, 1, "flush bottom on tall page")
+  })
+
   await test("held still before lift does not dismiss drawer", async () => {
     await page.locator('button:has-text("Open down")').click()
     await page.waitForSelector('.drawer[data-state="open"]')
