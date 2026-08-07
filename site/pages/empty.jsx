@@ -9,6 +9,12 @@ import {
 import "../../ui/empty/empty.css"
 import { Button } from "../../ui/button/button.jsx"
 import "../../ui/button/button.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 function InboxIcon() {
   return (
@@ -40,6 +46,7 @@ export default function EmptyPage() {
   return (
     <>
       <h2>Empty</h2>
+      <p>A placeholder for empty states — icon, title, description, and optional action buttons in a centred layout.</p>
 
       <section className="pg-section">
         <h3>Default</h3>
@@ -92,6 +99,29 @@ export default function EmptyPage() {
           </Empty>
         </div>
       </section>
+
+      <InstallSnippet slug="empty" />
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "./ui/empty/empty"
+import "./ui/empty/empty.css"
+
+<Empty>
+  <EmptyHeader>
+    <EmptyMedia><InboxIcon /></EmptyMedia>
+    <EmptyTitle>Nothing here</EmptyTitle>
+    <EmptyDescription>Content will appear when available.</EmptyDescription>
+  </EmptyHeader>
+</Empty>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos above.</p>
+        </ComponentPreview>
+      </section>
+
+      <ApiReference props={[
+        { name: "className", type: "string", description: "Additional CSS classes on the root" },
+        { name: "EmptyMedia: variant", type: '"default" | "icon"', default: '"default"', description: "Icon variant renders media as a filled circle" },
+      ]} />
     </>
   )
 }

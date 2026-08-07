@@ -11,6 +11,12 @@ import {
 } from "../../ui/attachment/attachment.jsx"
 import "../../ui/attachment/attachment.css"
 import "../../ui/button/button.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 function FileIcon() {
   return (
@@ -66,6 +72,7 @@ export default function AttachmentPage() {
   return (
     <>
       <h2>Attachment</h2>
+      <p>A file-upload card with media, title, description, and action buttons — supports upload states, vertical orientation, image previews, and scroll-snap groups.</p>
 
       <section className="pg-section">
         <h3>States</h3>
@@ -125,6 +132,38 @@ export default function AttachmentPage() {
           </AttachmentGroup>
         </div>
       </section>
+
+      <InstallSnippet slug="attachment" />
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { Attachment, AttachmentMedia, AttachmentContent, AttachmentTitle, AttachmentDescription } from "./ui/attachment/attachment"
+import "./ui/attachment/attachment.css"
+
+<Attachment state="done">
+  <AttachmentMedia><FileIcon /></AttachmentMedia>
+  <AttachmentContent>
+    <AttachmentTitle>report.pdf</AttachmentTitle>
+    <AttachmentDescription>1.2 MB</AttachmentDescription>
+  </AttachmentContent>
+</Attachment>`}>
+          <Attachment state="done">
+            <AttachmentMedia><FileIcon /></AttachmentMedia>
+            <AttachmentContent>
+              <AttachmentTitle>report.pdf</AttachmentTitle>
+              <AttachmentDescription>1.2 MB</AttachmentDescription>
+            </AttachmentContent>
+          </Attachment>
+        </ComponentPreview>
+      </section>
+
+      <ApiReference props={[
+        { name: "state", type: '"uploading" | "processing" | "error" | "done"', default: '"done"', description: "Upload lifecycle state" },
+        { name: "size", type: '"default" | "sm" | "xs"', default: '"default"', description: "Card size" },
+        { name: "orientation", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "Stack direction for media and content" },
+        { name: "AttachmentMedia: variant", type: '"default" | "image"', default: '"default"', description: "Image variant renders a preview thumbnail" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
     </>
   )
 }

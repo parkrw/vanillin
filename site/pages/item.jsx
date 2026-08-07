@@ -13,6 +13,12 @@ import {
 import "../../ui/item/item.css"
 import { Button } from "../../ui/button/button.jsx"
 import "../../ui/button/button.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 function FileIcon() {
   return (
@@ -45,100 +51,193 @@ export default function ItemPage() {
   return (
     <>
       <h2>Item</h2>
+      <p>A structured list row with media, title, description, and trailing actions — the building block for lists, nav menus, and settings panels.</p>
+
+      <InstallSnippet slug="item" />
 
       <section className="pg-section">
-        <h3>Default</h3>
-        <div style={{ maxWidth: "28rem" }}>
-          <Item>
-            <ItemMedia variant="icon">
-              <FileIcon />
-            </ItemMedia>
-            <ItemContent>
-              <ItemTitle>Project Notes</ItemTitle>
-              <ItemDescription>Last edited 2 hours ago</ItemDescription>
-            </ItemContent>
-            <ItemActions>
-              <Button variant="ghost" size="sm">Open</Button>
-            </ItemActions>
-          </Item>
-        </div>
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription } from "./ui/item/item"
+import "./ui/item/item.css"
+
+<Item>
+  <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+  <ItemContent>
+    <ItemTitle>Project Notes</ItemTitle>
+    <ItemDescription>Last edited 2 hours ago</ItemDescription>
+  </ItemContent>
+</Item>`}>
+          <div style={{ maxWidth: "28rem" }}>
+            <Item>
+              <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+              <ItemContent>
+                <ItemTitle>Project Notes</ItemTitle>
+                <ItemDescription>Last edited 2 hours ago</ItemDescription>
+              </ItemContent>
+            </Item>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>With Actions</h3>
+        <ComponentPreview code={`<Item>
+  <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+  <ItemContent>
+    <ItemTitle>Project Notes</ItemTitle>
+    <ItemDescription>Last edited 2 hours ago</ItemDescription>
+  </ItemContent>
+  <ItemActions>
+    <Button variant="ghost" size="sm">Open</Button>
+  </ItemActions>
+</Item>`}>
+          <div style={{ maxWidth: "28rem" }}>
+            <Item>
+              <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+              <ItemContent>
+                <ItemTitle>Project Notes</ItemTitle>
+                <ItemDescription>Last edited 2 hours ago</ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Button variant="ghost" size="sm">Open</Button>
+              </ItemActions>
+            </Item>
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Variants</h3>
-        <div style={{ maxWidth: "28rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          <Item>
-            <ItemMedia variant="icon"><FileIcon /></ItemMedia>
-            <ItemContent>
-              <ItemTitle>Default</ItemTitle>
-              <ItemDescription>No border, transparent background</ItemDescription>
-            </ItemContent>
-          </Item>
-          <Item variant="outline">
-            <ItemMedia variant="icon"><FileIcon /></ItemMedia>
-            <ItemContent>
-              <ItemTitle>Outline</ItemTitle>
-              <ItemDescription>Bordered container</ItemDescription>
-            </ItemContent>
-          </Item>
-          <Item variant="muted">
-            <ItemMedia variant="icon"><FileIcon /></ItemMedia>
-            <ItemContent>
-              <ItemTitle>Muted</ItemTitle>
-              <ItemDescription>Muted background</ItemDescription>
-            </ItemContent>
-          </Item>
-        </div>
+        <ComponentPreview code={`<Item>
+  <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+  <ItemContent>
+    <ItemTitle>Default</ItemTitle>
+    <ItemDescription>No border, transparent background</ItemDescription>
+  </ItemContent>
+</Item>
+<Item variant="outline">
+  <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+  <ItemContent>
+    <ItemTitle>Outline</ItemTitle>
+    <ItemDescription>Bordered container</ItemDescription>
+  </ItemContent>
+</Item>
+<Item variant="muted">
+  <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+  <ItemContent>
+    <ItemTitle>Muted</ItemTitle>
+    <ItemDescription>Muted background</ItemDescription>
+  </ItemContent>
+</Item>`}>
+          <div style={{ maxWidth: "28rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            <Item>
+              <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+              <ItemContent>
+                <ItemTitle>Default</ItemTitle>
+                <ItemDescription>No border, transparent background</ItemDescription>
+              </ItemContent>
+            </Item>
+            <Item variant="outline">
+              <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+              <ItemContent>
+                <ItemTitle>Outline</ItemTitle>
+                <ItemDescription>Bordered container</ItemDescription>
+              </ItemContent>
+            </Item>
+            <Item variant="muted">
+              <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+              <ItemContent>
+                <ItemTitle>Muted</ItemTitle>
+                <ItemDescription>Muted background</ItemDescription>
+              </ItemContent>
+            </Item>
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Sizes</h3>
-        <div style={{ maxWidth: "28rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          <Item variant="outline">
-            <ItemMedia variant="icon"><FileIcon /></ItemMedia>
-            <ItemContent>
-              <ItemTitle>Default size</ItemTitle>
-            </ItemContent>
-          </Item>
-          <Item variant="outline" size="sm">
-            <ItemMedia variant="icon"><FileIcon /></ItemMedia>
-            <ItemContent>
-              <ItemTitle>Small size</ItemTitle>
-            </ItemContent>
-          </Item>
-          <Item variant="outline" size="xs">
-            <ItemMedia variant="icon"><FileIcon /></ItemMedia>
-            <ItemContent>
-              <ItemTitle>Extra small size</ItemTitle>
-            </ItemContent>
-          </Item>
-        </div>
+        <ComponentPreview code={`<Item variant="outline">
+  <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+  <ItemContent><ItemTitle>Default size</ItemTitle></ItemContent>
+</Item>
+<Item variant="outline" size="sm">
+  <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+  <ItemContent><ItemTitle>Small size</ItemTitle></ItemContent>
+</Item>
+<Item variant="outline" size="xs">
+  <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+  <ItemContent><ItemTitle>Extra small size</ItemTitle></ItemContent>
+</Item>`}>
+          <div style={{ maxWidth: "28rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            <Item variant="outline">
+              <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+              <ItemContent><ItemTitle>Default size</ItemTitle></ItemContent>
+            </Item>
+            <Item variant="outline" size="sm">
+              <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+              <ItemContent><ItemTitle>Small size</ItemTitle></ItemContent>
+            </Item>
+            <Item variant="outline" size="xs">
+              <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+              <ItemContent><ItemTitle>Extra small size</ItemTitle></ItemContent>
+            </Item>
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Grouped</h3>
-        <div style={{ maxWidth: "28rem" }}>
-          <ItemGroup>
-            <ItemHeader>Navigation</ItemHeader>
-            <Item as="a" href="#item">
-              <ItemMedia variant="icon"><HomeIcon /></ItemMedia>
-              <ItemContent>
-                <ItemTitle>Dashboard</ItemTitle>
-                <ItemDescription>Overview and stats</ItemDescription>
-              </ItemContent>
-            </Item>
-            <ItemSeparator />
-            <Item as="a" href="#item">
-              <ItemMedia variant="icon"><SettingsIcon /></ItemMedia>
-              <ItemContent>
-                <ItemTitle>Settings</ItemTitle>
-                <ItemDescription>Manage preferences</ItemDescription>
-              </ItemContent>
-            </Item>
-            <ItemFooter>2 items</ItemFooter>
-          </ItemGroup>
-        </div>
+        <ComponentPreview code={`<ItemGroup>
+  <ItemHeader>Navigation</ItemHeader>
+  <Item as="a" href="#item">
+    <ItemMedia variant="icon"><HomeIcon /></ItemMedia>
+    <ItemContent>
+      <ItemTitle>Dashboard</ItemTitle>
+      <ItemDescription>Overview and stats</ItemDescription>
+    </ItemContent>
+  </Item>
+  <ItemSeparator />
+  <Item as="a" href="#item">
+    <ItemMedia variant="icon"><SettingsIcon /></ItemMedia>
+    <ItemContent>
+      <ItemTitle>Settings</ItemTitle>
+      <ItemDescription>Manage preferences</ItemDescription>
+    </ItemContent>
+  </Item>
+  <ItemFooter>2 items</ItemFooter>
+</ItemGroup>`}>
+          <div style={{ maxWidth: "28rem" }}>
+            <ItemGroup>
+              <ItemHeader>Navigation</ItemHeader>
+              <Item as="a" href="#item">
+                <ItemMedia variant="icon"><HomeIcon /></ItemMedia>
+                <ItemContent>
+                  <ItemTitle>Dashboard</ItemTitle>
+                  <ItemDescription>Overview and stats</ItemDescription>
+                </ItemContent>
+              </Item>
+              <ItemSeparator />
+              <Item as="a" href="#item">
+                <ItemMedia variant="icon"><SettingsIcon /></ItemMedia>
+                <ItemContent>
+                  <ItemTitle>Settings</ItemTitle>
+                  <ItemDescription>Manage preferences</ItemDescription>
+                </ItemContent>
+              </Item>
+              <ItemFooter>2 items</ItemFooter>
+            </ItemGroup>
+          </div>
+        </ComponentPreview>
       </section>
+
+      <ApiReference props={[
+        { name: "variant", type: '"default" | "outline" | "muted"', default: '"default"', description: "Visual style of the item" },
+        { name: "size", type: '"default" | "sm" | "xs"', default: '"default"', description: "Padding and icon size" },
+        { name: "as", type: "ElementType", default: '"div"', description: "Render as a different element or component" },
+        { name: "ItemMedia: variant", type: '"default" | "icon" | "image"', default: '"default"', description: "Media slot style — icon renders a tinted circle, image renders a thumbnail (image variant not demoed above)" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
     </>
   )
 }

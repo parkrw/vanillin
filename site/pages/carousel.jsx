@@ -10,6 +10,12 @@ import { Autoplay } from "../../ui/carousel/plugins/autoplay.js"
 import "../../ui/carousel/carousel.css"
 import { Button } from "../../ui/button/button.jsx"
 import "../../ui/button/button.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 const card = (h = "12rem") => ({
   display: "flex",
@@ -26,6 +32,7 @@ export default function CarouselPage() {
   return (
     <>
       <h2>Carousel</h2>
+      <p>A scroll-snap carousel with prev/next buttons, keyboard and swipe navigation, looping, alignment, and an autoplay plugin.</p>
 
       {/* Basic — one item per view */}
       <section className="pg-section">
@@ -208,11 +215,40 @@ export default function CarouselPage() {
         <AutoplayDemo />
       </section>
 
-      {/* API demo — slide counter via setApi */}
+      {/* API demo */}
       <section className="pg-section">
         <h3>API (slide counter)</h3>
         <ApiDemo />
       </section>
+
+      <InstallSnippet slug="carousel" />
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "./ui/carousel/carousel"
+import "./ui/carousel/carousel.css"
+
+<Carousel>
+  <CarouselContent>
+    <CarouselItem>Slide 1</CarouselItem>
+    <CarouselItem>Slide 2</CarouselItem>
+    <CarouselItem>Slide 3</CarouselItem>
+  </CarouselContent>
+  <CarouselPrevious />
+  <CarouselNext />
+</Carousel>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos above.</p>
+        </ComponentPreview>
+      </section>
+
+      <ApiReference props={[
+        { name: "orientation", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "Scroll axis" },
+        { name: "opts.align", type: '"start" | "center" | "end"', default: '"start"', description: "Scroll-snap alignment on each slide" },
+        { name: "opts.loop", type: "boolean", default: "false", description: "Wrap navigation at both ends via cloned slides" },
+        { name: "plugins", type: "Plugin[]", description: "Array of plugin instances (e.g. Autoplay)" },
+        { name: "setApi", type: "(api) => void", description: "Receives the imperative API for external control" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
     </>
   )
 }

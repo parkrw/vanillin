@@ -7,6 +7,12 @@ import {
 import "../../ui/resizable/resizable.css"
 import { Button } from "../../ui/button/button.jsx"
 import "../../ui/button/button.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 const panelStyle = {
   display: "flex",
@@ -23,12 +29,7 @@ export default function ResizablePage() {
   return (
     <>
       <h2>Resizable</h2>
-
-      <p className="pg-section" style={{ maxInlineSize: "40rem" }}>
-        Resizable panels split a container into adjustable regions separated by
-        draggable handles. Panels can be collapsed, persisted across sessions,
-        and controlled programmatically.
-      </p>
+      <p>Resizable panels split a container into adjustable regions separated by draggable handles, with keyboard support, collapsing, persistence, and nesting.</p>
 
       {/* ——— Horizontal (default) ——— */}
       <section className="pg-section">
@@ -279,6 +280,38 @@ export default function ResizablePage() {
           </ResizablePanelGroup>
         </div>
       </section>
+
+      <InstallSnippet slug="resizable" />
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "./ui/resizable/resizable"
+import "./ui/resizable/resizable.css"
+
+<ResizablePanelGroup direction="horizontal">
+  <ResizablePanel id="left" defaultSize={50} minSize={20}>
+    Left
+  </ResizablePanel>
+  <ResizableHandle />
+  <ResizablePanel id="right" defaultSize={50} minSize={20}>
+    Right
+  </ResizablePanel>
+</ResizablePanelGroup>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos above.</p>
+        </ComponentPreview>
+      </section>
+
+      <ApiReference props={[
+        { name: "ResizablePanelGroup: direction", type: '"horizontal" | "vertical"', description: "Axis along which panels are laid out" },
+        { name: "ResizablePanelGroup: autoSaveId", type: "string", description: "Persist layout to localStorage under this key" },
+        { name: "ResizablePanel: id", type: "string", description: "Unique panel identifier (required for persistence)" },
+        { name: "ResizablePanel: defaultSize", type: "number", description: "Initial size as a percentage of the group" },
+        { name: "ResizablePanel: minSize", type: "number", description: "Minimum size percentage" },
+        { name: "ResizablePanel: maxSize", type: "number", description: "Maximum size percentage" },
+        { name: "ResizablePanel: collapsible", type: "boolean", default: "false", description: "Allow collapsing past minSize to collapsedSize" },
+        { name: "ResizablePanel: collapsedSize", type: "number", default: "0", description: "Size when collapsed" },
+        { name: "ResizableHandle: withHandle", type: "boolean", default: "false", description: "Render a visible grip icon" },
+      ]} />
     </>
   )
 }

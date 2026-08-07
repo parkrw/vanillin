@@ -39,6 +39,12 @@ import "../../ui/command/command.css"
 import "../../ui/badge/badge.css"
 import "../../ui/separator/separator.css"
 import "../../ui/data-table/data-table.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 // ── Inline SVG icons (zero-dep, no lucide) ───────────────────────────
 
@@ -883,6 +889,7 @@ export default function DataTablePage() {
   return (
     <>
       <h2>Data Table</h2>
+      <p>A headless table engine with sorting, filtering, pagination, row selection, column sizing, pinning, grouping, and server-side modes — composed with vanillin's Table primitives.</p>
 
       <section className="pg-section">
         <h3>Filtering</h3>
@@ -1206,6 +1213,39 @@ export default function DataTablePage() {
           and keep the DOM at page size.
         </p>
       </section>
+
+      <InstallSnippet slug="data-table" />
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { useDataTable, flexRender } from "./lib/use-data-table"
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./ui/table/table"
+import { DataTableColumnHeader } from "./ui/data-table/data-table"
+
+const columns = [
+  { accessorKey: "email", header: ({ column }) => <DataTableColumnHeader column={column} title="Email" /> },
+  { accessorKey: "amount", header: "Amount" },
+]
+
+const table = useDataTable({ data, columns })
+
+<Table>
+  <TableHeader>...</TableHeader>
+  <TableBody>...</TableBody>
+</Table>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos above.</p>
+        </ComponentPreview>
+      </section>
+
+      <ApiReference props={[
+        { name: "useDataTable: data", type: "T[]", description: "Row data array" },
+        { name: "useDataTable: columns", type: "ColumnDef[]", description: "Column definitions with accessorKey, header, and cell" },
+        { name: "useDataTable: initialPageSize", type: "number", default: "10", description: "Rows per page" },
+        { name: "useDataTable: manualSorting", type: "boolean", default: "false", description: "Disable client-side sorting — fires onSortingChange instead" },
+        { name: "useDataTable: manualPagination", type: "boolean", default: "false", description: "Disable client-side pagination — requires rowCount or pageCount" },
+        { name: "useDataTable: rowCount", type: "number", description: "Total row count for server-side page-count derivation" },
+        { name: "useDataTable: initialGrouping", type: "string[]", description: "Column ids to group by on mount" },
+      ]} />
     </>
   )
 }

@@ -16,6 +16,12 @@ import "../../ui/message-scroller/message-scroller.css"
 import "../../ui/message/message.css"
 import "../../ui/bubble/bubble.css"
 import "../../ui/button/button.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 function Readout() {
   const { currentAnchorId, visibleMessageIds } = useMessageScrollerVisibility()
@@ -53,6 +59,7 @@ export default function MessageScrollerPage() {
   return (
     <>
       <h2>Message Scroller</h2>
+      <p>A stick-to-bottom scrollable transcript — appending keeps the newest message in view, scrolling up releases, and a button re-engages.</p>
 
       <section className="pg-section">
         <h3>Stick-to-bottom transcript</h3>
@@ -93,6 +100,41 @@ export default function MessageScrollerPage() {
           <Readout />
         </MessageScrollerProvider>
       </section>
+
+      <InstallSnippet slug="message-scroller" />
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import {
+  MessageScroller, MessageScrollerButton, MessageScrollerContent,
+  MessageScrollerItem, MessageScrollerProvider, MessageScrollerViewport,
+} from "./ui/message-scroller/message-scroller"
+import "./ui/message-scroller/message-scroller.css"
+
+<MessageScrollerProvider>
+  <MessageScroller style={{ blockSize: "18rem" }}>
+    <MessageScrollerViewport>
+      <MessageScrollerContent>
+        {messages.map(msg => (
+          <MessageScrollerItem key={msg.id} messageId={msg.id}>
+            {msg.text}
+          </MessageScrollerItem>
+        ))}
+      </MessageScrollerContent>
+    </MessageScrollerViewport>
+    <MessageScrollerButton />
+  </MessageScroller>
+</MessageScrollerProvider>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demo above.</p>
+        </ComponentPreview>
+      </section>
+
+      <ApiReference props={[
+        { name: "MessageScrollerItem: messageId", type: "string", description: "Unique ID used by visibility and anchor hooks" },
+        { name: "MessageScrollerButton", type: "component", description: "Scroll-to-bottom button, auto-disabled when already at the live edge" },
+        { name: "useMessageScrollerVisibility", type: "hook", description: "Returns { currentAnchorId, visibleMessageIds }" },
+        { name: "useMessageScrollerScrollable", type: "hook", description: "Returns { start, end } booleans for scroll direction" },
+      ]} />
     </>
   )
 }

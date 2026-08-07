@@ -2,6 +2,12 @@ import { useState } from "react"
 import { RelativeTime, Bytes, Duration, Cost } from "../../ui/format/format.jsx"
 import { DirectionProvider } from "../../lib/direction.jsx"
 import "../../ui/format/format.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 const FIVE_MIN = 5 * 60 * 1000
 const ONE_HOUR = 60 * 60 * 1000
@@ -23,7 +29,6 @@ export default function FormatPage() {
   return (
     <>
       <h2>Format</h2>
-
       <p>
         Four display components for the values every console renders:
         relative timestamps, byte counts, durations, and costs. Each is a
@@ -143,6 +148,37 @@ export default function FormatPage() {
           </section>
         </>
       )}
+
+      <InstallSnippet slug="format" />
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { RelativeTime, Bytes, Duration, Cost } from "./ui/format/format"
+import "./ui/format/format.css"
+
+<RelativeTime date={Date.now() - 300_000} />
+<Bytes value={1024} />
+<Duration value={90_000} />
+<Cost value={12.40} />`}>
+          <div className="pg-row" style={{ gap: "1.5rem" }}>
+            <span><RelativeTime date={now - FIVE_MIN} /></span>
+            <span><Bytes value={1024} /></span>
+            <span><Duration value={90_000} /></span>
+            <span><Cost value={12.40} /></span>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <ApiReference props={[
+        { name: "RelativeTime: date", type: "number | Date", description: "Timestamp to format relative to now" },
+        { name: "RelativeTime: live", type: "boolean", default: "false", description: "Auto-update on a shared interval" },
+        { name: "Bytes: value", type: "number", description: "Byte count to format" },
+        { name: "Bytes: base", type: '"iec" | "si"', default: '"iec"', description: "Binary (1024, KiB) or decimal (1000, kB) units" },
+        { name: "Duration: value", type: "number", description: "Duration in milliseconds" },
+        { name: "Duration: style", type: '"narrow" | "short" | "long"', default: '"narrow"', description: "Label width — 1m vs 1 min vs 1 minute" },
+        { name: "Cost: value", type: "number", description: "Amount to format" },
+        { name: "Cost: currency", type: "string", default: '"USD"', description: "ISO 4217 currency code" },
+      ]} />
     </>
   )
 }

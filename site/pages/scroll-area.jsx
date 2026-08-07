@@ -3,6 +3,12 @@ import { Separator } from "../../ui/separator/separator.jsx"
 import { ScrollArea, ScrollBar } from "../../ui/scroll-area/scroll-area.jsx"
 import "../../ui/scroll-area/scroll-area.css"
 import "../../ui/separator/separator.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 const tags = Array.from({ length: 40 }, (_, i) => `v1.2.0-beta.${40 - i}`)
 const columns = Array.from({ length: 12 }, (_, i) => `Column ${i + 1}`)
@@ -12,6 +18,7 @@ export default function ScrollAreaPage() {
   return (
     <>
       <h2>Scroll Area</h2>
+      <p>An overlay-scrollbar container with thumb drag, track click, hover/scroll indicators, overflow-edge detection, and RTL support.</p>
 
       <section className="pg-section">
         <h3>Vertical</h3>
@@ -291,6 +298,30 @@ export default function ScrollAreaPage() {
           </div>
         </ScrollArea>
       </section>
+
+      <InstallSnippet slug="scroll-area" />
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { ScrollArea, ScrollBar } from "./ui/scroll-area/scroll-area"
+import "./ui/scroll-area/scroll-area.css"
+
+<ScrollArea style={{ blockSize: "12rem" }}>
+  <div style={{ padding: "1rem" }}>
+    {/* scrollable content */}
+  </div>
+  <ScrollBar orientation="horizontal" />
+</ScrollArea>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos above.</p>
+        </ComponentPreview>
+      </section>
+
+      <ApiReference props={[
+        { name: "overflowEdgeThreshold", type: "number", default: "0", description: "Pixels of overflow before data-overflow-* attributes appear" },
+        { name: "ScrollBar: orientation", type: '"vertical" | "horizontal"', default: '"vertical"', description: "Scroll axis this bar controls" },
+        { name: "ScrollBar: keepMounted", type: "boolean", default: "false", description: "Render the track even without overflow" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
     </>
   )
 }
