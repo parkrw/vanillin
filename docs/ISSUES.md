@@ -719,6 +719,25 @@ biting. Sequenced accordingly: **71 → 72 → 73**.
 
 ---
 
+### H3. `tests/empty.test.mjs` asserts a page-global count, so documenting the component breaks it
+
+**Status:** open, unowned  **Found:** task 77c review, 2026-08-07
+
+`tests/empty.test.mjs:67-69` counts **every** `.empty` on the page and requires the total to equal `.pg-empty-frame`:
+
+```js
+const frames = await page.locator(".pg-empty-frame").count()
+eq(frames, await page.locator(".empty").count(), "one frame per empty demo")
+```
+
+Rendering an `<Empty>` anywhere outside a demo frame — such as in the Usage preview the docs template calls for — makes the counts disagree and fails the test. Task 77c hit this and worked around it by showing the text "See the live demos above" instead of the component, so the `empty` page is the one page in the batch whose Usage section does not render what it documents.
+
+The test is at fault, not the page: scope the assertion to `.pg-empty-frame .empty` and it measures what it means to measure. Then restore the real `<Empty>` in that page's Usage preview.
+
+Same shape as H1 — an assertion that passes for the wrong reason, here by counting a superset. Worth a grep for other page-global `.count()` comparisons while fixing it.
+
+---
+
 ## I. Suspected, unverified
 
 ### I1. ~~`ui/command` may never highlight inside a faceted-filter popover~~ — CLOSED, does not reproduce

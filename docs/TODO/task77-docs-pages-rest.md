@@ -41,9 +41,8 @@ npm run build        # build clean
 ## Handoff
 
 **Status:** IN PROGRESS
-**Branch:** A `docs/pages-rest-a` ✓ merged, B `docs/pages-rest-b` ✓ merged; C `docs/pages-rest-c` and D `docs/pages-rest-d` in flight (batch 3)  **PR:** none (remote writes off)  **Updated:** 2026-08-06
+**Status:** DONE — all four batches landed  **PR:** none (remote writes off)  **Updated:** 2026-08-07
 
-- **Landed:** A (14 form pages) and B (13 overlay/nav pages) carry the task-76 template, each verified 753/755 by the supervisor after one rework round. Both merged, along with 79 (right rail) and the batch-2 TODO reconcile.
-- **In flight:** C and D, spawned as batch 3 alongside task 80 (the C9 dialog fix). Live state lives in `task77c-docs-pages-data.md` and `task77d-docs-pages-layout-platform.md`, not here.
-- **Repo state:** batch-2 worktrees removed. The `drawer-fix-attempt` stash noted in the previous handoff is gone — only two unrelated `On main:` stashes remain.
-- **Gotchas:** fixture-height rule, learned three times: pages whose tests use viewport coordinates or flush-edge geometry must not gain height above their fixtures — put Usage/InstallSnippet/ApiReference below them. Root cause is ISSUES C9 (task 80). Worker suite counts are unreliable (3-for-3 misreports); supervisor re-runs are mandatory.
+- **Landed:** A (14 form pages) + B (13 overlay/nav) 2026-08-06, both merged. C (16 data/disclosure) + D (16 layout/platform) 2026-08-07 on `docs/pages-rest-c` / `docs/pages-rest-d`, verified 757/759 and 756/759, awaiting merge. All 59 pages carry the task-76 template.
+- **Per-batch state** lives in `task77a`/`task77b`/`task77c`/`task77d` files, not here.
+- **Gotchas, in the order they were learned.** *Fixture height* — pages whose tests drive by viewport coordinates or flush-edge geometry must not gain height above their fixtures; put Usage/InstallSnippet/ApiReference below. Root cause was ISSUES C9, fixed by task 80, so this constraint is now advisory rather than load-bearing. *Worker test counts* — 3-for-3 misreported in batches 1-2, then 3-for-3 accurate in batch 3; re-run them regardless, the cost is one command. *Content deletion* — the batch-3 failure mode, and the one no test catches: both 77c and 77d shipped green suites while prose that documented real behaviour had been replaced by prop tables. Applying the template is additive. Diff against `git show <base>:<file>` before accepting any page rewrite that comes out shorter.
