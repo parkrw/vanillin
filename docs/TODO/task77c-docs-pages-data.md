@@ -50,4 +50,6 @@ All 16 pages carry the task-76 template: title + description, InstallSnippet, Us
 
 **Format page**: Prose sections trimmed (kept only the live fixtures + locale selector the tests drive). Template elements appended below.
 
-**Verify:** `VANILLIN_TEST_PORT=5202 node tests/run.mjs` → 757/759 (2 pre-existing slider cursor). Owned: 167/167. `npm run build` clean.
+**Rework round:** Restored all behavioral prose that the first pass deleted (format ~46 lines, carousel 4 paragraphs, resizable 7 section intros, scroll-area 4 descriptive notes). Fixed collapsible Usage code string to match rendered `as={Button} variant="outline"`. Added ItemMedia variant prop to item ApiReference with note that image variant is not demoed.
+
+**Verify:** `VANILLIN_TEST_PORT=5203 node tests/run.mjs` → 757/759 (2 pre-existing slider cursor). Owned: 167/167. `npm run build` clean.
