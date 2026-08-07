@@ -1,6 +1,6 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–79)
 
-**Resume:** batch 3 in flight (spawned 2026-08-06) — **80** (`docs/TODO/task80-dialog-modal-positioning.md`), **77c** (`task77c-docs-pages-data.md`), **77d** (`task77d-docs-pages-layout-platform.md`). Owns pairwise disjoint; branches `fix/dialog-modal-positioning`, `docs/pages-rest-c`, `docs/pages-rest-d`; worktrees `../vanillin-task{80,77c,77d}`. Batch 2's four branches are merged (main worktree is on `docs/cli-first` at that merge, with unrelated uncommitted CLI-docs edits — not part of any batch-3 task's Owns). Run `/cycle --adjust` to reconcile after batch 3 lands. Then 74's scope call, then console kit.
+**Resume:** batch 3 complete and verified 2026-08-07 — 80 (759/761), 77c (757/759, 2 rework rounds), 77d (756/759, 1 rework round), all builds clean; the only failures are the two pre-existing slider-cursor tests plus an intermittent `navigation-menu` hover flake. **Task 77 is done — all 59 remaining component pages now carry the docs template.** *User merges four branches:* `fix/dialog-modal-positioning` (80), `docs/pages-rest-c` (77c), `docs/pages-rest-d` (77d), `docs/todo-batch3` (task files + this reconcile + ISSUES H3). No PRs — remote writes disabled. Worktrees `../vanillin-task{80,77c,77d}` stay until merged. **Next: 74's scope call** (is the docs site meant to work on a phone? — see [^74]), then the console kit.
 
 ## Handoff — task 70 (complete)
 
@@ -166,10 +166,10 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 73  | coverage-probe           | ~L  | [x]    | 26 probed, 5 gaps fixed, 20 caught, 1 skipped; suite 735 [^73]          |
 | 75  | docs-code-infra          | ~M  | [x]    | landed on `fix/docs-nav-rework` (`27a1410`); sub-task 5 (page convention) delegated to 76 [^75] |
 | 76  | docs-pages-core          | ~L  | [x]    | landed 2026-08-06 on `docs/pages-core` (18 commits, local merge); B5/B6/C8 fixed [^76] |
-| 77  | docs-pages-rest          | ~XL | [~]    | deps: 76; A+B landed 2026-08-06; C+D spawned as batch 3 (16/16) [^77]   |
+| 77  | docs-pages-rest          | ~XL | [x]    | deps: 76; all 59 pages templated — A+B 2026-08-06, C+D 2026-08-07 [^77]  |
 | 78  | docs-content             | ~M  | [x]    | landed 2026-08-06 on `docs/content` (6 commits, local merge); B1 + CLI page [^78] |
 | 79  | docs-right-rail          | ~M  | [x]    | landed 2026-08-06 on `feat/docs-right-rail`; TOC rail + drag resize; stretch (code panel) skipped [^79] |
-| 80  | dialog-modal-positioning | ~M  | [ ]    | ISSUES C9 — `.dialog` position:relative defeats `:modal` fixed; batch 3 [^80] |
+| 80  | dialog-modal-positioning | ~M  | [x]    | landed 2026-08-07 on `fix/dialog-modal-positioning`; one-line CSS fix, 2 new tests [^80] |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -398,7 +398,18 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
     a `cli` slug to `site/registry.js` with no page — the CLI docs page lands
     here and turns that entry live.**
 
-[^80]: ISSUES C9, found in 77b's rework. `ui/dialog/dialog.css:7` sets
+[^80]: **Landed 2026-08-07** on `fix/dialog-modal-positioning`. The fix is one
+    line — deleting `position: relative` from `ui/dialog/dialog.css:7`. It was
+    never needed: `container-type: inline-size` (task 39) applies
+    `contain: layout`, which already establishes the containing block for
+    `.dialog-close` and the drawer handle, so the declaration bought nothing and
+    cost `:modal { position: fixed }`. Verified across all five `.dialog`
+    consumers (sheet, drawer, alert-dialog, command-dialog, mobile sidebar).
+    Two tests added: a drawer opened on a 2x-viewport page asserting flush-bottom
+    against `window.innerHeight` (red before the fix), and a container-query
+    guard that fails if `container-type` is ever removed. `ui/dialog/.van.json`
+    regenerated. Original description follows.
+    ISSUES C9, found in 77b's rework. `ui/dialog/dialog.css:7` sets
     `position: relative` (for the task-39 `container-type` container), which
     overrides the UA's `:modal { position: fixed }` — open dialogs/drawers/
     sheets anchor to document height, so a bottom drawer on a page taller than
@@ -474,6 +485,8 @@ just-in-time. Rough order of usefulness:
   work because of it.
 
 ## Adjustments log
+
+- **2026-08-07 — batch 3 landed: 80 + 77c + 77d.** 80 passed first try; the task file's lead was right, and the fix is the single deletion of `position: relative` — `container-type: inline-size` applies `contain: layout`, which was already doing the containing-block job that declaration was credited with. Both 77 workers needed rework, but for a **new failure mode**: their test counts were accurate this time (first batch with no misreport), and what the suite could not see was content. 77c had deleted ~46 lines of behavioural prose from `format.jsx` and comparable detail from `carousel`, `resizable` and `scroll-area` — replaced by ApiReference tables that list prop names and document no behaviour. 77d had three code-tab drifts where the copyable source did not match the rendered preview. **The lesson generalises: a green suite proves the docs still work, never that they still say anything.** Template application is additive — a rewrite that reduces net prose is a regression until proven otherwise, and `git show <base>:<file>` is the check. Two items outgrew the batch: **H3** (`tests/empty.test.mjs` counts page-global `.empty`, so documenting the component fails its own test — the `empty` page still shows a placeholder until it is fixed) and the standing `navigation-menu` hover flake, which now joins the slider pair in the noise floor. Real baseline is **759 tests**, not the 753/755 the workers were seeded with; re-measure it per batch rather than inheriting it from the last handoff.
 
 - **2026-08-06 — batch 3 spawned: 80 + 77c + 77d (cap 3).** 77's C/D lists rebalanced 26+6 → 16/16 by moving ten layout/feedback pages (aspect-ratio, button-group, separator, skeleton, spinner, status-dot, toggle, toggle-group, typography, container-queries) from C to D; each got a standalone task file so each worker owns its own Handoff. 80 goes in the same batch rather than ahead of it: its Owns (`ui/dialog/**`, drawer+sheet pages, four overlay tests) touch nothing in C or D, and the fixture-height rule that C9 causes is already a known, applied mitigation — so C/D carry it explicitly (per-task lists of the coordinate-driven tests, from a `getBoundingClientRect|mouse.move|boundingBox` grep) rather than waiting a serial round for the root-cause fix. 77d's page list is half systems-not-components (density, direction, container-queries, view-transitions, typography, primitives), so its file licenses replacing the API table with the page's real contract instead of forcing the template.
 
