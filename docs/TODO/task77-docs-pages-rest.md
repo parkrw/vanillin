@@ -20,16 +20,15 @@ Same template as task 76:
 Batch into workers by category (disjoint files). **A and B split into their own task files 2026-08-06** (`task77a-docs-pages-forms.md`, `task77b-docs-pages-overlay-nav.md`) and spawned as batch 2 alongside task 79. Two list fixes made then: `input-group` was listed under both A and C (one file — it is A's), and D listed `forced-colors`, which has no `site/pages/` file (dropped).
 - **Worker A:** → `task77a-docs-pages-forms.md` (14 pages)
 - **Worker B:** → `task77b-docs-pages-overlay-nav.md` (13 pages)
-- **Worker C:** Data + Layout + Disclosure — aspect-ratio, attachment, bubble, button-group, calendar, carousel, collapsible, container-queries, data-table, empty, format, item, kbd, marker, message, message-scroller, progress, resizable, scroll-area, separator, skeleton, spinner, status-dot, toggle, toggle-group, typography (26 pages — rebalance with D into ~16/16 when batch 3 is sized)
-- **Worker D:** Platform — density, direction, mode-toggle, primitives, sidebar, view-transitions (6 pages)
+C and D were rebalanced 26+6 → 16/16 for batch 3 (2026-08-06) and split into their own task files, same as A and B.
+- **Worker C:** → `task77c-docs-pages-data.md` (16 pages — data, disclosure, content)
+- **Worker D:** → `task77d-docs-pages-layout-platform.md` (16 pages — layout, primitives, platform)
 
 Each worker reads `site/pages/button.jsx` (from task 76) as the reference pattern.
 
 ## Content notes for specific pages
 
-Notes for A/B pages moved into their task files. Remaining here for batch 3:
-
-- **density** (B2): add code examples to all sections
+All moved into the four A/B/C/D task files.
 
 ## Verify / done
 
@@ -42,9 +41,9 @@ npm run build        # build clean
 ## Handoff
 
 **Status:** IN PROGRESS
-**Branch:** A `docs/pages-rest-a` ✓, B `docs/pages-rest-b` ✓ — both verified, unmerged; C+D not started  **PR:** none (remote writes off)  **Updated:** 2026-08-06
+**Branch:** A `docs/pages-rest-a` ✓ merged, B `docs/pages-rest-b` ✓ merged; C `docs/pages-rest-c` and D `docs/pages-rest-d` in flight (batch 3)  **PR:** none (remote writes off)  **Updated:** 2026-08-06
 
-- **Landed:** A (14 form pages) and B (13 overlay/nav pages) carry the task-76 template, each verified 753/755 by the supervisor after one rework round. 79 (right rail) landed in the same batch on `feat/docs-right-rail`.
-- **Repo state:** main worktree on `docs/todo-batch2` with uncommitted handoff edits (README + this file). `stash@{0}: On docs/pages-rest-b: drawer-fix-attempt` is a worker leftover — inspect before dropping. Worktrees `../vanillin-task77{a,b}`, `../vanillin-task79` stay until the user merges the four branches named in README's Resume line.
-- **Next:** after the merges, batch 3: `/cycle --spawn 3` — task 80 (C9 dialog fix, row + [^80] in README, no task file yet) + 77-C + 77-D (rebalance the C/D lists in this file, 26+6 → ~16/16).
-- **Gotchas:** fixture-height rule, learned twice: pages whose tests use viewport coordinates or flush-edge geometry must not gain height above their fixtures — put Usage/InstallSnippet/ApiReference below them. Root cause is ISSUES C9 (task 80). Worker suite counts are unreliable (3-for-3 misreports); supervisor re-runs are mandatory.
+- **Landed:** A (14 form pages) and B (13 overlay/nav pages) carry the task-76 template, each verified 753/755 by the supervisor after one rework round. Both merged, along with 79 (right rail) and the batch-2 TODO reconcile.
+- **In flight:** C and D, spawned as batch 3 alongside task 80 (the C9 dialog fix). Live state lives in `task77c-docs-pages-data.md` and `task77d-docs-pages-layout-platform.md`, not here.
+- **Repo state:** batch-2 worktrees removed. The `drawer-fix-attempt` stash noted in the previous handoff is gone — only two unrelated `On main:` stashes remain.
+- **Gotchas:** fixture-height rule, learned three times: pages whose tests use viewport coordinates or flush-edge geometry must not gain height above their fixtures — put Usage/InstallSnippet/ApiReference below them. Root cause is ISSUES C9 (task 80). Worker suite counts are unreliable (3-for-3 misreports); supervisor re-runs are mandatory.

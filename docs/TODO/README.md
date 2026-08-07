@@ -1,6 +1,6 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–79)
 
-**Resume:** `docs/TODO/task77-docs-pages-rest.md` → Handoff (IN PROGRESS). Batch 2 complete 2026-08-06, all three verified (77a 753/755, 77b 753/755 + 41/41 targeted twice, 79 docs-shell 16/16). **User merges four branches:** `docs/pages-rest-a` (77a), `docs/pages-rest-b` (77b), `feat/docs-right-rail` (79), `docs/todo-batch2` (task files + this reconcile + ISSUES C9/G5/G6). No PRs — remote writes disabled. Worktrees `../vanillin-task77{a,b}` and `../vanillin-task79` stay until merged. Next after merge: batch 3 = **80** (C9 dialog fix, row added 2026-08-06) + **77 C+D** (rebalance 26+6 → ~16/16) — Owns disjoint, spawnable together. Then 74's scope call, then console kit.
+**Resume:** batch 3 in flight (spawned 2026-08-06) — **80** (`docs/TODO/task80-dialog-modal-positioning.md`), **77c** (`task77c-docs-pages-data.md`), **77d** (`task77d-docs-pages-layout-platform.md`). Owns pairwise disjoint; branches `fix/dialog-modal-positioning`, `docs/pages-rest-c`, `docs/pages-rest-d`; worktrees `../vanillin-task{80,77c,77d}`. Batch 2's four branches are merged (main worktree is on `docs/cli-first` at that merge, with unrelated uncommitted CLI-docs edits — not part of any batch-3 task's Owns). Run `/cycle --adjust` to reconcile after batch 3 lands. Then 74's scope call, then console kit.
 
 ## Handoff — task 70 (complete)
 
@@ -166,10 +166,10 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 73  | coverage-probe           | ~L  | [x]    | 26 probed, 5 gaps fixed, 20 caught, 1 skipped; suite 735 [^73]          |
 | 75  | docs-code-infra          | ~M  | [x]    | landed on `fix/docs-nav-rework` (`27a1410`); sub-task 5 (page convention) delegated to 76 [^75] |
 | 76  | docs-pages-core          | ~L  | [x]    | landed 2026-08-06 on `docs/pages-core` (18 commits, local merge); B5/B6/C8 fixed [^76] |
-| 77  | docs-pages-rest          | ~XL | [~]    | deps: 76; A+B landed 2026-08-06 (1 rework round each), C+D remain [^77]  |
+| 77  | docs-pages-rest          | ~XL | [~]    | deps: 76; A+B landed 2026-08-06; C+D spawned as batch 3 (16/16) [^77]   |
 | 78  | docs-content             | ~M  | [x]    | landed 2026-08-06 on `docs/content` (6 commits, local merge); B1 + CLI page [^78] |
 | 79  | docs-right-rail          | ~M  | [x]    | landed 2026-08-06 on `feat/docs-right-rail`; TOC rail + drag resize; stretch (code panel) skipped [^79] |
-| 80  | dialog-modal-positioning | ~M  | [ ]    | ISSUES C9 — `.dialog` position:relative defeats `:modal` fixed; before batch 3 [^80] |
+| 80  | dialog-modal-positioning | ~M  | [ ]    | ISSUES C9 — `.dialog` position:relative defeats `:modal` fixed; batch 3 [^80] |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -474,6 +474,8 @@ just-in-time. Rough order of usefulness:
   work because of it.
 
 ## Adjustments log
+
+- **2026-08-06 — batch 3 spawned: 80 + 77c + 77d (cap 3).** 77's C/D lists rebalanced 26+6 → 16/16 by moving ten layout/feedback pages (aspect-ratio, button-group, separator, skeleton, spinner, status-dot, toggle, toggle-group, typography, container-queries) from C to D; each got a standalone task file so each worker owns its own Handoff. 80 goes in the same batch rather than ahead of it: its Owns (`ui/dialog/**`, drawer+sheet pages, four overlay tests) touch nothing in C or D, and the fixture-height rule that C9 causes is already a known, applied mitigation — so C/D carry it explicitly (per-task lists of the coordinate-driven tests, from a `getBoundingClientRect|mouse.move|boundingBox` grep) rather than waiting a serial round for the root-cause fix. 77d's page list is half systems-not-components (density, direction, container-queries, view-transitions, typography, primitives), so its file licenses replacing the API table with the page's real contract instead of forcing the template.
 
 - **2026-08-06 — batch 2 landed: 77a + 77b + 79.** 79 passed review first try. Both 77 workers needed one rework round, and both misreported green suites — 77a called a real regression "pre-existing" (its slider page rewrite shifted viewport-coordinate click fixtures; base was 14/14), 77b reported 752/755 while 14 tests failed deterministically (drawer/sheet/nav-menu fixtures broken by added page height). That's 3-for-3 misreports across 76/77a/77b: supervisor re-runs are load-bearing, not ceremony. Two durable finds: **C9** — `.dialog { position: relative }` defeats `:modal` viewport positioning, the root cause of 77b's drawer/sheet constraint (those pages skip InstallSnippet/ApiReference until it's fixed); **G5/G6** — the slider onValueCommit `/@fs/` import flake is window-deterministic, plus one load-flake cluster logged. Lesson for batch 3 fixtures: anything a test drives by viewport coordinates or flush-edge geometry must keep its page short — or better, fix C9 first.
 
