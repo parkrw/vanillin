@@ -185,6 +185,7 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 81  | docs-layout-measure      | ~M  | [ ]    | `.pg-main` never centred; column measure + rhythm + topnav border/opacity [^81] |
 | 82  | docs-completeness        | ~L  | [ ]    | 9 unfinished pages + home/hero + 353 em dashes + `docs/` reference [^82] |
 | 83  | overlay-stacking         | ~S  | [ ]    | nav-menu viewport painted over by siblings; probe committed [^83]       |
+| 84  | token-guard              | ~S  | [ ]    | preventive — nothing broken today; build gate on undefined tokens [^84] |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -514,6 +515,29 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
     measures hit-testing rather than painting, so `pointer-events: none`
     overlays like tooltip false-positive at 49/49 until explicitly excluded.
 
+[^84]: Added 2026-08-07 from a user report that `styles/typeset.css` read five
+    `--typeset-*` tokens `defaults.css` did not define, so every heading computed
+    an invalid `calc()` under a clean build. **The report does not reproduce** —
+    all six tokens are defined, both files landed in the *same* commit
+    (`4ad8d502ed06`), and the page computes valid sizes (h1 36px/39.6px, h2 21px,
+    h3/p 14px/21px). No `ui-styles-lag-vanillin` entry exists in `ISSUES.md`
+    either. Kept as a task anyway because the failure *mode* is real and
+    invisible: a `var()` miss inside `calc()` is invalid at computed-value time,
+    and neither vite nor the suite resolves custom properties. So it is
+    **preventive, not a fix** — the task file says so at the top so nobody
+    burns an afternoon hunting a bug that is not there.
+    **The real risk is false positives, not misses.** A naive read-vs-defined
+    diff reports **17** tokens missing, every one of them legitimately set by JS
+    (`setProperty` or an inline `style={{"--x": …}}`), and a checker that cries
+    wolf 17 times gets ignored. Two detection traps found while scoping:
+    `setProperty` is not always passed a string literal
+    (`ui/scroll-area/scroll-area.jsx:99` passes a ternary, which a
+    `setProperty\(\s*"` regex misses), and inline JSX style objects are a second
+    differently-shaped source accounting for eight tokens alone.
+    One genuine gap did fall out: `--typeset-font-body`/`-heading`/`-mono` have
+    no `@property`, while the three rhythm vars do — which is also why the
+    reported failure could not have happened as described for those three.
+
 [^79]: right-hand rail on docs pages: scroll-synced "On this page" TOC,
     resizable via the same drag pattern as the left sidebar, stretch goal of a
     pinned code-example panel. Planned during the 2026-08-05 nav polish pass at
@@ -579,6 +603,8 @@ just-in-time. Rough order of usefulness:
   work because of it.
 
 ## Adjustments log
+
+- **2026-08-07 — task 84 added, from a report that did not reproduce.** The claim was that `typeset.css` reads five `--typeset-*` tokens this checkout's `defaults.css` predates, so every heading computes an invalid `calc()` while the build passes clean. Checked: all six tokens defined, both files landed in the **same commit** (`4ad8d502ed06`), headings compute valid sizes, and no such entry exists in `ISSUES.md`. **The task survives the report being wrong** — a `var()` miss inside `calc()` really is invisible to both vite and the suite, and the kit really does have a generated/hand-written token seam. So it is a preventive gate, labelled as one at the top of its file so no one hunts an absent bug. **Two things worth keeping.** First, the scoping measurement is the deliverable: a naive read-vs-defined diff reports 17 missing tokens, all 17 legitimately JS-set, so the hard part of this task is the allowlist and the risk is a tool nobody trusts — not a missed drift. Second, `@property` with an `initial-value` makes a missing token degrade instead of invalidate, which is why the three rhythm vars were never exposed to the described failure and the three font vars still are. **The generalisable point: check whether a reported bug reproduces before designing around it, and keep the task only if the mechanism is real without the instance.**
 
 - **2026-08-07 — task 83 added, and the rewrite question answered: no.** The user asked whether the kit's internals should be rewritten as a zero-dep Radix replacement, given how many bugs the site seems to have. **The premise does not hold, and the check is cheap: `lib/` already is that layer** — 23 primitives, 4,133 lines, `use-dismissable-layer` / `use-focus-trap` / `use-roving-focus` / `use-presence` / `use-controllable-state` / `anchor-position`. A rewrite rebuilds what exists, against 758 passing tests. **The reported bug was one missing `z-index`** (see [^83]), and the apparent bug volume in `docs/ISSUES.md` is the same illusion task 71 already documented: 56 contrast hits collapsed to 4 tokens, 38 cursor hits to 2 rules. Few causes, many pages. **The real gap was measurement, not architecture** — `sweep-pages.mjs` measures contrast, cursor, overflow and geometry, and none of those can see an overlay that opens correctly and is then painted over, which is exactly how this shipped through a 79-page sweep. So the deliverable is a probe plus a one-line fix, not a re-layering. **The generalisable lesson: when a defect survives a sweep, ask what the sweep cannot express before concluding the code is wrong in kind.**
 
