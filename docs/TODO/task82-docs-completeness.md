@@ -15,6 +15,27 @@ Measured on `main` at `7fbb916` — do not re-derive, but do re-check before ass
 
 **Get Started + `docs/` pages** — `site/pages/docs/` holds `introduction`, `installation`, `configuration`, `theming`, `schema`, `cli`, `contracts`. Task 78 rewrote most; `contracts.jsx` was never in any task's scope. Read all seven, and fix whatever is thin, stale or inconsistent with the others.
 
+**The home page** (`site/pages/home.jsx`, 165 lines) — the first thing anyone sees, and the user's review hit it three ways. Added 2026-08-07:
+
+- **The hero showcase lies.** `home.jsx:61-62` puts `<Badge variant="success">deploy passed</Badge>` beside `<Progress value={80}>`. A pass badge next to a bar that is three-quarters full reads as a broken component, not a demo. Either make the pair coherent (a finished bar reads 100, or the badge describes an in-flight rollout) or split the two ideas. This is a **content bug in the demo, not a bug in `ui/progress`** — verify that before touching the component.
+- **The `Zero dependencies` badge** (`home.jsx:71`) is a bare `variant="outline"` `Badge` doing the job of a hero eyebrow. It is the site's headline claim rendered as the weakest element on the page. Give it a treatment worth the claim, using kit components and tokens only.
+- **The hero as a whole.** Two-column copy + `HeroShowcase` (`home.jsx:26-66`). The showcase is a settings card plus a status card; it demonstrates six of 75 components and none of the ones anybody comes for. Revisit what it shows and how the section is laid out.
+
+**Em dashes** — **353 occurrences across `site/pages/`**. Remove them from site prose; recast the sentence rather than swapping in a hyphen where the punctuation was carrying real structure. Prose only: leave code strings, `CodeBlock` content and any `data-pg` value alone, and do not touch `docs/*.md` or `AGENTS.md` in this task.
+
+**Six pages the user named as needing examples** — measured 2026-08-07:
+
+| Page | Lines | `ComponentPreview` |
+| --- | --- | --- |
+| `form-fields` | 601 | **0** |
+| `container-queries` | 261 | **0** |
+| `data-table` | 1251 | 3 |
+| `sidebar` | 339 | 3 |
+| `command` | 382 | 7 |
+| `accordion` | 159 | 9 |
+
+The first two are already covered above (no preview at all). `data-table` is the standout defect in the second group: 1251 lines carrying three previews. `sidebar` at 3 is thin for a component with 24 exports. `command` and `accordion` have counts that look fine — **check them at the running site before rewriting anything**, since the user's complaint may be about which examples exist rather than how many.
+
 ## Sub-tasks
 
 - [ ] 1. **Audit and record.** Open all 75 component pages and all 7 `docs/` pages at the dev server; write the concrete defect per page into this file before fixing anything. A list written from reading source will miss the visual ones. Do this first — it sizes the rest.
@@ -22,7 +43,10 @@ Measured on `main` at `7fbb916` — do not re-derive, but do re-check before ass
 - [ ] 3. `drawer.jsx` and `sheet.jsx` — real examples (sides/directions, controlled, with a form inside), matching sibling overlay pages.
 - [ ] 4. The six system pages — one consistent page type, applied to all six.
 - [ ] 5. `site/pages/docs/` — the seven Get Started/reference pages, with `contracts.jsx` given the most attention.
-- [ ] 6. Anything else sub-task 1 turned up, cheapest first.
+- [ ] 6. **Home page** — the progress/badge mismatch first (one-line content fix), then the zero-dependencies badge, then the hero layout and what the showcase shows.
+- [ ] 7. **Examples for the six named pages** — `data-table` and `sidebar` need more; `command` and `accordion` need an audit before any edit.
+- [ ] 8. **Em-dash sweep** across `site/pages/`. Do this **last**: every sub-task above writes new prose, and sweeping first means sweeping twice. Verify with `grep -ro "—" site/pages | wc -l` reaching 0.
+- [ ] 9. Anything else sub-task 1 turned up, cheapest first.
 
 ## Rules carried forward from 76/77 — read these, they were each learned the hard way
 
@@ -42,7 +66,7 @@ npm run build
 
 Baseline noise floor: 2 slider-cursor failures + an intermittent `navigation-menu` hover flake. Report exact counts from the runner summary — not from memory.
 
-Done when: every component page and every `docs/` page is complete by its own page type, sub-task 1's audit list is fully struck through, and no page lost prose it used to have.
+Done when: every component page and every `docs/` page is complete by its own page type, sub-task 1's audit list is fully struck through, the home page's hero holds up as the site's front door, `grep -ro "—" site/pages | wc -l` is 0, and no page lost prose it used to have.
 
 ## Out of scope
 

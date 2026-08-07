@@ -8,7 +8,7 @@
 
 - **Landed:** batch 3 is merged into `main` (`7fbb916`) — ISSUES C9 fixed, so dialogs/drawers/sheets anchor to the viewport again on tall pages (this broke consumer code, not just the docs site), and **task 77 is done**: every component in the kit has a templated docs page. Merged suite **758/761**, build clean.
 - **Repo state:** clean. Worktrees `../vanillin-task{80,77c,77d}` and their merged branches are safe to remove — offered, not yet done. The two `On main:` stashes are old and unrelated.
-- **Next:** **batch 4 — `/cycle --spawn 2` for tasks 81 + 82.** Both are detailed and their `Owns` are disjoint (81: `site/site.css`/`app.jsx`/`toc.jsx`; 82: `site/pages/**`). 81 leads with a one-line fix: `.pg-main` (`site/site.css:471`) has a `max-width` but no `margin: 0 auto`, so the content column pins left of a wide `1fr` track.
+- **Next:** **batch 4 — `/cycle --spawn 2` for tasks 81 + 82.** Both are detailed and their `Owns` are disjoint (81: `site/site.css`/`app.jsx`/`toc.jsx`; 82: `site/pages/**`). 81 leads with a one-line fix: `.pg-main` (`site/site.css:471`) has a `max-width` but no `margin: 0 auto`, so the content column pins left of a wide `1fr` track. **Both tasks grew 2026-08-07** from a second user review — 81 takes the topnav border/opacity, 82 takes the home page, the em-dash sweep and four pages needing examples. See the top entry in the adjustments log.
 - **Gotchas:** 77 templated every page but did **not** make the site look finished — that gap is what 81+82 exist to close, so treat neither as a redo. Suite baseline is **761**; noise floor is two slider-cursor failures plus an intermittent `navigation-menu` hover flake. Task **74** (≤380px overflow) is still blocked on the user's scope call and must not be folded into 81.
 
 Two notes for reading anything below: the docs site directory is **`site/`** (renamed 2026-07-27), so older prose here saying `playground/` means `site/`. And `docs/HANDOFF.md` is gone — its durable content is in `AGENTS.md`, `docs/QUIRKS.md` and `docs/DECISIONS.md`; live state belongs in each task file's `## Handoff`.
@@ -182,8 +182,8 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 78  | docs-content             | ~M  | [x]    | landed 2026-08-06 on `docs/content` (6 commits, local merge); B1 + CLI page [^78] |
 | 79  | docs-right-rail          | ~M  | [x]    | landed 2026-08-06 on `feat/docs-right-rail`; TOC rail + drag resize; stretch (code panel) skipped [^79] |
 | 80  | dialog-modal-positioning | ~M  | [x]    | landed 2026-08-07 on `fix/dialog-modal-positioning`; one-line CSS fix, 2 new tests [^80] |
-| 81  | docs-layout-measure      | ~M  | [ ]    | `.pg-main` never centred; column measure + section rhythm sweep [^81]   |
-| 82  | docs-completeness        | ~L  | [ ]    | 9 unfinished component pages + Get Started + `docs/` reference [^82]    |
+| 81  | docs-layout-measure      | ~M  | [ ]    | `.pg-main` never centred; column measure + rhythm + topnav border/opacity [^81] |
+| 82  | docs-completeness        | ~L  | [ ]    | 9 unfinished pages + home/hero + 353 em dashes + `docs/` reference [^82] |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -439,7 +439,13 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
     (`site/site.css:471`) caps at `56rem` but has **no `margin: 0 auto`**, while
     the shell grid is `auto 1fr auto` — so the content column pins to the left of
     a much wider track on any large display, stranding space before the TOC rail.
-    `.pg-main--home` has the centring; the base rule never got it. Scope is the
+    `.pg-main--home` has the centring; the base rule never got it.
+    **Grew 2026-08-07** with the topnav, from the user's second review: the
+    scrolled bar's `border-bottom-color: var(--border)` is the 1.26:1 token 71
+    measured and 72 never fixed (D9's fix went to `--input`), and its
+    `--background 82%` backdrop lets content read through the bar. Both are the
+    one rule at `site/site.css:78-82`, and both are shell, so they land here.
+    Scope is the
     shell only: centring, a deliberate re-measure of the cap (prose wants 65-75
     characters, but this column also carries code blocks and previews), the three
     overlapping breakpoints at `:52`/`:460`/`:565`, and one section-spacing
@@ -465,6 +471,16 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
     of which **`contracts.jsx` has never been in any task's scope**. Sub-task 1
     is an audit against the running site, because the visual defects are the ones
     source-reading misses.
+    **Grew 2026-08-07** with the rest of the user's second review, all of it
+    `site/pages/**`: the **home page** (a `success` "deploy passed" badge sitting
+    beside `<Progress value={80}>` at `home.jsx:61-62`, so the demo reads as a
+    broken component; the `Zero dependencies` claim rendered as a bare outline
+    `Badge`; and the hero showcase generally), **353 em dashes** across the page
+    prose, and **six pages the user named as needing examples** — `form-fields`
+    (601 lines, 0 previews) and `container-queries` (261, 0) were already on the
+    list, `data-table` (1251 lines, **3** previews) and `sidebar` (339, 3) are
+    new, and `command` (7) and `accordion` (9) get an audit before any edit since
+    their counts do not look like the defect.
 
 [^79]: right-hand rail on docs pages: scroll-synced "On this page" TOC,
     resizable via the same drag pattern as the left sidebar, stretch goal of a
@@ -531,6 +547,8 @@ just-in-time. Rough order of usefulness:
   work because of it.
 
 ## Adjustments log
+
+- **2026-08-07 — batch 4 grew, from the user's second review of the site.** Six more defects, none of them a new task: they split along the same shell/content seam 81 and 82 already own, and neither task has started. **To 81:** the scrolled topnav's bottom border is invisible and its 82% backdrop lets content read through the bar — one rule, `site/site.css:78-82`. The border is `var(--border)`, the 1.26:1 token task 71 measured; 72's D9 fix went to `--input` instead, so this is the first thing to actually trip over that. Fix it topnav-locally — 227 surface call sites ride on the global token. **To 82:** the home page (progress/badge mismatch, the zero-dependencies badge, the hero), 353 em dashes across `site/pages/`, and examples for `data-table` (1251 lines carrying 3 previews) and `sidebar` (24 exports, 3 previews). **Two calls worth recording.** The progress bar is not a `ui/progress` bug — `home.jsx:61` puts a `success` badge reading "deploy passed" next to `<Progress value={80}>`, so the component is drawing exactly what it was told and the demo is what is wrong; check the component before believing a demo. And the em-dash sweep is sub-task **8 of 9**, deliberately last: every earlier sub-task writes new prose, so sweeping first means sweeping twice.
 
 - **2026-08-07 — batch 4 added: 81 + 82, from the user's review of the finished docs site.** The report was "still don't all look great — funky placing, and not even done in some" across components, Get Started and docs. Scoping found one structural cause and one coverage gap, which is why this is two tasks rather than a polish pass. **Structural:** `.pg-main` (`site/site.css:471`) caps at 56rem with no `margin: 0 auto` inside an `auto 1fr auto` grid, so every page's content has been pinned to the left of a wide track on large displays — `.pg-main--home` has the centring, the base rule never did. **Coverage:** 77 templated all 59 remaining pages, but nine were left genuinely incomplete (`use-form` and `form-fields` at 682 and 601 lines with no `ComponentPreview` at all; `drawer`/`sheet` at ~70 lines because task 80 restored their sections without adding examples), `contracts.jsx` was never in any task's scope, and the six system pages 77d correctly licensed to skip InstallSnippet/ApiReference now read as neglected rather than deliberate. **The lesson worth keeping: "every page has the template" and "the site looks finished" are different claims, and 77's verification only ever tested the first.** A per-page checklist cannot see column geometry or a page type that is consistent with itself but inconsistent with its neighbours. Split at the shell/content seam so the two spawn together; 74 stays separate since it is still awaiting a scope call.
 

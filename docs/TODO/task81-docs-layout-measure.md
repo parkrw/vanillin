@@ -24,7 +24,8 @@ That one declaration is the headline fix. The rest of this task is the sweep it 
 - [ ] 2. **Reconcile the three breakpoints.** `site/site.css:52`, `:460` and `:565` each collapse a different part of the layout at `72rem`/`64rem`. Confirm they compose — in particular that hiding `.pg-rail` at 72rem (`:460-464`) hands its space to the content column rather than leaving it stranded. Files: `site/site.css`.
 - [ ] 3. **Sweep vertical rhythm between page sections.** The reported "funky placing" is largely inconsistent gaps between a heading, its description, its preview and the next section — different pages were written by four different workers against the same template. Find the section wrapper, give it one spacing contract, and delete the per-page margin overrides that fight it. Files: `site/site.css`.
 - [ ] 4. **Check the right rail against the new geometry.** The TOC rail (task 79) was positioned against the old left-aligned column. Confirm it still tracks headings and that its drag-resize range still makes sense once the column moves. Files: `site/toc.jsx`, `site/site.css`.
-- [ ] 5. **Screenshot QA at three widths.** `node scripts/sweep-pages.mjs` covers 1280 and 380; this task cares about the wide end, which nothing currently measures. Spot-check a prose page (`docs/introduction`), a dense component page (`data-table`) and a system page (`container-queries`).
+- [ ] 5. **Topnav separation and scrolled opacity** (user report, 2026-08-07). `site/site.css:78-82`: the scrolled bar draws `border-bottom-color: var(--border)` and `background: color-mix(in oklab, var(--background) 82%, transparent)`. Two defects, one rule: the border is invisible (`--border` measured **1.26:1** in task 71's sweep — D9's fix went to `--input`, so this token is still the weak one), and at 82% the page content reads straight through the bar while scrolling under it. Raise the border to a visible weight against both surfaces and take the background materially more opaque; the `prefers-reduced-transparency` branch at `:85-91` already lands on solid `--background`, so that is the ceiling. Do not fix this by changing `--border` globally — 227 surface call sites depend on it; use a topnav-local value. Files: `site/site.css`.
+- [ ] 6. **Screenshot QA at three widths.** `node scripts/sweep-pages.mjs` covers 1280 and 380; this task cares about the wide end, which nothing currently measures. Spot-check a prose page (`docs/introduction`), a dense component page (`data-table`) and a system page (`container-queries`).
 
 ## Verify / done
 
@@ -36,7 +37,9 @@ node scripts/sweep-pages.mjs
 
 Baseline noise floor: 2 slider-cursor failures + an intermittent `navigation-menu` hover flake. Report exact counts from the runner summary.
 
-Done when: the content column is centred and deliberately measured at 1280/1600/2560, section spacing is one contract rather than per-page overrides, and the rail still works.
+Done when: the content column is centred and deliberately measured at 1280/1600/2560, section spacing is one contract rather than per-page overrides, the scrolled topnav visibly separates from the content passing under it, and the rail still works.
+
+Sub-task 5 also wants a measurement, not an eyeball: run `node scripts/contrast-nontext.mjs` and confirm the topnav's bottom boundary clears 3:1 in light and dark.
 
 ## Out of scope
 
