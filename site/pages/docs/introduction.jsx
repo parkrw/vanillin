@@ -131,7 +131,7 @@ export default function IntroductionPage() {
         </TabsContent>
         <TabsContent value="cli" style={{ padding: "1rem 0" }}>
           <p style={{ margin: 0, fontSize: "0.875rem" }}>
-            <code>npx github:parkrw/vanillin init</code> scaffolds the config.{" "}
+            <code>van init</code> scaffolds the config.{" "}
             <code>van add button card tabs</code> copies components with
             their dependencies resolved automatically.
           </p>

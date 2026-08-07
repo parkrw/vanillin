@@ -7,8 +7,9 @@
 This is not a package — the files land in your project and are yours to edit. The CLI is a faster hand for the copying:
 
 ```sh
-npx github:parkrw/vanillin init          # config + stylesheets, layout detected
-npx github:parkrw/vanillin add button dialog
+npm i -D github:parkrw/vanillin          # adds the `van` CLI to your project
+van init                                 # config + stylesheets, layout detected
+van add button dialog
 ```
 
 `init` reads your `package.json` and any `components.json` to work out where components belong (`src/components/ui` in a Next or aliased project, `./components/ui` otherwise), writes `van.config.json`, and copies the stylesheets. `add` brings each component's dependencies with it — other components it imports, and the `lib/` primitives it needs. In a Next App Router project the copied components get a `"use client"` directive; elsewhere they don't.
@@ -35,7 +36,9 @@ The other commands:
 
 `add` never overwrites a file you edited — it tells you and skips that component. `van add --overwrite` replaces it deliberately. That distinction comes from the `.van.json` sidecar written next to each component, which records what you were given.
 
-Pin a tag (`npx github:parkrw/vanillin#v0.1.0`) if you want a stable source to copy from.
+For a one-off — trying the kit, or a single `add` in a project you don't want to touch — run it without installing: `npx github:parkrw/vanillin add button`.
+
+Pin a tag for a stable source, either way: `npm i -D github:parkrw/vanillin#v0.1.0` or `npx github:parkrw/vanillin#v0.1.0 add button`.
 
 ### Component API conventions
 

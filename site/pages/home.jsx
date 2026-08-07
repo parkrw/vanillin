@@ -83,7 +83,7 @@ export default function HomePage() {
             <Button variant="outline" as="a" href="#button">Browse Components</Button>
           </div>
           <CodeBlock
-            code="npx github:parkrw/vanillin init"
+            code="npm i -D github:parkrw/vanillin"
             language="bash"
             className="pg-hero-install"
           />

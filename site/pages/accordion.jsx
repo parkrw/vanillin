@@ -109,7 +109,7 @@ import "./ui/accordion/accordion.css"
   <AccordionItem value="faq-1">
     <AccordionTrigger>How do I install vanillin?</AccordionTrigger>
     <AccordionContent>
-      Run npx github:parkrw/vanillin init to set up, then add components.
+      Run van init to set up, then van add to copy components.
     </AccordionContent>
   </AccordionItem>
   <AccordionItem value="faq-2">
@@ -123,7 +123,7 @@ import "./ui/accordion/accordion.css"
             <AccordionItem value="faq-1">
               <AccordionTrigger>How do I install vanillin?</AccordionTrigger>
               <AccordionContent>
-                Run <code>npx github:parkrw/vanillin init</code> to set up your project, then add individual components.
+                Run <code>van init</code> to set up your project, then <code>van add</code> to copy individual components.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="faq-2">

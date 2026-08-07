@@ -12,7 +12,15 @@ export default function CliPage() {
         vanillin at runtime. Node 18+ stdlib only, no dependencies.
       </p>
 
-      <CodeBlock language="bash" code="npx github:parkrw/vanillin <command> [options]" />
+      <CodeBlock language="bash" code="van <command> [options]" />
+
+      <p>
+        Install with <code>npm i -D github:parkrw/vanillin</code> to
+        get the <code>van</code> command in your project. For a one-off
+        run without installing,{" "}
+        <code>npx github:parkrw/vanillin &lt;command&gt;</code> works
+        the same.
+      </p>
 
       <h3>init</h3>
 

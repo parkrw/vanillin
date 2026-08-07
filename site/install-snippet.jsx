@@ -3,7 +3,7 @@ import "./code-example.css"
 import registryData from "../registry.json"
 
 export function InstallSnippet({ slug }) {
-  const command = `npx github:parkrw/vanillin add ${slug}`
+  const command = `van add ${slug}`
   const requires = registryData.components?.[slug]?.requires ?? []
 
   return (

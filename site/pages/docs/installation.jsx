@@ -21,7 +21,19 @@ export default function InstallationPage() {
         <li>Node 18+</li>
       </ul>
 
-      <h3>1. Scaffold the project</h3>
+      <h3>1. Install the CLI</h3>
+
+      <CodeBlock language="bash" code="npm i -D github:parkrw/vanillin" />
+
+      <p>
+        This adds the <code>van</code> command to your project. Nothing
+        is imported from vanillin at runtime — the CLI only copies files.
+        Just trying it out? Prefix any command with{" "}
+        <code>npx github:parkrw/vanillin</code> instead and skip this
+        step.
+      </p>
+
+      <h3>2. Scaffold the project</h3>
 
       <p>
         <code>van init</code> detects your framework, finds where
@@ -29,7 +41,7 @@ export default function InstallationPage() {
         and copies the base stylesheets.
       </p>
 
-      <CodeBlock language="bash" code="npx github:parkrw/vanillin init" />
+      <CodeBlock language="bash" code="van init" />
 
       <p>
         It reads <code>package.json</code> for framework detection
@@ -39,7 +51,7 @@ export default function InstallationPage() {
         <code>paths</code>.
       </p>
 
-      <h3>2. Import the stylesheets</h3>
+      <h3>3. Import the stylesheets</h3>
 
       <p>
         Add these two imports to your app entry, in this order:
@@ -55,7 +67,7 @@ import "./styles/van.css"`} />
         must come after <code>globals.css</code> so your theme wins.
       </p>
 
-      <h3>3. Add components</h3>
+      <h3>4. Add components</h3>
 
       <p>
         Copy one or more components by slug. Dependencies are resolved
@@ -63,9 +75,9 @@ import "./styles/van.css"`} />
         <code>dialog</code> and <code>button</code> with it.
       </p>
 
-      <CodeBlock language="bash" code={`npx github:parkrw/vanillin add button dialog card
+      <CodeBlock language="bash" code={`van add button dialog card
 # or add everything at once
-npx github:parkrw/vanillin add --yes`} />
+van add --yes`} />
 
       <p>
         Run bare <code>van add</code> in a terminal for an interactive
@@ -73,7 +85,7 @@ npx github:parkrw/vanillin add --yes`} />
         confirm.
       </p>
 
-      <h3>4. Use a component</h3>
+      <h3>5. Use a component</h3>
 
       <p>
         Import the JSX and its CSS. Each component is a directory
@@ -87,13 +99,13 @@ function App() {
   return <Button variant="outline">Click me</Button>
 }`} />
 
-      <h3>5. Customise the theme</h3>
+      <h3>6. Customise the theme</h3>
 
       <p>
         Edit <code>van.config.json</code> and regenerate:
       </p>
 
-      <CodeBlock language="bash" code="npx github:parkrw/vanillin build" />
+      <CodeBlock language="bash" code="van build" />
 
       <p>
         See <a href="#configuration">Configuration</a> for the full
