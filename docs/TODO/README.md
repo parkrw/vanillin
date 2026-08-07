@@ -557,6 +557,7 @@ after 30** (see the order above): they need post-39 CSS and settled docs
 conventions, and writing them earlier means writing them twice. Detail
 just-in-time. Rough order of usefulness:
 
+- `glow-pulse` - glow, speed-ctrl, brightness, multi-color, badge/progress-bar/status-dot/etc.
 - `copy-field` — resource IDs, ARNs, connection strings (~S)
 - `key-value` — resource detail pane, definition-list semantics (~S)
 - `stat-tile` — metric + delta + inline SVG sparkline (~M)
