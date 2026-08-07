@@ -11,15 +11,23 @@ import {
 import { Button } from "../../ui/button/button.jsx"
 import { Field, FieldLabel } from "../../ui/field/field.jsx"
 import { Input } from "../../ui/input/input.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
 import "../../ui/sheet/sheet.css"
 import "../../ui/button/button.css"
 import "../../ui/field/field.css"
 import "../../ui/input/input.css"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 export default function SheetPage() {
   return (
     <>
       <h2>Sheet</h2>
+      <p>A modal panel that slides in from an edge for forms, detail views, or settings.</p>
+
+      <InstallSnippet slug="sheet" />
 
       <section className="pg-section">
         <h3>Sides</h3>
@@ -53,6 +61,10 @@ export default function SheetPage() {
           ))}
         </div>
       </section>
+
+      <ApiReference props={[
+        { name: "side", type: '"right" | "left" | "top" | "bottom"', default: '"right"', description: "Edge the sheet slides in from" },
+      ]} />
     </>
   )
 }

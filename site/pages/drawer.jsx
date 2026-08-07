@@ -9,13 +9,21 @@ import {
   DrawerDescription,
 } from "../../ui/drawer/drawer.jsx"
 import { Button } from "../../ui/button/button.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
 import "../../ui/drawer/drawer.css"
 import "../../ui/button/button.css"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 export default function DrawerPage() {
   return (
     <>
       <h2>Drawer</h2>
+      <p>A touch-first panel that slides in from any edge and dismisses with a swipe.</p>
+
+      <InstallSnippet slug="drawer" />
 
       <section className="pg-section">
         <h3>Swipe to dismiss</h3>
@@ -56,6 +64,11 @@ export default function DrawerPage() {
           ))}
         </div>
       </section>
+
+      <ApiReference props={[
+        { name: "swipeDirection", type: '"down" | "up" | "left" | "right"', default: '"down"', description: "Edge the drawer anchors to and swipe direction for dismissal" },
+        { name: "showSwipeHandle", type: "boolean", default: "true", description: "Show the grab handle that signals the swipe gesture" },
+      ]} />
     </>
   )
 }
