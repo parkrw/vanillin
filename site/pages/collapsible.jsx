@@ -92,9 +92,10 @@ export default function CollapsiblePage() {
         <h3>Usage</h3>
         <ComponentPreview code={`import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "./ui/collapsible/collapsible"
 import "./ui/collapsible/collapsible.css"
+import { Button } from "./ui/button/button"
 
 <Collapsible>
-  <CollapsibleTrigger>Show more</CollapsibleTrigger>
+  <CollapsibleTrigger as={Button} variant="outline">Show more</CollapsibleTrigger>
   <CollapsibleContent>
     <p>Hidden content revealed on toggle.</p>
   </CollapsibleContent>

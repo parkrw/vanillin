@@ -235,6 +235,7 @@ import "./ui/item/item.css"
         { name: "variant", type: '"default" | "outline" | "muted"', default: '"default"', description: "Visual style of the item" },
         { name: "size", type: '"default" | "sm" | "xs"', default: '"default"', description: "Padding and icon size" },
         { name: "as", type: "ElementType", default: '"div"', description: "Render as a different element or component" },
+        { name: "ItemMedia: variant", type: '"default" | "icon" | "image"', default: '"default"', description: "Media slot style — icon renders a tinted circle, image renders a thumbnail (image variant not demoed above)" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />
     </>

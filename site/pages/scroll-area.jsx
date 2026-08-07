@@ -153,8 +153,14 @@ export default function ScrollAreaPage() {
         </DirectionProvider>
       </section>
 
+      {/* ── New parity features ───────────────────────────────── */}
+
       <section className="pg-section">
         <h3>Fade mask (overflow edge detection)</h3>
+        <p className="pg-desc" style={{ marginBlockEnd: "0.75rem" }}>
+          <code>data-overflow-y-start</code> / <code>data-overflow-y-end</code> drive a CSS{" "}
+          <code>mask-image</code> fade at clipped edges. Scroll to see the mask appear and disappear.
+        </p>
         <ScrollArea
           data-pg="sa-fade"
           className="scroll-area--fade-demo"
@@ -194,6 +200,10 @@ export default function ScrollAreaPage() {
 
       <section className="pg-section">
         <h3>With threshold (overflowEdgeThreshold)</h3>
+        <p className="pg-desc" style={{ marginBlockEnd: "0.75rem" }}>
+          Threshold set to 20px. Scroll slowly from the top — the start attribute only appears
+          after 20px of content is clipped.
+        </p>
         <ScrollArea
           data-pg="sa-threshold"
           overflowEdgeThreshold={20}
@@ -216,6 +226,10 @@ export default function ScrollAreaPage() {
 
       <section className="pg-section">
         <h3>Snap content (snap suspension)</h3>
+        <p className="pg-desc" style={{ marginBlockEnd: "0.75rem" }}>
+          Horizontal scroll-snap content inside a scroll area. Dragging the scrollbar thumb
+          suspends snap so it does not re-snap mid-drag.
+        </p>
         <ScrollArea
           data-pg="sa-snap"
           style={{
@@ -261,6 +275,11 @@ export default function ScrollAreaPage() {
 
       <section className="pg-section">
         <h3>Overscroll squish</h3>
+        <p className="pg-desc" style={{ marginBlockEnd: "0.75rem" }}>
+          Touch or pen only (trackpad already has native overscroll on macOS). Scroll to the top
+          or bottom, then continue dragging — the content rubber-bands and springs back on
+          release. Disabled under <code>prefers-reduced-motion: reduce</code>.
+        </p>
         <ScrollArea
           data-pg="sa-squish"
           style={{

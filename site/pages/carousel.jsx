@@ -122,9 +122,15 @@ export default function CarouselPage() {
         </div>
       </section>
 
-      {/* Alignment */}
+      {/* Alignment — opts.align: start | center | end */}
       <section className="pg-section">
         <h3>Alignment</h3>
+        <p className="pg-prose">
+          <code>opts.align</code> maps directly to <code>scroll-snap-align</code> on
+          each slide. Values: <code>"start"</code> (default),{" "}
+          <code>"center"</code>, <code>"end"</code>. Most useful with
+          partial-width slides so the active item is visually centred.
+        </p>
         <div style={{ paddingInline: "4rem", maxInlineSize: "32rem" }}>
           <Carousel opts={{ align: "center" }} data-pg="c-align">
             <CarouselContent style={{ gap: "0.5rem" }}>
@@ -143,9 +149,16 @@ export default function CarouselPage() {
         </div>
       </section>
 
-      {/* Loop */}
+      {/* Loop — opts.loop */}
       <section className="pg-section">
         <h3>Loop</h3>
+        <p className="pg-prose">
+          <code>opts.loop</code> wraps navigation at both ends. Internally,
+          slides are cloned before and after the real set; when scroll settles on
+          a clone the container jumps invisibly to the corresponding real slide.
+          Clones are <code>aria-hidden</code> and <code>inert</code> so keyboard
+          users never land on them. Both nav buttons stay enabled.
+        </p>
         <div style={{ paddingInline: "4rem", maxInlineSize: "24rem" }}>
           <Carousel opts={{ loop: true }} data-pg="c-loop">
             <CarouselContent>
@@ -161,9 +174,15 @@ export default function CarouselPage() {
         </div>
       </section>
 
-      {/* Loop with narrow items */}
+      {/* Loop with many narrow items — tests clone optimisation */}
       <section className="pg-section">
         <h3>Loop (narrow items)</h3>
+        <p className="pg-prose">
+          Same loop behaviour but with narrower items. The carousel only
+          clones enough slides to fill one viewport plus a safety margin
+          on each side, so this 10-item carousel has fewer clones than a
+          naive 2N approach.
+        </p>
         <div style={{ paddingInline: "4rem", maxInlineSize: "32rem" }}>
           <Carousel opts={{ loop: true }} data-pg="c-loop-narrow">
             <CarouselContent style={{ gap: "0.5rem" }}>
@@ -182,9 +201,17 @@ export default function CarouselPage() {
         </div>
       </section>
 
-      {/* Autoplay */}
+      {/* Autoplay plugin */}
       <section className="pg-section">
         <h3>Autoplay</h3>
+        <p className="pg-prose">
+          The plugin contract is{" "}
+          <code>{"{ name, init(api, opts), destroy() }"}</code>, called on
+          mount/unmount. <code>Autoplay</code> is the first built-in plugin.
+          It pauses on hover, on focus-within, and when the page is hidden.
+          Under <code>prefers-reduced-motion: reduce</code> it never starts.
+          The interval is a fixed literal (not a motion token).
+        </p>
         <AutoplayDemo />
       </section>
 
