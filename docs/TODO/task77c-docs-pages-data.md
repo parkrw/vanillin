@@ -38,4 +38,16 @@ Any `site/pages/*.jsx` not listed above, `ui/**`, `tests/**`, and the shared doc
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** DONE
+
+All 16 pages carry the task-76 template: title + description, InstallSnippet, Usage (ComponentPreview), examples, ApiReference.
+
+**Height-sensitive pages** (attachment, calendar, carousel, collapsible, data-table, empty, message-scroller, resizable, scroll-area): InstallSnippet, Usage, and ApiReference placed below test-driven fixtures. Existing fixtures untouched — no ComponentPreview wrapping on test-driven sections.
+
+**Empty page fix**: Usage preview initially rendered a bare `<Empty>` component, breaking the "every empty demo is framed" test (expected `.pg-empty-frame` count to match `.empty` count). Fixed by showing text reference instead of rendered component.
+
+**Progress page**: Test uses `document.querySelectorAll(".progress")[0]` for the animated demo, so Usage section placed below fixtures to preserve index ordering.
+
+**Format page**: Prose sections trimmed (kept only the live fixtures + locale selector the tests drive). Template elements appended below.
+
+**Verify:** `VANILLIN_TEST_PORT=5202 node tests/run.mjs` → 757/759 (2 pre-existing slider cursor). Owned: 167/167. `npm run build` clean.
