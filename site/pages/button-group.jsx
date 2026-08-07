@@ -2,26 +2,50 @@ import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from "../../ui/but
 import "../../ui/button-group/button-group.css"
 import { Button } from "../../ui/button/button.jsx"
 import "../../ui/button/button.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 export default function ButtonGroupPage() {
   return (
     <>
       <h2>Button Group</h2>
+      <p>Visually connects related buttons into a single row or column, merging their borders so they read as one control.</p>
+
+      <InstallSnippet slug="button-group" />
 
       <section className="pg-section">
-        <h3>Basic</h3>
-        <div className="pg-row">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { ButtonGroup } from "./ui/button-group/button-group"
+import "./ui/button-group/button-group.css"
+import { Button } from "./ui/button/button"
+import "./ui/button/button.css"
+
+<ButtonGroup aria-label="Actions">
+  <Button variant="outline">Archive</Button>
+  <Button variant="outline">Report</Button>
+  <Button variant="outline">Snooze</Button>
+</ButtonGroup>`}>
           <ButtonGroup aria-label="Actions">
             <Button variant="outline">Archive</Button>
             <Button variant="outline">Report</Button>
             <Button variant="outline">Snooze</Button>
           </ButtonGroup>
-        </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
-        <h3>With Separator</h3>
-        <div className="pg-row">
+        <h3>With separator</h3>
+        <ComponentPreview code={`<ButtonGroup aria-label="Split action">
+  <Button variant="outline">Save</Button>
+  <ButtonGroupSeparator />
+  <Button variant="outline" size="icon" aria-label="More options">
+    <ChevronDownIcon />
+  </Button>
+</ButtonGroup>`}>
           <ButtonGroup aria-label="Split action">
             <Button variant="outline">Save</Button>
             <ButtonGroupSeparator />
@@ -31,12 +55,20 @@ export default function ButtonGroupPage() {
               </svg>
             </Button>
           </ButtonGroup>
-        </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
-        <h3>With Text</h3>
-        <div className="pg-row">
+        <h3>With text</h3>
+        <ComponentPreview code={`<ButtonGroup aria-label="Navigation">
+  <ButtonGroupText>Page 1 of 10</ButtonGroupText>
+  <Button variant="outline" size="icon" aria-label="Previous">
+    <ChevronLeftIcon />
+  </Button>
+  <Button variant="outline" size="icon" aria-label="Next">
+    <ChevronRightIcon />
+  </Button>
+</ButtonGroup>`}>
           <ButtonGroup aria-label="Navigation">
             <ButtonGroupText>Page 1 of 10</ButtonGroupText>
             <Button variant="outline" size="icon" aria-label="Previous">
@@ -50,12 +82,22 @@ export default function ButtonGroupPage() {
               </svg>
             </Button>
           </ButtonGroup>
-        </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Vertical</h3>
-        <div className="pg-row">
+        <ComponentPreview code={`<ButtonGroup orientation="vertical" aria-label="Text formatting">
+  <Button variant="outline" size="icon" aria-label="Bold">
+    <BoldIcon />
+  </Button>
+  <Button variant="outline" size="icon" aria-label="Italic">
+    <ItalicIcon />
+  </Button>
+  <Button variant="outline" size="icon" aria-label="Underline">
+    <UnderlineIcon />
+  </Button>
+</ButtonGroup>`}>
           <ButtonGroup orientation="vertical" aria-label="Text formatting">
             <Button variant="outline" size="icon" aria-label="Bold">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -77,8 +119,13 @@ export default function ButtonGroupPage() {
               </svg>
             </Button>
           </ButtonGroup>
-        </div>
+        </ComponentPreview>
       </section>
+
+      <ApiReference props={[
+        { name: "orientation", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "Layout direction of the group" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
     </>
   )
 }

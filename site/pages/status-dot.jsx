@@ -1,5 +1,11 @@
 import { StatusDot } from "../../ui/status-dot/status-dot.jsx"
 import "../../ui/status-dot/status-dot.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 export default function StatusDotPage() {
   return (
@@ -136,6 +142,32 @@ export default function StatusDotPage() {
           <StatusDot status="pending" />
         </div>
       </section>
+
+      <InstallSnippet slug="status-dot" />
+
+      <section className="pg-section">
+        <h3>Basic usage</h3>
+        <ComponentPreview code={`import { StatusDot } from "./ui/status-dot/status-dot"
+import "./ui/status-dot/status-dot.css"
+
+<StatusDot status="success" />
+<StatusDot status="error" ring />
+<StatusDot status="warning" size="lg" />`}>
+          <div className="pg-row">
+            <StatusDot status="success" />
+            <StatusDot status="error" ring />
+            <StatusDot status="warning" size="lg" />
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <ApiReference props={[
+        { name: "status", type: '"success" | "warning" | "error" | "info" | "neutral" | "pending"', default: '"neutral"', description: "Semantic state, mapped to the corresponding token family" },
+        { name: "size", type: '"sm" | "default" | "lg"', default: '"default"', description: "Dot diameter: 6px, 8px, or 10px" },
+        { name: "ring", type: "boolean", default: "false", description: "Draws a 20% opacity halo around the dot" },
+        { name: "label", type: "string | null", default: "auto", description: "Accessible label. null gives aria-hidden; omit for the auto-derived label" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
     </>
   )
 }

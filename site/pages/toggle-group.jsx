@@ -2,6 +2,12 @@ import { useState } from "react"
 import { ToggleGroup, ToggleGroupItem } from "../../ui/toggle-group/toggle-group.jsx"
 import "../../ui/toggle/toggle.css"
 import "../../ui/toggle-group/toggle-group.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 const stroke = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }
 
@@ -63,53 +69,100 @@ export default function ToggleGroupPage() {
   return (
     <>
       <h2>Toggle Group</h2>
+      <p>Groups multiple toggles so they behave as a single-select radio or multi-select checkbox set, with roving keyboard focus between items.</p>
+
+      <InstallSnippet slug="toggle-group" />
 
       <section className="pg-section">
-        <h3>Single</h3>
-        <div className="pg-row">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group/toggle-group"
+import "./ui/toggle/toggle.css"
+import "./ui/toggle-group/toggle-group.css"
+
+<ToggleGroup type="single" defaultValue="left" aria-label="Text alignment">
+  <ToggleGroupItem value="left" aria-label="Align left">
+    <AlignLeftIcon />
+  </ToggleGroupItem>
+  <ToggleGroupItem value="center" aria-label="Align center">
+    <AlignCenterIcon />
+  </ToggleGroupItem>
+  <ToggleGroupItem value="right" aria-label="Align right">
+    <AlignRightIcon />
+  </ToggleGroupItem>
+</ToggleGroup>`}>
           <AlignmentGroup />
-        </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Multiple (controlled)</h3>
-        <div className="pg-row">
-          <ToggleGroup type="multiple" value={formats} onValueChange={setFormats} aria-label="Text formatting">
-            <ToggleGroupItem value="bold" aria-label="Toggle bold">
-              <BoldIcon />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="italic" aria-label="Toggle italic">
-              <ItalicIcon />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="underline" aria-label="Toggle underline">
-              <UnderlineIcon />
-            </ToggleGroupItem>
-          </ToggleGroup>
-          <span>{formats.join(", ") || "none"}</span>
-        </div>
+        <ComponentPreview code={`const [formats, setFormats] = useState(["bold"])
+
+<ToggleGroup type="multiple" value={formats} onValueChange={setFormats} aria-label="Text formatting">
+  <ToggleGroupItem value="bold" aria-label="Toggle bold"><BoldIcon /></ToggleGroupItem>
+  <ToggleGroupItem value="italic" aria-label="Toggle italic"><ItalicIcon /></ToggleGroupItem>
+  <ToggleGroupItem value="underline" aria-label="Toggle underline"><UnderlineIcon /></ToggleGroupItem>
+</ToggleGroup>`}>
+          <div className="pg-row">
+            <ToggleGroup type="multiple" value={formats} onValueChange={setFormats} aria-label="Text formatting">
+              <ToggleGroupItem value="bold" aria-label="Toggle bold">
+                <BoldIcon />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="italic" aria-label="Toggle italic">
+                <ItalicIcon />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="underline" aria-label="Toggle underline">
+                <UnderlineIcon />
+              </ToggleGroupItem>
+            </ToggleGroup>
+            <span>{formats.join(", ") || "none"}</span>
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Outline</h3>
-        <div className="pg-row">
-          <AlignmentGroup variant="outline" aria-label="Outline alignment" />
-        </div>
+        <ComponentPreview code={`<ToggleGroup type="single" variant="outline" defaultValue="left">
+  ...
+</ToggleGroup>`}>
+          <div className="pg-row">
+            <AlignmentGroup variant="outline" aria-label="Outline alignment" />
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Sizes</h3>
-        <div className="pg-row">
-          <AlignmentGroup size="sm" aria-label="Small alignment" />
-          <AlignmentGroup size="lg" aria-label="Large alignment" />
-        </div>
+        <ComponentPreview code={`<ToggleGroup type="single" size="sm" defaultValue="left">...</ToggleGroup>
+<ToggleGroup type="single" size="lg" defaultValue="left">...</ToggleGroup>`}>
+          <div className="pg-row">
+            <AlignmentGroup size="sm" aria-label="Small alignment" />
+            <AlignmentGroup size="lg" aria-label="Large alignment" />
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Disabled</h3>
-        <div className="pg-row">
-          <AlignmentGroup disabled aria-label="Disabled group" />
-        </div>
+        <ComponentPreview code={`<ToggleGroup type="single" disabled defaultValue="left">
+  ...
+</ToggleGroup>`}>
+          <div className="pg-row">
+            <AlignmentGroup disabled aria-label="Disabled group" />
+          </div>
+        </ComponentPreview>
       </section>
+
+      <ApiReference props={[
+        { name: "type", type: '"single" | "multiple"', default: '"single"', description: "Single deselects siblings; multiple allows many active" },
+        { name: "value", type: "string | string[]", description: "Controlled value (string for single, array for multiple)" },
+        { name: "defaultValue", type: "string | string[]", description: "Initial value (uncontrolled)" },
+        { name: "onValueChange", type: "(value) => void", description: "Called when the selection changes" },
+        { name: "variant", type: '"default" | "outline"', default: '"default"', description: "Visual style forwarded to every item" },
+        { name: "size", type: '"default" | "sm" | "lg"', default: '"default"', description: "Size forwarded to every item" },
+        { name: "disabled", type: "boolean", default: "false", description: "Disables every item in the group" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
     </>
   )
 }

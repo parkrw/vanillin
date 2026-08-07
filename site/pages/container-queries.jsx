@@ -23,6 +23,8 @@ import "../../ui/button/button.css"
 import "../../ui/item/item.css"
 import "../../ui/field/field.css"
 import "../../ui/table/table.css"
+import { CodeBlock } from "../code-example.jsx"
+import "../code-example.css"
 
 const columns = ["Name", "Region", "Status"]
 
@@ -32,9 +34,6 @@ const rows = [
   { name: "batch-jobs", region: "ap-south-1", status: "Stopped" },
 ]
 
-/* Every panel below renders exactly these children. Nothing is passed a width,
-   a breakpoint or a prop about size — the only difference between two panels is
-   how much inline space the panel gives them. */
 function Panel() {
   return (
     <>
@@ -111,22 +110,9 @@ export default function ContainerQueriesPage() {
   return (
     <>
       <h2>Container Queries</h2>
-
-      <section className="pg-section">
-        <h3>Overview</h3>
-        <p>
-          A media query asks how wide the <em>window</em> is. That is the wrong
-          question for a component: the same card belongs in a 320px side panel
-          and in a 1200px main region, and the viewport cannot tell those apart.
-          Components here size themselves to their <em>container</em> instead, so
-          one copy is correct in both places with no breakpoint props and no
-          duplicate markup.
-        </p>
-        <p>
-          This is a capability an upstream utility-class kit cannot easily adopt,
-          because its responsive prefixes are viewport-bound by default.
-        </p>
-      </section>
+      <p>
+        Components size themselves to their <em>container</em> instead of the viewport, so one copy is correct in a 320px side panel and a 1200px main region with no breakpoint props and no duplicate markup.
+      </p>
 
       <section className="pg-section">
         <h3>The same components, three widths, one viewport</h3>
@@ -172,6 +158,20 @@ export default function ContainerQueriesPage() {
           below 40rem of container width every row becomes a card of
           label/value pairs.
         </p>
+        <CodeBlock code={`<Table className="table--stack">
+  <TableHeader>
+    <TableRow>
+      <TableHead>Name</TableHead>
+      <TableHead>Region</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell data-label="Name">api-gateway</TableCell>
+      <TableCell data-label="Region">eu-west-1</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>`} />
         <p>
           The visual labels come from <code>data-label</code> on each cell, which
           you set, because <code>ui/table</code> never sees your column list.
@@ -215,9 +215,7 @@ export default function ContainerQueriesPage() {
           <li>
             <code>ui/dialog</code> and <code>ui/sheet</code> —{" "}
             <code>vanillin-dialog</code>, header alignment and footer direction
-            from 24rem of content width. A side sheet is ~20rem wide on the
-            largest desktop, so keying this to the viewport gave it a layout it
-            had no room for.
+            from 24rem of content width.
           </li>
         </ul>
         <p>

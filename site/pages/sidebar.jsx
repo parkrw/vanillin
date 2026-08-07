@@ -26,8 +26,13 @@ import {
   useSidebar,
 } from "../../ui/sidebar/sidebar.jsx"
 import "../../ui/sidebar/sidebar.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
-/* SVG icon helpers — inline to avoid deps */
 const IconHome = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
 )
@@ -174,6 +179,7 @@ export default function SidebarPage() {
   return (
     <>
       <h2>Sidebar</h2>
+      <p>A collapsible navigation panel with icon-only, offcanvas, and floating modes. Swaps to a sheet on mobile via <code>matchMedia</code>, persists state in a cookie, and toggles with <kbd>Cmd+B</kbd>.</p>
 
       <section className="pg-section">
         <h3>Controls</h3>
@@ -199,9 +205,6 @@ export default function SidebarPage() {
 
       <section className="pg-section" data-pg="sb-main">
         <h3>Default (left, offcanvas)</h3>
-        {/* Render inside a bounded container so the site shell stays usable.
-            The sidebar is position:fixed inside this container, but we use CSS
-            containment + overflow:hidden + relative positioning to scope it. */}
         <div
           className="sidebar-demo-frame"
           style={{
@@ -216,7 +219,6 @@ export default function SidebarPage() {
           <SidebarProvider
             defaultOpen
             style={{
-              /* Override the fixed positioning for the demo frame */
               "--sidebar-width": "16rem",
               "--sidebar-width-icon": "3rem",
               minHeight: "100%",
@@ -284,6 +286,54 @@ export default function SidebarPage() {
           </SidebarProvider>
         </div>
       </section>
+
+      <InstallSnippet slug="sidebar" />
+
+      <section className="pg-section">
+        <h3>Basic setup</h3>
+        <ComponentPreview code={`import {
+  SidebarProvider, Sidebar, SidebarTrigger, SidebarInset,
+  SidebarContent, SidebarGroup, SidebarGroupLabel,
+  SidebarGroupContent, SidebarMenu, SidebarMenuItem,
+  SidebarMenuButton,
+} from "./ui/sidebar/sidebar"
+import "./ui/sidebar/sidebar.css"
+
+<SidebarProvider>
+  <Sidebar>
+    <SidebarContent>
+      <SidebarGroup>
+        <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton>Home</SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </SidebarContent>
+  </Sidebar>
+  <SidebarInset>
+    <SidebarTrigger />
+    {/* page content */}
+  </SidebarInset>
+</SidebarProvider>`}>
+          <p style={{ fontSize: "0.8125rem", color: "var(--muted-foreground)" }}>See the live demos above.</p>
+        </ComponentPreview>
+      </section>
+
+      <ApiReference title="Sidebar" props={[
+        { name: "variant", type: '"sidebar" | "floating" | "inset"', default: '"sidebar"', description: "Visual style of the sidebar" },
+        { name: "collapsible", type: '"offcanvas" | "icon" | "none"', default: '"offcanvas"', description: "Collapse behavior: fully hidden, icon-only strip, or always visible" },
+        { name: "side", type: '"left" | "right"', default: '"left"', description: "Which edge the sidebar sits on" },
+      ]} />
+
+      <ApiReference title="SidebarProvider" props={[
+        { name: "defaultOpen", type: "boolean", default: "true", description: "Initial open state (uncontrolled)" },
+        { name: "open", type: "boolean", description: "Controlled open state" },
+        { name: "onOpenChange", type: "(open: boolean) => void", description: "Called when open state changes" },
+      ]} />
     </>
   )
 }

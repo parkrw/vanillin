@@ -7,6 +7,8 @@ import { useReturnFocus } from "../../lib/use-return-focus.js"
 import { useRovingFocus } from "../../lib/use-roving-focus.js"
 import { Button } from "../../ui/button/button.jsx"
 import "../../ui/button/button.css"
+import { CodeBlock } from "../code-example.jsx"
+import "../code-example.css"
 
 function DemoPopover({ side }) {
   const [open, setOpen] = useState(false)
@@ -94,25 +96,83 @@ export default function PrimitivesPage() {
   return (
     <>
       <h2>Primitives</h2>
-      <p>The shared <code>lib/</code> hooks every component builds on. Use them directly when building custom components that need anchored positioning, keyboard navigation, animated mount/unmount, or layer dismissal.</p>
+      <p>
+        The shared <code>lib/</code> hooks that every component builds on. Use them directly when building custom components that need anchored positioning, keyboard navigation, animated mount/unmount, or layer dismissal — without pulling in a finished UI component you would have to reskin.
+      </p>
 
       <section className="pg-section">
         <h3>Anchor positioning + dismissable layer + return focus</h3>
+        <p>
+          <code>useAnchorPosition</code> places a floating element next to its trigger (with collision flipping). <code>useDismissableLayer</code> closes it on Escape or outside click. <code>useReturnFocus</code> restores focus after close. All three compose — every overlay component (popover, dropdown, combobox, tooltip) is built from them.
+        </p>
         <div className="pg-row">
           {["top", "bottom", "left", "right"].map((side) => (
             <DemoPopover key={side} side={side} />
           ))}
         </div>
+        <CodeBlock code={`import { useAnchorPosition } from "./lib/use-anchor-position"
+import { useDismissableLayer } from "./lib/use-dismissable-layer"
+import { useReturnFocus } from "./lib/use-return-focus"
+
+useAnchorPosition(open, triggerRef, floatingRef, { side: "bottom" })
+useDismissableLayer(floatingRef, {
+  enabled: open,
+  onDismiss: () => setOpen(false),
+  exclude: [triggerRef],
+})
+useReturnFocus(open)`} />
       </section>
 
       <section className="pg-section">
-        <h3>Roving tabindex (Tab in, then arrow keys / Home / End)</h3>
+        <h3>Roving tabindex</h3>
+        <p>
+          <code>useRovingFocus</code> manages <code>tabIndex</code> so Tab enters the group once, then arrow keys / Home / End move between items. Mark focusable children with <code>data-roving</code>.
+        </p>
         <DemoRoving />
+        <CodeBlock code={`import { useRovingFocus } from "./lib/use-roving-focus"
+
+const ref = useRef(null)
+useRovingFocus(ref, { orientation: "horizontal" })
+
+<div ref={ref} role="toolbar">
+  <button data-roving>One</button>
+  <button data-roving>Two</button>
+  <button data-roving>Three</button>
+</div>`} />
       </section>
 
       <section className="pg-section">
         <h3>Presence (exit animation before unmount)</h3>
+        <p>
+          <code>usePresence</code> returns <code>true</code> while the element should remain in the DOM — including the exit-animation phase after the logical state goes <code>false</code>. The element unmounts only after its <code>transitionend</code> or <code>animationend</code> fires.
+        </p>
         <DemoPresence />
+        <CodeBlock code={`import { usePresence } from "./lib/use-presence"
+
+const [open, setOpen] = useState(false)
+const ref = useRef(null)
+const present = usePresence(open, ref)
+
+{present && (
+  <div ref={ref} data-state={open ? "open" : "closed"}
+       style={{ transition: "opacity 300ms", opacity: open ? 1 : 0 }}>
+    Content
+  </div>
+)}`} />
+      </section>
+
+      <section className="pg-section">
+        <h3>The full set</h3>
+        <ul>
+          <li><code>useAnchorPosition</code> — floating placement with collision detection</li>
+          <li><code>useDismissableLayer</code> — Escape / outside-click dismissal, nested-layer aware</li>
+          <li><code>useReturnFocus</code> — restores focus to the trigger after close</li>
+          <li><code>useFocusTrap</code> — traps Tab within a dialog or modal sheet</li>
+          <li><code>useRovingFocus</code> — arrow-key navigation within a group</li>
+          <li><code>usePresence</code> — exit animation before unmount</li>
+          <li><code>useSafeTriangle</code> — hoverable gap between trigger and submenu</li>
+          <li><code>Portal</code> — renders children into <code>document.body</code></li>
+        </ul>
       </section>
     </>
   )
