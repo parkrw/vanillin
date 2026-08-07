@@ -184,6 +184,7 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 80  | dialog-modal-positioning | ~M  | [x]    | landed 2026-08-07 on `fix/dialog-modal-positioning`; one-line CSS fix, 2 new tests [^80] |
 | 81  | docs-layout-measure      | ~M  | [ ]    | `.pg-main` never centred; column measure + rhythm + topnav border/opacity [^81] |
 | 82  | docs-completeness        | ~L  | [ ]    | 9 unfinished pages + home/hero + 353 em dashes + `docs/` reference [^82] |
+| 83  | overlay-stacking         | ~S  | [ ]    | nav-menu viewport painted over by siblings; probe committed [^83]       |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -495,6 +496,24 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
     new, and `command` (7) and `accordion` (9) get an audit before any edit since
     their counts do not look like the defect.
 
+[^83]: Added 2026-08-07 from the user's "navigation menu is very see thru"
+    report, which turned out not to be opacity at all.
+    `.navigation-menu-viewport-wrapper` (`ui/navigation-menu/navigation-menu.css:129`)
+    is `position: absolute` with **no `z-index`**, so it paints in DOM order and
+    any later sibling wins — the docs page has three menus, so the second one's
+    triggers draw through the first one's open panel. **Viewport mode is the only
+    overlay in the kit not on the Popover API top layer**; popover mode already
+    is (`:82`), and dropdown-menu/popover/select/combobox/menubar/hover-card all
+    measured `position: fixed` and clean. `~S` because the instance is one
+    declaration; the open question in sub-task 1 is whether viewport mode should
+    join the top layer outright, which would kill the class but interacts with
+    the JS-driven morph transition. `scripts/probe-stacking.mjs` ships with the
+    task and already measures it. **Two lessons in the probe's own comments:** a
+    three-point sample calls this bug clean (the intruder is one trigger row
+    across the panel's middle — the grid is load-bearing), and `elementFromPoint`
+    measures hit-testing rather than painting, so `pointer-events: none`
+    overlays like tooltip false-positive at 49/49 until explicitly excluded.
+
 [^79]: right-hand rail on docs pages: scroll-synced "On this page" TOC,
     resizable via the same drag pattern as the left sidebar, stretch goal of a
     pinned code-example panel. Planned during the 2026-08-05 nav polish pass at
@@ -560,6 +579,8 @@ just-in-time. Rough order of usefulness:
   work because of it.
 
 ## Adjustments log
+
+- **2026-08-07 — task 83 added, and the rewrite question answered: no.** The user asked whether the kit's internals should be rewritten as a zero-dep Radix replacement, given how many bugs the site seems to have. **The premise does not hold, and the check is cheap: `lib/` already is that layer** — 23 primitives, 4,133 lines, `use-dismissable-layer` / `use-focus-trap` / `use-roving-focus` / `use-presence` / `use-controllable-state` / `anchor-position`. A rewrite rebuilds what exists, against 758 passing tests. **The reported bug was one missing `z-index`** (see [^83]), and the apparent bug volume in `docs/ISSUES.md` is the same illusion task 71 already documented: 56 contrast hits collapsed to 4 tokens, 38 cursor hits to 2 rules. Few causes, many pages. **The real gap was measurement, not architecture** — `sweep-pages.mjs` measures contrast, cursor, overflow and geometry, and none of those can see an overlay that opens correctly and is then painted over, which is exactly how this shipped through a 79-page sweep. So the deliverable is a probe plus a one-line fix, not a re-layering. **The generalisable lesson: when a defect survives a sweep, ask what the sweep cannot express before concluding the code is wrong in kind.**
 
 - **2026-08-07 — batch 4 grew, from the user's second review of the site.** Six more defects, none of them a new task: they split along the same shell/content seam 81 and 82 already own, and neither task has started. **To 81:** the scrolled topnav's bottom border is invisible and its 82% backdrop lets content read through the bar — one rule, `site/site.css:78-82`. The border is `var(--border)`, the 1.26:1 token task 71 measured; 72's D9 fix went to `--input` instead, so this is the first thing to actually trip over that. Fix it topnav-locally — 227 surface call sites ride on the global token. **To 82:** the home page (progress/badge mismatch, the zero-dependencies badge, the hero), 353 em dashes across `site/pages/`, and examples for `data-table` (1251 lines carrying 3 previews) and `sidebar` (24 exports, 3 previews). **Two calls worth recording.** The progress bar is not a `ui/progress` bug — `home.jsx:61` puts a `success` badge reading "deploy passed" next to `<Progress value={80}>`, so the component is drawing exactly what it was told and the demo is what is wrong; check the component before believing a demo. And the em-dash sweep is sub-task **8 of 9**, deliberately last: every earlier sub-task writes new prose, so sweeping first means sweeping twice.
 
