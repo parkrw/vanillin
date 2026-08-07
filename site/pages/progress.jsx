@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react"
 import { Progress } from "../../ui/progress/progress.jsx"
 import "../../ui/progress/progress.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 export default function ProgressPage() {
   const [progress, setProgress] = useState(13)
@@ -11,6 +17,7 @@ export default function ProgressPage() {
   return (
     <>
       <h2>Progress</h2>
+      <p>A horizontal bar that shows completion or loading state, with ARIA progressbar semantics.</p>
 
       <section className="pg-section">
         <h3>Default (animates 13 → 66)</h3>
@@ -28,6 +35,26 @@ export default function ProgressPage() {
           <Progress value={30} max={40} aria-label="Custom max" />
         </div>
       </section>
+
+      <InstallSnippet slug="progress" />
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { Progress } from "./ui/progress/progress"
+import "./ui/progress/progress.css"
+
+<Progress value={33} />`}>
+          <div style={{ width: "60%" }}>
+            <Progress value={33} />
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <ApiReference props={[
+        { name: "value", type: "number", description: "Current progress value" },
+        { name: "max", type: "number", default: "100", description: "Maximum value" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
     </>
   )
 }

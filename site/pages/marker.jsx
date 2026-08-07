@@ -1,5 +1,11 @@
 import { Marker, MarkerIcon, MarkerContent } from "../../ui/marker/marker.jsx"
 import "../../ui/marker/marker.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 function CheckIcon() {
   return (
@@ -32,69 +38,119 @@ export default function MarkerPage() {
   return (
     <>
       <h2>Marker</h2>
+      <p>An inline status indicator for activity feeds and timelines — icon, text, and an optional link surface.</p>
+
+      <InstallSnippet slug="marker" />
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { Marker, MarkerIcon, MarkerContent } from "./ui/marker/marker"
+import "./ui/marker/marker.css"
+
+<Marker>
+  <MarkerIcon><CheckIcon /></MarkerIcon>
+  <MarkerContent>Explored 4 files</MarkerContent>
+</Marker>`}>
+          <div style={{ maxWidth: "28rem" }}>
+            <Marker>
+              <MarkerIcon><CheckIcon /></MarkerIcon>
+              <MarkerContent>Explored 4 files</MarkerContent>
+            </Marker>
+          </div>
+        </ComponentPreview>
+      </section>
 
       <section className="pg-section">
         <h3>Default</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxWidth: "28rem" }}>
-          <Marker>
-            <MarkerIcon>
-              <CheckIcon />
-            </MarkerIcon>
-            <MarkerContent>Explored 4 files</MarkerContent>
-          </Marker>
-          <Marker>
-            <MarkerIcon>
-              <FileIcon />
-            </MarkerIcon>
-            <MarkerContent>Opened implementation notes</MarkerContent>
-          </Marker>
-          <Marker>
-            <MarkerContent>A default marker without icon</MarkerContent>
-          </Marker>
-        </div>
+        <ComponentPreview code={`<Marker>
+  <MarkerIcon><CheckIcon /></MarkerIcon>
+  <MarkerContent>Explored 4 files</MarkerContent>
+</Marker>
+<Marker>
+  <MarkerIcon><FileIcon /></MarkerIcon>
+  <MarkerContent>Opened implementation notes</MarkerContent>
+</Marker>
+<Marker>
+  <MarkerContent>A default marker without icon</MarkerContent>
+</Marker>`}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxWidth: "28rem" }}>
+            <Marker>
+              <MarkerIcon><CheckIcon /></MarkerIcon>
+              <MarkerContent>Explored 4 files</MarkerContent>
+            </Marker>
+            <Marker>
+              <MarkerIcon><FileIcon /></MarkerIcon>
+              <MarkerContent>Opened implementation notes</MarkerContent>
+            </Marker>
+            <Marker>
+              <MarkerContent>A default marker without icon</MarkerContent>
+            </Marker>
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Border Variant</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "28rem" }}>
-          <Marker variant="border">
-            <MarkerIcon>
-              <FileIcon />
-            </MarkerIcon>
-            <MarkerContent>Opened implementation notes</MarkerContent>
-          </Marker>
-          <Marker variant="border">
-            <MarkerIcon>
-              <AlertIcon />
-            </MarkerIcon>
-            <MarkerContent>Review required before merge</MarkerContent>
-          </Marker>
-        </div>
+        <ComponentPreview code={`<Marker variant="border">
+  <MarkerIcon><FileIcon /></MarkerIcon>
+  <MarkerContent>Opened implementation notes</MarkerContent>
+</Marker>
+<Marker variant="border">
+  <MarkerIcon><AlertIcon /></MarkerIcon>
+  <MarkerContent>Review required before merge</MarkerContent>
+</Marker>`}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "28rem" }}>
+            <Marker variant="border">
+              <MarkerIcon><FileIcon /></MarkerIcon>
+              <MarkerContent>Opened implementation notes</MarkerContent>
+            </Marker>
+            <Marker variant="border">
+              <MarkerIcon><AlertIcon /></MarkerIcon>
+              <MarkerContent>Review required before merge</MarkerContent>
+            </Marker>
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Separator Variant</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "28rem" }}>
-          <Marker variant="separator">
-            <MarkerContent>Today</MarkerContent>
-          </Marker>
-          <Marker variant="separator">
-            <MarkerContent>Yesterday</MarkerContent>
-          </Marker>
-        </div>
+        <ComponentPreview code={`<Marker variant="separator">
+  <MarkerContent>Today</MarkerContent>
+</Marker>
+<Marker variant="separator">
+  <MarkerContent>Yesterday</MarkerContent>
+</Marker>`}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "28rem" }}>
+            <Marker variant="separator">
+              <MarkerContent>Today</MarkerContent>
+            </Marker>
+            <Marker variant="separator">
+              <MarkerContent>Yesterday</MarkerContent>
+            </Marker>
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>As Link</h3>
-        <div style={{ maxWidth: "28rem" }}>
-          <Marker as="a" href="#marker">
-            <MarkerIcon>
-              <CheckIcon />
-            </MarkerIcon>
-            <MarkerContent>View the pull request</MarkerContent>
-          </Marker>
-        </div>
+        <ComponentPreview code={`<Marker as="a" href="#marker">
+  <MarkerIcon><CheckIcon /></MarkerIcon>
+  <MarkerContent>View the pull request</MarkerContent>
+</Marker>`}>
+          <div style={{ maxWidth: "28rem" }}>
+            <Marker as="a" href="#marker">
+              <MarkerIcon><CheckIcon /></MarkerIcon>
+              <MarkerContent>View the pull request</MarkerContent>
+            </Marker>
+          </div>
+        </ComponentPreview>
       </section>
+
+      <ApiReference props={[
+        { name: "variant", type: '"default" | "border" | "separator"', default: '"default"', description: "Visual style of the marker" },
+        { name: "as", type: "ElementType", default: '"div"', description: "Render as a different element or component" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
     </>
   )
 }
