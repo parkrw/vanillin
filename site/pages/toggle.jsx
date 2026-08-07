@@ -1,6 +1,12 @@
 import { useState } from "react"
 import { Toggle } from "../../ui/toggle/toggle.jsx"
 import "../../ui/toggle/toggle.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 function BoldIcon() {
   return (
@@ -25,10 +31,22 @@ export default function TogglePage() {
   return (
     <>
       <h2>Toggle</h2>
+      <p>A two-state button that stays pressed until clicked again — bold on, bold off. Tracks state with <code>aria-pressed</code> and <code>data-state</code>.</p>
+
+      <InstallSnippet slug="toggle" />
 
       <section className="pg-section">
-        <h3>Default</h3>
-        <div className="pg-row">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { Toggle } from "./ui/toggle/toggle"
+import "./ui/toggle/toggle.css"
+
+<Toggle aria-label="Toggle bold">
+  <BoldIcon />
+</Toggle>
+<Toggle aria-label="Toggle italic">
+  <ItalicIcon />
+  Italic
+</Toggle>`}>
           <Toggle aria-label="Toggle bold">
             <BoldIcon />
           </Toggle>
@@ -36,47 +54,74 @@ export default function TogglePage() {
             <ItalicIcon />
             Italic
           </Toggle>
-        </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Outline</h3>
-        <div className="pg-row">
-          <Toggle variant="outline" aria-label="Toggle italic">
-            <ItalicIcon />
-          </Toggle>
-        </div>
+        <ComponentPreview code={`<Toggle variant="outline" aria-label="Toggle italic">
+  <ItalicIcon />
+</Toggle>`}>
+          <div className="pg-row">
+            <Toggle variant="outline" aria-label="Toggle italic">
+              <ItalicIcon />
+            </Toggle>
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>Sizes</h3>
-        <div className="pg-row">
-          <Toggle size="sm" aria-label="Toggle bold">
-            <BoldIcon />
-          </Toggle>
-          <Toggle aria-label="Toggle bold">
-            <BoldIcon />
-          </Toggle>
-          <Toggle size="lg" aria-label="Toggle bold">
-            <BoldIcon />
-          </Toggle>
-        </div>
+        <ComponentPreview code={`<Toggle size="sm" aria-label="Toggle bold"><BoldIcon /></Toggle>
+<Toggle aria-label="Toggle bold"><BoldIcon /></Toggle>
+<Toggle size="lg" aria-label="Toggle bold"><BoldIcon /></Toggle>`}>
+          <div className="pg-row">
+            <Toggle size="sm" aria-label="Toggle bold">
+              <BoldIcon />
+            </Toggle>
+            <Toggle aria-label="Toggle bold">
+              <BoldIcon />
+            </Toggle>
+            <Toggle size="lg" aria-label="Toggle bold">
+              <BoldIcon />
+            </Toggle>
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
         <h3>States</h3>
-        <div className="pg-row">
-          <Toggle defaultPressed aria-label="Toggle bold">
-            Pressed by default
-          </Toggle>
-          <Toggle disabled aria-label="Toggle bold">
-            Disabled
-          </Toggle>
-          <Toggle pressed={pressed} onPressedChange={setPressed}>
-            Controlled: {pressed ? "on" : "off"}
-          </Toggle>
-        </div>
+        <ComponentPreview code={`<Toggle defaultPressed aria-label="Toggle bold">
+  Pressed by default
+</Toggle>
+<Toggle disabled aria-label="Toggle bold">
+  Disabled
+</Toggle>
+<Toggle pressed={pressed} onPressedChange={setPressed}>
+  Controlled: {pressed ? "on" : "off"}
+</Toggle>`}>
+          <div className="pg-row">
+            <Toggle defaultPressed aria-label="Toggle bold">
+              Pressed by default
+            </Toggle>
+            <Toggle disabled aria-label="Toggle bold">
+              Disabled
+            </Toggle>
+            <Toggle pressed={pressed} onPressedChange={setPressed}>
+              Controlled: {pressed ? "on" : "off"}
+            </Toggle>
+          </div>
+        </ComponentPreview>
       </section>
+
+      <ApiReference props={[
+        { name: "variant", type: '"default" | "outline"', default: '"default"', description: "Visual style of the toggle" },
+        { name: "size", type: '"default" | "sm" | "lg"', default: '"default"', description: "Size of the toggle" },
+        { name: "pressed", type: "boolean", description: "Controlled pressed state" },
+        { name: "defaultPressed", type: "boolean", default: "false", description: "Initial pressed state (uncontrolled)" },
+        { name: "onPressedChange", type: "(pressed: boolean) => void", description: "Called when pressed state changes" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
     </>
   )
 }

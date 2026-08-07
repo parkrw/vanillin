@@ -1,9 +1,14 @@
 import "../../ui/typography/typography.css"
+import { CodeBlock } from "../code-example.jsx"
+import "../code-example.css"
 
 export default function TypographyPage() {
   return (
     <>
       <h2>Typography</h2>
+      <p>
+        A CSS-only typeset container that gives rendered HTML consistent sizing and spacing from three rhythm variables. Wrap any block in <code>.typeset</code> — no component import needed.
+      </p>
 
       <section className="pg-section">
         <h3>Typeset container</h3>
@@ -162,6 +167,45 @@ export default function TypographyPage() {
             <code>.lead</code>, <code>.large</code>, <code>.small</code>, <code>.muted</code>.
           </p>
         </div>
+      </section>
+
+      <section className="pg-section">
+        <h3>How to use</h3>
+        <CodeBlock code={`import "./ui/typography/typography.css"
+
+{/* Wrap rendered markdown or CMS output */}
+<div className="typeset">
+  <h1>Title</h1>
+  <p>Body text picks up rhythm automatically.</p>
+</div>
+
+{/* Docs preset — roomier */}
+<div className="typeset typeset-docs">...</div>
+
+{/* Chat preset — compact */}
+<div className="typeset typeset-chat">...</div>
+
+{/* Custom rhythm */}
+<div className="typeset" style={{ "--typeset-size": "1.125rem" }}>
+  ...
+</div>
+
+{/* Opt-out a subtree */}
+<div className="typeset">
+  <div className="not-typeset">
+    {/* back to inherited styles */}
+  </div>
+</div>`} />
+      </section>
+
+      <section className="pg-section">
+        <h3>CSS custom properties</h3>
+        <ul>
+          <li><code>--typeset-size</code> — base font size. Default: <code>1rem</code>. Docs: <code>1.0625rem</code>. Chat: <code>0.9375rem</code>.</li>
+          <li><code>--typeset-leading</code> — line-height ratio. Default: <code>1.75</code>. Docs: <code>1.8</code>. Chat: <code>1.5</code>.</li>
+          <li><code>--typeset-flow</code> — vertical spacing between blocks. Default: <code>1.5rem</code>. Docs: <code>1.75rem</code>. Chat: <code>1rem</code>.</li>
+          <li><code>--typeset-font-mono</code> — monospace family for <code>code</code> and <code>pre</code> blocks.</li>
+        </ul>
       </section>
     </>
   )

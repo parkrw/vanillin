@@ -46,4 +46,47 @@ Any `site/pages/*.jsx` not listed above, `ui/**`, `tests/**`, and the shared doc
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** DONE
+
+**Branch:** `docs/pages-rest-d`
+**Commits:**
+- `287b2b07fa0f` docs(pages): apply task-76 template to 16 layout/platform pages
+- `1ae88be09237` docs(todo): task 77d handoff — 16 pages done, 85/85 owned tests pass
+- `abb1b8931bc1` docs(pages): rework — code-tab drift, missing API rows, primitives heading
+
+### What landed
+
+All 16 pages rewritten to the task-76 template:
+
+**Component pages (10)** — title, description, InstallSnippet, Usage with ComponentPreview, example sections with ComponentPreview, ApiReference:
+aspect-ratio, button-group, separator, skeleton, spinner, status-dot, toggle, toggle-group, mode-toggle, sidebar
+
+**System pages (6)** — title, description, examples with CodeBlock, contract section (tokens/CSS custom properties/utility list):
+container-queries, density, direction, typography, view-transitions, primitives
+
+### Height-sensitive pages
+
+container-queries, density, direction, sidebar, status-dot, typography — all test fixtures kept at their original DOM positions. InstallSnippet and ApiReference placed below fixtures per task rules.
+
+### Content decisions
+
+- **primitives**: defined as the shared `lib/` hooks page for building custom components (anchored positioning, keyboard nav, animated mount/unmount, layer dismissal). Not deleted — it has a clear purpose.
+- **density**: code examples added to all sections (ISSUES B2).
+- System pages use CodeBlock (not ComponentPreview) for code examples, and replace ApiReference with a tokens/properties section.
+
+### Rework (round 1)
+
+Fixed all 4 categories flagged by supervisor:
+1. **Code-tab drift** — toggle.jsx Usage code now shows both toggles; mode-toggle.jsx switch/checkbox code now includes Checkbox+Label; spinner.jsx inline-with-text code now includes all style properties.
+2. **Missing ApiReference rows** — mode-toggle children prop added; button-group now documents ButtonGroupSeparator and ButtonGroupText; toggle-group now documents ToggleGroupItem.
+3. **primitives heading** — retitled "The full set" → "Overlay and interaction primitives", added paragraph listing the remaining lib/ exports not demoed on the page.
+4. **Smaller drifts** — separator decorative code now includes the `<p>`; toggle-group multiple code now includes the feedback `<span>`. mode-toggle Usage code uses `setIsDark` (the consumer API name) while the demo renders `setSiteDark` (the site's own wiring) — this is deliberate: the code tab shows what a consumer writes, not the demo site's internals.
+
+### Verify results
+
+- `node tests/run.mjs`: **756/759 passed** (3 failures, all pre-existing or unrelated: 2 slider cursor, 1 navigation-menu timing flake)
+- `npm run build`: clean
+
+### Surprises
+
+- None.

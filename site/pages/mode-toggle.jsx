@@ -8,12 +8,13 @@ import "../../ui/mode-toggle/mode-toggle.css"
 import "../../ui/switch/switch.css"
 import "../../ui/checkbox/checkbox.css"
 import "../../ui/label/label.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
-/**
- * Every demo drives the site's own scheme store, so the page doubles as a live
- * check on the sweep — and so the nav toggle and these stay in step. A private
- * `useState` per demo would fight whichever wrote `.dark` last.
- */
 export default function ModeTogglePage() {
   const isDark = useSiteDark()
   const scheme = useColorScheme({ value: isDark, onChange: setSiteDark })
@@ -21,18 +22,20 @@ export default function ModeTogglePage() {
   return (
     <>
       <h2>Mode Toggle</h2>
+      <p>An icon button that swaps the colour scheme. A pendant lamp swings on its cord as if the chain had been pulled, and the light under it goes out. The scheme swaps instantly — the feedback is inside the button, where its size is fixed and it looks the same on every display.</p>
+
+      <InstallSnippet slug="mode-toggle" />
 
       <section className="pg-section">
-        <h3>Default</h3>
-        <p>
-          An icon button. A pendant lamp swings on its cord as if the chain had
-          been pulled, and the light under it goes out. The scheme itself swaps
-          instantly — the feedback is inside the button, where its size is fixed
-          and it looks the same on every display.
-        </p>
-        <div className="pg-row">
-          <ModeToggle isDark={isDark} onIsDarkChange={setSiteDark} />
-        </div>
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { ModeToggle } from "./ui/mode-toggle/mode-toggle"
+import "./ui/mode-toggle/mode-toggle.css"
+
+<ModeToggle isDark={isDark} onIsDarkChange={setIsDark} />`}>
+          <div className="pg-row">
+            <ModeToggle isDark={isDark} onIsDarkChange={setSiteDark} />
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
@@ -43,30 +46,35 @@ export default function ModeTogglePage() {
           copying <code>mode-toggle.jsx</code> never drags a Switch and a
           Checkbox along with it.
         </p>
-        <div className="pg-row">
-          <Label htmlFor="mt-switch">Dark mode</Label>
-          <Switch
-            id="mt-switch"
-            checked={scheme.isDark}
-            onCheckedChange={() => scheme.toggle()}
-          />
-        </div>
-        <div className="pg-row">
-          <Checkbox
-            id="mt-checkbox"
-            checked={scheme.isDark}
-            onCheckedChange={() => scheme.toggle()}
-          />
-          <Label htmlFor="mt-checkbox">Dark mode</Label>
-        </div>
-        <pre>
-          <code>{`const { isDark, toggle } = useColorScheme({
+        <ComponentPreview code={`const { isDark, toggle } = useColorScheme({
   value: theme === "dark",
   onChange: (dark) => setTheme(dark ? "dark" : "light"),
 })
 
-<Switch checked={isDark} onCheckedChange={() => toggle()} />`}</code>
-        </pre>
+<Label htmlFor="mt-switch">Dark mode</Label>
+<Switch id="mt-switch" checked={isDark} onCheckedChange={() => toggle()} />
+
+<Checkbox id="mt-checkbox" checked={isDark} onCheckedChange={() => toggle()} />
+<Label htmlFor="mt-checkbox">Dark mode</Label>`}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            <div className="pg-row">
+              <Label htmlFor="mt-switch">Dark mode</Label>
+              <Switch
+                id="mt-switch"
+                checked={scheme.isDark}
+                onCheckedChange={() => scheme.toggle()}
+              />
+            </div>
+            <div className="pg-row">
+              <Checkbox
+                id="mt-checkbox"
+                checked={scheme.isDark}
+                onCheckedChange={() => scheme.toggle()}
+              />
+              <Label htmlFor="mt-checkbox">Dark mode</Label>
+            </div>
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
@@ -78,14 +86,16 @@ export default function ModeTogglePage() {
           duplicating them here would fight it. Wire{" "}
           <code>onIsDarkChange</code> to whatever you already use.
         </p>
-        <pre>
-          <code>{`// next-themes
+        <ComponentPreview code={`// next-themes
 const { theme, setTheme } = useTheme()
 <ModeToggle
   isDark={theme === "dark"}
   onIsDarkChange={(dark) => setTheme(dark ? "dark" : "light")}
-/>`}</code>
-        </pre>
+/>`}>
+          <div className="pg-row">
+            <ModeToggle isDark={isDark} onIsDarkChange={setSiteDark} />
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
@@ -98,6 +108,15 @@ const { theme, setTheme } = useTheme()
           scale go.
         </p>
       </section>
+
+      <ApiReference props={[
+        { name: "isDark", type: "boolean", description: "Controlled dark-mode state" },
+        { name: "defaultIsDark", type: "boolean", default: "false", description: "Initial state (uncontrolled)" },
+        { name: "onIsDarkChange", type: "(isDark: boolean) => void", description: "Called when the scheme changes" },
+        { name: "children", type: "ReactNode", default: "<ModeToggleIcon />", description: "Custom icon to replace the default lamp glyph" },
+        { name: "labels", type: "{ toDark: string, toLight: string }", default: '{ toDark: "Switch to dark mode", toLight: "Switch to light mode" }', description: "Accessible labels for each direction" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
     </>
   )
 }
