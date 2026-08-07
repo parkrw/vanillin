@@ -46,4 +46,37 @@ Any `site/pages/*.jsx` not listed above, `ui/**`, `tests/**`, and the shared doc
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** DONE
+
+**Branch:** `docs/pages-rest-d`
+**Commit:** `287b2b07fa0f` — docs(pages): apply task-76 template to 16 layout/platform pages
+
+### What landed
+
+All 16 pages rewritten to the task-76 template:
+
+**Component pages (10)** — title, description, InstallSnippet, Usage with ComponentPreview, example sections with ComponentPreview, ApiReference:
+aspect-ratio, button-group, separator, skeleton, spinner, status-dot, toggle, toggle-group, mode-toggle, sidebar
+
+**System pages (6)** — title, description, examples with CodeBlock, contract section (tokens/CSS custom properties/utility list):
+container-queries, density, direction, typography, view-transitions, primitives
+
+### Height-sensitive pages
+
+container-queries, density, direction, sidebar, status-dot, typography — all test fixtures kept at their original DOM positions. InstallSnippet and ApiReference placed below fixtures per task rules.
+
+### Content decisions
+
+- **primitives**: defined as the shared `lib/` hooks page for building custom components (anchored positioning, keyboard nav, animated mount/unmount, layer dismissal). Not deleted — it has a clear purpose.
+- **density**: code examples added to all sections (ISSUES B2).
+- System pages use CodeBlock (not ComponentPreview) for code examples, and replace ApiReference with a tokens/properties section.
+
+### Verify results
+
+- `node tests/run.mjs`: **755/759 passed** (4 failures, all pre-existing or unrelated: 2 slider cursor, 1 carousel loop, 1 slider dynamic import race)
+- `npm run build`: clean
+- Owned tests targeted: **85/85 passed**
+
+### Surprises
+
+- None. All 10 test files for owned pages pass cleanly.
