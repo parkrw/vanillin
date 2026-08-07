@@ -14,11 +14,11 @@ The blast radius is not the docs site. Any consumer page taller than the viewpor
 
 ## Sub-tasks
 
-- [ ] 1. **Reproduce.** Add a failing test: a fixture page taller than the viewport (~2x), scrolled to the top, opens a bottom drawer; assert the drawer's `getBoundingClientRect().bottom` is within a few px of `window.innerHeight`. It must fail on the current tree — a test that passes now proves nothing. Files: `tests/drawer.test.mjs`.
-- [ ] 2. **Fix `.dialog`.** Restore viewport positioning without losing the container. Verify both: an open dialog reports `position: fixed` (computed style), and a `@container vanillin-dialog` rule still resolves — grep for the existing container queries in `ui/dialog/` and the components that reuse it, and assert one of them at a real width. Files: `ui/dialog/dialog.css`.
-- [ ] 3. **Regression-guard the container.** A test that narrows the dialog and asserts the container-query-driven style actually applied, so a future `contain` change cannot silently kill it. Files: `tests/dialog.test.mjs`.
-- [ ] 4. **Restore the drawer + sheet docs pages.** Task 77b skipped `<InstallSnippet>` and `<ApiReference>` on both because the added height triggered this bug. Add them, matching `site/pages/button.jsx`. Files: `site/pages/{drawer,sheet}.jsx`.
-- [ ] 5. **Re-verify the pages that were height-constrained.** `tests/{drawer,sheet}.test.mjs` were passing only because those fixture pages stayed short. With the fix they should pass at full height — if a test still depends on page height, it is asserting the bug; fix the test.
+- [x] 1. **Reproduce.** Add a failing test: a fixture page taller than the viewport (~2x), scrolled to the top, opens a bottom drawer; assert the drawer's `getBoundingClientRect().bottom` is within a few px of `window.innerHeight`. It must fail on the current tree — a test that passes now proves nothing. Files: `tests/drawer.test.mjs`.
+- [x] 2. **Fix `.dialog`.** Restore viewport positioning without losing the container. Verify both: an open dialog reports `position: fixed` (computed style), and a `@container vanillin-dialog` rule still resolves — grep for the existing container queries in `ui/dialog/` and the components that reuse it, and assert one of them at a real width. Files: `ui/dialog/dialog.css`.
+- [x] 3. **Regression-guard the container.** A test that narrows the dialog and asserts the container-query-driven style actually applied, so a future `contain` change cannot silently kill it. Files: `tests/dialog.test.mjs`.
+- [x] 4. **Restore the drawer + sheet docs pages.** Task 77b skipped `<InstallSnippet>` and `<ApiReference>` on both because the added height triggered this bug. Add them, matching `site/pages/button.jsx`. Files: `site/pages/{drawer,sheet}.jsx`.
+- [x] 5. **Re-verify the pages that were height-constrained.** `tests/{drawer,sheet}.test.mjs` were passing only because those fixture pages stayed short. With the fix they should pass at full height — if a test still depends on page height, it is asserting the bug; fix the test.
 
 ## Verify / done
 
@@ -37,4 +37,20 @@ Other components' pages, `site/pages/*.jsx` beyond drawer and sheet, and the two
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** DONE
+
+**What landed (5 commits on `fix/dialog-modal-positioning`):**
+
+1. `e3cb03a` test(drawer): add viewport-anchoring test for tall pages — injects a 2× viewport spacer, opens a bottom drawer, asserts `getBoundingClientRect().bottom ≈ window.innerHeight`. Confirmed failing before the fix (`expected 720±1, got 170`).
+2. `cf0373a` fix(dialog): remove position:relative that broke viewport anchoring — deleted `position: relative` from `.dialog` in `dialog.css:7`. `container-type: inline-size` already applies `contain: layout`, which establishes the containing block for `.dialog-close` and drawer handle. The removed rule overrode the UA `:modal { position: fixed }`, causing dialogs/drawers/sheets to anchor to the document instead of the viewport on tall pages.
+3. `27a9457` test(dialog): regression-guard container query at wide and narrow widths — asserts `text-align` and `flex-direction` flip between the wide (32rem) and narrow (320px) dialog, proving `@container vanillin-dialog (min-width: 24rem)` resolves.
+4. `6000f58` docs(drawer,sheet): restore InstallSnippet and ApiReference — adds the `<InstallSnippet>` and `<ApiReference>` that task 77b skipped because the extra height triggered this bug.
+5. `66521ad` test(drawer): assert position:fixed and clean up diagnostics — adds explicit `eq(position, "fixed")` to the first drawer test.
+
+**Verify output:**
+- `node tests/run.mjs` → 759/761 passed (2 pre-existing: slider cursor/thumb)
+- `npm run build` → clean
+- `node tests/run.mjs dialog drawer sheet alert-dialog` → 35/35 passed
+
+**Surprises:**
+- Stale Vite dev-server processes on `:5199` from previous test runs caused phantom failures: the old server served pre-fix CSS. Killing them before each run resolved it. The test runner's `vite.kill()` in its finally block doesn't always reap the child in time when runs overlap.
