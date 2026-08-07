@@ -63,6 +63,11 @@ export default function MessageScrollerPage() {
 
       <section className="pg-section">
         <h3>Stick-to-bottom transcript</h3>
+        <p>
+          Pinned to the live edge: appending keeps the newest message in view. Scroll up (wheel,
+          keys, scrollbar) to release; scroll back to the bottom to re-engage. Prepending keeps
+          your place.
+        </p>
         <div style={{ display: "flex", gap: "0.5rem", marginBlockEnd: "0.75rem" }}>
           <Button variant="outline" size="sm" aria-label="Append message" onClick={append}>
             Append message
