@@ -51,7 +51,11 @@ import "./ui/mode-toggle/mode-toggle.css"
   onChange: (dark) => setTheme(dark ? "dark" : "light"),
 })
 
-<Switch checked={isDark} onCheckedChange={() => toggle()} />`}>
+<Label htmlFor="mt-switch">Dark mode</Label>
+<Switch id="mt-switch" checked={isDark} onCheckedChange={() => toggle()} />
+
+<Checkbox id="mt-checkbox" checked={isDark} onCheckedChange={() => toggle()} />
+<Label htmlFor="mt-checkbox">Dark mode</Label>`}>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             <div className="pg-row">
               <Label htmlFor="mt-switch">Dark mode</Label>
@@ -109,6 +113,7 @@ const { theme, setTheme } = useTheme()
         { name: "isDark", type: "boolean", description: "Controlled dark-mode state" },
         { name: "defaultIsDark", type: "boolean", default: "false", description: "Initial state (uncontrolled)" },
         { name: "onIsDarkChange", type: "(isDark: boolean) => void", description: "Called when the scheme changes" },
+        { name: "children", type: "ReactNode", default: "<ModeToggleIcon />", description: "Custom icon to replace the default lamp glyph" },
         { name: "labels", type: "{ toDark: string, toLight: string }", default: '{ toDark: "Switch to dark mode", toLight: "Switch to light mode" }', description: "Accessible labels for each direction" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />

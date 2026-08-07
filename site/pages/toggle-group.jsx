@@ -102,7 +102,8 @@ import "./ui/toggle-group/toggle-group.css"
   <ToggleGroupItem value="bold" aria-label="Toggle bold"><BoldIcon /></ToggleGroupItem>
   <ToggleGroupItem value="italic" aria-label="Toggle italic"><ItalicIcon /></ToggleGroupItem>
   <ToggleGroupItem value="underline" aria-label="Toggle underline"><UnderlineIcon /></ToggleGroupItem>
-</ToggleGroup>`}>
+</ToggleGroup>
+<span>{formats.join(", ") || "none"}</span>`}>
           <div className="pg-row">
             <ToggleGroup type="multiple" value={formats} onValueChange={setFormats} aria-label="Text formatting">
               <ToggleGroupItem value="bold" aria-label="Toggle bold">
@@ -153,7 +154,7 @@ import "./ui/toggle-group/toggle-group.css"
         </ComponentPreview>
       </section>
 
-      <ApiReference props={[
+      <ApiReference title="ToggleGroup" props={[
         { name: "type", type: '"single" | "multiple"', default: '"single"', description: "Single deselects siblings; multiple allows many active" },
         { name: "value", type: "string | string[]", description: "Controlled value (string for single, array for multiple)" },
         { name: "defaultValue", type: "string | string[]", description: "Initial value (uncontrolled)" },
@@ -161,6 +162,12 @@ import "./ui/toggle-group/toggle-group.css"
         { name: "variant", type: '"default" | "outline"', default: '"default"', description: "Visual style forwarded to every item" },
         { name: "size", type: '"default" | "sm" | "lg"', default: '"default"', description: "Size forwarded to every item" },
         { name: "disabled", type: "boolean", default: "false", description: "Disables every item in the group" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
+
+      <ApiReference title="ToggleGroupItem" props={[
+        { name: "value", type: "string", description: "Value this item represents (required)" },
+        { name: "disabled", type: "boolean", default: "false", description: "Disables this item independently" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />
     </>

@@ -42,7 +42,12 @@ import "./ui/spinner/spinner.css"
 
       <section className="pg-section">
         <h3>Inline with text</h3>
-        <ComponentPreview code={`<button disabled style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+        <ComponentPreview code={`<button disabled style={{
+  display: "inline-flex", alignItems: "center", gap: "0.5rem",
+  padding: "0.5rem 1rem", border: "1px solid var(--border)",
+  borderRadius: "var(--radius)", background: "var(--muted)",
+  color: "var(--muted-foreground)", cursor: "not-allowed",
+}}>
   <Spinner style={{ width: "1rem", height: "1rem" }} />
   Loading…
 </button>`}>

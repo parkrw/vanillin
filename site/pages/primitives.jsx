@@ -162,7 +162,7 @@ const present = usePresence(open, ref)
       </section>
 
       <section className="pg-section">
-        <h3>The full set</h3>
+        <h3>Overlay and interaction primitives</h3>
         <ul>
           <li><code>useAnchorPosition</code> — floating placement with collision detection</li>
           <li><code>useDismissableLayer</code> — Escape / outside-click dismissal, nested-layer aware</li>
@@ -173,6 +173,9 @@ const present = usePresence(open, ref)
           <li><code>useSafeTriangle</code> — hoverable gap between trigger and submenu</li>
           <li><code>Portal</code> — renders children into <code>document.body</code></li>
         </ul>
+        <p>
+          <code>lib/</code> also exports utilities not demoed here: <code>useControllableState</code>, <code>useColorScheme</code>, <code>useSwipe</code>, <code>useHighlight</code>, <code>useDataTable</code>, <code>useForm</code>, <code>DirectionProvider</code>, <code>withViewTransition</code>, <code>cn</code>, <code>commandScore</code>, <code>scrollLock</code>, <code>composeRefs</code>, <code>format</code>, <code>parseDate</code>, <code>schema</code>, and <code>anchorPosition</code> (the non-hook geometry engine).
+        </p>
       </section>
     </>
   )

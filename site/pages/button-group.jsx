@@ -122,8 +122,18 @@ import "./ui/button/button.css"
         </ComponentPreview>
       </section>
 
-      <ApiReference props={[
+      <ApiReference title="ButtonGroup" props={[
         { name: "orientation", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "Layout direction of the group" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
+
+      <ApiReference title="ButtonGroupSeparator" props={[
+        { name: "orientation", type: '"horizontal" | "vertical"', default: '"vertical"', description: "Direction of the separator line (vertical in a horizontal group)" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
+
+      <ApiReference title="ButtonGroupText" props={[
+        { name: "as", type: "ElementType", default: '"span"', description: "Render as a different element or component" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />
     </>

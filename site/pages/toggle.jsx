@@ -42,6 +42,10 @@ import "./ui/toggle/toggle.css"
 
 <Toggle aria-label="Toggle bold">
   <BoldIcon />
+</Toggle>
+<Toggle aria-label="Toggle italic">
+  <ItalicIcon />
+  Italic
 </Toggle>`}>
           <Toggle aria-label="Toggle bold">
             <BoldIcon />
