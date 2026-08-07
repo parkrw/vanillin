@@ -12,6 +12,11 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await settle(drawer)
     eq(await drawer.evaluate((el) => el.classList.contains("drawer--down")), true)
     eq(await drawer.evaluate((el) => el.matches(":modal")), true, "modal")
+    eq(
+      await drawer.evaluate((el) => getComputedStyle(el).position),
+      "fixed",
+      "position: fixed from :modal"
+    )
     const [bottom, viewport] = await drawer.evaluate((el) => [
       el.getBoundingClientRect().bottom,
       window.innerHeight,
