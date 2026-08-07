@@ -2,9 +2,14 @@
 
 **Resume:** batch 3 complete and verified 2026-08-07 — 80 (759/761), 77c (757/759, 2 rework rounds), 77d (756/759, 1 rework round), all builds clean; the only failures are the two pre-existing slider-cursor tests plus an intermittent `navigation-menu` hover flake. **Task 77 is done — all 59 remaining component pages now carry the docs template.** *User merges four branches:* `fix/dialog-modal-positioning` (80), `docs/pages-rest-c` (77c), `docs/pages-rest-d` (77d), `docs/todo-batch3` (task files + this reconcile + ISSUES H3). No PRs — remote writes disabled. Worktrees `../vanillin-task{80,77c,77d}` stay until merged. **Next: 74's scope call** (is the docs site meant to work on a phone? — see [^74]), then the console kit.
 
-## Handoff — task 70 (complete)
+## Handoff — batch 3 (complete, unmerged)
 
-See `docs/TODO/task70-typography-system.md` → Handoff. Typeset rhythm system landed, all inline font sizes consolidated. Suite 744/746 (2 pre-existing).
+**Status:** COMPLETE  **Branch:** `docs/todo-batch3`  **PR:** none (remote writes off)  **Updated:** 2026-08-07
+
+- **Landed:** ISSUES C9 is fixed — dialogs, drawers and sheets anchor to the viewport again on pages taller than the fold, which was breaking any drawer below the fold in consumer code, not just the docs site. And **task 77 is done**: all 59 remaining component pages carry the docs template, so every component in the kit now has a real docs page.
+- **Repo state:** working tree clean. Four unmerged branches, all verified by the supervisor: `fix/dialog-modal-positioning` (759/761), `docs/pages-rest-c` (757/759), `docs/pages-rest-d` (756/759), `docs/todo-batch3` (this reconcile). Worktrees `../vanillin-task{80,77c,77d}` still exist — remove after merging. The two `On main:` stashes are old and unrelated.
+- **Next:** task 74 needs a **scope call from the user before it can be detailed** — is the docs site meant to work on a phone? 73 of 79 pages force a horizontal scroll at 380px. If yes it is demo-layout work across most of `site/pages/`, not kit CSS. See [^74]. After 74, the console kit.
+- **Gotchas:** the task files for 80, 77c and 77d read `NOT STARTED` in this worktree — each worker wrote its handoff on its own branch, so the real `DONE` state only appears after the merge. Don't re-run those tasks. Suite baseline is **759**, and the noise floor is two slider-cursor failures plus an intermittent `navigation-menu` hover flake.
 
 Two notes for reading anything below: the docs site directory is **`site/`** (renamed 2026-07-27), so older prose here saying `playground/` means `site/`. And `docs/HANDOFF.md` is gone — its durable content is in `AGENTS.md`, `docs/QUIRKS.md` and `docs/DECISIONS.md`; live state belongs in each task file's `## Handoff`.
 
