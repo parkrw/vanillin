@@ -83,4 +83,37 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.waitForSelector(".dialog", { state: "detached" })
     eq(await readout.textContent(), "closed")
   })
+
+  await test("container query flips layout between wide and narrow", async () => {
+    // Wide: default 1280px viewport → dialog 32rem → content > 24rem → query fires
+    await trigger.click()
+    await page.waitForSelector('.dialog[data-state="open"]')
+    const wideAlign = await dialog.evaluate(
+      (el) => getComputedStyle(el.querySelector(".dialog-header")).textAlign
+    )
+    const wideDir = await dialog.evaluate(
+      (el) => getComputedStyle(el.querySelector(".dialog-footer")).flexDirection
+    )
+    await page.keyboard.press("Escape")
+    await page.waitForSelector(".dialog", { state: "detached" })
+
+    // Narrow: 320px viewport → dialog max-width calc(100% - 2rem) = 288px < 24rem
+    await page.setViewportSize({ width: 320, height: 720 })
+    await trigger.click()
+    await page.waitForSelector('.dialog[data-state="open"]')
+    const narrowAlign = await dialog.evaluate(
+      (el) => getComputedStyle(el.querySelector(".dialog-header")).textAlign
+    )
+    const narrowDir = await dialog.evaluate(
+      (el) => getComputedStyle(el.querySelector(".dialog-footer")).flexDirection
+    )
+    await page.keyboard.press("Escape")
+    await page.waitForSelector(".dialog", { state: "detached" })
+    await page.setViewportSize({ width: 1280, height: 720 })
+
+    eq(wideAlign, "start", "wide: header text-align from container query")
+    eq(wideDir, "row", "wide: footer flex-direction from container query")
+    eq(narrowAlign, "center", "narrow: header falls back to center")
+    eq(narrowDir, "column-reverse", "narrow: footer falls back to column-reverse")
+  })
 }
