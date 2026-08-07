@@ -114,13 +114,7 @@ import "./ui/empty/empty.css"
     <EmptyDescription>Content will appear when available.</EmptyDescription>
   </EmptyHeader>
 </Empty>`}>
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia><InboxIcon /></EmptyMedia>
-              <EmptyTitle>Nothing here</EmptyTitle>
-              <EmptyDescription>Content will appear when available.</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos above.</p>
         </ComponentPreview>
       </section>
 
