@@ -10,6 +10,12 @@ import { Autoplay } from "../../ui/carousel/plugins/autoplay.js"
 import "../../ui/carousel/carousel.css"
 import { Button } from "../../ui/button/button.jsx"
 import "../../ui/button/button.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 const card = (h = "12rem") => ({
   display: "flex",
@@ -26,6 +32,7 @@ export default function CarouselPage() {
   return (
     <>
       <h2>Carousel</h2>
+      <p>A scroll-snap carousel with prev/next buttons, keyboard and swipe navigation, looping, alignment, and an autoplay plugin.</p>
 
       {/* Basic — one item per view */}
       <section className="pg-section">
@@ -115,15 +122,9 @@ export default function CarouselPage() {
         </div>
       </section>
 
-      {/* Alignment — opts.align: start | center | end */}
+      {/* Alignment */}
       <section className="pg-section">
         <h3>Alignment</h3>
-        <p className="pg-prose">
-          <code>opts.align</code> maps directly to <code>scroll-snap-align</code> on
-          each slide. Values: <code>"start"</code> (default),{" "}
-          <code>"center"</code>, <code>"end"</code>. Most useful with
-          partial-width slides so the active item is visually centred.
-        </p>
         <div style={{ paddingInline: "4rem", maxInlineSize: "32rem" }}>
           <Carousel opts={{ align: "center" }} data-pg="c-align">
             <CarouselContent style={{ gap: "0.5rem" }}>
@@ -142,16 +143,9 @@ export default function CarouselPage() {
         </div>
       </section>
 
-      {/* Loop — opts.loop */}
+      {/* Loop */}
       <section className="pg-section">
         <h3>Loop</h3>
-        <p className="pg-prose">
-          <code>opts.loop</code> wraps navigation at both ends. Internally,
-          slides are cloned before and after the real set; when scroll settles on
-          a clone the container jumps invisibly to the corresponding real slide.
-          Clones are <code>aria-hidden</code> and <code>inert</code> so keyboard
-          users never land on them. Both nav buttons stay enabled.
-        </p>
         <div style={{ paddingInline: "4rem", maxInlineSize: "24rem" }}>
           <Carousel opts={{ loop: true }} data-pg="c-loop">
             <CarouselContent>
@@ -167,15 +161,9 @@ export default function CarouselPage() {
         </div>
       </section>
 
-      {/* Loop with many narrow items — tests clone optimisation */}
+      {/* Loop with narrow items */}
       <section className="pg-section">
         <h3>Loop (narrow items)</h3>
-        <p className="pg-prose">
-          Same loop behaviour but with narrower items. The carousel only
-          clones enough slides to fill one viewport plus a safety margin
-          on each side, so this 10-item carousel has fewer clones than a
-          naive 2N approach.
-        </p>
         <div style={{ paddingInline: "4rem", maxInlineSize: "32rem" }}>
           <Carousel opts={{ loop: true }} data-pg="c-loop-narrow">
             <CarouselContent style={{ gap: "0.5rem" }}>
@@ -194,25 +182,46 @@ export default function CarouselPage() {
         </div>
       </section>
 
-      {/* Autoplay plugin */}
+      {/* Autoplay */}
       <section className="pg-section">
         <h3>Autoplay</h3>
-        <p className="pg-prose">
-          The plugin contract is{" "}
-          <code>{"{ name, init(api, opts), destroy() }"}</code>, called on
-          mount/unmount. <code>Autoplay</code> is the first built-in plugin.
-          It pauses on hover, on focus-within, and when the page is hidden.
-          Under <code>prefers-reduced-motion: reduce</code> it never starts.
-          The interval is a fixed literal (not a motion token).
-        </p>
         <AutoplayDemo />
       </section>
 
-      {/* API demo — slide counter via setApi */}
+      {/* API demo */}
       <section className="pg-section">
         <h3>API (slide counter)</h3>
         <ApiDemo />
       </section>
+
+      <InstallSnippet slug="carousel" />
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "./ui/carousel/carousel"
+import "./ui/carousel/carousel.css"
+
+<Carousel>
+  <CarouselContent>
+    <CarouselItem>Slide 1</CarouselItem>
+    <CarouselItem>Slide 2</CarouselItem>
+    <CarouselItem>Slide 3</CarouselItem>
+  </CarouselContent>
+  <CarouselPrevious />
+  <CarouselNext />
+</Carousel>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos above.</p>
+        </ComponentPreview>
+      </section>
+
+      <ApiReference props={[
+        { name: "orientation", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "Scroll axis" },
+        { name: "opts.align", type: '"start" | "center" | "end"', default: '"start"', description: "Scroll-snap alignment on each slide" },
+        { name: "opts.loop", type: "boolean", default: "false", description: "Wrap navigation at both ends via cloned slides" },
+        { name: "plugins", type: "Plugin[]", description: "Array of plugin instances (e.g. Autoplay)" },
+        { name: "setApi", type: "(api) => void", description: "Receives the imperative API for external control" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
     </>
   )
 }

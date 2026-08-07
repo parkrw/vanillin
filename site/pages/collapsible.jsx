@@ -7,6 +7,12 @@ import {
 import { Button } from "../../ui/button/button.jsx"
 import "../../ui/collapsible/collapsible.css"
 import "../../ui/button/button.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 const repoStyle = {
   border: "1px solid var(--border)",
@@ -21,6 +27,7 @@ export default function CollapsiblePage() {
   return (
     <>
       <h2>Collapsible</h2>
+      <p>A disclosure primitive that shows and hides content with a measured-height animation.</p>
 
       <section className="pg-section">
         <h3>Default</h3>
@@ -79,15 +86,36 @@ export default function CollapsiblePage() {
         </Collapsible>
       </section>
 
+      <InstallSnippet slug="collapsible" />
+
       <section className="pg-section">
-        <h3>Spacing contract</h3>
-        <p className="pg-description">
-          <code>CollapsibleContent</code> owns its spacing through an inner wrapper, never as
-          padding on the content element itself, and a <code>Collapsible</code> root must not use{" "}
-          <code>gap</code> — a zero-height child still occupies its gap slot, so either one leaves
-          a step of that size behind when the content mounts and unmounts.
-        </p>
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "./ui/collapsible/collapsible"
+import "./ui/collapsible/collapsible.css"
+
+<Collapsible>
+  <CollapsibleTrigger>Show more</CollapsibleTrigger>
+  <CollapsibleContent>
+    <p>Hidden content revealed on toggle.</p>
+  </CollapsibleContent>
+</Collapsible>`}>
+          <Collapsible style={{ maxWidth: "22rem" }}>
+            <CollapsibleTrigger as={Button} variant="outline">Show more</CollapsibleTrigger>
+            <CollapsibleContent>
+              <div style={{ paddingTop: "0.5rem", fontSize: "0.875rem" }}>
+                Hidden content revealed on toggle.
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </ComponentPreview>
       </section>
+
+      <ApiReference props={[
+        { name: "open", type: "boolean", description: "Controlled open state" },
+        { name: "defaultOpen", type: "boolean", default: "false", description: "Uncontrolled initial state" },
+        { name: "onOpenChange", type: "(open: boolean) => void", description: "Called when open state changes" },
+        { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
     </>
   )
 }

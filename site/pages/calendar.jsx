@@ -2,6 +2,12 @@ import { useState } from "react"
 import { DirectionProvider } from "../../lib/direction.jsx"
 import { Calendar } from "../../ui/calendar/calendar.jsx"
 import "../../ui/calendar/calendar.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 const framed = {
   border: "1px solid var(--border)",
@@ -17,6 +23,7 @@ export default function CalendarPage() {
   return (
     <>
       <h2>Calendar</h2>
+      <p>A date picker grid with single, multiple, and range selection — keyboard navigation, RTL, dropdowns, and disabled-day matchers.</p>
 
       <section className="pg-section">
         <h3>Single</h3>
@@ -145,6 +152,39 @@ export default function CalendarPage() {
           </div>
         </DirectionProvider>
       </section>
+
+      <InstallSnippet slug="calendar" />
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { Calendar } from "./ui/calendar/calendar"
+import "./ui/calendar/calendar.css"
+
+const [date, setDate] = useState(new Date())
+
+<Calendar
+  mode="single"
+  selected={date}
+  onSelect={setDate}
+/>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos above.</p>
+        </ComponentPreview>
+      </section>
+
+      <ApiReference props={[
+        { name: "mode", type: '"single" | "multiple" | "range"', description: "Selection mode" },
+        { name: "selected", type: "Date | Date[] | { from: Date, to?: Date }", description: "Current selection (controlled)" },
+        { name: "onSelect", type: "(value) => void", description: "Called when selection changes" },
+        { name: "defaultMonth", type: "Date", description: "Initial displayed month" },
+        { name: "disabled", type: "Matcher | Matcher[]", description: "Days to disable — date, range, dayOfWeek, or function" },
+        { name: "locale", type: "string", description: "BCP 47 locale for weekday names and formatting" },
+        { name: "numberOfMonths", type: "number", default: "1", description: "Number of month grids to display" },
+        { name: "captionLayout", type: '"buttons" | "dropdown"', default: '"buttons"', description: "Month/year navigation style" },
+        { name: "showWeekNumber", type: "boolean", default: "false", description: "Show ISO week numbers" },
+        { name: "showOutsideDays", type: "boolean", default: "true", description: "Show days from adjacent months" },
+        { name: "startMonth", type: "Date", description: "Earliest navigable month" },
+        { name: "endMonth", type: "Date", description: "Latest navigable month" },
+      ]} />
     </>
   )
 }

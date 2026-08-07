@@ -7,6 +7,12 @@ import {
 import "../../ui/resizable/resizable.css"
 import { Button } from "../../ui/button/button.jsx"
 import "../../ui/button/button.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
 
 const panelStyle = {
   display: "flex",
@@ -23,21 +29,11 @@ export default function ResizablePage() {
   return (
     <>
       <h2>Resizable</h2>
-
-      <p className="pg-section" style={{ maxInlineSize: "40rem" }}>
-        Resizable panels split a container into adjustable regions separated by
-        draggable handles. Panels can be collapsed, persisted across sessions,
-        and controlled programmatically.
-      </p>
+      <p>Resizable panels split a container into adjustable regions separated by draggable handles, with keyboard support, collapsing, persistence, and nesting.</p>
 
       {/* ——— Horizontal (default) ——— */}
       <section className="pg-section">
         <h3>Horizontal</h3>
-        <p>
-          Two panels side by side. Drag the separator or use keyboard arrows
-          when focused. <code>minSize</code> prevents either panel from
-          disappearing.
-        </p>
         <div
           data-pg="r-horizontal"
           style={{
@@ -63,10 +59,6 @@ export default function ResizablePage() {
       {/* ——— Vertical ——— */}
       <section className="pg-section">
         <h3>Vertical</h3>
-        <p>
-          Set <code>direction="vertical"</code> for a top/bottom split.
-          Arrow Up/Down resize; Arrow Left/Right are no-ops.
-        </p>
         <div
           data-pg="r-vertical"
           style={{
@@ -92,10 +84,6 @@ export default function ResizablePage() {
       {/* ——— With Handle ——— */}
       <section className="pg-section">
         <h3>With Handle</h3>
-        <p>
-          Pass <code>withHandle</code> to render a visible grip icon on the
-          separator.
-        </p>
         <div
           data-pg="r-handle"
           style={{
@@ -121,11 +109,6 @@ export default function ResizablePage() {
       {/* ——— Collapsible ——— */}
       <section className="pg-section">
         <h3>Collapsible</h3>
-        <p>
-          A <code>collapsible</code> panel snaps shut when dragged past its
-          minimum. Press Enter on a focused handle to toggle. The imperative
-          handle exposes <code>collapse()</code> and <code>expand()</code>.
-        </p>
         <div
           data-pg="r-collapsible"
           style={{
@@ -178,12 +161,6 @@ export default function ResizablePage() {
       {/* ——— Persistent layout ——— */}
       <section className="pg-section">
         <h3>Persistent Layout</h3>
-        <p>
-          Pass <code>autoSaveId</code> to persist the layout to localStorage.
-          Resize the panels below, then reload the page — the layout restores
-          without a flash. Storage is keyed by panel IDs and count, so a saved
-          3-panel layout is silently dropped if the group changes to 2 panels.
-        </p>
         <div
           data-pg="r-persistent"
           style={{
@@ -209,13 +186,9 @@ export default function ResizablePage() {
         </div>
       </section>
 
-      {/* ——— Nested (horizontal inside vertical) ——— */}
+      {/* ——— Nested ——— */}
       <section className="pg-section">
         <h3>Nested</h3>
-        <p>
-          Groups can be nested. Each group manages its own separators
-          independently; F6 cycles only the separators of the focused group.
-        </p>
         <div
           data-pg="r-nested"
           style={{
@@ -249,11 +222,6 @@ export default function ResizablePage() {
       {/* ——— Three panels ——— */}
       <section className="pg-section">
         <h3>Three Panels</h3>
-        <p>
-          Any number of panels and handles. Focus a handle and press F6 to
-          cycle to the next handle within the same group, Shift+F6 to go
-          backward. The cycle wraps.
-        </p>
         <div
           data-pg="r-three"
           style={{
@@ -279,6 +247,38 @@ export default function ResizablePage() {
           </ResizablePanelGroup>
         </div>
       </section>
+
+      <InstallSnippet slug="resizable" />
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview code={`import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "./ui/resizable/resizable"
+import "./ui/resizable/resizable.css"
+
+<ResizablePanelGroup direction="horizontal">
+  <ResizablePanel id="left" defaultSize={50} minSize={20}>
+    Left
+  </ResizablePanel>
+  <ResizableHandle />
+  <ResizablePanel id="right" defaultSize={50} minSize={20}>
+    Right
+  </ResizablePanel>
+</ResizablePanelGroup>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos above.</p>
+        </ComponentPreview>
+      </section>
+
+      <ApiReference props={[
+        { name: "ResizablePanelGroup: direction", type: '"horizontal" | "vertical"', description: "Axis along which panels are laid out" },
+        { name: "ResizablePanelGroup: autoSaveId", type: "string", description: "Persist layout to localStorage under this key" },
+        { name: "ResizablePanel: id", type: "string", description: "Unique panel identifier (required for persistence)" },
+        { name: "ResizablePanel: defaultSize", type: "number", description: "Initial size as a percentage of the group" },
+        { name: "ResizablePanel: minSize", type: "number", description: "Minimum size percentage" },
+        { name: "ResizablePanel: maxSize", type: "number", description: "Maximum size percentage" },
+        { name: "ResizablePanel: collapsible", type: "boolean", default: "false", description: "Allow collapsing past minSize to collapsedSize" },
+        { name: "ResizablePanel: collapsedSize", type: "number", default: "0", description: "Size when collapsed" },
+        { name: "ResizableHandle: withHandle", type: "boolean", default: "false", description: "Render a visible grip icon" },
+      ]} />
     </>
   )
 }
