@@ -1,8 +1,35 @@
 # task82: docs-completeness
 **Goal:** Finish the docs pages that are still incomplete — nine component pages, the Get Started flow, and the `docs/` reference pages — so no page reads as half-built.  **Branch:** `docs/completeness`  **Deps:** 77 (done)
-**Owns:** `site/pages/**` (all component pages and `site/pages/docs/*.jsx`)
+**Owns:** `site/pages/**` (all component pages and `site/pages/docs/*.jsx`), `site/code-example.jsx`, `site/api-reference.jsx`, `site/install-snippet.jsx`
 
-## What is actually missing
+## The standard: `button.jsx` and `combobox.jsx`
+
+**The user named these two as how every page should look** (2026-08-07). Read both before touching anything else — they are the spec, and this task is largely "make the other 73 pages meet them".
+
+What they actually do, measured:
+
+| | previews | lines | shape |
+| --- | --- | --- | --- |
+| `button.jsx` | 7 | 170 | tight — every variant its own preview |
+| `combobox.jsx` | 7 | 342 | same count, more prose per example |
+
+Both: exactly one `<InstallSnippet>`, one `<ApiReference>`, **zero bare `<CodeBlock>`** — every code sample lives inside a `ComponentPreview` with its rendered demo. That last point is the real rule. A page that explains with a code block instead of a working demo is the thing that reads as unfinished.
+
+The bar is therefore **~7 previews and every example rendered**, not a line count. `combobox` is twice `button`'s length at the same preview count, so prose is free; missing demos are not.
+
+### Census against that bar — all 75 pages, measured 2026-08-07
+
+| previews | pages |
+| --- | --- |
+| **0** | 12 — sheet, drawer, direction, primitives, view-transitions, navigation-menu, typography, density, container-queries, form-fields, use-form (+home) |
+| **1** | 17 — incl. **data-table (1251 lines!)**, sidebar, carousel, resizable, scroll-area, calendar, menubar, tabs, format, attachment, status-dot, message-scroller, collapsible, empty, alert-dialog, slider, progress |
+| 2-3 | 17 — incl. command (3, at 382 lines) |
+| 4-6 | 25 — incl. accordion (4) |
+| **7-8** | 4 — button, combobox, and two others |
+
+**Only four pages of 75 meet the standard.** The 29 pages at 0-1 previews are what "not even done" meant. Work them worst-first: a 1251-line page with one demo is a bigger defect than a 70-line page with none.
+
+## What else is missing
 
 Measured on `main` at `7fbb916` — do not re-derive, but do re-check before assuming a page is still broken.
 
@@ -38,13 +65,15 @@ The first two are already covered above (no preview at all). `data-table` is the
 
 ## Sub-tasks
 
-- [ ] 1. **Audit and record.** Open all 75 component pages and all 7 `docs/` pages at the dev server; write the concrete defect per page into this file before fixing anything. A list written from reading source will miss the visual ones. Do this first — it sizes the rest.
+- [ ] 0a. **Usage sections open on the Code tab.** `site/code-example.jsx:52` hardcodes `<Tabs defaultValue="preview">`. Add a prop (`defaultTab`, defaulting to `"preview"` so nothing else changes) and pass `defaultTab="code"` from every page's **Usage** section only — the reader arriving at Usage wants the import and JSX to copy, not a rendering of a button they can already see below. Examples/variants sections keep opening on Preview. Do this **before** the page work so the 73 pages are written against the final API, and check `tests/` for anything selecting the active tab. Files: `site/code-example.jsx`, then every page's Usage block.
+- [ ] 0b. **Read `site/pages/button.jsx` and `site/pages/combobox.jsx` first.** They are the standard the user named. Everything below means "bring this page up to those two".
+- [ ] 1. **Audit and record.** Open all 75 component pages and all 7 `docs/` pages at the dev server; write the concrete defect per page into this file before fixing anything. A list written from reading source will miss the visual ones. Do this first — it sizes the rest. Use the preview census above as the worklist skeleton, worst-first.
 - [ ] 2. `use-form.jsx` and `form-fields.jsx` — bring to the task-76 template.
 - [ ] 3. `drawer.jsx` and `sheet.jsx` — real examples (sides/directions, controlled, with a form inside), matching sibling overlay pages.
 - [ ] 4. The six system pages — one consistent page type, applied to all six.
 - [ ] 5. `site/pages/docs/` — the seven Get Started/reference pages, with `contracts.jsx` given the most attention.
 - [ ] 6. **Home page** — the progress/badge mismatch first (one-line content fix), then the zero-dependencies badge, then the hero layout and what the showcase shows.
-- [ ] 7. **Examples for the six named pages** — `data-table` and `sidebar` need more; `command` and `accordion` need an audit before any edit.
+- [ ] 7. **The 29 pages at 0-1 previews**, worst-first by the census. `data-table` (1251 lines, 1 preview) leads; then `sidebar`, `carousel`, `resizable`, `scroll-area`, `calendar`. Every example becomes a `ComponentPreview` with a working demo — a `CodeBlock` on its own is what this task is removing.
 - [ ] 8. **Em-dash sweep** across `site/pages/`. Do this **last**: every sub-task above writes new prose, and sweeping first means sweeping twice. Verify with `grep -ro "—" site/pages | wc -l` reaching 0.
 - [ ] 9. Anything else sub-task 1 turned up, cheapest first.
 
