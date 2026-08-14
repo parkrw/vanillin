@@ -126,7 +126,12 @@
 /*  Viewport mode (default)                                           */
 /* ================================================================== */
 
-/* Wrapper: positioned below the nav list, full width, centered. */
+/* Wrapper: positioned below the nav list, full width, centered.
+   The z-index is load-bearing: every other overlay in the kit sits in the
+   Popover API top layer, but the viewport panel is an ordinary absolutely
+   positioned element. At `z-index: auto` it paints in DOM order, so a second
+   navigation menu further down the page draws its triggers straight through
+   the first menu's open panel. 50 matches ui/tooltip and ui/hover-card. */
 .navigation-menu-viewport-wrapper {
   position: absolute;
   inset-inline-start: 0;
@@ -136,6 +141,7 @@
   inline-size: 100%;
   pointer-events: none;
   perspective: 62.5rem;
+  z-index: 50;
 }
 
 .navigation-menu-viewport-wrapper[data-state="open"] {
@@ -264,7 +270,9 @@
   inline-size: var(--indicator-width, 0);
   display: flex;
   justify-content: center;
-  z-index: 1;
+  /* Above the viewport wrapper's 50, so the arrow's last 2px still merge into
+     the panel's top border instead of being painted over by it. */
+  z-index: 51;
 
   transition:
     inset-inline-start var(--motion-fast) var(--motion-ease),

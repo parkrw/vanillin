@@ -444,6 +444,55 @@ export default async function run({ page, baseUrl, test, eq }) {
     await vpCleanup()
   })
 
+  // The viewport panel is the one overlay in the kit that is not in the Popover
+  // API top layer, so it is the only one whose paint order depends on a
+  // z-index. Without it the panel paints in DOM order and the *next* navigation
+  // menu on the page draws its triggers straight through the open panel.
+  await test("viewport: open panel paints over a later sibling menu", async () => {
+    await vpLearn.hover()
+    await vpWaitOpen("nm-vp-content-learn")
+    // The morph sizes the viewport from JS, so wait for a measured box.
+    await page.waitForFunction(() => {
+      const vp = document.querySelector('[data-pg="nm-vp"] .navigation-menu-viewport')
+      return vp && vp.getBoundingClientRect().height > 8
+    })
+
+    const probe = await page.evaluate(() => {
+      const vp = document.querySelector('[data-pg="nm-vp"] .navigation-menu-viewport')
+      const laterRow = document.querySelector('[data-pg="nm"] .navigation-menu-list')
+      const panel = vp.getBoundingClientRect()
+      const row = laterRow.getBoundingClientRect()
+
+      const x = Math.max(panel.left, row.left) + Math.min(panel.right, row.right)
+      const y = Math.max(panel.top, row.top) + Math.min(panel.bottom, row.bottom)
+      const overlap = {
+        width: Math.min(panel.right, row.right) - Math.max(panel.left, row.left),
+        height: Math.min(panel.bottom, row.bottom) - Math.max(panel.top, row.top),
+      }
+      if (overlap.width <= 0 || overlap.height <= 0) return { overlap }
+
+      const at = [x / 2, y / 2]
+      const hit = document.elementFromPoint(at[0], at[1])
+      return {
+        overlap,
+        at,
+        onTop: hit === vp || vp.contains(hit),
+        hitBy: hit ? String(hit.className) || hit.tagName : null,
+      }
+    })
+
+    // Guard the premise: if the two menus stop overlapping, this test silently
+    // stops measuring anything, so fail rather than pass green.
+    eq(
+      probe.overlap.width > 0 && probe.overlap.height > 0,
+      true,
+      `fixture premise: open panel must overlap the later menu's trigger row (got ${probe.overlap.width}x${probe.overlap.height})`
+    )
+    eq(probe.onTop, true, `panel is topmost at ${probe.at} (hit: ${probe.hitBy})`)
+
+    await vpCleanup()
+  })
+
   await test("viewport={false}: per-item panels are popovers, not in a shared viewport", async () => {
     // The data-pg="nm" section uses viewport={false}.
     const hasPopover = await page.evaluate(() => {
