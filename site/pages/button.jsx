@@ -23,7 +23,7 @@ export default function ButtonPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Button } from "./ui/button/button"
+        <ComponentPreview defaultTab="code" code={`import { Button } from "./ui/button/button"
 import "./ui/button/button.css"
 
 <Button>Click me</Button>`}>

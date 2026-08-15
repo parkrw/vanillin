@@ -1,12 +1,11 @@
 import { Button } from "../../ui/button/button.jsx"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../ui/card/card.jsx"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CardAction } from "../../ui/card/card.jsx"
 import { Badge } from "../../ui/badge/badge.jsx"
 import { Separator } from "../../ui/separator/separator.jsx"
 import { Input } from "../../ui/input/input.jsx"
-import { Label } from "../../ui/label/label.jsx"
-import { Switch } from "../../ui/switch/switch.jsx"
-import { Slider } from "../../ui/slider/slider.jsx"
-import { Progress } from "../../ui/progress/progress.jsx"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../ui/tabs/tabs.jsx"
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../../ui/table/table.jsx"
+import { Checkbox } from "../../ui/checkbox/checkbox.jsx"
 import { Avatar, AvatarFallback } from "../../ui/avatar/avatar.jsx"
 import { CodeBlock } from "../code-example.jsx"
 import { categories } from "../registry.js"
@@ -16,53 +15,81 @@ import "../../ui/card/card.css"
 import "../../ui/badge/badge.css"
 import "../../ui/separator/separator.css"
 import "../../ui/input/input.css"
-import "../../ui/label/label.css"
-import "../../ui/switch/switch.css"
-import "../../ui/slider/slider.css"
-import "../../ui/progress/progress.css"
+import "../../ui/tabs/tabs.css"
+import "../../ui/table/table.css"
+import "../../ui/checkbox/checkbox.css"
 import "../../ui/avatar/avatar.css"
 import "../code-example.css"
 
 function HeroShowcase() {
   return (
     <div className="pg-hero-showcase" aria-hidden="true">
-      <Card>
-        <CardHeader>
-          <CardTitle>Project settings</CardTitle>
-          <CardDescription>Every control below is a vanillin component.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="pg-hero-showcase-row">
-            <Label htmlFor="hero-name">Name</Label>
-            <Input id="hero-name" defaultValue="vanillin" className="pg-hero-showcase-input" />
-          </div>
-          <Separator className="pg-hero-showcase-sep" />
-          <div className="pg-hero-showcase-row">
-            <Label htmlFor="hero-notify">Notifications</Label>
-            <Switch id="hero-notify" defaultChecked />
-            <Badge variant="secondary">beta</Badge>
-          </div>
-          <Separator className="pg-hero-showcase-sep" />
-          <Slider defaultValue={[66]} aria-label="Volume" />
-        </CardContent>
-        <CardFooter>
-          <div className="pg-hero-showcase-row">
-            <Button size="sm">Save</Button>
-            <Button size="sm" variant="outline">Cancel</Button>
-          </div>
-        </CardFooter>
-      </Card>
-      <Card>
-        <CardContent>
-          <div className="pg-hero-showcase-row">
-            <Avatar>
-              <AvatarFallback>PW</AvatarFallback>
-            </Avatar>
-            <Badge variant="success">deploy passed</Badge>
-            <Progress value={80} className="pg-hero-showcase-progress" aria-label="Rollout" />
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="tasks">
+        <Card>
+          <CardHeader>
+            <CardTitle>Sprint board</CardTitle>
+            <CardAction>
+              <TabsList>
+                <TabsTrigger value="tasks">Tasks</TabsTrigger>
+                <TabsTrigger value="team">Team</TabsTrigger>
+              </TabsList>
+            </CardAction>
+          </CardHeader>
+          <TabsContent value="tasks">
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead style={{ width: "2rem" }}></TableHead>
+                    <TableHead>Task</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell><Checkbox defaultChecked /></TableCell>
+                    <TableCell>Design tokens</TableCell>
+                    <TableCell><Badge variant="success">Done</Badge></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><Checkbox /></TableCell>
+                    <TableCell>API routes</TableCell>
+                    <TableCell><Badge variant="warning">Review</Badge></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><Checkbox /></TableCell>
+                    <TableCell>Unit tests</TableCell>
+                    <TableCell><Badge variant="outline">Todo</Badge></TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </TabsContent>
+          <TabsContent value="team">
+            <CardContent>
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+                <div className="pg-hero-showcase-row">
+                  <Avatar><AvatarFallback>PW</AvatarFallback></Avatar>
+                  <span style={{ fontSize: "0.875rem" }}>Parker</span>
+                  <Badge variant="info">3 tasks</Badge>
+                </div>
+                <div className="pg-hero-showcase-row">
+                  <Avatar><AvatarFallback>AK</AvatarFallback></Avatar>
+                  <span style={{ fontSize: "0.875rem" }}>Alex</span>
+                  <Badge variant="info">5 tasks</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </TabsContent>
+          <Separator />
+          <CardFooter>
+            <div className="pg-hero-showcase-row">
+              <Input placeholder="Add a task..." className="pg-hero-showcase-input" />
+              <Button size="sm">Add</Button>
+            </div>
+          </CardFooter>
+        </Card>
+      </Tabs>
     </div>
   )
 }
@@ -72,7 +99,7 @@ export default function HomePage() {
     <div className="pg-home">
       <section className="pg-hero">
         <div className="pg-hero-copy">
-          <Badge variant="outline" className="pg-hero-badge">Zero dependencies</Badge>
+          <Badge className="pg-hero-badge" style={{ boxShadow: "var(--shadow-md)" }}>Zero dependencies</Badge>
           <h1 className="pg-hero-title">vanillin</h1>
           <p className="pg-hero-desc">
             Copy-paste components for React. No Tailwind, no Radix, no runtime dependencies.

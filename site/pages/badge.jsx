@@ -30,7 +30,7 @@ export default function BadgePage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Badge } from "./ui/badge/badge"
+        <ComponentPreview defaultTab="code" code={`import { Badge } from "./ui/badge/badge"
 import "./ui/badge/badge.css"
 
 <Badge>Default</Badge>

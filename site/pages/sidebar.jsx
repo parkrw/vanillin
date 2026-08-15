@@ -172,6 +172,15 @@ function DemoSidebar({ variant = "sidebar", collapsible = "offcanvas", side = "l
   )
 }
 
+const miniFrame = (h = "14rem") => ({
+  position: "relative",
+  height: h,
+  border: "1px solid var(--border)",
+  borderRadius: "var(--radius-lg)",
+  overflow: "hidden",
+  contain: "layout size",
+})
+
 export default function SidebarPage() {
   const [variant, setVariant] = useState("sidebar")
   const [collapsible, setCollapsible] = useState("offcanvas")
@@ -180,6 +189,42 @@ export default function SidebarPage() {
     <>
       <h2>Sidebar</h2>
       <p>A collapsible navigation panel with icon-only, offcanvas, and floating modes. Swaps to a sheet on mobile via <code>matchMedia</code>, persists state in a cookie, and toggles with <kbd>Cmd+B</kbd>.</p>
+
+      <InstallSnippet slug="sidebar" />
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import {
+  SidebarProvider, Sidebar, SidebarTrigger, SidebarInset,
+  SidebarContent, SidebarGroup, SidebarGroupLabel,
+  SidebarGroupContent, SidebarMenu, SidebarMenuItem,
+  SidebarMenuButton,
+} from "./ui/sidebar/sidebar"
+import "./ui/sidebar/sidebar.css"
+
+<SidebarProvider>
+  <Sidebar>
+    <SidebarContent>
+      <SidebarGroup>
+        <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton>Home</SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </SidebarContent>
+  </Sidebar>
+  <SidebarInset>
+    <SidebarTrigger />
+    {/* page content */}
+  </SidebarInset>
+</SidebarProvider>`}>
+          <p style={{ fontSize: "0.8125rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
+        </ComponentPreview>
+      </section>
 
       <section className="pg-section">
         <h3>Controls</h3>
@@ -287,39 +332,343 @@ export default function SidebarPage() {
         </div>
       </section>
 
-      <InstallSnippet slug="sidebar" />
+      {/* ── Focused feature demos ─────────────────────────────── */}
 
       <section className="pg-section">
-        <h3>Basic setup</h3>
-        <ComponentPreview code={`import {
-  SidebarProvider, Sidebar, SidebarTrigger, SidebarInset,
-  SidebarContent, SidebarGroup, SidebarGroupLabel,
-  SidebarGroupContent, SidebarMenu, SidebarMenuItem,
-  SidebarMenuButton,
-} from "./ui/sidebar/sidebar"
-import "./ui/sidebar/sidebar.css"
+        <h3>Groups with labels and actions</h3>
+        <p>
+          <code>SidebarGroupLabel</code> titles a group. <code>SidebarGroupAction</code> renders an icon button pinned to the group header, typically used for "add" or "create" shortcuts.
+        </p>
+        <ComponentPreview code={`<SidebarGroup>
+  <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+  <SidebarGroupAction title="Create new">
+    <PlusIcon />
+  </SidebarGroupAction>
+  <SidebarGroupContent>
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <SidebarMenuButton>Team Board</SidebarMenuButton>
+      </SidebarMenuItem>
+      <SidebarMenuItem>
+        <SidebarMenuButton>Sprint View</SidebarMenuButton>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  </SidebarGroupContent>
+</SidebarGroup>`}>
+          <div style={miniFrame()}>
+            <SidebarProvider style={{ "--sidebar-width": "16rem", minHeight: "100%" }}>
+              <Sidebar collapsible="none">
+                <SidebarContent>
+                  <SidebarGroup>
+                    <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+                    <SidebarGroupAction title="Create new"><IconPlus /></SidebarGroupAction>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton>Team Board</SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton>Sprint View</SidebarMenuButton>
+                        </SidebarMenuItem>
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                  <SidebarGroup>
+                    <SidebarGroupLabel>Resources</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton>Wiki</SidebarMenuButton>
+                        </SidebarMenuItem>
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                </SidebarContent>
+              </Sidebar>
+              <SidebarInset>
+                <div style={{ padding: "1rem", fontSize: "0.8125rem", color: "var(--muted-foreground)" }}>
+                  Content area
+                </div>
+              </SidebarInset>
+            </SidebarProvider>
+          </div>
+        </ComponentPreview>
+      </section>
 
-<SidebarProvider>
-  <Sidebar>
-    <SidebarContent>
-      <SidebarGroup>
-        <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton>Home</SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    </SidebarContent>
-  </Sidebar>
-  <SidebarInset>
-    <SidebarTrigger />
-    {/* page content */}
-  </SidebarInset>
-</SidebarProvider>`}>
-          <p style={{ fontSize: "0.8125rem", color: "var(--muted-foreground)" }}>See the live demos above.</p>
+      <section className="pg-section">
+        <h3>Badges and active state</h3>
+        <p>
+          <code>SidebarMenuBadge</code> shows a count or label to the right of a menu item. Set <code>isActive</code> on <code>SidebarMenuButton</code> to highlight the current page.
+        </p>
+        <ComponentPreview code={`<SidebarMenu>
+  <SidebarMenuItem>
+    <SidebarMenuButton isActive>
+      <InboxIcon />
+      <span>Alerts</span>
+    </SidebarMenuButton>
+    <SidebarMenuBadge>5</SidebarMenuBadge>
+  </SidebarMenuItem>
+  <SidebarMenuItem>
+    <SidebarMenuButton>
+      <HomeIcon />
+      <span>Mentions</span>
+    </SidebarMenuButton>
+    <SidebarMenuBadge>12</SidebarMenuBadge>
+  </SidebarMenuItem>
+</SidebarMenu>`}>
+          <div style={miniFrame("12rem")}>
+            <SidebarProvider style={{ "--sidebar-width": "16rem", minHeight: "100%" }}>
+              <Sidebar collapsible="none">
+                <SidebarContent>
+                  <SidebarGroup>
+                    <SidebarGroupLabel>Activity</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton isActive>
+                            <IconInbox />
+                            <span>Alerts</span>
+                          </SidebarMenuButton>
+                          <SidebarMenuBadge>5</SidebarMenuBadge>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton>
+                            <IconHome />
+                            <span>Mentions</span>
+                          </SidebarMenuButton>
+                          <SidebarMenuBadge>12</SidebarMenuBadge>
+                        </SidebarMenuItem>
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                </SidebarContent>
+              </Sidebar>
+              <SidebarInset>
+                <div style={{ padding: "1rem", fontSize: "0.8125rem", color: "var(--muted-foreground)" }}>
+                  Content area
+                </div>
+              </SidebarInset>
+            </SidebarProvider>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Menu actions</h3>
+        <p>
+          <code>SidebarMenuAction</code> places an action button next to a menu item. Pass <code>showOnHover</code> to reveal it only when the row is hovered.
+        </p>
+        <ComponentPreview code={`<SidebarMenu>
+  <SidebarMenuItem>
+    <SidebarMenuButton>Shared Files</SidebarMenuButton>
+    <SidebarMenuAction showOnHover title="Add file">
+      <PlusIcon />
+    </SidebarMenuAction>
+  </SidebarMenuItem>
+  <SidebarMenuItem>
+    <SidebarMenuButton>Media Library</SidebarMenuButton>
+    <SidebarMenuAction title="Upload">
+      <PlusIcon />
+    </SidebarMenuAction>
+  </SidebarMenuItem>
+</SidebarMenu>`}>
+          <div style={miniFrame("12rem")}>
+            <SidebarProvider style={{ "--sidebar-width": "16rem", minHeight: "100%" }}>
+              <Sidebar collapsible="none">
+                <SidebarContent>
+                  <SidebarGroup>
+                    <SidebarGroupLabel>Files</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton>Shared Files</SidebarMenuButton>
+                          <SidebarMenuAction showOnHover title="Add file"><IconPlus /></SidebarMenuAction>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton>Media Library</SidebarMenuButton>
+                          <SidebarMenuAction title="Upload"><IconPlus /></SidebarMenuAction>
+                        </SidebarMenuItem>
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                </SidebarContent>
+              </Sidebar>
+              <SidebarInset>
+                <div style={{ padding: "1rem", fontSize: "0.8125rem", color: "var(--muted-foreground)" }}>
+                  Hover a row to reveal the add action
+                </div>
+              </SidebarInset>
+            </SidebarProvider>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Sub-menus</h3>
+        <p>
+          <code>SidebarMenuSub</code> nests a second-level list under a parent item. <code>SidebarMenuSubButton</code> renders as an anchor by default; set <code>isActive</code> on the current page.
+        </p>
+        <ComponentPreview code={`<SidebarMenu>
+  <SidebarMenuItem>
+    <SidebarMenuButton>Preferences</SidebarMenuButton>
+    <SidebarMenuSub>
+      <SidebarMenuSubItem>
+        <SidebarMenuSubButton isActive>General</SidebarMenuSubButton>
+      </SidebarMenuSubItem>
+      <SidebarMenuSubItem>
+        <SidebarMenuSubButton>Display</SidebarMenuSubButton>
+      </SidebarMenuSubItem>
+      <SidebarMenuSubItem>
+        <SidebarMenuSubButton>Privacy</SidebarMenuSubButton>
+      </SidebarMenuSubItem>
+    </SidebarMenuSub>
+  </SidebarMenuItem>
+</SidebarMenu>`}>
+          <div style={miniFrame()}>
+            <SidebarProvider style={{ "--sidebar-width": "16rem", minHeight: "100%" }}>
+              <Sidebar collapsible="none">
+                <SidebarContent>
+                  <SidebarGroup>
+                    <SidebarGroupLabel>Account</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton>Preferences</SidebarMenuButton>
+                          <SidebarMenuSub>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton href="#sidebar" isActive>General</SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton href="#sidebar">Display</SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton href="#sidebar">Privacy</SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          </SidebarMenuSub>
+                        </SidebarMenuItem>
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                </SidebarContent>
+              </Sidebar>
+              <SidebarInset>
+                <div style={{ padding: "1rem", fontSize: "0.8125rem", color: "var(--muted-foreground)" }}>
+                  Content area
+                </div>
+              </SidebarInset>
+            </SidebarProvider>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Skeleton loading</h3>
+        <p>
+          <code>SidebarMenuSkeleton</code> renders a pulsing placeholder while menu content is loading. Pass <code>showIcon</code> to include an icon-sized skeleton.
+        </p>
+        <ComponentPreview code={`<SidebarMenu>
+  <SidebarMenuItem>
+    <SidebarMenuSkeleton showIcon />
+  </SidebarMenuItem>
+  <SidebarMenuItem>
+    <SidebarMenuSkeleton showIcon />
+  </SidebarMenuItem>
+  <SidebarMenuItem>
+    <SidebarMenuSkeleton />
+  </SidebarMenuItem>
+</SidebarMenu>`}>
+          <div style={miniFrame("12rem")}>
+            <SidebarProvider style={{ "--sidebar-width": "16rem", minHeight: "100%" }}>
+              <Sidebar collapsible="none">
+                <SidebarContent>
+                  <SidebarGroup>
+                    <SidebarGroupLabel>Loading...</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        <SidebarMenuItem><SidebarMenuSkeleton showIcon /></SidebarMenuItem>
+                        <SidebarMenuItem><SidebarMenuSkeleton showIcon /></SidebarMenuItem>
+                        <SidebarMenuItem><SidebarMenuSkeleton /></SidebarMenuItem>
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                </SidebarContent>
+              </Sidebar>
+              <SidebarInset>
+                <div style={{ padding: "1rem", fontSize: "0.8125rem", color: "var(--muted-foreground)" }}>
+                  Content area
+                </div>
+              </SidebarInset>
+            </SidebarProvider>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Non-collapsible with search</h3>
+        <p>
+          Set <code>collapsible="none"</code> for a sidebar that is always fully visible. <code>SidebarInput</code> extends the base <code>Input</code> component with sidebar-specific sizing and is typically placed in a <code>SidebarHeader</code>.
+        </p>
+        <ComponentPreview code={`<Sidebar collapsible="none">
+  <SidebarHeader>
+    <SidebarInput placeholder="Filter..." />
+  </SidebarHeader>
+  <SidebarSeparator />
+  <SidebarContent>
+    <SidebarGroup>
+      <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton>Summary</SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton>Reports</SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  </SidebarContent>
+</Sidebar>`}>
+          <div style={miniFrame()}>
+            <SidebarProvider style={{ "--sidebar-width": "16rem", minHeight: "100%" }}>
+              <Sidebar collapsible="none">
+                <SidebarHeader>
+                  <SidebarInput placeholder="Filter..." />
+                </SidebarHeader>
+                <SidebarSeparator />
+                <SidebarContent>
+                  <SidebarGroup>
+                    <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton>Summary</SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton>Reports</SidebarMenuButton>
+                        </SidebarMenuItem>
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                </SidebarContent>
+                <SidebarFooter>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton>
+                        <IconSettings />
+                        <span>Config</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarFooter>
+              </Sidebar>
+              <SidebarInset>
+                <div style={{ padding: "1rem", fontSize: "0.8125rem", color: "var(--muted-foreground)" }}>
+                  Content area
+                </div>
+              </SidebarInset>
+            </SidebarProvider>
+          </div>
         </ComponentPreview>
       </section>
 
@@ -333,6 +682,24 @@ import "./ui/sidebar/sidebar.css"
         { name: "defaultOpen", type: "boolean", default: "true", description: "Initial open state (uncontrolled)" },
         { name: "open", type: "boolean", description: "Controlled open state" },
         { name: "onOpenChange", type: "(open: boolean) => void", description: "Called when open state changes" },
+      ]} />
+
+      <ApiReference title="SidebarMenuButton" props={[
+        { name: "as", type: "ElementType", default: '"button"', description: "Render as a different element or component" },
+        { name: "isActive", type: "boolean", default: "false", description: "Highlight this item as the current page" },
+        { name: "variant", type: '"default" | "outline"', default: '"default"', description: "Visual style" },
+        { name: "size", type: '"default" | "sm" | "lg"', default: '"default"', description: "Size of the button" },
+        { name: "tooltip", type: "string | TooltipContentProps", description: "Tooltip shown when the sidebar is in icon-collapsed state" },
+      ]} />
+
+      <ApiReference title="useSidebar" props={[
+        { name: "state", type: '"expanded" | "collapsed"', description: "Current sidebar state" },
+        { name: "open", type: "boolean", description: "Whether the sidebar is open" },
+        { name: "setOpen", type: "(open: boolean) => void", description: "Set the open state" },
+        { name: "isMobile", type: "boolean", description: "Whether the viewport is below 768px" },
+        { name: "openMobile", type: "boolean", description: "Whether the mobile sheet is open" },
+        { name: "setOpenMobile", type: "(open: boolean) => void", description: "Set the mobile sheet state" },
+        { name: "toggleSidebar", type: "() => void", description: "Toggle the sidebar open/closed" },
       ]} />
     </>
   )

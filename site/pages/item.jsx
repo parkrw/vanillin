@@ -57,7 +57,7 @@ export default function ItemPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription } from "./ui/item/item"
+        <ComponentPreview defaultTab="code" code={`import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription } from "./ui/item/item"
 import "./ui/item/item.css"
 
 <Item>

@@ -35,8 +35,10 @@ import "../../ui/radio-group/radio-group.css"
 import "../../ui/slider/slider.css"
 import { Button } from "../../ui/button/button.jsx"
 import "../../ui/button/button.css"
+import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
 import "../install-snippet.css"
 import "../api-reference.css"
 
@@ -68,6 +70,34 @@ const profileSchema = s.object({
   marketing: s.boolean(),
   notifications: s.boolean(),
 })
+
+/* ================================================================== */
+/*  Usage                                                              */
+/* ================================================================== */
+
+function UsageDemo() {
+  const { handleSubmit, control, formState } = useForm({
+    defaultValues: { name: "" },
+  })
+  const [result, setResult] = useState(null)
+  return (
+    <div style={{ maxWidth: "28rem" }}>
+      <Form
+        form={{ formState }}
+        onSubmit={handleSubmit((data) => setResult(JSON.stringify(data)))}
+      >
+        <TextField
+          name="name"
+          control={control}
+          label="Name"
+          placeholder="Enter your name"
+        />
+        <Button type="submit">Save</Button>
+      </Form>
+      {result && <pre>{result}</pre>}
+    </div>
+  )
+}
 
 /* ================================================================== */
 /*  Form vs Form-Fields explainer (ISSUES B6)                          */
@@ -212,6 +242,45 @@ const HAND_SOURCE = `<Controller
   )}
 />`
 
+function ReplacesLiveDemo() {
+  const { handleSubmit, control, formState } = useForm({
+    defaultValues: { role: "" },
+    resolver: schemaResolver(
+      s.object({
+        role: s.string().refine((v) => ROLES.some((r) => r.value === v), "Pick a role"),
+      })
+    ),
+  })
+  const [result, setResult] = useState(null)
+  return (
+    <div style={{ maxWidth: "28rem" }}>
+      <Form
+        form={{ formState }}
+        onSubmit={handleSubmit((data) => setResult(JSON.stringify(data)))}
+        data-pg="ff-replaces-form"
+      >
+        <SelectField
+          name="role"
+          control={control}
+          label="Role"
+          description="Controls what the user can access."
+          placeholder="Select a role"
+          items={ROLES}
+          data-pg="ff-replaces-role"
+        />
+        <Button type="submit" data-pg="ff-replaces-submit">
+          Pick a role
+        </Button>
+      </Form>
+      {result && (
+        <pre data-pg="ff-replaces-result" style={{ marginTop: "1rem" }}>
+          {result}
+        </pre>
+      )}
+    </div>
+  )
+}
+
 function ReplacesDemo() {
   return (
     <section className="pg-section">
@@ -233,11 +302,16 @@ function ReplacesDemo() {
         they land on a real button.
       </p>
 
+      <ComponentPreview code={BOUND_SOURCE}>
+        <ReplacesLiveDemo />
+      </ComponentPreview>
+
       <div
         style={{
           display: "grid",
           gap: "1rem",
           gridTemplateColumns: "repeat(auto-fit, minmax(20rem, 1fr))",
+          marginBlockStart: "1rem",
         }}
       >
         <div>
@@ -274,33 +348,47 @@ function ProviderPathDemo() {
         naming the field.
       </p>
 
-      <div style={{ maxWidth: "28rem" }}>
-        <FormProvider {...methods}>
-          <Form
-            form={{ formState: methods.formState }}
-            onSubmit={methods.handleSubmit((data) =>
-              setResult(JSON.stringify(data))
-            )}
-            data-pg="ff-provider"
-          >
-            <TextField
-              name="nickname"
-              label="Nickname"
-              rules={{ required: "Nickname is required" }}
-              data-pg="ff-provider-nickname"
-            />
-            <Button type="submit" data-pg="ff-provider-submit">
-              Submit
-            </Button>
-          </Form>
-        </FormProvider>
+      <ComponentPreview code={`const methods = useForm({ defaultValues: { nickname: "" } })
 
-        {result && (
-          <pre data-pg="ff-provider-result" style={{ marginTop: "1rem" }}>
-            {result}
-          </pre>
-        )}
-      </div>
+<FormProvider {...methods}>
+  <Form form={{ formState: methods.formState }}
+    onSubmit={methods.handleSubmit(onSubmit)}>
+    <TextField
+      name="nickname"
+      label="Nickname"
+      rules={{ required: "Nickname is required" }}
+    />
+    <Button type="submit">Submit</Button>
+  </Form>
+</FormProvider>`}>
+        <div style={{ maxWidth: "28rem" }}>
+          <FormProvider {...methods}>
+            <Form
+              form={{ formState: methods.formState }}
+              onSubmit={methods.handleSubmit((data) =>
+                setResult(JSON.stringify(data))
+              )}
+              data-pg="ff-provider"
+            >
+              <TextField
+                name="nickname"
+                label="Nickname"
+                rules={{ required: "Nickname is required" }}
+                data-pg="ff-provider-nickname"
+              />
+              <Button type="submit" data-pg="ff-provider-submit">
+                Submit
+              </Button>
+            </Form>
+          </FormProvider>
+
+          {result && (
+            <pre data-pg="ff-provider-result" style={{ marginTop: "1rem" }}>
+              {result}
+            </pre>
+          )}
+        </div>
+      </ComponentPreview>
     </section>
   )
 }
@@ -331,39 +419,54 @@ function EscapeHatchDemo() {
         and emits an array, so the value needs adapting in both directions.
       </p>
 
-      <div style={{ maxWidth: "28rem" }}>
-        <Form
-          form={{ formState }}
-          onSubmit={handleSubmit((data) => setResult(JSON.stringify(data)))}
-          data-pg="ff-hatch"
-        >
-          <FormFieldBinding
-            controlled
-            name="budget"
-            control={control}
-            label="Budget"
-            description="Anything from 0 to 100."
-            render={({ field }) => (
-              <FormControl
-                as={Slider}
-                value={[field.value ?? 0]}
-                onValueChange={([v]) => field.onChange(v)}
-                data-pg="ff-budget"
-              />
-            )}
-          />
+      <ComponentPreview code={`<FormFieldBinding
+  controlled
+  name="budget"
+  control={control}
+  label="Budget"
+  description="Anything from 0 to 100."
+  render={({ field }) => (
+    <FormControl
+      as={Slider}
+      value={[field.value ?? 0]}
+      onValueChange={([v]) => field.onChange(v)}
+    />
+  )}
+/>`}>
+        <div style={{ maxWidth: "28rem" }}>
+          <Form
+            form={{ formState }}
+            onSubmit={handleSubmit((data) => setResult(JSON.stringify(data)))}
+            data-pg="ff-hatch"
+          >
+            <FormFieldBinding
+              controlled
+              name="budget"
+              control={control}
+              label="Budget"
+              description="Anything from 0 to 100."
+              render={({ field }) => (
+                <FormControl
+                  as={Slider}
+                  value={[field.value ?? 0]}
+                  onValueChange={([v]) => field.onChange(v)}
+                  data-pg="ff-budget"
+                />
+              )}
+            />
 
-          <Button type="submit" data-pg="ff-hatch-submit">
-            Submit
-          </Button>
-        </Form>
+            <Button type="submit" data-pg="ff-hatch-submit">
+              Submit
+            </Button>
+          </Form>
 
-        {result && (
-          <pre data-pg="ff-hatch-result" style={{ marginTop: "1rem" }}>
-            {result}
-          </pre>
-        )}
-      </div>
+          {result && (
+            <pre data-pg="ff-hatch-result" style={{ marginTop: "1rem" }}>
+              {result}
+            </pre>
+          )}
+        </div>
+      </ComponentPreview>
     </section>
   )
 }
@@ -400,100 +503,136 @@ function BoundFormDemo() {
         <code>Controller</code>. Nothing in the markup below says which.
       </p>
 
-      <div style={{ maxWidth: "28rem" }}>
-        <Form
-          form={{ formState }}
-          onSubmit={handleSubmit((data) =>
-            setResult(JSON.stringify(data, null, 2))
-          )}
-          data-pg="ff-bound"
-        >
-          <TextField
-            name="username"
-            control={control}
-            label="Username"
-            description="Your public display name."
-            placeholder="caseynolan"
-            data-pg="ff-username"
-          />
+      <ComponentPreview code={`<Form form={{ formState }} onSubmit={handleSubmit(onSubmit)}>
+  <TextField
+    name="username" control={control}
+    label="Username" description="Your public display name."
+    placeholder="caseynolan"
+  />
+  <TextareaField
+    name="bio" control={control}
+    label="Bio" description="A sentence or two. 160 characters max."
+    rows={3}
+  />
+  <SelectField
+    name="role" control={control}
+    label="Role" description="Controls what the user can access."
+    placeholder="Select a role" items={ROLES}
+  />
+  <RadioGroupField
+    name="plan" control={control}
+    label="Plan" description="Change it any time."
+    items={PLANS}
+  />
+  <CheckboxField
+    name="marketing" control={control}
+    label="Receive marketing emails"
+    description="Opt in to occasional product updates."
+  />
+  <SwitchField
+    name="notifications" control={control}
+    label="Push notifications"
+  />
+  <Button type="submit">Save profile</Button>
+  <Button type="button" variant="outline" onClick={() => reset()}>
+    Reset
+  </Button>
+</Form>`}>
+        <div style={{ maxWidth: "28rem" }}>
+          <Form
+            form={{ formState }}
+            onSubmit={handleSubmit((data) =>
+              setResult(JSON.stringify(data, null, 2))
+            )}
+            data-pg="ff-bound"
+          >
+            <TextField
+              name="username"
+              control={control}
+              label="Username"
+              description="Your public display name."
+              placeholder="caseynolan"
+              data-pg="ff-username"
+            />
 
-          <TextareaField
-            name="bio"
-            control={control}
-            label="Bio"
-            description="A sentence or two. 160 characters max."
-            rows={3}
-            data-pg="ff-bio"
-          />
+            <TextareaField
+              name="bio"
+              control={control}
+              label="Bio"
+              description="A sentence or two. 160 characters max."
+              rows={3}
+              data-pg="ff-bio"
+            />
 
-          <SelectField
-            name="role"
-            control={control}
-            label="Role"
-            description="Controls what the user can access."
-            placeholder="Select a role"
-            items={ROLES}
-            data-pg="ff-role"
-          />
+            <SelectField
+              name="role"
+              control={control}
+              label="Role"
+              description="Controls what the user can access."
+              placeholder="Select a role"
+              items={ROLES}
+              data-pg="ff-role"
+            />
 
-          <RadioGroupField
-            name="plan"
-            control={control}
-            label="Plan"
-            description="Change it any time."
-            items={PLANS}
-            data-pg="ff-plan"
-          />
+            <RadioGroupField
+              name="plan"
+              control={control}
+              label="Plan"
+              description="Change it any time."
+              items={PLANS}
+              data-pg="ff-plan"
+            />
 
-          <CheckboxField
-            name="marketing"
-            control={control}
-            label="Receive marketing emails"
-            description="Opt in to occasional product updates."
-            data-pg="ff-marketing"
-          />
+            <CheckboxField
+              name="marketing"
+              control={control}
+              label="Receive marketing emails"
+              description="Opt in to occasional product updates."
+              data-pg="ff-marketing"
+            />
 
-          <SwitchField
-            name="notifications"
-            control={control}
-            label="Push notifications"
-            data-pg="ff-notifications"
-          />
+            <SwitchField
+              name="notifications"
+              control={control}
+              label="Push notifications"
+              data-pg="ff-notifications"
+            />
 
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <Button type="submit" data-pg="ff-submit">
-              Save profile
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              data-pg="ff-reset"
-              onClick={() => {
-                reset()
-                setResult(null)
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <Button type="submit" data-pg="ff-submit">
+                Save profile
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                data-pg="ff-reset"
+                onClick={() => {
+                  reset()
+                  setResult(null)
+                }}
+              >
+                Reset
+              </Button>
+            </div>
+          </Form>
+
+          {result && (
+            <pre
+              data-pg="ff-result"
+              className="pg-detail"
+              style={{
+                marginTop: "1rem",
+                padding: "0.75rem",
+                borderRadius: "var(--radius)",
+                background: "var(--muted)",
+                overflow: "auto",
               }}
             >
-              Reset
-            </Button>
-          </div>
-        </Form>
-
-        {result && (
-          <pre
-            data-pg="ff-result"
-            className="pg-detail"
-            style={{
-              marginTop: "1rem",
-              padding: "0.75rem",
-              borderRadius: "var(--radius)",
-              background: "var(--muted)",
-              overflow: "auto",
-            }}
-          >
-            {result}
-          </pre>
-        )}
-      </div>
+              {result}
+            </pre>
+          )}
+        </div>
+      </ComponentPreview>
     </section>
   )
 }
@@ -523,38 +662,144 @@ function ParityDemo() {
         for exactly this markup, not a different thing.
       </p>
 
-      <div style={{ maxWidth: "28rem" }}>
-        <Form
-          form={{ formState }}
-          onSubmit={handleSubmit(() => {})}
-          data-pg="ff-parity"
-        >
-          <TextField
-            name="bound"
-            control={control}
-            label="Handle"
-            description="Two characters or more."
-            data-pg="ff-parity-bound"
-          />
+      <ComponentPreview code={`<Form form={{ formState }} onSubmit={handleSubmit(() => {})}>
+  {/* Bound version */}
+  <TextField
+    name="bound" control={control}
+    label="Handle" description="Two characters or more."
+  />
 
-          <FormField name="hand">
-            <FormItem>
-              <FormLabel>Handle</FormLabel>
-              <FormControl
-                as={Input}
-                data-pg="ff-parity-hand"
-                {...register("hand")}
-              />
-              <FormDescription>Two characters or more.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          </FormField>
+  {/* Hand-wired equivalent */}
+  <FormField name="hand">
+    <FormItem>
+      <FormLabel>Handle</FormLabel>
+      <FormControl as={Input} {...register("hand")} />
+      <FormDescription>Two characters or more.</FormDescription>
+      <FormMessage />
+    </FormItem>
+  </FormField>
 
-          <Button type="submit" data-pg="ff-parity-submit">
-            Validate both
-          </Button>
-        </Form>
-      </div>
+  <Button type="submit">Validate both</Button>
+</Form>`}>
+        <div style={{ maxWidth: "28rem" }}>
+          <Form
+            form={{ formState }}
+            onSubmit={handleSubmit(() => {})}
+            data-pg="ff-parity"
+          >
+            <TextField
+              name="bound"
+              control={control}
+              label="Handle"
+              description="Two characters or more."
+              data-pg="ff-parity-bound"
+            />
+
+            <FormField name="hand">
+              <FormItem>
+                <FormLabel>Handle</FormLabel>
+                <FormControl
+                  as={Input}
+                  data-pg="ff-parity-hand"
+                  {...register("hand")}
+                />
+                <FormDescription>Two characters or more.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            </FormField>
+
+            <Button type="submit" data-pg="ff-parity-submit">
+              Validate both
+            </Button>
+          </Form>
+        </div>
+      </ComponentPreview>
+    </section>
+  )
+}
+
+/* ================================================================== */
+/*  Individual field types                                             */
+/* ================================================================== */
+
+function TextFieldDemo() {
+  const { handleSubmit, control, formState } = useForm({
+    defaultValues: { email: "" },
+  })
+  const [result, setResult] = useState(null)
+  return (
+    <section className="pg-section">
+      <h3>TextField</h3>
+      <ComponentPreview code={`<TextField
+  name="email"
+  control={control}
+  label="Email"
+  description="We will never share your email."
+  placeholder="you@example.com"
+  rules={{ required: "Email is required" }}
+/>`}>
+        <div style={{ maxWidth: "28rem" }}>
+          <Form
+            form={{ formState }}
+            onSubmit={handleSubmit((data) => setResult(JSON.stringify(data)))}
+          >
+            <TextField
+              name="email"
+              control={control}
+              label="Email"
+              description="We will never share your email."
+              placeholder="you@example.com"
+              rules={{ required: "Email is required" }}
+            />
+            <Button type="submit">Submit email</Button>
+          </Form>
+          {result && <pre style={{ marginTop: "1rem" }}>{result}</pre>}
+        </div>
+      </ComponentPreview>
+    </section>
+  )
+}
+
+function CheckboxSwitchDemo() {
+  const { handleSubmit, control, formState } = useForm({
+    defaultValues: { terms: false, newsletter: true },
+  })
+  const [result, setResult] = useState(null)
+  return (
+    <section className="pg-section">
+      <h3>CheckboxField and SwitchField</h3>
+      <ComponentPreview code={`<CheckboxField
+  name="terms"
+  control={control}
+  label="I agree to the terms of service"
+  description="You must agree before continuing."
+/>
+<SwitchField
+  name="newsletter"
+  control={control}
+  label="Subscribe to newsletter"
+/>`}>
+        <div style={{ maxWidth: "28rem" }}>
+          <Form
+            form={{ formState }}
+            onSubmit={handleSubmit((data) => setResult(JSON.stringify(data)))}
+          >
+            <CheckboxField
+              name="terms"
+              control={control}
+              label="I agree to the terms of service"
+              description="You must agree before continuing."
+            />
+            <SwitchField
+              name="newsletter"
+              control={control}
+              label="Subscribe to newsletter"
+            />
+            <Button type="submit">Confirm preferences</Button>
+          </Form>
+          {result && <pre style={{ marginTop: "1rem" }}>{result}</pre>}
+        </div>
+      </ComponentPreview>
     </section>
   )
 }
@@ -571,9 +816,35 @@ export default function FormFieldsPage() {
 
       <InstallSnippet slug="form-fields" />
 
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { TextField } from "./ui/form-fields/form-fields"
+import "./ui/form-fields/form-fields.css"
+import { Form } from "./ui/form/form"
+import { useForm } from "./lib/use-form"
+
+const { handleSubmit, control, formState } = useForm({
+  defaultValues: { name: "" },
+})
+
+<Form form={{ formState }} onSubmit={handleSubmit(onSubmit)}>
+  <TextField
+    name="name"
+    control={control}
+    label="Name"
+    placeholder="Enter your name"
+  />
+  <Button type="submit">Save</Button>
+</Form>`}>
+          <UsageDemo />
+        </ComponentPreview>
+      </section>
+
       <FormVsFormFields />
       <Docs />
       <BoundFormDemo />
+      <TextFieldDemo />
+      <CheckboxSwitchDemo />
       <ReplacesDemo />
       <ParityDemo />
       <ProviderPathDemo />

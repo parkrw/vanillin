@@ -1,5 +1,14 @@
 import { Kbd, KbdGroup } from "../../ui/kbd/kbd.jsx"
 import "../../ui/kbd/kbd.css"
+import { Button } from "../../ui/button/button.jsx"
+import "../../ui/button/button.css"
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "../../ui/tooltip/tooltip.jsx"
+import "../../ui/tooltip/tooltip.css"
 import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
@@ -17,7 +26,7 @@ export default function KbdPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Kbd } from "./ui/kbd/kbd"
+        <ComponentPreview defaultTab="code" code={`import { Kbd } from "./ui/kbd/kbd"
 import "./ui/kbd/kbd.css"
 
 <Kbd>K</Kbd>`}>
@@ -72,6 +81,86 @@ import "./ui/kbd/kbd.css"
           <p>
             Press <Kbd>Cmd</Kbd> + <Kbd>K</Kbd> to open the command palette.
           </p>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Platform Modifiers</h3>
+        <ComponentPreview code={`{/* macOS */}
+<div style={{ display: "flex", gap: "1rem" }}>
+  <KbdGroup><Kbd>⌘</Kbd><Kbd>C</Kbd></KbdGroup>
+  <KbdGroup><Kbd>⌘</Kbd><Kbd>V</Kbd></KbdGroup>
+  <KbdGroup><Kbd>⌘</Kbd><Kbd>⇧</Kbd><Kbd>P</Kbd></KbdGroup>
+</div>
+
+{/* Windows / Linux */}
+<div style={{ display: "flex", gap: "1rem" }}>
+  <KbdGroup><Kbd>Ctrl</Kbd><Kbd>C</Kbd></KbdGroup>
+  <KbdGroup><Kbd>Ctrl</Kbd><Kbd>V</Kbd></KbdGroup>
+  <KbdGroup><Kbd>Ctrl</Kbd><Kbd>Shift</Kbd><Kbd>P</Kbd></KbdGroup>
+</div>`}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            <div>
+              <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", display: "block", marginBlockEnd: "0.25rem" }}>macOS</span>
+              <div style={{ display: "flex", gap: "1rem" }}>
+                <KbdGroup><Kbd>⌘</Kbd><Kbd>C</Kbd></KbdGroup>
+                <KbdGroup><Kbd>⌘</Kbd><Kbd>V</Kbd></KbdGroup>
+                <KbdGroup><Kbd>⌘</Kbd><Kbd>⇧</Kbd><Kbd>P</Kbd></KbdGroup>
+              </div>
+            </div>
+            <div>
+              <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", display: "block", marginBlockEnd: "0.25rem" }}>Windows / Linux</span>
+              <div style={{ display: "flex", gap: "1rem" }}>
+                <KbdGroup><Kbd>Ctrl</Kbd><Kbd>C</Kbd></KbdGroup>
+                <KbdGroup><Kbd>Ctrl</Kbd><Kbd>V</Kbd></KbdGroup>
+                <KbdGroup><Kbd>Ctrl</Kbd><Kbd>Shift</Kbd><Kbd>P</Kbd></KbdGroup>
+              </div>
+            </div>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Kbd in Button</h3>
+        <ComponentPreview code={`<Button variant="outline">
+  Search <KbdGroup><Kbd>⌘</Kbd><Kbd>K</Kbd></KbdGroup>
+</Button>
+<Button variant="outline">
+  Save <KbdGroup><Kbd>⌘</Kbd><Kbd>S</Kbd></KbdGroup>
+</Button>`}>
+          <div className="pg-row">
+            <Button variant="outline">
+              Search <KbdGroup><Kbd>⌘</Kbd><Kbd>K</Kbd></KbdGroup>
+            </Button>
+            <Button variant="outline">
+              Save <KbdGroup><Kbd>⌘</Kbd><Kbd>S</Kbd></KbdGroup>
+            </Button>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Kbd in Tooltip</h3>
+        <ComponentPreview code={`<TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger as={Button} variant="outline">
+      Bold
+    </TooltipTrigger>
+    <TooltipContent>
+      Toggle bold <KbdGroup><Kbd>⌘</Kbd><Kbd>B</Kbd></KbdGroup>
+    </TooltipContent>
+  </Tooltip>
+</TooltipProvider>`}>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as={Button} variant="outline">
+                Bold
+              </TooltipTrigger>
+              <TooltipContent>
+                Toggle bold <KbdGroup><Kbd>⌘</Kbd><Kbd>B</Kbd></KbdGroup>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </ComponentPreview>
       </section>
 

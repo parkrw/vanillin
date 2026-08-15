@@ -27,7 +27,7 @@ export default function BreadcrumbDemo() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "./ui/breadcrumb/breadcrumb"
+        <ComponentPreview defaultTab="code" code={`import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "./ui/breadcrumb/breadcrumb"
 import "./ui/breadcrumb/breadcrumb.css"
 
 <Breadcrumb>

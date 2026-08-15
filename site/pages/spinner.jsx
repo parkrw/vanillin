@@ -17,7 +17,7 @@ export default function SpinnerPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Spinner } from "./ui/spinner/spinner"
+        <ComponentPreview defaultTab="code" code={`import { Spinner } from "./ui/spinner/spinner"
 import "./ui/spinner/spinner.css"
 
 <Spinner />`}>

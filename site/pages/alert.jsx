@@ -39,7 +39,7 @@ export default function AlertPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Alert, AlertTitle, AlertDescription } from "./ui/alert/alert"
+        <ComponentPreview defaultTab="code" code={`import { Alert, AlertTitle, AlertDescription } from "./ui/alert/alert"
 import "./ui/alert/alert.css"
 
 <Alert>

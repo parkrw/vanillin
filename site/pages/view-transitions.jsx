@@ -1,9 +1,19 @@
+// System page layout: description → demos → reference.
 import { useCallback, useRef, useState } from "react"
 import { withViewTransition, setTransitionName } from "../../lib/view-transition.js"
 import { setSiteDark, useSiteDark } from "../color-scheme.js"
 import { Button } from "../../ui/button/button.jsx"
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "../../ui/table/table.jsx"
 import "../../ui/button/button.css"
-import { CodeBlock } from "../code-example.jsx"
+import "../../ui/table/table.css"
+import { ComponentPreview } from "../code-example.jsx"
 import "../code-example.css"
 
 const items = [
@@ -106,9 +116,15 @@ export default function ViewTransitionsPage() {
           without it, discarding the snapshot finishes the job in one frame and
           the sweep ends with a pop.
         </p>
-        <div className="pg-row">
-          <WipeDemo />
-        </div>
+        <ComponentPreview code={`import { withViewTransition } from "./lib/view-transition"
+
+withViewTransition(() => setDark(!dark), {
+  clipPath: { x: event.clientX, y: event.clientY },
+})`}>
+          <div className="pg-row">
+            <WipeDemo />
+          </div>
+        </ComponentPreview>
         <p>
           A hard edge is the only option: Chrome ignores <code>mask-image</code>{" "}
           on these pseudo-elements, so a feathered reveal is not merely
@@ -133,25 +149,13 @@ export default function ViewTransitionsPage() {
           the transition. This avoids the duplicate-name abort that happens
           when multiple elements share a name simultaneously.
         </p>
-        <ListDetailDemo />
-      </section>
+        <ComponentPreview code={`import { withViewTransition, setTransitionName } from "./lib/view-transition"
 
-      <section className="pg-section">
-        <h3>How to use</h3>
-        <CodeBlock code={`import { withViewTransition, setTransitionName } from "./lib/view-transition"
-
-// Simple state update with crossfade
-withViewTransition(() => setState(newValue))
-
-// Circular wipe from a click point
-withViewTransition(() => setState(newValue), {
-  clipPath: { x: event.clientX, y: event.clientY },
-})
-
-// Shared-element morph
 const cleanup = setTransitionName(element, "shared-element")
-withViewTransition(() => navigate())
-setTimeout(cleanup, 500)`} />
+withViewTransition(() => setSelected(id))
+setTimeout(cleanup, 500)`}>
+          <ListDetailDemo />
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
@@ -177,6 +181,31 @@ setTimeout(cleanup, 500)`} />
           is decoration — no interaction depends on it. Supported in Chrome
           111+, Safari 18+, and Firefox 133+.
         </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Reference</h3>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Export</TableHead>
+              <TableHead>Signature</TableHead>
+              <TableHead>Description</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell><code>withViewTransition</code></TableCell>
+              <TableCell><code>{"(update, options?) => ViewTransition | void"}</code></TableCell>
+              <TableCell>Wraps a state update in the View Transitions API. Falls back to a plain call when unsupported or when reduced motion is active. Pass <code>{"{ clipPath: { x, y } }"}</code> for a circular wipe from that point.</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell><code>setTransitionName</code></TableCell>
+              <TableCell><code>{"(element, name) => () => void"}</code></TableCell>
+              <TableCell>Sets <code>view-transition-name</code> on an element. Returns a cleanup function that clears it. Use to assign a name at click time and remove it after the transition to avoid duplicate-name aborts.</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       </section>
     </>
   )

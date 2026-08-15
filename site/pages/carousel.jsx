@@ -34,92 +34,161 @@ export default function CarouselPage() {
       <h2>Carousel</h2>
       <p>A scroll-snap carousel with prev/next buttons, keyboard and swipe navigation, looping, alignment, and an autoplay plugin.</p>
 
+      <InstallSnippet slug="carousel" />
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "./ui/carousel/carousel"
+import "./ui/carousel/carousel.css"
+
+<Carousel>
+  <CarouselContent>
+    <CarouselItem>Slide 1</CarouselItem>
+    <CarouselItem>Slide 2</CarouselItem>
+    <CarouselItem>Slide 3</CarouselItem>
+  </CarouselContent>
+  <CarouselPrevious />
+  <CarouselNext />
+</Carousel>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
+        </ComponentPreview>
+      </section>
+
       {/* Basic — one item per view */}
       <section className="pg-section">
         <h3>Basic</h3>
-        <div style={{ paddingInline: "4rem", maxInlineSize: "24rem" }}>
-          <Carousel data-pg="c-basic">
-            <CarouselContent>
-              {Array.from({ length: 5 }, (_, i) => (
-                <CarouselItem key={i}>
-                  <div style={card()}>{i + 1}</div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
-        </div>
+        <ComponentPreview code={`<Carousel>
+  <CarouselContent>
+    {Array.from({ length: 5 }, (_, i) => (
+      <CarouselItem key={i}>
+        <div className="slide">{i + 1}</div>
+      </CarouselItem>
+    ))}
+  </CarouselContent>
+  <CarouselPrevious />
+  <CarouselNext />
+</Carousel>`}>
+          <div style={{ paddingInline: "4rem", maxInlineSize: "24rem" }}>
+            <Carousel data-pg="c-basic">
+              <CarouselContent>
+                {Array.from({ length: 5 }, (_, i) => (
+                  <CarouselItem key={i}>
+                    <div style={card()}>{i + 1}</div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
+        </ComponentPreview>
       </section>
 
       {/* Multiple items per view */}
       <section className="pg-section">
         <h3>Multiple per view (3)</h3>
-        <div style={{ paddingInline: "4rem", maxInlineSize: "32rem" }}>
-          <Carousel data-pg="c-multi">
-            <CarouselContent style={{ gap: "0.5rem" }}>
-              {Array.from({ length: 8 }, (_, i) => (
-                <CarouselItem
-                  key={i}
-                  style={{ flex: "0 0 calc(33.333% - 0.334rem)" }}
-                >
-                  <div style={card("8rem")}>{i + 1}</div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
-        </div>
+        <ComponentPreview code={`<Carousel>
+  <CarouselContent style={{ gap: "0.5rem" }}>
+    {items.map((item, i) => (
+      <CarouselItem
+        key={i}
+        style={{ flex: "0 0 calc(33.333% - 0.334rem)" }}
+      >
+        {item}
+      </CarouselItem>
+    ))}
+  </CarouselContent>
+  <CarouselPrevious />
+  <CarouselNext />
+</Carousel>`}>
+          <div style={{ paddingInline: "4rem", maxInlineSize: "32rem" }}>
+            <Carousel data-pg="c-multi">
+              <CarouselContent style={{ gap: "0.5rem" }}>
+                {Array.from({ length: 8 }, (_, i) => (
+                  <CarouselItem
+                    key={i}
+                    style={{ flex: "0 0 calc(33.333% - 0.334rem)" }}
+                  >
+                    <div style={card("8rem")}>{i + 1}</div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
+        </ComponentPreview>
       </section>
 
       {/* Vertical */}
       <section className="pg-section">
         <h3>Vertical</h3>
-        <div style={{ paddingBlock: "4rem", maxInlineSize: "24rem" }}>
-          <Carousel orientation="vertical" data-pg="c-vertical">
-            <CarouselContent style={{ blockSize: "12rem" }}>
-              {Array.from({ length: 5 }, (_, i) => (
-                <CarouselItem key={i} style={{ flex: "0 0 100%" }}>
-                  <div style={card("100%")}>{i + 1}</div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
-        </div>
+        <ComponentPreview code={`<Carousel orientation="vertical">
+  <CarouselContent style={{ blockSize: "12rem" }}>
+    {items.map((item, i) => (
+      <CarouselItem key={i} style={{ flex: "0 0 100%" }}>
+        {item}
+      </CarouselItem>
+    ))}
+  </CarouselContent>
+  <CarouselPrevious />
+  <CarouselNext />
+</Carousel>`}>
+          <div style={{ paddingBlock: "4rem", maxInlineSize: "24rem" }}>
+            <Carousel orientation="vertical" data-pg="c-vertical">
+              <CarouselContent style={{ blockSize: "12rem" }}>
+                {Array.from({ length: 5 }, (_, i) => (
+                  <CarouselItem key={i} style={{ flex: "0 0 100%" }}>
+                    <div style={card("100%")}>{i + 1}</div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
+        </ComponentPreview>
       </section>
 
       {/* Interactive content inside slides */}
       <section className="pg-section">
         <h3>Click target</h3>
-        <div style={{ paddingInline: "4rem", maxInlineSize: "24rem" }}>
-          <Carousel data-pg="c-click">
-            <CarouselContent>
-              {Array.from({ length: 3 }, (_, i) => (
-                <CarouselItem key={i}>
-                  <div style={card()}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      data-pg="c-click-btn"
-                      data-clicks="0"
-                      onClick={(e) => {
-                        const n = Number(e.currentTarget.dataset.clicks) + 1
-                        e.currentTarget.dataset.clicks = String(n)
-                      }}
-                    >
-                      Click me
-                    </Button>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
-        </div>
+        <ComponentPreview code={`<Carousel>
+  <CarouselContent>
+    <CarouselItem>
+      <Button variant="outline" size="sm">Click me</Button>
+    </CarouselItem>
+  </CarouselContent>
+  <CarouselPrevious />
+  <CarouselNext />
+</Carousel>`}>
+          <div style={{ paddingInline: "4rem", maxInlineSize: "24rem" }}>
+            <Carousel data-pg="c-click">
+              <CarouselContent>
+                {Array.from({ length: 3 }, (_, i) => (
+                  <CarouselItem key={i}>
+                    <div style={card()}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        data-pg="c-click-btn"
+                        data-clicks="0"
+                        onClick={(e) => {
+                          const n = Number(e.currentTarget.dataset.clicks) + 1
+                          e.currentTarget.dataset.clicks = String(n)
+                        }}
+                      >
+                        Click me
+                      </Button>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
+        </ComponentPreview>
       </section>
 
       {/* Alignment — opts.align: start | center | end */}
@@ -131,22 +200,34 @@ export default function CarouselPage() {
           <code>"center"</code>, <code>"end"</code>. Most useful with
           partial-width slides so the active item is visually centred.
         </p>
-        <div style={{ paddingInline: "4rem", maxInlineSize: "32rem" }}>
-          <Carousel opts={{ align: "center" }} data-pg="c-align">
-            <CarouselContent style={{ gap: "0.5rem" }}>
-              {Array.from({ length: 8 }, (_, i) => (
-                <CarouselItem
-                  key={i}
-                  style={{ flex: "0 0 60%" }}
-                >
-                  <div style={card("8rem")}>{i + 1}</div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
-        </div>
+        <ComponentPreview code={`<Carousel opts={{ align: "center" }}>
+  <CarouselContent style={{ gap: "0.5rem" }}>
+    {items.map((item, i) => (
+      <CarouselItem key={i} style={{ flex: "0 0 60%" }}>
+        {item}
+      </CarouselItem>
+    ))}
+  </CarouselContent>
+  <CarouselPrevious />
+  <CarouselNext />
+</Carousel>`}>
+          <div style={{ paddingInline: "4rem", maxInlineSize: "32rem" }}>
+            <Carousel opts={{ align: "center" }} data-pg="c-align">
+              <CarouselContent style={{ gap: "0.5rem" }}>
+                {Array.from({ length: 8 }, (_, i) => (
+                  <CarouselItem
+                    key={i}
+                    style={{ flex: "0 0 60%" }}
+                  >
+                    <div style={card("8rem")}>{i + 1}</div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
+        </ComponentPreview>
       </section>
 
       {/* Loop — opts.loop */}
@@ -159,19 +240,29 @@ export default function CarouselPage() {
           Clones are <code>aria-hidden</code> and <code>inert</code> so keyboard
           users never land on them. Both nav buttons stay enabled.
         </p>
-        <div style={{ paddingInline: "4rem", maxInlineSize: "24rem" }}>
-          <Carousel opts={{ loop: true }} data-pg="c-loop">
-            <CarouselContent>
-              {Array.from({ length: 5 }, (_, i) => (
-                <CarouselItem key={i}>
-                  <div style={card()}>{i + 1}</div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
-        </div>
+        <ComponentPreview code={`<Carousel opts={{ loop: true }}>
+  <CarouselContent>
+    {items.map((item, i) => (
+      <CarouselItem key={i}>{item}</CarouselItem>
+    ))}
+  </CarouselContent>
+  <CarouselPrevious />
+  <CarouselNext />
+</Carousel>`}>
+          <div style={{ paddingInline: "4rem", maxInlineSize: "24rem" }}>
+            <Carousel opts={{ loop: true }} data-pg="c-loop">
+              <CarouselContent>
+                {Array.from({ length: 5 }, (_, i) => (
+                  <CarouselItem key={i}>
+                    <div style={card()}>{i + 1}</div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
+        </ComponentPreview>
       </section>
 
       {/* Loop with many narrow items — tests clone optimisation */}
@@ -212,32 +303,48 @@ export default function CarouselPage() {
           Under <code>prefers-reduced-motion: reduce</code> it never starts.
           The interval is a fixed literal (not a motion token).
         </p>
-        <AutoplayDemo />
+        <ComponentPreview code={`import { Autoplay } from "./ui/carousel/plugins/autoplay"
+
+<Carousel opts={{ loop: true }} plugins={[Autoplay({ delay: 3000 })]}>
+  <CarouselContent>
+    {items.map((item, i) => (
+      <CarouselItem key={i}>{item}</CarouselItem>
+    ))}
+  </CarouselContent>
+  <CarouselPrevious />
+  <CarouselNext />
+</Carousel>`}>
+          <AutoplayDemo />
+        </ComponentPreview>
       </section>
 
       {/* API demo */}
       <section className="pg-section">
         <h3>API (slide counter)</h3>
-        <ApiDemo />
-      </section>
+        <ComponentPreview code={`const [api, setApi] = useState(null)
+const [current, setCurrent] = useState(0)
+const [count, setCount] = useState(0)
 
-      <InstallSnippet slug="carousel" />
+useEffect(() => {
+  if (!api) return
+  setCount(api.scrollSnapList().length)
+  setCurrent(api.selectedScrollSnap() + 1)
+  const onSelect = () => setCurrent(api.selectedScrollSnap() + 1)
+  api.on("select", onSelect)
+  return () => api.off("select", onSelect)
+}, [api])
 
-      <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview code={`import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "./ui/carousel/carousel"
-import "./ui/carousel/carousel.css"
-
-<Carousel>
+<Carousel setApi={setApi}>
   <CarouselContent>
-    <CarouselItem>Slide 1</CarouselItem>
-    <CarouselItem>Slide 2</CarouselItem>
-    <CarouselItem>Slide 3</CarouselItem>
+    {items.map((item, i) => (
+      <CarouselItem key={i}>{item}</CarouselItem>
+    ))}
   </CarouselContent>
   <CarouselPrevious />
   <CarouselNext />
-</Carousel>`}>
-          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos above.</p>
+</Carousel>
+<p>Slide {current} of {count}</p>`}>
+          <ApiDemo />
         </ComponentPreview>
       </section>
 

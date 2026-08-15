@@ -7,6 +7,7 @@ import { Input } from "../../../ui/input/input.jsx"
 import { Switch } from "../../../ui/switch/switch.jsx"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../../ui/tabs/tabs.jsx"
 import { Separator } from "../../../ui/separator/separator.jsx"
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "../../../ui/dialog/dialog.jsx"
 
 import "../../../ui/button/button.css"
 import "../../../ui/card/card.css"
@@ -16,6 +17,9 @@ import "../../../ui/input/input.css"
 import "../../../ui/switch/switch.css"
 import "../../../ui/tabs/tabs.css"
 import "../../../ui/separator/separator.css"
+import "../../../ui/dialog/dialog.css"
+import { CodeBlock, ComponentPreview } from "../../code-example.jsx"
+import "../../code-example.css"
 
 export default function IntroductionPage() {
   const [notifications, setNotifications] = useState(true)
@@ -77,6 +81,65 @@ export default function IntroductionPage() {
 
       <Separator style={{ margin: "1.5rem 0" }} />
 
+      <h3>See it working</h3>
+
+      <p>
+        A native <code>&lt;dialog&gt;</code> overlay, no Radix, no
+        packages. The trigger, the content panel, and the close button are
+        all plain JSX that you own:
+      </p>
+
+      <ComponentPreview code={`<Dialog>
+  <DialogTrigger as={Button}>Open dialog</DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Zero dependencies</DialogTitle>
+      <DialogDescription>
+        This dialog uses the native &lt;dialog&gt; element
+        with showModal(). No Radix, no portal library.
+      </DialogDescription>
+    </DialogHeader>
+    <DialogFooter>
+      <DialogClose as={Button} variant="outline">
+        Close
+      </DialogClose>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>`}>
+        <Dialog>
+          <DialogTrigger as={Button}>Open dialog</DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Zero dependencies</DialogTitle>
+              <DialogDescription>
+                This dialog uses the native &lt;dialog&gt; element
+                with showModal(). No Radix, no portal library.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <DialogClose as={Button} variant="outline">
+                Close
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </ComponentPreview>
+
+      <h3>Copy, import, done</h3>
+
+      <p>
+        Each component is a directory. Copy it, import the JSX and its
+        CSS, and you have a working component with no build plugin beyond
+        what your bundler already does:
+      </p>
+
+      <CodeBlock language="jsx" code={`import { Button } from "./ui/button/button"
+import "./ui/button/button.css"
+
+function App() {
+  return <Button variant="outline">Click me</Button>
+}`} />
+
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))", gap: "1rem", marginBlock: "1.5rem" }}>
         <Card>
           <CardHeader>
@@ -86,7 +149,7 @@ export default function IntroductionPage() {
               </Avatar>
               <div>
                 <CardTitle>vanillin</CardTitle>
-                <CardDescription>68 components, zero deps</CardDescription>
+                <CardDescription>69 components, zero deps</CardDescription>
               </div>
             </div>
           </CardHeader>

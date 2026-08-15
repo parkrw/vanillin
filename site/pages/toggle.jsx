@@ -1,6 +1,10 @@
 import { useState } from "react"
 import { Toggle } from "../../ui/toggle/toggle.jsx"
 import "../../ui/toggle/toggle.css"
+import { Card, CardHeader, CardTitle, CardContent } from "../../ui/card/card.jsx"
+import "../../ui/card/card.css"
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "../../ui/tooltip/tooltip.jsx"
+import "../../ui/tooltip/tooltip.css"
 import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
@@ -26,6 +30,15 @@ function ItalicIcon() {
   )
 }
 
+function UnderlineIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 4v6a6 6 0 0 0 12 0V4" />
+      <line x1="4" x2="20" y1="20" y2="20" />
+    </svg>
+  )
+}
+
 export default function TogglePage() {
   const [pressed, setPressed] = useState(false)
   return (
@@ -37,7 +50,7 @@ export default function TogglePage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Toggle } from "./ui/toggle/toggle"
+        <ComponentPreview defaultTab="code" code={`import { Toggle } from "./ui/toggle/toggle"
 import "./ui/toggle/toggle.css"
 
 <Toggle aria-label="Toggle bold">
@@ -110,6 +123,95 @@ import "./ui/toggle/toggle.css"
             <Toggle pressed={pressed} onPressedChange={setPressed}>
               Controlled: {pressed ? "on" : "off"}
             </Toggle>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>data-state</h3>
+        <ComponentPreview code={`{/* data-state="on" when pressed, "off" otherwise */}
+<Toggle defaultPressed aria-label="Pressed toggle">
+  On
+</Toggle>
+<Toggle aria-label="Unpressed toggle">
+  Off
+</Toggle>`}>
+          <div className="pg-row">
+            <Toggle defaultPressed aria-label="Pressed toggle">
+              On
+            </Toggle>
+            <Toggle aria-label="Unpressed toggle">
+              Off
+            </Toggle>
+          </div>
+        </ComponentPreview>
+        <p>
+          The toggle sets <code>data-state="on"</code> when pressed and{" "}
+          <code>data-state="off"</code> otherwise. Target these values in CSS to
+          style pressed and unpressed states independently.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Toggle in Card</h3>
+        <ComponentPreview code={`<Card>
+  <CardHeader>
+    <CardTitle>Preferences</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <Toggle defaultPressed>Notifications</Toggle>
+      <Toggle>Sound effects</Toggle>
+      <Toggle>Auto-save</Toggle>
+    </div>
+  </CardContent>
+</Card>`}>
+          <Card style={{ width: "100%", maxWidth: "20rem" }}>
+            <CardHeader>
+              <CardTitle>Preferences</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                <Toggle defaultPressed>Notifications</Toggle>
+                <Toggle>Sound effects</Toggle>
+                <Toggle>Auto-save</Toggle>
+              </div>
+            </CardContent>
+          </Card>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Toggle with Tooltip</h3>
+        <ComponentPreview code={`<TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger as={Toggle} aria-label="Toggle underline">
+      <UnderlineIcon />
+    </TooltipTrigger>
+    <TooltipContent>Underline</TooltipContent>
+  </Tooltip>
+  <Tooltip>
+    <TooltipTrigger as={Toggle} variant="outline" aria-label="Toggle bold formatting">
+      <BoldIcon />
+    </TooltipTrigger>
+    <TooltipContent>Bold</TooltipContent>
+  </Tooltip>
+</TooltipProvider>`}>
+          <div className="pg-row">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger as={Toggle} aria-label="Toggle underline">
+                  <UnderlineIcon />
+                </TooltipTrigger>
+                <TooltipContent>Underline</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger as={Toggle} variant="outline" aria-label="Toggle bold formatting">
+                  <BoldIcon />
+                </TooltipTrigger>
+                <TooltipContent>Bold</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </ComponentPreview>
       </section>

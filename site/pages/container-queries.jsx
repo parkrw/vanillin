@@ -1,3 +1,4 @@
+// System page layout: description → demos → reference.
 import {
   Card,
   CardHeader,
@@ -23,7 +24,7 @@ import "../../ui/button/button.css"
 import "../../ui/item/item.css"
 import "../../ui/field/field.css"
 import "../../ui/table/table.css"
-import { CodeBlock } from "../code-example.jsx"
+import { ComponentPreview } from "../code-example.jsx"
 import "../code-example.css"
 
 const columns = ["Name", "Region", "Status"]
@@ -158,7 +159,7 @@ export default function ContainerQueriesPage() {
           below 40rem of container width every row becomes a card of
           label/value pairs.
         </p>
-        <CodeBlock code={`<Table className="table--stack">
+        <ComponentPreview code={`<Table className="table--stack">
   <TableHeader>
     <TableRow>
       <TableHead>Name</TableHead>
@@ -171,7 +172,28 @@ export default function ContainerQueriesPage() {
       <TableCell data-label="Region">eu-west-1</TableCell>
     </TableRow>
   </TableBody>
-</Table>`} />
+</Table>`}>
+          <div style={{ maxWidth: "20rem" }}>
+            <Table className="table--stack">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Region</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((r) => (
+                  <TableRow key={r.name}>
+                    <TableCell data-label="Name">{r.name}</TableCell>
+                    <TableCell data-label="Region">{r.region}</TableCell>
+                    <TableCell data-label="Status">{r.status}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </ComponentPreview>
         <p>
           The visual labels come from <code>data-label</code> on each cell, which
           you set, because <code>ui/table</code> never sees your column list.
@@ -255,6 +277,46 @@ export default function ContainerQueriesPage() {
           container query support renders the plain wide layout rather than a
           broken one.
         </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Reference</h3>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Container name</TableHead>
+              <TableHead>Component</TableHead>
+              <TableHead>Threshold</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell><code>vanillin-card</code></TableCell>
+              <TableCell><code>ui/card</code></TableCell>
+              <TableCell>20rem — action drops under title, footer buttons stretch</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell><code>vanillin-item</code></TableCell>
+              <TableCell><code>ui/item</code></TableCell>
+              <TableCell>18rem — actions take their own row</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell><code>vanillin-field</code></TableCell>
+              <TableCell><code>ui/field</code></TableCell>
+              <TableCell>40rem — <code>orientation="responsive"</code> goes side by side</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell><code>vanillin-table</code></TableCell>
+              <TableCell><code>ui/table</code></TableCell>
+              <TableCell>40rem — <code>.table--stack</code> lays rows as cards</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell><code>vanillin-dialog</code></TableCell>
+              <TableCell><code>ui/dialog</code>, <code>ui/sheet</code></TableCell>
+              <TableCell>24rem — header alignment and footer direction flip</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       </section>
     </>
   )

@@ -104,6 +104,19 @@ const currencyFmt = new Intl.NumberFormat("en-US", {
   currency: "USD",
 })
 
+// ── Focused demo data ────────────────────────────────────────────────
+
+const sampleContacts = [
+  { name: "Alice Chen", role: "Engineer", dept: "Platform" },
+  { name: "Bob Kim", role: "Designer", dept: "Product" },
+  { name: "Carol Diaz", role: "Engineer", dept: "Frontend" },
+  { name: "Dan Okafor", role: "PM", dept: "Product" },
+  { name: "Eve Singh", role: "Designer", dept: "Platform" },
+  { name: "Frank Lee", role: "Engineer", dept: "Frontend" },
+  { name: "Grace Wu", role: "PM", dept: "Platform" },
+  { name: "Hank Johal", role: "Engineer", dept: "Product" },
+]
+
 // ── Column definitions ───────────────────────────────────────────────
 
 const columns = [
@@ -872,6 +885,355 @@ function ServerSideDemo() {
   )
 }
 
+// ── Focused demos ────────────────────────────────────────────────────
+
+function SortingDemo() {
+  const table = useDataTable({
+    data: sampleContacts,
+    columns: [
+      { accessorKey: "name", header: ({ column }) => <DataTableColumnHeader column={column} title="Name" /> },
+      { accessorKey: "role", header: "Role" },
+      { accessorKey: "dept", header: ({ column }) => <DataTableColumnHeader column={column} title="Department" /> },
+    ],
+  })
+  return (
+    <Table>
+      <TableHeader>
+        {table.getHeaderGroups().map((hg) => (
+          <TableRow key={hg.id}>
+            {hg.headers.map((header) => {
+              const sorted = header.column.getIsSorted()
+              const isPrimary = sorted && header.column.getSortIndex() === 0
+              return (
+                <TableHead
+                  key={header.id}
+                  {...(isPrimary
+                    ? { "aria-sort": sorted === "asc" ? "ascending" : "descending" }
+                    : {})}
+                >
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
+              )
+            })}
+          </TableRow>
+        ))}
+      </TableHeader>
+      <TableBody>
+        {table.getRowModel().rows.map((row) => (
+          <TableRow key={row.id}>
+            {row.getVisibleCells().map((cell) => (
+              <TableCell key={cell.id}>
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
+}
+
+function FilterDemo() {
+  const table = useDataTable({
+    data: sampleContacts,
+    columns: [
+      { accessorKey: "name", header: "Name" },
+      { accessorKey: "role", header: "Role" },
+      { accessorKey: "dept", header: "Department" },
+    ],
+  })
+  return (
+    <div>
+      <div className="data-table-toolbar">
+        <div className="data-table-toolbar-filters">
+          <Input
+            className="data-table-filter"
+            placeholder="Search contacts..."
+            value={table.getState().globalFilter}
+            onChange={(e) => table.setGlobalFilter(e.target.value)}
+          />
+          <Input
+            className="data-table-filter"
+            placeholder="Filter by role..."
+            value={table.getColumn("role")?.getFilterValue() ?? ""}
+            onChange={(e) => table.getColumn("role")?.setFilterValue(e.target.value)}
+          />
+        </div>
+      </div>
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((hg) => (
+            <TableRow key={hg.id}>
+              {hg.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.length > 0 ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={3} style={{ height: "6rem", textAlign: "center" }}>
+                No results.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+
+function SelectionDemo() {
+  const selectCols = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all contacts"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select contact"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    { accessorKey: "name", header: "Name" },
+    { accessorKey: "role", header: "Role" },
+  ]
+  const table = useDataTable({ data: sampleContacts.slice(0, 5), columns: selectCols })
+  const selected = table.getFilteredSelectedRowModel().rows.length
+  return (
+    <div>
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((hg) => (
+            <TableRow key={hg.id}>
+              {hg.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <TableRow key={row.id} data-selected={row.getIsSelected() ? "true" : undefined}>
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+        {selected} of {sampleContacts.slice(0, 5).length} row(s) selected.
+      </p>
+    </div>
+  )
+}
+
+function PaginationDemo() {
+  const table = useDataTable({
+    data: sampleContacts,
+    columns: [
+      { accessorKey: "name", header: "Name" },
+      { accessorKey: "dept", header: "Department" },
+    ],
+    initialPageSize: 3,
+  })
+  const { pagination } = table.getState()
+  return (
+    <div>
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((hg) => (
+            <TableRow key={hg.id}>
+              {hg.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      <div className="data-table-pagination">
+        <div className="data-table-page-controls">
+          <div className="data-table-page-size">
+            <span>Rows per page</span>
+            <select
+              value={pagination.pageSize}
+              onChange={(e) => table.setPageSize(Number(e.target.value))}
+            >
+              {[3, 5, 8].map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="data-table-page-info">
+            Page {pagination.pageIndex + 1} of {table.getPageCount()}
+          </div>
+          <div className="data-table-page-nav">
+            <Button
+              variant="outline"
+              size="icon"
+              className="btn--sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              aria-label="Back"
+            >
+              <ChevronLeft />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="btn--sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              aria-label="Forward"
+            >
+              <ChevronRight />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function VisibilityDemo() {
+  const table = useDataTable({
+    data: sampleContacts.slice(0, 5),
+    columns: [
+      { accessorKey: "name", header: "Name", enableHiding: false },
+      { accessorKey: "role", header: "Role" },
+      { accessorKey: "dept", header: "Department" },
+    ],
+  })
+  return (
+    <div>
+      <div className="data-table-toolbar">
+        <div className="data-table-toolbar-actions">
+          <DropdownMenu>
+            <DropdownMenuTrigger as={Button} variant="outline" size="sm">
+              Fields
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="bottom" align="end">
+              {table
+                .getAllColumns()
+                .filter((c) => c.getCanHide())
+                .map((col) => (
+                  <DropdownMenuCheckboxItem
+                    key={col.id}
+                    checked={col.getIsVisible()}
+                    onCheckedChange={(val) => col.toggleVisibility(!!val)}
+                  >
+                    {col.id}
+                  </DropdownMenuCheckboxItem>
+                ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((hg) => (
+            <TableRow key={hg.id}>
+              {hg.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+
+function EmptyDemo() {
+  const table = useDataTable({
+    data: [],
+    columns: [
+      { accessorKey: "name", header: "Name" },
+      { accessorKey: "role", header: "Role" },
+    ],
+  })
+  return (
+    <Table>
+      <TableHeader>
+        {table.getHeaderGroups().map((hg) => (
+          <TableRow key={hg.id}>
+            {hg.headers.map((header) => (
+              <TableHead key={header.id}>
+                {flexRender(header.column.columnDef.header, header.getContext())}
+              </TableHead>
+            ))}
+          </TableRow>
+        ))}
+      </TableHeader>
+      <TableBody>
+        <TableRow>
+          <TableCell colSpan={2} style={{ height: "6rem", textAlign: "center" }}>
+            No results.
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+  )
+}
+
 // ── Page ─────────────────────────────────────────────────────────────
 
 export default function DataTablePage() {
@@ -889,36 +1251,137 @@ export default function DataTablePage() {
   return (
     <>
       <h2>Data Table</h2>
-      <p>A headless table engine with sorting, filtering, pagination, row selection, column sizing, pinning, grouping, and server-side modes — composed with vanillin's Table primitives.</p>
+      <p>A headless table engine with sorting, filtering, pagination, row selection, column sizing, pinning, grouping, and server-side modes, composed with vanillin's Table primitives.</p>
+
+      <InstallSnippet slug="data-table" />
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { useDataTable, flexRender } from "./lib/use-data-table"
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./ui/table/table"
+import { DataTableColumnHeader } from "./ui/data-table/data-table"
+import "./ui/data-table/data-table.css"
+
+const columns = [
+  { accessorKey: "email", header: ({ column }) => <DataTableColumnHeader column={column} title="Email" /> },
+  { accessorKey: "amount", header: "Amount" },
+]
+
+const table = useDataTable({ data, columns })
+
+<Table>
+  <TableHeader>
+    {table.getHeaderGroups().map(hg => (
+      <TableRow key={hg.id}>
+        {hg.headers.map(header => (
+          <TableHead key={header.id}>
+            {flexRender(header.column.columnDef.header, header.getContext())}
+          </TableHead>
+        ))}
+      </TableRow>
+    ))}
+  </TableHeader>
+  <TableBody>
+    {table.getRowModel().rows.map(row => (
+      <TableRow key={row.id}>
+        {row.getVisibleCells().map(cell => (
+          <TableCell key={cell.id}>
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </TableCell>
+        ))}
+      </TableRow>
+    ))}
+  </TableBody>
+</Table>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Sorting</h3>
+        <ComponentPreview code={`const columns = [
+  { accessorKey: "name", header: ({ column }) => <DataTableColumnHeader column={column} title="Name" /> },
+  { accessorKey: "role", header: "Role" },
+  { accessorKey: "dept", header: ({ column }) => <DataTableColumnHeader column={column} title="Department" /> },
+]
+const table = useDataTable({ data, columns })
+
+<Table>
+  <TableHeader>
+    {table.getHeaderGroups().map(hg => (
+      <TableRow key={hg.id}>
+        {hg.headers.map(header => (
+          <TableHead key={header.id} aria-sort={...}>
+            {flexRender(header.column.columnDef.header, header.getContext())}
+          </TableHead>
+        ))}
+      </TableRow>
+    ))}
+  </TableHeader>
+  <TableBody>...</TableBody>
+</Table>`}>
+          <SortingDemo />
+        </ComponentPreview>
+        <p>
+          Click a column header to sort ascending, then descending, then clear.
+          Columns without a <code>DataTableColumnHeader</code> are not sortable;
+          set <code>enableSorting: false</code> to opt out explicitly.
+          Shift-click a sortable column header to append it as a secondary (or
+          tertiary) sort key. Plain click resets to single-column sort. The
+          comparator chain is stable: ties on all sort keys preserve original
+          data order. <code>maxMultiSortColCount</code> (default 3) caps the
+          depth; exceeding it drops the oldest key. <code>aria-sort</code> goes
+          on the primary column only; secondary columns expose their position
+          via the button's <code>aria-label</code>.
+        </p>
+      </section>
 
       <section className="pg-section">
         <h3>Filtering</h3>
+        <ComponentPreview code={`const table = useDataTable({ data, columns })
+
+{/* Global filter: case-insensitive substring across all accessor columns */}
+<Input
+  placeholder="Search..."
+  value={table.getState().globalFilter}
+  onChange={(e) => table.setGlobalFilter(e.target.value)}
+/>
+
+{/* Per-column filter: AND-composed with the global filter */}
+<Input
+  placeholder="Filter by role..."
+  value={table.getColumn("role")?.getFilterValue() ?? ""}
+  onChange={(e) => table.getColumn("role")?.setFilterValue(e.target.value)}
+/>`}>
+          <FilterDemo />
+        </ComponentPreview>
         <p>
           The global filter is a case-insensitive substring match across every
           column with an <code>accessorKey</code>. Set{" "}
           <code>enableGlobalFilter: false</code> on a column def to exclude it.
           Use <code>getFilterValue(rawValue)</code> on a column def to override
           what string the global filter matches against (useful for timestamps
-          or enum codes). Global and column filters compose with AND — a row
+          or enum codes). Global and column filters compose with AND: a row
           must pass both to appear.
         </p>
         <h3>Highlighted matches</h3>
         <p>
-          Type in "Search all columns" and the matched text is painted in the
-          rows below, via <code>useDataTableHighlight(bodyRef, query)</code> —{" "}
+          Type in "Search all columns" in the Payments demo below and the
+          matched text is painted in the rows, via{" "}
+          <code>useDataTableHighlight(bodyRef, query)</code> from{" "}
           <code>lib/use-highlight.js</code> (the CSS Custom Highlight API) with
           a table-specific registry name. Pass the ref to{" "}
           <code>TableBody</code>, not <code>Table</code>: on the table it would
           light up a column header whenever the query matched its title.{" "}
           {highlightSupported
             ? "Your browser supports CSS.highlights, so matches are painted."
-            : "Your browser has no CSS.highlights, so nothing is painted — filtering still works."}
+            : "Your browser has no CSS.highlights, so nothing is painted; filtering still works."}
         </p>
         <p>
           The name is <code>vanillin-table-search</code>, not{" "}
           <code>ui/command</code>'s default <code>vanillin-search</code>:{" "}
           <code>CSS.highlights</code> is one global registry, and the faceted
-          filter renders a Command — under a shared name, typing in that popover
+          filter renders a Command. Under a shared name, typing in that popover
           would blank the table's highlights. Paint lives in{" "}
           <code>data-table.css</code> under <code>.table-body</code>;{" "}
           <code>::highlight()</code> accepts only colour, background-colour,
@@ -932,17 +1395,144 @@ export default function DataTablePage() {
           <code>Map&lt;value, count&gt;</code> computed from rows passing every
           active filter <em>except</em> the facet column's own selection. This
           keeps counts useful: selecting "pending" does not collapse all other
-          status counts to zero.
+          status counts to zero. The Payments demo below shows{" "}
+          <code>DataTableFacetedFilter</code> wired to the status column.
         </p>
-        <h3>Multi-sort</h3>
+      </section>
+
+      <section className="pg-section">
+        <h3>Row selection</h3>
+        <ComponentPreview code={`const columns = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  { accessorKey: "name", header: "Name" },
+]
+const table = useDataTable({ data, columns })
+
+<p>{table.getFilteredSelectedRowModel().rows.length} of {data.length} row(s) selected.</p>`}>
+          <SelectionDemo />
+        </ComponentPreview>
         <p>
-          Shift-click a sortable column header to append it as a secondary (or
-          tertiary) sort key. Plain click resets to single-column sort. The
-          comparator chain is stable — ties on all sort keys preserve original
-          data order. <code>maxMultiSortColCount</code> (default 3) caps the
-          depth; exceeding it drops the oldest key. <code>aria-sort</code> goes
-          on the primary column only; secondary columns expose their position
-          via the button's <code>aria-label</code>.
+          Add a column with <code>id: "select"</code> that renders a{" "}
+          <code>Checkbox</code> in both the header and each cell. The header
+          checkbox is tri-state: unchecked when nothing is selected,
+          indeterminate when some rows are, and checked when all page rows
+          are. <code>table.getFilteredSelectedRowModel()</code> returns the
+          selected rows after filtering, so the count stays accurate when a
+          filter is active. Selection state is per original-data index, so
+          it survives sorting and pagination.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Pagination</h3>
+        <ComponentPreview code={`const table = useDataTable({ data, columns, initialPageSize: 3 })
+const { pagination } = table.getState()
+
+<div className="data-table-pagination">
+  <div className="data-table-page-controls">
+    <div className="data-table-page-size">
+      <span>Rows per page</span>
+      <select value={pagination.pageSize} onChange={(e) => table.setPageSize(Number(e.target.value))}>
+        {[3, 5, 8].map(size => <option key={size} value={size}>{size}</option>)}
+      </select>
+    </div>
+    <div className="data-table-page-info">
+      Page {pagination.pageIndex + 1} of {table.getPageCount()}
+    </div>
+    <Button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Prev</Button>
+    <Button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Next</Button>
+  </div>
+</div>`}>
+          <PaginationDemo />
+        </ComponentPreview>
+        <p>
+          Pass <code>initialPageSize</code> to set the default page size.
+          The engine exposes <code>previousPage()</code>,{" "}
+          <code>nextPage()</code>, <code>setPageSize(n)</code>,{" "}
+          <code>setPageIndex(i)</code>, <code>getCanPreviousPage()</code>,{" "}
+          <code>getCanNextPage()</code>, and <code>getPageCount()</code>.
+          Changing the page size or applying a filter resets to page 0.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Column visibility</h3>
+        <ComponentPreview code={`const table = useDataTable({ data, columns })
+
+<DropdownMenu>
+  <DropdownMenuTrigger as={Button} variant="outline" size="sm">
+    Fields
+  </DropdownMenuTrigger>
+  <DropdownMenuContent>
+    {table.getAllColumns().filter(c => c.getCanHide()).map(col => (
+      <DropdownMenuCheckboxItem
+        key={col.id}
+        checked={col.getIsVisible()}
+        onCheckedChange={val => col.toggleVisibility(!!val)}
+      >
+        {col.id}
+      </DropdownMenuCheckboxItem>
+    ))}
+  </DropdownMenuContent>
+</DropdownMenu>`}>
+          <VisibilityDemo />
+        </ComponentPreview>
+        <p>
+          Set <code>enableHiding: false</code> on a column def to lock
+          it visible. <code>column.getCanHide()</code> reads this flag.
+          The visibility dropdown iterates{" "}
+          <code>table.getAllColumns()</code> and toggles each with{" "}
+          <code>column.toggleVisibility(bool)</code>. Hidden columns
+          are excluded from <code>getHeaderGroups()</code> and{" "}
+          <code>row.getVisibleCells()</code> automatically.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Empty state</h3>
+        <ComponentPreview code={`<TableBody>
+  {table.getRowModel().rows.length > 0 ? (
+    table.getRowModel().rows.map(row => (
+      <TableRow key={row.id}>
+        {row.getVisibleCells().map(cell => (
+          <TableCell key={cell.id}>
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </TableCell>
+        ))}
+      </TableRow>
+    ))
+  ) : (
+    <TableRow>
+      <TableCell colSpan={columns.length} style={{ height: "6rem", textAlign: "center" }}>
+        No results.
+      </TableCell>
+    </TableRow>
+  )}
+</TableBody>`}>
+          <EmptyDemo />
+        </ComponentPreview>
+        <p>
+          When <code>table.getRowModel().rows</code> is empty, render a
+          single row spanning all columns with a placeholder message.
+          This handles both empty data and filters that match nothing.
         </p>
       </section>
 
@@ -1214,37 +1804,32 @@ export default function DataTablePage() {
         </p>
       </section>
 
-      <InstallSnippet slug="data-table" />
-
-      <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview code={`import { useDataTable, flexRender } from "./lib/use-data-table"
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./ui/table/table"
-import { DataTableColumnHeader } from "./ui/data-table/data-table"
-
-const columns = [
-  { accessorKey: "email", header: ({ column }) => <DataTableColumnHeader column={column} title="Email" /> },
-  { accessorKey: "amount", header: "Amount" },
-]
-
-const table = useDataTable({ data, columns })
-
-<Table>
-  <TableHeader>...</TableHeader>
-  <TableBody>...</TableBody>
-</Table>`}>
-          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos above.</p>
-        </ComponentPreview>
-      </section>
-
       <ApiReference props={[
         { name: "useDataTable: data", type: "T[]", description: "Row data array" },
         { name: "useDataTable: columns", type: "ColumnDef[]", description: "Column definitions with accessorKey, header, and cell" },
         { name: "useDataTable: initialPageSize", type: "number", default: "10", description: "Rows per page" },
-        { name: "useDataTable: manualSorting", type: "boolean", default: "false", description: "Disable client-side sorting — fires onSortingChange instead" },
-        { name: "useDataTable: manualPagination", type: "boolean", default: "false", description: "Disable client-side pagination — requires rowCount or pageCount" },
+        { name: "useDataTable: maxMultiSortColCount", type: "number", default: "3", description: "Max simultaneous sort keys; exceeding drops the oldest" },
+        { name: "useDataTable: initialGrouping", type: "string[]", description: "Column ids to group by on mount (depth capped at 2)" },
+        { name: "useDataTable: manualSorting", type: "boolean", default: "false", description: "Disable client-side sorting; fires onSortingChange instead" },
+        { name: "useDataTable: manualFiltering", type: "boolean", default: "false", description: "Disable client-side filtering; fires onColumnFiltersChange instead" },
+        { name: "useDataTable: manualPagination", type: "boolean", default: "false", description: "Disable client-side pagination; requires rowCount or pageCount" },
         { name: "useDataTable: rowCount", type: "number", description: "Total row count for server-side page-count derivation" },
-        { name: "useDataTable: initialGrouping", type: "string[]", description: "Column ids to group by on mount" },
+        { name: "useDataTable: pageCount", type: "number", description: "Alternative to rowCount; total number of pages" },
+        { name: "useDataTable: onSortingChange", type: "(sorting) => void", description: "Fires after each sort state change (for server re-fetch)" },
+        { name: "useDataTable: onPaginationChange", type: "({ pageIndex, pageSize }) => void", description: "Fires after each pagination state change" },
+        { name: "useDataTable: onColumnFiltersChange", type: "(filters) => void", description: "Fires after each column filter change" },
+        { name: "DataTableColumnHeader: column", type: "Column", description: "Column proxy from the table engine" },
+        { name: "DataTableColumnHeader: title", type: "string", description: "Display text for the header" },
+        { name: "DataTableFacetedFilter: column", type: "Column", description: "Column proxy to filter on" },
+        { name: "DataTableFacetedFilter: title", type: "string", description: "Label shown on the trigger and as placeholder" },
+        { name: "DataTableFacetedFilter: options", type: "{ label, value, icon }[]", description: "Optional explicit options; derived from faceted values when omitted" },
+        { name: "DataTableGroupRow: row", type: "GroupRow", description: "Group row from the engine (row.isGrouped === true)" },
+        { name: "DataTableGroupRow: colSpan", type: "number", description: "Number of visible columns (spans the full table width)" },
+        { name: "DataTableGroupRow: label", type: "string", description: "Optional display label; defaults to the group value" },
+        { name: "DataTableColumnResizer: column", type: "Column", description: "Column proxy; drag resizes, double-click resets, arrows +/- 8px" },
+        { name: "DataTableScroller", type: "component", description: "ScrollArea wrapper that hands horizontal scrolling from ui/table's container to the viewport" },
+        { name: "useDataTableHighlight: bodyRef", type: "RefObject", description: "Ref to TableBody; scopes highlights to the body, not headers" },
+        { name: "useDataTableHighlight: query", type: "string", description: "Search string to paint via CSS Custom Highlight API" },
       ]} />
     </>
   )

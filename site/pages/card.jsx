@@ -23,7 +23,7 @@ export default function CardPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Card, CardHeader, CardTitle, CardDescription,
+        <ComponentPreview defaultTab="code" code={`import { Card, CardHeader, CardTitle, CardDescription,
   CardContent, CardFooter } from "./ui/card/card"
 import "./ui/card/card.css"
 

@@ -28,7 +28,7 @@ export default function ModeTogglePage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { ModeToggle } from "./ui/mode-toggle/mode-toggle"
+        <ComponentPreview defaultTab="code" code={`import { ModeToggle } from "./ui/mode-toggle/mode-toggle"
 import "./ui/mode-toggle/mode-toggle.css"
 
 <ModeToggle isDark={isDark} onIsDarkChange={setIsDark} />`}>

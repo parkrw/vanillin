@@ -46,10 +46,10 @@ export function CodeBlock({ code, language, className }) {
   )
 }
 
-export function ComponentPreview({ children, code, className }) {
+export function ComponentPreview({ children, code, className, defaultTab = "preview" }) {
   return (
     <div className={`pg-preview${className ? ` ${className}` : ""}`}>
-      <Tabs defaultValue="preview">
+      <Tabs defaultValue={defaultTab}>
         <div className="pg-preview-toolbar">
           <TabsList>
             <TabsTrigger value="preview">Preview</TabsTrigger>
