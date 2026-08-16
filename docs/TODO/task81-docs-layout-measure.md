@@ -47,11 +47,10 @@ Sub-task 5 also wants a measurement, not an eyeball: run `node scripts/contrast-
 
 ## Handoff
 
-**Status:** DONE, UNMERGED  **Branch:** `docs/layout-measure` (worktree `../vanillin-task81`)  **Updated:** 2026-08-16
+**Status:** COMPLETE
+**Branch:** `docs/layout-measure` (merged `6a79bdc4`; branch and worktree removed)  **PR:** none (local merge)  **Updated:** 2026-08-16
 
-- **Landed (2 commits):** `c1a70f1` (salvaged worker WIP — centring, 68rem cap, `--typeset-measure: 62ch`, topnav border token + 94% backdrop) plus the finishing commit: the page-rhythm contract the WIP had stubbed out (`/* RHYTHM DISABLED FOR BISECT */` — the interrupted worker's bisect marker; the browser suite was green with rhythm off, so whatever it was bisecting was visual, not a test).
-- **The rhythm contract** (`site/site.css` "Page rhythm"): two tokens, `--pg-flow: 2rem` between sections, `--pg-flow-tight: 0.75rem` heading-to-content. Gaps sit on the *following* sibling's top margin with heading margins zeroed, so UA paragraph margins can never collapse over the token — measured uniform: section gaps 32px, tight gaps 12px, on every probed page.
-- **Verified:** suite **758/761** on this branch (= documented noise floor: 2 slider-cursor + navigation-menu hover flake; branch base predates the batch-4 merges, so re-run after merge against main's 759/761). Build clean. `sweep-pages`: 0 contrast findings, 0 overflow @1280. Geometry probed at 1280/1600/2560/1100: column centred (symmetric track gaps at every width), caps at 1088px, prose at 547px (62ch), rail hand-off below 72rem gives its width to the column, no horizontal overflow. Topnav boundary measured settled (the color transition takes ~500ms — read too early it lies): **3.64:1 light, 3.61:1 dark**, both over the 3:1 bar, in-band and against the page below.
-- **For 82 (recorded, not edited):** pages carry inline `marginBottom`/`marginBlockEnd` on section-intro paragraphs (e.g. `navigation-menu.jsx:36,95`, `scroll-area.jsx` passim) that pre-date the contract; they are within-section spacing so nothing breaks, but they can be dropped where they duplicate the `h3 + *` tight gap.
-- **Follow-up candidate:** `scripts/contrast-nontext.mjs` has no topnav probe (scripts/ is outside this task's Owns); the measurement here was a one-off scratchpad probe. A committed probe needs the settle-wait above.
-- **Next:** user merges (merges are user-run in this repo), then 74 unblocks (deps 81, shares `site/app.jsx`/`site.css`).
+- **Landed:** content column centred and capped at 68rem with a 62ch prose measure; one page-rhythm contract (`--pg-flow` between sections, `--pg-flow-tight` heading→content); scrolled topnav at 94% opacity with a boundary measuring 3.64:1 light / 3.61:1 dark.
+- **Repo state:** clean; post-merge suite 760/762 (the pre-existing slider-cursor pair only). Main is ahead of origin — push is human-only.
+- **Next:** task 82 — the 20 reverted pages (`docs/TODO/task82-docs-completeness.md` → Handoff, worktree `../vanillin-task82`).
+- **Gotchas:** for 82 — inline `marginBottom`/`marginBlockEnd` on section-intro paragraphs (`site/pages/navigation-menu.jsx:36,95`, `site/pages/scroll-area.jsx` passim) predate the rhythm contract and can be dropped where they duplicate the `h3 + *` tight gap. Measurement traps are in the adjustments log (topnav transition settle, InstallSnippet between sections); the missing topnav probe is ISSUES.md §J.

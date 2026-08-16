@@ -771,6 +771,7 @@ spending time on it — it may be a dev-server artefact rather than a page bug.
 
 ## J. Debt / housekeeping
 
+- `scripts/contrast-nontext.mjs` has no topnav row — task 81's boundary fix (3.64:1 light / 3.61:1 dark) was measured by a one-off probe, so nothing guards it. A committed row must wait ~500ms after `data-scrolled` flips: the bar's colors transition, and an early read returns the interpolating value (found task81, 2026-08-16).
 - **Task 64 is half-done** on `feat/component-contracts`: sub-tasks 1–2 landed
   (manifest reader/writer, 68 generated `.van.json`); **3–6 open** —
   conformance suite, import-graph + cycle check, `npm test` wiring ("expect a
