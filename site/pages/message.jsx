@@ -22,7 +22,7 @@ export default function MessagePage() {
   return (
     <>
       <h2>Message</h2>
-      <p>A chat-message row with avatar, header, bubble, and footer — the layout primitive that pairs with Bubble.</p>
+      <p>A chat-message row with avatar, header, bubble, and footer: the layout primitive that pairs with Bubble.</p>
 
       <InstallSnippet slug="message" />
 
@@ -187,7 +187,7 @@ import { Avatar, AvatarFallback } from "./ui/avatar/avatar"
       </section>
 
       <ApiReference props={[
-        { name: "align", type: '"start" | "end"', default: '"start"', description: "Horizontal alignment — start for incoming, end for outgoing" },
+        { name: "align", type: '"start" | "end"', default: '"start"', description: "Horizontal alignment: start for incoming, end for outgoing" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />
     </>

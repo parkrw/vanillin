@@ -74,12 +74,8 @@ export default function ToggleGroupPage() {
       <InstallSnippet slug="toggle-group" />
 
       <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview code={`import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group/toggle-group"
-import "./ui/toggle/toggle.css"
-import "./ui/toggle-group/toggle-group.css"
-
-<ToggleGroup type="single" defaultValue="left" aria-label="Text alignment">
+        <h3>Default</h3>
+        <ComponentPreview code={`<ToggleGroup type="single" defaultValue="left" aria-label="Text alignment">
   <ToggleGroupItem value="left" aria-label="Align left">
     <AlignLeftIcon />
   </ToggleGroupItem>
@@ -92,6 +88,46 @@ import "./ui/toggle-group/toggle-group.css"
 </ToggleGroup>`}>
           <AlignmentGroup />
         </ComponentPreview>
+        <p className="pg-desc">
+          <code>type="single"</code> behaves like a radio set: picking one clears the rest, and clicking the active item clears the group entirely.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group/toggle-group"
+import "./ui/toggle/toggle.css"
+import "./ui/toggle-group/toggle-group.css"
+
+<ToggleGroup type="single" defaultValue="left" aria-label="Text alignment">
+  <ToggleGroupItem value="left" aria-label="Align left">
+    <AlignLeftIcon />
+  </ToggleGroupItem>
+  <ToggleGroupItem value="center" aria-label="Align center">
+    <AlignCenterIcon />
+  </ToggleGroupItem>
+</ToggleGroup>`}>
+          <AlignmentGroup aria-label="Usage alignment" />
+        </ComponentPreview>
+        <p className="pg-desc">
+          The group needs an <code>aria-label</code>, and every icon-only item needs one of its own. Without them the control announces as a row of unnamed buttons.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Text labels</h3>
+        <ComponentPreview code={`<ToggleGroup type="single" defaultValue="month" aria-label="Billing period">
+  <ToggleGroupItem value="month">Monthly</ToggleGroupItem>
+  <ToggleGroupItem value="year">Yearly</ToggleGroupItem>
+</ToggleGroup>`}>
+          <ToggleGroup type="single" defaultValue="month" aria-label="Billing period">
+            <ToggleGroupItem value="month">Monthly</ToggleGroupItem>
+            <ToggleGroupItem value="year">Yearly</ToggleGroupItem>
+          </ToggleGroup>
+        </ComponentPreview>
+        <p className="pg-desc">
+          Text items need no <code>aria-label</code>: their content is the accessible name. Two or three short options read better here than a select.
+        </p>
       </section>
 
       <section className="pg-section">
@@ -119,6 +155,9 @@ import "./ui/toggle-group/toggle-group.css"
             <span>{formats.join(", ") || "none"}</span>
           </div>
         </ComponentPreview>
+        <p className="pg-desc">
+          In multiple mode the value is an array and every item toggles independently, which is what a bold, italic, and underline row needs.
+        </p>
       </section>
 
       <section className="pg-section">
@@ -130,6 +169,9 @@ import "./ui/toggle-group/toggle-group.css"
             <AlignmentGroup variant="outline" aria-label="Outline alignment" />
           </div>
         </ComponentPreview>
+        <p className="pg-desc">
+          <code>variant</code> and <code>size</code> are set once on the group and forwarded to every item, so the row cannot drift out of alignment with itself.
+        </p>
       </section>
 
       <section className="pg-section">
@@ -141,6 +183,9 @@ import "./ui/toggle-group/toggle-group.css"
             <AlignmentGroup size="lg" aria-label="Large alignment" />
           </div>
         </ComponentPreview>
+        <p className="pg-desc">
+          Sizes scale the hit area as well as the icon, so the small variant still clears the minimum touch target under compact density.
+        </p>
       </section>
 
       <section className="pg-section">
@@ -152,6 +197,9 @@ import "./ui/toggle-group/toggle-group.css"
             <AlignmentGroup disabled aria-label="Disabled group" />
           </div>
         </ComponentPreview>
+        <p className="pg-desc">
+          <code>disabled</code> on the group disables every item. Put it on a single <code>ToggleGroupItem</code> to knock out just that one option while the rest stay live.
+        </p>
       </section>
 
       <ApiReference title="ToggleGroup" props={[

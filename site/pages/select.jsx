@@ -34,18 +34,24 @@ export default function SelectPage() {
       <InstallSnippet slug="select" />
 
       <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview code={`import { Select, SelectTrigger, SelectValue,
-  SelectContent, SelectItem } from "./ui/select/select"
-import "./ui/select/select.css"
-
-<Select>
+        <h3>Default</h3>
+        <ComponentPreview code={`<Select>
   <SelectTrigger style={{ width: "180px" }}>
     <SelectValue placeholder="Select a fruit" />
   </SelectTrigger>
   <SelectContent>
-    <SelectItem value="apple">Apple</SelectItem>
-    <SelectItem value="banana">Banana</SelectItem>
+    <SelectGroup>
+      <SelectLabel>Fruits</SelectLabel>
+      <SelectItem value="apple">Apple</SelectItem>
+      <SelectItem value="banana">Banana</SelectItem>
+      <SelectItem value="blueberry" disabled>Blueberry (out of season)</SelectItem>
+      <SelectItem value="cherry">Cherry</SelectItem>
+    </SelectGroup>
+    <SelectSeparator />
+    <SelectGroup>
+      <SelectLabel>Vegetables</SelectLabel>
+      <SelectItem value="carrot">Carrot</SelectItem>
+    </SelectGroup>
   </SelectContent>
 </Select>`}>
           <Select>
@@ -70,6 +76,39 @@ import "./ui/select/select.css"
             </SelectContent>
           </Select>
         </ComponentPreview>
+        <p className="pg-desc">
+          Groups and labels are structural: the label names the group for a screen reader rather than sitting in the list as an unselectable row.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Select, SelectTrigger, SelectValue,
+  SelectContent, SelectItem } from "./ui/select/select"
+import "./ui/select/select.css"
+
+<Select>
+  <SelectTrigger style={{ width: "180px" }}>
+    <SelectValue placeholder="Select a fruit" />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="apple">Apple</SelectItem>
+    <SelectItem value="banana">Banana</SelectItem>
+  </SelectContent>
+</Select>`}>
+          <Select>
+            <SelectTrigger style={{ width: "180px" }}>
+              <SelectValue placeholder="Select a fruit" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="apple">Apple</SelectItem>
+              <SelectItem value="banana">Banana</SelectItem>
+            </SelectContent>
+          </Select>
+        </ComponentPreview>
+        <p className="pg-desc">
+          <code>SelectValue</code> renders the chosen item's text, or the placeholder while nothing is chosen. It reads the value from context, so you never pass the label twice.
+        </p>
       </section>
 
       <section className="pg-section">
@@ -144,7 +183,7 @@ import "./ui/select/select.css"
         <p>
           <code>SelectScrollUpButton</code> and <code>SelectScrollDownButton</code>{" "}
           are decorative affordances for mouse users. They are{" "}
-          <code>aria-hidden</code> — keyboard users scroll via arrow keys.
+          <code>aria-hidden</code>, since keyboard users scroll with the arrow keys.
         </p>
         <ComponentPreview code={`<SelectContent style={{ maxBlockSize: "12rem" }}>
   <SelectScrollUpButton />

@@ -23,7 +23,7 @@ export default function CalendarPage() {
   return (
     <>
       <h2>Calendar</h2>
-      <p>A date picker grid with single, multiple, and range selection — keyboard navigation, RTL, dropdowns, and disabled-day matchers.</p>
+      <p>A date picker grid with single, multiple, and range selection, plus keyboard navigation, RTL, dropdowns, and disabled-day matchers.</p>
 
       <InstallSnippet slug="calendar" />
 
@@ -241,7 +241,7 @@ const [date, setDate] = useState(new Date())
         { name: "month", type: "Date", description: "Controlled displayed month" },
         { name: "defaultMonth", type: "Date", description: "Initial displayed month (uncontrolled)" },
         { name: "onMonthChange", type: "(month: Date) => void", description: "Called when the displayed month changes" },
-        { name: "disabled", type: "Matcher | Matcher[]", description: "Days to disable — date, range, dayOfWeek, or function" },
+        { name: "disabled", type: "Matcher | Matcher[]", description: "Days to disable: date, range, dayOfWeek, or function" },
         { name: "locale", type: "string", description: "BCP 47 locale for weekday names and formatting" },
         { name: "weekStartsOn", type: "number", description: "Override the locale's first day of week (0=Sunday)" },
         { name: "numberOfMonths", type: "number", default: "1", description: "Number of month grids to display" },

@@ -48,7 +48,7 @@ import "./ui/separator/separator.css"
 
       <section className="pg-section">
         <h3>Decorative</h3>
-        <ComponentPreview code={`{/* role="none" — invisible to screen readers */}
+        <ComponentPreview code={`{/* role="none" keeps it invisible to screen readers */}
 <p>Decorative separator below (no ARIA role)</p>
 <Separator decorative />`}>
           <div>

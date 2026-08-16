@@ -44,7 +44,7 @@ export default function TogglePage() {
   return (
     <>
       <h2>Toggle</h2>
-      <p>A two-state button that stays pressed until clicked again — bold on, bold off. Tracks state with <code>aria-pressed</code> and <code>data-state</code>.</p>
+      <p>A two-state button that stays pressed until clicked again: bold on, bold off. Tracks state with <code>aria-pressed</code> and <code>data-state</code>.</p>
 
       <InstallSnippet slug="toggle" />
 

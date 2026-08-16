@@ -60,7 +60,7 @@ import "./ui/badge/badge.css"
       <section className="pg-section">
         <h3>Status Variants</h3>
         <p>
-          Soft treatment — tinted background, coloured text, tinted border — so
+          Soft treatment, with tinted background, coloured text, and tinted border, so
           they stay readable in dense table rows.
         </p>
         <ComponentPreview code={`<Badge variant="success">Success</Badge>

@@ -38,7 +38,7 @@ export default function MarkerPage() {
   return (
     <>
       <h2>Marker</h2>
-      <p>An inline status indicator for activity feeds and timelines — icon, text, and an optional link surface.</p>
+      <p>An inline status indicator for activity feeds and timelines, with icon, text, and an optional link surface.</p>
 
       <InstallSnippet slug="marker" />
 

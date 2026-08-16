@@ -57,7 +57,7 @@ export default function DatePickerPage() {
   return (
     <>
       <h2>Date Picker</h2>
-      <p>A composition of <code>Popover</code> + <code>Calendar</code> + <code>Button</code> — not a standalone component, just a documented pattern.</p>
+      <p>A composition of <code>Popover</code> + <code>Calendar</code> + <code>Button</code>. It is not a standalone component, just a documented pattern.</p>
 
       <InstallSnippet slug="date-picker" />
 
@@ -223,7 +223,7 @@ const [open, setOpen] = useState(false)
         { name: "selected", type: "Date | { from, to }", description: "Current selection" },
         { name: "onSelect", type: "(value) => void", description: "Called when the user picks a day" },
         { name: "numberOfMonths", type: "number", default: "1", description: "Months to show side-by-side" },
-        { name: "captionLayout", type: '"buttons" | "dropdown"', default: '"buttons"', description: "Navigation style — dropdown for wide year ranges" },
+        { name: "captionLayout", type: '"buttons" | "dropdown"', default: '"buttons"', description: "Navigation style; dropdown suits wide year ranges" },
         { name: "defaultMonth", type: "Date", description: "Initially visible month" },
         { name: "startMonth", type: "Date", description: "Earliest navigable month" },
         { name: "endMonth", type: "Date", description: "Latest navigable month" },

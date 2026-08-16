@@ -235,13 +235,13 @@ export default function PrimitivesPage() {
     <>
       <h2>Primitives</h2>
       <p>
-        The shared <code>lib/</code> hooks that every component builds on. Use them directly when building custom components that need anchored positioning, keyboard navigation, animated mount/unmount, or layer dismissal — without pulling in a finished UI component you would have to reskin.
+        The shared <code>lib/</code> hooks that every component builds on. Use them directly when building custom components that need anchored positioning, keyboard navigation, animated mount/unmount, or layer dismissal, without pulling in a finished UI component you would have to reskin.
       </p>
 
       <section className="pg-section">
         <h3>Anchor positioning + dismissable layer + return focus</h3>
         <p>
-          <code>useAnchorPosition</code> places a floating element next to its trigger (with collision flipping). <code>useDismissableLayer</code> closes it on Escape or outside click. <code>useReturnFocus</code> restores focus after close. All three compose — every overlay component (popover, dropdown, combobox, tooltip) is built from them.
+          <code>useAnchorPosition</code> places a floating element next to its trigger (with collision flipping). <code>useDismissableLayer</code> closes it on Escape or outside click. <code>useReturnFocus</code> restores focus after close. All three compose: every overlay component (popover, dropdown, combobox, tooltip) is built from them.
         </p>
         <ComponentPreview code={`import { useAnchorPosition } from "./lib/use-anchor-position"
 import { useDismissableLayer } from "./lib/use-dismissable-layer"
@@ -284,7 +284,7 @@ useRovingFocus(ref, { orientation: "horizontal" })
       <section className="pg-section">
         <h3>Presence (exit animation before unmount)</h3>
         <p>
-          <code>usePresence</code> returns <code>true</code> while the element should remain in the DOM — including the exit-animation phase after the logical state goes <code>false</code>. The element unmounts only after its <code>transitionend</code> or <code>animationend</code> fires.
+          <code>usePresence</code> returns <code>true</code> while the element should remain in the DOM, including the exit-animation phase after the logical state goes <code>false</code>. The element unmounts only after its <code>transitionend</code> or <code>animationend</code> fires.
         </p>
         <ComponentPreview code={`import { usePresence } from "./lib/use-presence"
 

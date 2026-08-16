@@ -53,14 +53,14 @@ import "./ui/bubble/bubble.css"
         <h3>Ghost (full width, unframed)</h3>
         <ComponentPreview code={`<Bubble variant="ghost">
   <BubbleContent>
-    Ghost bubbles span the full width without a surface —
+    Ghost bubbles span the full width without a surface,
     used for assistant prose in AI chats.
   </BubbleContent>
 </Bubble>`}>
           <div style={{ maxWidth: "24rem" }}>
             <Bubble variant="ghost">
               <BubbleContent>
-                Ghost bubbles span the full width without a surface — used for
+                Ghost bubbles span the full width without a surface, used for
                 assistant prose in AI chats.
               </BubbleContent>
             </Bubble>
@@ -154,7 +154,7 @@ import "./ui/bubble/bubble.css"
 
       <ApiReference props={[
         { name: "variant", type: '"default" | "secondary" | "muted" | "tinted" | "outline" | "ghost" | "destructive"', default: '"default"', description: "Visual style of the bubble surface" },
-        { name: "align", type: '"start" | "end"', default: '"start"', description: "Horizontal alignment — start for incoming, end for outgoing" },
+        { name: "align", type: '"start" | "end"', default: '"start"', description: "Horizontal alignment: start for incoming, end for outgoing" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />
     </>

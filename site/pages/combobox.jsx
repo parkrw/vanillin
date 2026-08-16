@@ -45,7 +45,7 @@ export default function ComboboxPage() {
   return (
     <>
       <h2>Combobox</h2>
-      <p>A filterable select — type to search, arrow keys highlight via <code>aria-activedescendant</code>, Enter selects, Escape reverts. Supports single, multiple, groups, controlled value, and native form validation.</p>
+      <p>A filterable select: type to search, arrow keys highlight via <code>aria-activedescendant</code>, Enter selects, Escape reverts. Supports single, multiple, groups, controlled value, and native form validation.</p>
 
       <InstallSnippet slug="combobox" />
 
@@ -329,11 +329,11 @@ import "./ui/combobox/combobox.css"
         { name: "value", type: "string | string[]", description: "Controlled selected value" },
         { name: "defaultValue", type: "string | string[]", description: "Initial value (uncontrolled)" },
         { name: "onValueChange", type: "(value) => void", description: "Called when the selection changes" },
-        { name: "items", type: "Array<{ value, label }>", description: "Data source — enables function-as-child in ComboboxList" },
+        { name: "items", type: "Array<{ value, label }>", description: "Data source; enables function-as-child in ComboboxList" },
         { name: "multiple", type: "boolean", default: "false", description: "Allow multiple selections (chips + aria-multiselectable)" },
         { name: "autoHighlight", type: "boolean", default: "false", description: "Highlight the first match as the user types" },
         { name: "showClear", type: "boolean", default: "false", description: "Show a clear button when a value is selected" },
-        { name: "name", type: "string", description: "Form field name — renders a hidden native <select> for validation" },
+        { name: "name", type: "string", description: "Form field name; renders a hidden native <select> for validation" },
         { name: "required", type: "boolean", description: "Marks the hidden select as required" },
         { name: "disabled", type: "boolean", default: "false", description: "Disables the combobox" },
       ]} />

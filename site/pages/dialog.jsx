@@ -47,13 +47,8 @@ export default function DialogPage() {
       <InstallSnippet slug="dialog" />
 
       <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview code={`import { Dialog, DialogTrigger, DialogContent, DialogHeader,
-  DialogFooter, DialogTitle, DialogDescription, DialogClose }
-  from "./ui/dialog/dialog"
-import "./ui/dialog/dialog.css"
-
-<Dialog>
+        <h3>Default</h3>
+        <ComponentPreview code={`<Dialog>
   <DialogTrigger as={Button} variant="outline">Open dialog</DialogTrigger>
   <DialogContent>
     <DialogHeader>
@@ -98,6 +93,119 @@ import "./ui/dialog/dialog.css"
             </DialogContent>
           </Dialog>
         </ComponentPreview>
+        <p className="pg-desc">
+          The panel is a native <code>&lt;dialog&gt;</code> opened with <code>showModal()</code>, so focus trapping, the top layer, and inertness of the page behind it come from the browser rather than from JavaScript.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Dialog, DialogTrigger, DialogContent, DialogHeader,
+  DialogFooter, DialogTitle, DialogDescription, DialogClose }
+  from "./ui/dialog/dialog"
+import "./ui/dialog/dialog.css"
+
+<Dialog>
+  <DialogTrigger as={Button}>Share link</DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Share this page</DialogTitle>
+      <DialogDescription>Anyone with the link can view it.</DialogDescription>
+    </DialogHeader>
+    <DialogFooter>
+      <DialogClose as={Button} variant="outline">Done</DialogClose>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>`}>
+          <Dialog>
+            <DialogTrigger as={Button}>Share link</DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Share this page</DialogTitle>
+                <DialogDescription>Anyone with the link can view it.</DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose as={Button} variant="outline">Done</DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </ComponentPreview>
+        <p className="pg-desc">
+          <code>DialogTitle</code> and <code>DialogDescription</code> generate the ids that label and describe the panel. Leave them out and the dialog opens unnamed.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Not dismissible</h3>
+        <ComponentPreview code={`<DialogContent dismissible={false} showCloseButton={false}>
+  <DialogHeader>
+    <DialogTitle>Migration in progress</DialogTitle>
+    <DialogDescription>Do not close this tab.</DialogDescription>
+  </DialogHeader>
+  <DialogFooter>
+    <DialogClose as={Button}>Stop migration</DialogClose>
+  </DialogFooter>
+</DialogContent>`}>
+          <Dialog>
+            <DialogTrigger as={Button} variant="outline">
+              Start migration
+            </DialogTrigger>
+            <DialogContent dismissible={false} showCloseButton={false}>
+              <DialogHeader>
+                <DialogTitle>Migration in progress</DialogTitle>
+                <DialogDescription>Do not close this tab.</DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose as={Button}>Stop migration</DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </ComponentPreview>
+        <p className="pg-desc">
+          <code>dismissible={"{false}"}</code> blocks the backdrop click and Escape, and <code>showCloseButton={"{false}"}</code> removes the X. Together they leave the footer as the only way out, which is what <code>alert-dialog</code> ships preconfigured.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Scrolling content</h3>
+        <ComponentPreview code={`<DialogContent>
+  <DialogHeader>
+    <DialogTitle>Terms of service</DialogTitle>
+  </DialogHeader>
+  <div style={{ maxBlockSize: "14rem", overflowY: "auto" }}>
+    {/* long content */}
+  </div>
+  <DialogFooter>
+    <DialogClose as={Button}>I agree</DialogClose>
+  </DialogFooter>
+</DialogContent>`}>
+          <Dialog>
+            <DialogTrigger as={Button} variant="outline">
+              Read terms
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Terms of service</DialogTitle>
+                <DialogDescription>Last updated 3 March 2026.</DialogDescription>
+              </DialogHeader>
+              <div style={{ maxBlockSize: "14rem", overflowY: "auto", display: "grid", gap: "0.75rem" }}>
+                {Array.from({ length: 8 }, (_, index) => (
+                  <p key={index} style={{ fontSize: "0.875rem" }}>
+                    Clause {index + 1}. The software is provided as is, without warranty of
+                    any kind, express or implied, including but not limited to the
+                    warranties of merchantability and fitness for a particular purpose.
+                  </p>
+                ))}
+              </div>
+              <DialogFooter>
+                <DialogClose as={Button}>I agree</DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </ComponentPreview>
+        <p className="pg-desc">
+          Scroll the body, not the panel. Keeping the header and footer outside the scrolling region leaves the title and the exit visible at every scroll position.
+        </p>
       </section>
 
       <section className="pg-section">
@@ -134,7 +242,7 @@ import "./ui/dialog/dialog.css"
         <h3>Alert Dialog</h3>
         <p>
           <code>alert-dialog</code> is a thin re-export of <code>dialog</code> with{" "}
-          <code>dismissible=false</code> — clicking the backdrop or pressing Escape
+          <code>dismissible=false</code>, so clicking the backdrop or pressing Escape
           does not close it. Use it for destructive confirmations.
         </p>
         <ComponentPreview code={`<AlertDialog>

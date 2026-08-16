@@ -33,7 +33,7 @@ export default function AlertPage() {
   return (
     <>
       <h2>Alert</h2>
-      <p>A callout for important information — tips, warnings, or errors.</p>
+      <p>A callout for important information: tips, warnings, or errors.</p>
 
       <InstallSnippet slug="alert" />
 

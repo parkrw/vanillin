@@ -21,7 +21,7 @@ export default function InputOTPPage() {
   return (
     <>
       <h2>Input OTP</h2>
-      <p>One-time-password input rendered as individual slots over a single hidden <code>&lt;input&gt;</code> — native autofill and IME keep working.</p>
+      <p>One-time-password input rendered as individual slots over a single hidden <code>&lt;input&gt;</code>, so native autofill and IME keep working.</p>
 
       <InstallSnippet slug="input-otp" />
 
@@ -89,7 +89,7 @@ import "./ui/input-otp/input-otp.css"
             </InputOTPGroup>
           </InputOTP>
           <p>
-            Value: <span data-pg="otp-digits-state">{code === "" ? "empty" : code}</span> — completed:{" "}
+            Value: <span data-pg="otp-digits-state">{code === "" ? "empty" : code}</span> · completed:{" "}
             <span data-pg="otp-complete-state">{completed}</span>
           </p>
         </ComponentPreview>
@@ -139,7 +139,7 @@ import "./ui/input-otp/input-otp.css"
         { name: "defaultValue", type: "string", default: '""', description: "Initial value (uncontrolled)" },
         { name: "onChange", type: "(value: string) => void", description: "Called on every character change" },
         { name: "onComplete", type: "(value: string) => void", description: "Called when all slots are filled" },
-        { name: "pattern", type: "string", description: "Regex pattern — rejects the entire change if it fails (e.g. REGEXP_ONLY_DIGITS)" },
+        { name: "pattern", type: "string", description: "Regex pattern; rejects the entire change if it fails (e.g. REGEXP_ONLY_DIGITS)" },
         { name: "disabled", type: "boolean", default: "false", description: "Disables the input" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />

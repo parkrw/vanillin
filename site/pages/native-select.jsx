@@ -11,7 +11,7 @@ export default function NativeSelectPage() {
   return (
     <>
       <h2>Native Select</h2>
-      <p>A styled <code>&lt;select&gt;</code> — no JavaScript, no portal, full browser and assistive-tech support out of the box.</p>
+      <p>A styled <code>&lt;select&gt;</code>. No JavaScript, no portal, and full browser and assistive-tech support out of the box.</p>
 
       <InstallSnippet slug="native-select" />
 
