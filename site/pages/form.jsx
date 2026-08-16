@@ -43,7 +43,7 @@ import "../install-snippet.css"
 import "../api-reference.css"
 
 /* ================================================================== */
-/*  Resolver — plain function, no zod dependency                       */
+/*  Resolver: plain function, no zod dependency                       */
 /* ================================================================== */
 
 function profileResolver(values) {
@@ -399,7 +399,7 @@ function ActionsPathDemo() {
 }
 
 /* ================================================================== */
-/*  Engine-agnostic proof — hand-rolled RHF-shaped context             */
+/*  Engine-agnostic proof: hand-rolled RHF-shaped context             */
 /* ================================================================== */
 
 function GroupedItemDemo() {
@@ -482,7 +482,7 @@ function EngineAgnosticDemo() {
 }
 
 /* ================================================================== */
-/*  Portalled FormSubmit — useFormStatus boundary test                  */
+/*  Portalled FormSubmit: useFormStatus boundary test                  */
 /* ================================================================== */
 
 function PortalledSubmitDemo() {
@@ -542,13 +542,13 @@ export default function FormPage() {
     <>
       <h2>Form</h2>
       <p>
-        ARIA wiring layer for form fields — generates ids, connects{" "}
+        ARIA wiring layer for form fields: generates ids, connects{" "}
         <code>aria-describedby</code> / <code>aria-invalid</code>, and renders
         error messages as live regions.
       </p>
       <p>
         <strong><code>ui/form</code> vs <code>ui/form-fields</code>:</strong>{" "}
-        <code>ui/form</code> is the engine-agnostic primitive layer — it never
+        <code>ui/form</code> is the engine-agnostic primitive layer: it never
         imports the form engine (<code>lib/use-form.js</code>) and stays
         copyable on its own. <code>ui/form-fields</code> is the bound layer
         that wraps <code>lib/use-form.js</code> with pre-wired field components.
@@ -700,7 +700,7 @@ import "./ui/form/form.css"
         <h3>Engine-Agnostic Proof</h3>
         <p className="pg-description">
           A hand-rolled <code>{"{ formState: { errors } }"}</code> object works
-          identically — the components only read <code>formState.errors</code>{" "}
+          identically: the components only read <code>formState.errors</code>{" "}
           from context, so any engine that produces this shape is compatible.
         </p>
         <ComponentPreview code={`const [errors, setErrors] = useState({})
@@ -728,10 +728,10 @@ const fakeForm = { formState: { errors } }
           <code>&lt;form&gt;</code> always reads <code>pending: false</code>{" "}
           because <code>useFormStatus</code> only sees the nearest ancestor form.
         </p>
-        <ComponentPreview code={`{/* Inside <form> — reads pending correctly */}
+        <ComponentPreview code={`{/* Inside <form>: reads pending correctly */}
 <FormSubmit pending="Submitting...">Submit (inside form)</FormSubmit>
 
-{/* Portalled outside <form> — always reads pending: false */}
+{/* Portalled outside <form>: always reads pending: false */}
 {createPortal(
   <FormSubmit pending="Submitting...">Submit (portalled)</FormSubmit>,
   portalTarget
@@ -744,7 +744,7 @@ const fakeForm = { formState: { errors } }
         <h3>Schema Validation</h3>
         <p className="pg-description">
           For schema-based validation, use <code>lib/schema.js</code> and{" "}
-          <code>schemaResolver</code> — zero-dependency, zod-shaped API built into
+          <code>schemaResolver</code>, a zero-dependency, zod-shaped API built into
           the kit:
         </p>
         <ComponentPreview code={`import { s, schemaResolver } from "./lib/schema"
@@ -763,7 +763,7 @@ const { register, handleSubmit, formState } = useForm({
           </p>
         </ComponentPreview>
         <p className="pg-description">
-          External resolvers are also compatible — the resolver contract{" "}
+          External resolvers are also compatible: the resolver contract{" "}
           <code>{"(values) => { values, errors }"}</code> matches{" "}
           <code>@hookform/resolvers</code> + <code>zod</code> (verified against{" "}
           <code>@hookform/resolvers 5.5.3</code> + <code>zod 4.4.3</code>).
@@ -772,7 +772,7 @@ const { register, handleSubmit, formState } = useForm({
 
       <ApiReference title="Form" props={[
         { name: "form", type: "{ formState: { errors } }", description: "Form engine instance (from useForm or hand-rolled)" },
-        { name: "action", type: "(prevState, FormData) => Promise", description: "React 19 action — replaces form + onSubmit" },
+        { name: "action", type: "(prevState, FormData) => Promise", description: "React 19 action; replaces form + onSubmit" },
         { name: "onSubmit", type: "(e: FormEvent) => void", description: "Submit handler (use with form prop)" },
       ]} />
 

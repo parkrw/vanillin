@@ -30,7 +30,7 @@ export default function IntroductionPage() {
 
       <p>
         Vanillin is a React component kit. You copy the source into your
-        project and own it — no package to install, no version to track, no
+        project and own it: no package to install, no version to track, no
         upgrade that can break your app. Every component is vanilla JSX and
         CSS with React as the only runtime dependency.
       </p>
@@ -51,26 +51,26 @@ export default function IntroductionPage() {
 
       <ul>
         <li>
-          <strong>Zero runtime dependencies</strong> — only React.
+          <strong>Zero runtime dependencies</strong>: only React.
           Overlays use native <code>&lt;dialog&gt;</code> and popover.
           Focus trapping, roving focus, dismissable layers, anchor
           positioning, and safe triangles are all in <code>lib/</code>,
           framework-free.
         </li>
         <li>
-          <strong>Plain CSS</strong> — design tokens
+          <strong>Plain CSS</strong>: design tokens
           in <code>globals.css</code>, scoped component styles
           in <code>.css</code> files. No utility classes, no build
           plugin required beyond what your bundler already does.
         </li>
         <li>
-          <strong>Full ownership</strong> — the files are yours once
+          <strong>Full ownership</strong>: the files are yours once
           copied. Edit them, delete them, fork them.
           A <code>.van.json</code> sidecar tracks what you were given so
           the CLI can tell your edits from upstream changes.
         </li>
         <li>
-          <strong>Theming through config</strong> — edit{" "}
+          <strong>Theming through config</strong>: edit{" "}
           <code>van.config.json</code>, run <code>van build</code>, and
           the generated <code>van.css</code> re-themes everything.
           Brand colours, radius, density, motion, fonts, and per-component
@@ -189,7 +189,7 @@ function App() {
         <TabsContent value="copy" style={{ padding: "1rem 0" }}>
           <p style={{ margin: 0, fontSize: "0.875rem" }}>
             Clone the repo, copy <code>ui/button/</code> into your project, import it.
-            Each component is self-contained — no package.json, no build step.
+            Each component is self-contained: no package.json, no build step.
           </p>
         </TabsContent>
         <TabsContent value="cli" style={{ padding: "1rem 0" }}>
@@ -202,7 +202,7 @@ function App() {
       </Tabs>
 
       <p>
-        Every page in this site renders the real component — pick one in
+        Every page in this site renders the real component; pick one in
         the sidebar to see it live.
       </p>
     </>

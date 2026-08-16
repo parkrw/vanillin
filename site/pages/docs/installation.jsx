@@ -8,7 +8,7 @@ export default function InstallationPage() {
 
       <p>
         Components are copied into your project, not installed from a
-        package. The CLI does the copying — it resolves dependencies,
+        package. The CLI does the copying: it resolves dependencies,
         writes the files, and stops. Nothing is imported from vanillin at
         runtime.
       </p>
@@ -27,7 +27,7 @@ export default function InstallationPage() {
 
       <p>
         This adds the <code>van</code> command to your project. Nothing
-        is imported from vanillin at runtime — the CLI only copies files.
+        is imported from vanillin at runtime; the CLI only copies files.
         Just trying it out? Prefix any command with{" "}
         <code>npx github:parkrw/vanillin</code> instead and skip this
         step.
@@ -47,7 +47,7 @@ export default function InstallationPage() {
         It reads <code>package.json</code> for framework detection
         and <code>tsconfig.json</code> / <code>jsconfig.json</code> for
         path aliases. An existing <code>components.json</code> from
-        shadcn is honoured — its aliases map directly to vanillin's{" "}
+        shadcn is honoured: its aliases map directly to vanillin's{" "}
         <code>paths</code>.
       </p>
 
@@ -63,7 +63,7 @@ import "./styles/van.css"`} />
       <p>
         <code>globals.css</code> declares every design token.{" "}
         <code>van.css</code> is generated from your config and
-        overrides the defaults. Order matters — <code>van.css</code>{" "}
+        overrides the defaults. Order matters: <code>van.css</code>{" "}
         must come after <code>globals.css</code> so your theme wins.
       </p>
 
@@ -71,7 +71,7 @@ import "./styles/van.css"`} />
 
       <p>
         Copy one or more components by slug. Dependencies are resolved
-        automatically — <code>alert-dialog</code> brings{" "}
+        automatically: <code>alert-dialog</code> brings{" "}
         <code>dialog</code> and <code>button</code> with it.
       </p>
 
@@ -81,7 +81,7 @@ van add --yes`} />
 
       <p>
         Run bare <code>van add</code> in a terminal for an interactive
-        picker — arrow keys to navigate, space to toggle, enter to
+        picker: arrow keys to navigate, space to toggle, enter to
         confirm.
       </p>
 
@@ -116,7 +116,7 @@ function App() {
 
       <p>
         Editing copied files is the point. The CLI refuses to overwrite
-        a file you changed — each component gets a{" "}
+        a file you changed: each component gets a{" "}
         <code>.van.json</code> sidecar recording the hash of what was
         written, so it can tell your edits from upstream changes.
         One edited file skips that whole component (a partial update

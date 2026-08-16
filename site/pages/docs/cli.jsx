@@ -8,7 +8,7 @@ export default function CliPage() {
 
       <p>
         <code>van</code> copies components into your project. It resolves
-        dependencies, writes files, and stops — nothing is imported from
+        dependencies, writes files, and stops; nothing is imported from
         vanillin at runtime. Node 18+ stdlib only, no dependencies.
       </p>
 
@@ -54,7 +54,7 @@ export default function CliPage() {
 
       <p>
         Copy one or more components and their transitive dependencies.
-        Slugs are validated against the registry — unknown names fail
+        Slugs are validated against the registry; unknown names fail
         immediately.
       </p>
 
@@ -64,14 +64,14 @@ van add --dry-run      # print what would be written, write nothing`} />
 
       <p>
         Run bare <code>van add</code> in a terminal for an interactive
-        picker — arrow keys to move, space to toggle, <code>a</code>{" "}
+        picker: arrow keys to move, space to toggle, <code>a</code>{" "}
         to select all, enter to confirm, <code>q</code> to cancel.
       </p>
 
       <p>
         Each component gets a <code>.van.json</code> sidecar recording
         hashes of the files that were written. If a file has been edited
-        since it was copied, <code>add</code> refuses to overwrite it —
+        since it was copied, <code>add</code> refuses to overwrite it:
         one edited file skips that entire component (a partial update
         would straddle two kit versions), while the rest of the batch
         still lands. Use <code>--overwrite</code> to force.
@@ -102,7 +102,7 @@ van diff --all        # include unchanged files in output`} />
       <p>
         Merge upstream changes into installed components. Unmodified
         files are overwritten directly. Files where both sides changed
-        go through a 3-way merge using <code>git merge-file</code> —
+        go through a 3-way merge using <code>git merge-file</code>:
         clean merges land automatically, conflicts get markers for you
         to resolve.
       </p>
@@ -138,12 +138,12 @@ van update --overwrite  # replace even your edited files`} />
       <h3>Global flags</h3>
 
       <ul>
-        <li><code>--cwd &lt;dir&gt;</code> — run against a different directory</li>
-        <li><code>--dry-run</code> — print what would be written, write nothing (add, update)</li>
-        <li><code>--overwrite</code> — replace files you have edited (add, update)</li>
-        <li><code>--yes</code> — assume yes for prompts</li>
-        <li><code>--silent</code> — suppress non-error output</li>
-        <li><code>--no-color</code> — disable ANSI colour</li>
+        <li><code>--cwd &lt;dir&gt;</code>: run against a different directory</li>
+        <li><code>--dry-run</code>: print what would be written, write nothing (add, update)</li>
+        <li><code>--overwrite</code>: replace files you have edited (add, update)</li>
+        <li><code>--yes</code>: assume yes for prompts</li>
+        <li><code>--silent</code>: suppress non-error output</li>
+        <li><code>--no-color</code>: disable ANSI colour</li>
         <li><code>--help</code>, <code>--version</code></li>
       </ul>
     </>

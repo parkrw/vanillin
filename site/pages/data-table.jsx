@@ -265,7 +265,7 @@ const sizedColumns = [
 function SizedPinnedDemo() {
   const table = useDataTable({ data: payments, columns: sizedColumns, initialPageSize: 5 })
 
-  // CSS vars for column widths — set on the <table> element
+  // CSS vars for column widths: set on the <table> element
   const sizeVars = {}
   for (const col of table.getAllColumns()) {
     if (col.getIsVisible()) {
@@ -485,7 +485,7 @@ function GroupedDemo() {
         rows are interleaved with data rows, sorting applies <em>within</em>{" "}
         each group, and pagination slices the flattened result. Group rows
         have a stable id (<code>group:&lt;colId&gt;:&lt;value&gt;</code>) so
-        expand state survives re-renders. Nesting is capped at two levels —
+        expand state survives re-renders. Nesting is capped at two levels:
         entries beyond index 1 are ignored. There is no aggregation API;
         compute aggregates in your data if you need them.
       </p>
@@ -645,8 +645,8 @@ function ManualSortingDemo() {
       <p>
         <code>manualSorting</code>, <code>manualFiltering</code>, and{" "}
         <code>manualPagination</code> each disable the corresponding engine
-        stage. The engine still tracks the state — controls render, indicators
-        update, and the change callbacks fire — but the data you pass in is
+        stage. The engine still tracks the state (controls render, indicators
+        update, and the change callbacks fire), but the data you pass in is
         shown as-is. This table has <code>manualSorting: true</code> and a
         static <code>data</code> prop: clicking the Product header updates the
         sort indicator and fires <code>onSortingChange</code>, but the rows do
@@ -1720,7 +1720,7 @@ const { pagination } = table.getState()
           <code>table-layout:&nbsp;fixed</code>. vanillin ships this as an
           opt-in class: add <code>className="data-table-sized"</code> to your{" "}
           <code>&lt;Table&gt;</code>. Without it the table keeps the browser's
-          intrinsic <code>auto</code> layout and renders identically to before —
+          intrinsic <code>auto</code> layout and renders identically to before:
           existing tables are never affected.
         </p>
         <h3>Column pinning</h3>
@@ -1736,7 +1736,7 @@ const { pagination } = table.getState()
           Pinned <em>header</em> cells needed a fix to work at all:{" "}
           <code>.data-table-sized .table-head</code> sets{" "}
           <code>position: relative</code> for the resizer handle, and it
-          out-specifies <code>.data-table-pinned</code> — so header cells were
+          out-specifies <code>.data-table-pinned</code>, so header cells were
           silently <code>relative</code> and scrolled away with the content
           while the body cells stuck. <code>.data-table-sized
           .table-head.data-table-pinned</code> restores <code>sticky</code>;
@@ -1744,7 +1744,7 @@ const { pagination } = table.getState()
         </p>
         <h3>Scrolling: DataTableScroller</h3>
         <p>
-          The demo above is wrapped in <code>DataTableScroller</code> —{" "}
+          The demo above is wrapped in <code>DataTableScroller</code>:{" "}
           <code>ui/scroll-area</code> with the one override a table needs.{" "}
           <code>Table</code> wraps its <code>&lt;table&gt;</code> in{" "}
           <code>.table-container {`{ overflow: auto }`}</code>, which would be a
@@ -1756,7 +1756,7 @@ const { pagination } = table.getState()
           <code>ui/table</code> is not modified.
         </p>
         <p>
-          The scroller mounts the horizontal <code>ScrollBar</code> itself —{" "}
+          The scroller mounts the horizontal <code>ScrollBar</code> itself;{" "}
           <code>ScrollArea</code> mounts only the vertical one, and a wide table
           is exactly the horizontal case. Constrain the width on the scroller or
           its parent (the demo caps it at <code>36rem</code>); a scroll area
@@ -1787,7 +1787,7 @@ const { pagination } = table.getState()
           fixed</code>, sticky first column) and rejected. At paginated sizes
           the DOM is already small and there is nothing to win. At 10K+ rows{" "}
           <code>content-visibility: auto</code> made scroll jank{" "}
-          <em>worse</em> — the per-frame cost of toggling visibility state
+          <em>worse</em>: the per-frame cost of toggling visibility state
           during scroll exceeds the paint savings (80 jank frames per 120 vs
           21 without it). At 50K rows the bottleneck is DOM construction and
           layout, which only removing nodes solves.
@@ -1796,7 +1796,7 @@ const { pagination } = table.getState()
           A windowing layer does remove nodes, but it breaks{" "}
           <code>Ctrl+F</code>, breaks <code>aria-rowcount</code> /{" "}
           <code>aria-rowindex</code> unless maintained by hand, and breaks
-          sticky column pinning because off-screen pinned cells disappear —
+          sticky column pinning because off-screen pinned cells disappear:
           hundreds of lines of bug surface for a need that pagination already
           eliminates. If your dataset does not fit in memory, that is what{" "}
           <code>manualPagination</code> is for: push the work to the server
