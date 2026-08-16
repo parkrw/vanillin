@@ -14,6 +14,8 @@ import "../api-reference.css"
 
 export default function CheckboxPage() {
   const [checked, setChecked] = useState(true)
+  const [rows, setRows] = useState([true, false, false])
+
   return (
     <>
       <h2>Checkbox</h2>
@@ -22,17 +24,75 @@ export default function CheckboxPage() {
       <InstallSnippet slug="checkbox" />
 
       <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview code={`import { Checkbox } from "./ui/checkbox/checkbox"
-import "./ui/checkbox/checkbox.css"
-
-<Checkbox id="terms" />
+        <h3>Default</h3>
+        <ComponentPreview code={`<Checkbox id="terms" />
 <Label htmlFor="terms">Accept terms and conditions</Label>`}>
           <div className="pg-row">
             <Checkbox id="terms" />
             <Label htmlFor="terms">Accept terms and conditions</Label>
           </div>
         </ComponentPreview>
+        <p className="pg-desc">
+          The control is a <code>button</code> with <code>role="checkbox"</code>, not a native input, so pair it with a <code>Label</code> whose <code>htmlFor</code> matches the id to keep the click target and the announcement right.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Checkbox } from "./ui/checkbox/checkbox"
+import "./ui/checkbox/checkbox.css"
+
+<Checkbox id="terms" />
+<Label htmlFor="terms">Accept terms and conditions</Label>`}>
+          <div className="pg-row">
+            <Checkbox id="usage-marketing" />
+            <Label htmlFor="usage-marketing">Send me product updates</Label>
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          Space and Enter both toggle it, and the checked state is reported through <code>aria-checked</code> rather than a hidden input.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Indeterminate</h3>
+        <ComponentPreview code={`{/* checked accepts "indeterminate" as a third state. */}
+const allChecked = items.every(Boolean)
+const someChecked = items.some(Boolean)
+
+<Checkbox
+  id="select-all"
+  checked={allChecked ? true : someChecked ? "indeterminate" : false}
+  onCheckedChange={(next) => setItems(items.map(() => next === true))}
+/>`}>
+          <div style={{ display: "grid", gap: "0.75rem" }}>
+            <div className="pg-row">
+              <Checkbox
+                id="select-all"
+                checked={
+                  rows.every(Boolean) ? true : rows.some(Boolean) ? "indeterminate" : false
+                }
+                onCheckedChange={(next) => setRows(rows.map(() => next === true))}
+              />
+              <Label htmlFor="select-all">Select all</Label>
+            </div>
+            {["Invoices", "Receipts", "Statements"].map((label, index) => (
+              <div className="pg-row" key={label} style={{ paddingInlineStart: "1.5rem" }}>
+                <Checkbox
+                  id={`row-${label}`}
+                  checked={rows[index]}
+                  onCheckedChange={(next) =>
+                    setRows(rows.map((value, i) => (i === index ? next === true : value)))
+                  }
+                />
+                <Label htmlFor={`row-${label}`}>{label}</Label>
+              </div>
+            ))}
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          Passing the string <code>"indeterminate"</code> paints the dash and sets <code>aria-checked="mixed"</code>. Clicking it resolves to a real boolean, so a parent row never leaves the reader stuck in the mixed state.
+        </p>
       </section>
 
       <section className="pg-section">
@@ -48,6 +108,9 @@ import "./ui/checkbox/checkbox.css"
             <Checkbox aria-invalid="true" aria-label="Invalid" />
           </div>
         </ComponentPreview>
+        <p className="pg-desc">
+          <code>aria-invalid</code> switches the border and focus ring to <code>--destructive</code>. It is an attribute, not a variant, so form libraries can set it without knowing about the component.
+        </p>
       </section>
 
       <section className="pg-section">
@@ -61,6 +124,9 @@ import "./ui/checkbox/checkbox.css"
             <Label htmlFor="newsletter">Subscribed: {checked ? "yes" : "no"}</Label>
           </div>
         </ComponentPreview>
+        <p className="pg-desc">
+          Pass <code>checked</code> and the component stops tracking state itself. Leave it off and it manages its own, seeded by <code>defaultChecked</code>.
+        </p>
       </section>
 
       <section className="pg-section">
@@ -92,6 +158,9 @@ import "./ui/checkbox/checkbox.css"
             </CardContent>
           </Card>
         </ComponentPreview>
+        <p className="pg-desc">
+          Nothing groups checkboxes for you. A list is just rows of label and control, which is why the card, not the component, owns the spacing.
+        </p>
       </section>
 
       <ApiReference props={[
