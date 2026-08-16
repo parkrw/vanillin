@@ -21,17 +21,10 @@ export default function ToastPage() {
       <InstallSnippet slug="toast" />
 
       <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview code={`import { Toaster, toast } from "./ui/toast/toast"
-import "./ui/toast/toast.css"
-
-// Place <Toaster /> once in your app root
-<Toaster position="bottom-right" />
-
-// Trigger from anywhere
-toast("Event has been created")
-toast.success("Saved", { description: "Changes saved." })
-toast.error("Failed", { description: "Please try again." })`}>
+        <h3>Default</h3>
+        <ComponentPreview code={`toast("Event has been created")
+toast.success("Profile updated", { description: "Your changes have been saved." })
+toast.error("Something went wrong", { description: "Please try again." })`}>
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
             <Button variant="outline" onClick={() => toast("Event has been created")}>
               Default
@@ -50,6 +43,30 @@ toast.error("Failed", { description: "Please try again." })`}>
             </Button>
           </div>
         </ComponentPreview>
+        <p className="pg-desc">
+          Toasts stack from the corner and dismiss themselves. Fire several in a row and the newest sits on top while the older ones slide behind it.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Toaster, toast } from "./ui/toast/toast"
+import "./ui/toast/toast.css"
+
+// Place <Toaster /> once in your app root
+<Toaster position="bottom-right" />
+
+// Trigger from anywhere
+toast("Event has been created")
+toast.success("Saved", { description: "Changes saved." })
+toast.error("Failed", { description: "Please try again." })`}>
+          <Button variant="outline" onClick={() => toast("Deployment queued")}>
+            Queue deployment
+          </Button>
+        </ComponentPreview>
+        <p className="pg-desc">
+          <code>toast()</code> is a plain function, not a hook, so it can be called from an event handler, a router guard, or a promise chain without touching the component tree.
+        </p>
       </section>
 
       <section className="pg-section">
@@ -171,23 +188,29 @@ toast("Delete item?", {
       </section>
 
       <section className="pg-section">
-        <h3>Test Helpers</h3>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          <Button
-            variant="outline"
-            data-pg="short"
-            onClick={() => toast("Quick toast", { duration: 800 })}
-          >
-            800ms toast
-          </Button>
-          <Button
-            variant="outline"
-            data-pg="medium"
-            onClick={() => toast("Medium toast", { duration: 2000 })}
-          >
-            2s toast
-          </Button>
-        </div>
+        <h3>Duration</h3>
+        <ComponentPreview code={`toast("Quick toast", { duration: 800 })
+toast("Medium toast", { duration: 2000 })`}>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <Button
+              variant="outline"
+              data-pg="short"
+              onClick={() => toast("Quick toast", { duration: 800 })}
+            >
+              800ms toast
+            </Button>
+            <Button
+              variant="outline"
+              data-pg="medium"
+              onClick={() => toast("Medium toast", { duration: 2000 })}
+            >
+              2s toast
+            </Button>
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          <code>duration</code> overrides the <code>Toaster</code> default for one toast. Pass <code>Infinity</code> for a message the reader has to dismiss.
+        </p>
       </section>
 
       <ApiReference title="toast()" props={[
