@@ -103,7 +103,7 @@ export default function HomePage() {
           <h1 className="pg-hero-title">vanillin</h1>
           <p className="pg-hero-desc">
             Copy-paste components for React. No Tailwind, no Radix, no runtime dependencies.
-            Everything is plain CSS and standard DOM — you own every line.
+            Everything is plain CSS and standard DOM, so you own every line.
           </p>
           <div className="pg-hero-actions">
             <Button as="a" href="#installation">Get Started</Button>
@@ -126,7 +126,7 @@ export default function HomePage() {
             <CardHeader>
               <CardTitle>Zero runtime deps</CardTitle>
               <CardDescription>
-                React is the only peer. Everything in devDependencies serves the docs site or tests — nothing leaks into your bundle.
+                React is the only peer. Everything in devDependencies serves the docs site or tests, and nothing leaks into your bundle.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -134,7 +134,7 @@ export default function HomePage() {
             <CardHeader>
               <CardTitle>Copy, don't install</CardTitle>
               <CardDescription>
-                Components live in your project. <code>van add button</code> copies the files — no version lock, no upgrade that breaks your app.
+                Components live in your project. <code>van add button</code> copies the files: no version lock, no upgrade that breaks your app.
               </CardDescription>
             </CardHeader>
           </Card>

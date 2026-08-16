@@ -182,7 +182,7 @@ import "./ui/card/card.css"
       ]} />
 
       <ApiReference title="CardAction" props={[
-        { name: "className", type: "string", description: "Additional CSS classes — renders in the header's trailing slot" },
+        { name: "className", type: "string", description: "Additional CSS classes; renders in the header's trailing slot" },
       ]} />
     </>
   )

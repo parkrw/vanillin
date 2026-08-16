@@ -82,7 +82,7 @@ export default function AttachmentPage() {
   return (
     <>
       <h2>Attachment</h2>
-      <p>A file-upload card with media, title, description, and action buttons — supports upload states, vertical orientation, image previews, and scroll-snap groups.</p>
+      <p>A file-upload card with media, title, description, and action buttons, with upload states, vertical orientation, image previews, and scroll-snap groups.</p>
 
       <InstallSnippet slug="attachment" />
 
@@ -302,12 +302,12 @@ import "./ui/attachment/attachment.css"
       </section>
 
       <ApiReference props={[
-        { name: "state", type: '"idle" | "uploading" | "processing" | "error" | "done"', default: '"idle"', description: "Upload lifecycle state — drives data-state for CSS" },
-        { name: "size", type: '"default" | "sm" | "xs"', default: '"default"', description: "Card size — icon, padding, and font scale down" },
+        { name: "state", type: '"idle" | "uploading" | "processing" | "error" | "done"', default: '"idle"', description: "Upload lifecycle state; drives data-state for CSS" },
+        { name: "size", type: '"default" | "sm" | "xs"', default: '"default"', description: "Card size; icon, padding, and font scale down" },
         { name: "orientation", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "Stack direction for media and content" },
         { name: "AttachmentMedia: variant", type: '"icon" | "image"', default: '"icon"', description: "Image variant renders a cropped thumbnail preview" },
         { name: "AttachmentAction", type: "component", description: "Ghost icon button for per-file actions (download, remove)" },
-        { name: "AttachmentTrigger", type: "component", description: "Inset overlay that makes the whole card clickable — actions stay above" },
+        { name: "AttachmentTrigger", type: "component", description: "Inset overlay that makes the whole card clickable; actions stay above" },
         { name: "AttachmentTrigger: as", type: "ElementType", default: '"button"', description: 'Render as a different element (e.g. as="a" for a link)' },
         { name: "className", type: "string", description: "Additional CSS classes on any part" },
       ]} />

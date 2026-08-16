@@ -31,7 +31,7 @@ export default function FieldPage() {
   return (
     <>
       <h2>Field</h2>
-      <p>Layout primitives for form fields — label, description, error, and grouping — without any form engine dependency.</p>
+      <p>Layout primitives for form fields: label, description, error, and grouping, with no form engine dependency.</p>
 
       <InstallSnippet slug="field" />
 
@@ -235,19 +235,19 @@ import "./ui/field/field.css"
       </section>
 
       <ApiReference title="Field" props={[
-        { name: "orientation", type: '"vertical" | "horizontal" | "responsive"', default: '"vertical"', description: "Layout direction — responsive flips based on container width" },
+        { name: "orientation", type: '"vertical" | "horizontal" | "responsive"', default: '"vertical"', description: "Layout direction; responsive flips based on container width" },
         { name: "data-invalid", type: "string", description: "Set to mark the field as invalid (styles label and description)" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />
 
       <ApiReference title="FieldError" props={[
-        { name: "errors", type: "Array<{ message: string }>", description: "Error objects to render — children take precedence" },
-        { name: "as", type: "ElementType", default: '"div"', description: 'Wrapper element — use "p" for prose-shaped errors' },
+        { name: "errors", type: "Array<{ message: string }>", description: "Error objects to render; children take precedence" },
+        { name: "as", type: "ElementType", default: '"div"', description: 'Wrapper element; use "p" for prose-shaped errors' },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />
 
       <ApiReference title="FieldLegend" props={[
-        { name: "variant", type: '"legend" | "label"', default: '"legend"', description: "Sizing variant — label matches FieldLabel sizing" },
+        { name: "variant", type: '"legend" | "label"', default: '"legend"', description: "Sizing variant; label matches FieldLabel sizing" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />
     </>

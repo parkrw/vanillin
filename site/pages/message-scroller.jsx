@@ -59,7 +59,7 @@ export default function MessageScrollerPage() {
   return (
     <>
       <h2>Message Scroller</h2>
-      <p>A stick-to-bottom scrollable transcript — appending keeps the newest message in view, scrolling up releases, and a button re-engages.</p>
+      <p>A stick-to-bottom scrollable transcript: appending keeps the newest message in view, scrolling up releases it, and a button re-engages.</p>
 
       <InstallSnippet slug="message-scroller" />
 
@@ -132,8 +132,8 @@ import "./ui/message-scroller/message-scroller.css"
       <section className="pg-section">
         <h3>Follow and release</h3>
         <ComponentPreview defaultTab="code" code={`// The scroller tracks two states via data-state on the root:
-//   "following" — pinned to the live edge, new items auto-scroll
-//   "released" — user scrolled away, new items do not move the viewport
+//   "following": pinned to the live edge, new items auto-scroll
+//   "released": user scrolled away, new items do not move the viewport
 //
 // Wheel-up, touch-move, keyboard (ArrowUp/PageUp/Home), and scrollbar
 // drag all release follow. Scrolling back to the end re-engages it.
@@ -263,13 +263,13 @@ function StatusBar() {
 
       <section className="pg-section">
         <h3>Default scroll position</h3>
-        <ComponentPreview defaultTab="code" code={`// "end" (default) — starts pinned to the bottom
+        <ComponentPreview defaultTab="code" code={`// "end" (default): starts pinned to the bottom
 <MessageScrollerProvider defaultScrollPosition="end">
 
-// "start" — starts at the top, browsers' natural position
+// "start": starts at the top, browsers' natural position
 <MessageScrollerProvider defaultScrollPosition="start">
 
-// "last-anchor" — scrolls to the first [data-scroll-anchor] item
+// "last-anchor": scrolls to the first [data-scroll-anchor] item
 <MessageScrollerProvider defaultScrollPosition="last-anchor">
   <MessageScroller>
     <MessageScrollerViewport>

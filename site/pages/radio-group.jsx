@@ -15,7 +15,7 @@ export default function RadioGroupPage() {
   return (
     <>
       <h2>Radio Group</h2>
-      <p>A set of mutually exclusive options — arrow keys rove focus and select via <code>aria-checked</code> and roving tabindex.</p>
+      <p>A set of mutually exclusive options. Arrow keys rove focus and select, wired through <code>aria-checked</code> and roving tabindex.</p>
 
       <InstallSnippet slug="radio-group" />
 

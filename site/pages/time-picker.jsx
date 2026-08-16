@@ -67,7 +67,7 @@ const [time, setTime] = useState({ hour: 14, minute: 30, second: 0 })
         { name: "value", type: "{ hour, minute, second }", description: "Controlled value (24h internal)" },
         { name: "defaultValue", type: "{ hour, minute, second }", description: "Initial value (uncontrolled)" },
         { name: "onChange", type: "(value) => void", description: "Called on every change" },
-        { name: "locale", type: "string", default: '"en-US"', description: "BCP 47 locale tag — derives 12h/24h default" },
+        { name: "locale", type: "string", default: '"en-US"', description: "BCP 47 locale tag; derives the 12h or 24h default" },
         { name: "hour12", type: "boolean", description: "Override locale's hour cycle" },
         { name: "showSeconds", type: "boolean", default: "false", description: "Show seconds segment" },
         { name: "step", type: "number", default: "1", description: "Minutes step" },

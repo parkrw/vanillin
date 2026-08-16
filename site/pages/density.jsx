@@ -87,8 +87,8 @@ export default function DensityPage() {
       <h2>Density</h2>
 
       <p>
-        Three named density modes — <code>compact</code>,{" "}
-        <code>comfortable</code>, and <code>spacious</code> — scale
+        Three named density modes, <code>compact</code>,{" "}
+        <code>comfortable</code>, and <code>spacious</code>, scale
         all spacing that flows through the <code>--space-*</code> token ramp.
         Wrap any subtree in <code>&lt;Density mode="..."&gt;</code> or set
         the <code>data-density</code> attribute directly.
@@ -240,7 +240,7 @@ export default function DensityPage() {
         <p>
           The three named modes are the API, but you can set{" "}
           <code>--density-scale</code> to any number directly.
-          The touch-target floor still applies — interactive elements
+          The touch-target floor still applies, so interactive elements
           will not shrink below 24px regardless of the scale value.
         </p>
         <ComponentPreview code={`<div style={{ "--density-scale": "0.75" }}>

@@ -11,7 +11,7 @@ export default function LabelPage() {
   return (
     <>
       <h2>Label</h2>
-      <p>Accessible text that binds to a form control — click the label, focus lands on the input.</p>
+      <p>Accessible text that binds to a form control: click the label and focus lands on the input.</p>
 
       <InstallSnippet slug="label" />
 

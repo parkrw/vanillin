@@ -32,7 +32,7 @@ export default function SheetPage() {
       <section className="pg-section">
         <h3>Sides</h3>
         <p>
-          A modal panel that slides in from an edge — use it for forms, detail
+          A modal panel that slides in from an edge. Use it for forms, detail
           views, or settings that overlay the page.
         </p>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>

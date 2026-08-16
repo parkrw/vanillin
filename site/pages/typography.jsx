@@ -17,7 +17,7 @@ export default function TypographyPage() {
     <>
       <h2>Typography</h2>
       <p>
-        A CSS-only typeset container that gives rendered HTML consistent sizing and spacing from three rhythm variables. Wrap any block in <code>.typeset</code> — no component import needed.
+        A CSS-only typeset container that gives rendered HTML consistent sizing and spacing from three rhythm variables. Wrap any block in <code>.typeset</code>; no component import needed.
       </p>
 
       <section className="pg-section">
@@ -109,7 +109,7 @@ export default function TypographyPage() {
       <section className="pg-section">
         <h3>Docs preset</h3>
         <p className="pg-desc">
-          <code>.typeset-docs</code> — roomier rhythm for documentation pages.
+          <code>.typeset-docs</code> gives a roomier rhythm for documentation pages.
         </p>
         <ComponentPreview code={`<div className="typeset typeset-docs">
   <h3>Documentation heading</h3>
@@ -137,7 +137,7 @@ export default function TypographyPage() {
       <section className="pg-section">
         <h3>Chat preset</h3>
         <p className="pg-desc">
-          <code>.typeset-chat</code> — compact rhythm for messaging and streaming content.
+          <code>.typeset-chat</code> gives a compact rhythm for messaging and streaming content.
         </p>
         <ComponentPreview code={`<div className="typeset typeset-chat">
   <p>Chat messages use tighter spacing and a smaller base size.</p>
@@ -176,7 +176,7 @@ export default function TypographyPage() {
             <p>
               This scope sets a larger base size, double line-height and generous flow.
               Every heading, list and table inside it responds because all sizes derive
-              from the three rhythm variables — no per-element overrides needed.
+              from the three rhythm variables, with no per-element overrides needed.
             </p>
           </div>
         </ComponentPreview>
@@ -191,14 +191,14 @@ export default function TypographyPage() {
         <ComponentPreview code={`<div className="typeset">
   <p>Inside .typeset.</p>
   <div className="not-typeset">
-    <p>Opted out — inherits from the page, not the typeset container.</p>
+    <p>Opted out: inherits from the page, not the typeset container.</p>
   </div>
   <p>Back inside .typeset.</p>
 </div>`}>
           <div className="typeset" data-pg="typeset-optout">
             <p>This paragraph is inside <code>.typeset</code>.</p>
             <div className="not-typeset" data-pg="not-typeset">
-              <p>This paragraph opted out — it inherits from the page, not the typeset container.</p>
+              <p>This paragraph opted out: it inherits from the page, not the typeset container.</p>
             </div>
             <p>Back inside <code>.typeset</code>.</p>
           </div>

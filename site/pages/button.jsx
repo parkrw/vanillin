@@ -17,7 +17,7 @@ export default function ButtonPage() {
   return (
     <>
       <h2>Button</h2>
-      <p>Triggers an action or event — submit a form, open a dialog, cancel an operation.</p>
+      <p>Triggers an action or event: submit a form, open a dialog, cancel an operation.</p>
 
       <InstallSnippet slug="button" />
 

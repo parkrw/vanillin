@@ -112,7 +112,7 @@ export default function ViewTransitionsPage() {
           <code>clip-path: circle()</code> expanding from the button centre on
           the <code>::view-transition-new(root)</code> pseudo-element. The radius
           is the distance to the farthest viewport corner, times a small
-          overshoot so the last sliver is covered before the clock runs out —
+          overshoot so the last sliver is covered before the clock runs out,
           without it, discarding the snapshot finishes the job in one frame and
           the sweep ends with a pop.
         </p>
@@ -136,7 +136,7 @@ withViewTransition(() => setDark(!dark), {
           instantly.
         </p>
         <p>
-          The nav mode toggle deliberately does <em>not</em> do this — see{" "}
+          The nav mode toggle deliberately does <em>not</em> do this; see{" "}
           <a href="#mode-toggle">Mode Toggle</a>.
         </p>
       </section>
@@ -178,7 +178,7 @@ setTimeout(cleanup, 500)`}>
         <p>
           Every call site falls back to a plain state update when{" "}
           <code>document.startViewTransition</code> is absent. The transition
-          is decoration — no interaction depends on it. Supported in Chrome
+          is decoration, and no interaction depends on it. Supported in Chrome
           111+, Safari 18+, and Firefox 133+.
         </p>
       </section>

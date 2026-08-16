@@ -54,7 +54,7 @@ import "./ui/carousel/carousel.css"
         </ComponentPreview>
       </section>
 
-      {/* Basic — one item per view */}
+      {/* Basic: one item per view */}
       <section className="pg-section">
         <h3>Basic</h3>
         <ComponentPreview code={`<Carousel>
@@ -191,7 +191,7 @@ import "./ui/carousel/carousel.css"
         </ComponentPreview>
       </section>
 
-      {/* Alignment — opts.align: start | center | end */}
+      {/* Alignment via opts.align: start | center | end */}
       <section className="pg-section">
         <h3>Alignment</h3>
         <p className="pg-prose">
@@ -230,7 +230,7 @@ import "./ui/carousel/carousel.css"
         </ComponentPreview>
       </section>
 
-      {/* Loop — opts.loop */}
+      {/* Loop via opts.loop */}
       <section className="pg-section">
         <h3>Loop</h3>
         <p className="pg-prose">
@@ -265,7 +265,7 @@ import "./ui/carousel/carousel.css"
         </ComponentPreview>
       </section>
 
-      {/* Loop with many narrow items — tests clone optimisation */}
+      {/* Loop with many narrow items, which tests clone optimisation */}
       <section className="pg-section">
         <h3>Loop (narrow items)</h3>
         <p className="pg-prose">

@@ -22,7 +22,7 @@ export default function ModeTogglePage() {
   return (
     <>
       <h2>Mode Toggle</h2>
-      <p>An icon button that swaps the colour scheme. A pendant lamp swings on its cord as if the chain had been pulled, and the light under it goes out. The scheme swaps instantly — the feedback is inside the button, where its size is fixed and it looks the same on every display.</p>
+      <p>An icon button that swaps the colour scheme. A pendant lamp swings on its cord as if the chain had been pulled, and the light under it goes out. The scheme swaps instantly, and the feedback is inside the button, where its size is fixed and it looks the same on every display.</p>
 
       <InstallSnippet slug="mode-toggle" />
 
@@ -82,7 +82,7 @@ import "./ui/mode-toggle/mode-toggle.css"
         <p>
           The hook tracks a boolean and nothing else. It never writes{" "}
           <code>.dark</code>, touches <code>localStorage</code>, or reads a
-          cookie — an app on <code>next-themes</code> already does all three, and
+          cookie. An app on <code>next-themes</code> already does all three, and
           duplicating them here would fight it. Wire{" "}
           <code>onIsDarkChange</code> to whatever you already use.
         </p>

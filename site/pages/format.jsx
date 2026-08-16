@@ -205,7 +205,7 @@ import "./ui/format/format.css"
         { name: "Bytes: value", type: "number", description: "Byte count to format" },
         { name: "Bytes: base", type: '"iec" | "si"', default: '"iec"', description: "Binary (1024, KiB) or decimal (1000, kB) units" },
         { name: "Duration: value", type: "number", description: "Duration in milliseconds" },
-        { name: "Duration: style", type: '"narrow" | "short" | "long"', default: '"narrow"', description: "Label width — 1m vs 1 min vs 1 minute" },
+        { name: "Duration: style", type: '"narrow" | "short" | "long"', default: '"narrow"', description: "Label width: 1m vs 1 min vs 1 minute" },
         { name: "Cost: value", type: "number", description: "Amount to format" },
         { name: "Cost: currency", type: "string", default: '"USD"', description: "ISO 4217 currency code" },
       ]} />

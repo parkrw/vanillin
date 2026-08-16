@@ -48,7 +48,7 @@ import "./ui/status-dot/status-dot.css"
           <div>
             <p className="pg-prose">
               Six built-in states. Each maps to the corresponding token family
-              in <code>globals.css</code> — <code>error</code> maps to{" "}
+              in <code>globals.css</code>: <code>error</code> maps to{" "}
               <code>--destructive</code>, <code>neutral</code> and{" "}
               <code>pending</code> share <code>--muted-foreground</code>.
             </p>
@@ -96,7 +96,7 @@ import "./ui/status-dot/status-dot.css"
           <div>
             <p className="pg-prose">
               The <code>ring</code> prop draws a 20% opacity halo around the
-              dot — the "live" look consoles use for running instances.
+              dot, the "live" look consoles use for running instances.
             </p>
             <div className="pg-row" data-pg="sd-ring">
               <StatusDot status="success" ring />
@@ -129,7 +129,7 @@ Running (label on adjacent text)
               "Warning", etc.). When the dot sits next to visible
               text that already names the state, pass{" "}
               <code>label=&#123;null&#125;</code> to suppress the label and get{" "}
-              <code>aria-hidden="true"</code> instead — without this,
+              <code>aria-hidden="true"</code> instead. Without this,
               screen readers will announce the status twice.
             </p>
             <div className="pg-row" data-pg="sd-hidden">
@@ -192,7 +192,7 @@ Running (label on adjacent text)
           <div>
             <p className="pg-prose">
               Status is communicated by colour, which disappears in Windows High
-              Contrast mode — the OS replaces every colour with its own palette.
+              Contrast mode, where the OS replaces every colour with its own palette.
               Under <code>forced-colors: active</code> each status therefore takes
               a distinct <em>shape</em>: <code>warning</code> becomes a diamond,{" "}
               <code>error</code> a square, <code>info</code> a ringed circle, and{" "}
