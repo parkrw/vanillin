@@ -17,7 +17,7 @@ export default function AspectRatioPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { AspectRatio } from "./ui/aspect-ratio/aspect-ratio"
+        <ComponentPreview defaultTab="code" code={`import { AspectRatio } from "./ui/aspect-ratio/aspect-ratio"
 import "./ui/aspect-ratio/aspect-ratio.css"
 
 <AspectRatio ratio={16 / 9}>

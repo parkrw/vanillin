@@ -44,7 +44,7 @@ export default function MarkerPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Marker, MarkerIcon, MarkerContent } from "./ui/marker/marker"
+        <ComponentPreview defaultTab="code" code={`import { Marker, MarkerIcon, MarkerContent } from "./ui/marker/marker"
 import "./ui/marker/marker.css"
 
 <Marker>

@@ -9,8 +9,30 @@ import {
 } from "../../lib/use-form.js"
 import { Button } from "../../ui/button/button.jsx"
 import "../../ui/button/button.css"
+import { ComponentPreview } from "../code-example.jsx"
 import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
 import "../api-reference.css"
+
+/* ================================================================== */
+/*  Usage                                                              */
+/* ================================================================== */
+
+function UsageDemo() {
+  const { register, handleSubmit } = useForm({
+    defaultValues: { email: "" },
+  })
+  const [result, setResult] = useState(null)
+  return (
+    <div>
+      <form onSubmit={handleSubmit((data) => setResult(JSON.stringify(data)))}>
+        <input placeholder="Email" {...register("email")} />
+        <Button type="submit">Send</Button>
+      </form>
+      {result && <pre>{result}</pre>}
+    </div>
+  )
+}
 
 /* ================================================================== */
 /*  Section 1 — Render-isolation test                                  */
@@ -40,20 +62,33 @@ function RenderIsolation() {
         Typing in one registered field does not re-render siblings — values live
         in a mutable ref, not React state.
       </p>
-      <form
-        onSubmit={handleSubmit((data) => setSubmitted(data))}
-      >
-        <IsolatedField name="fieldA" register={register} />
-        <IsolatedField name="fieldB" register={register} />
-        <Button type="submit" data-pg="uf-isolation-submit">
-          Submit
-        </Button>
-      </form>
-      {submitted && (
-        <pre data-pg="uf-isolation-result">
-          {JSON.stringify(submitted)}
-        </pre>
-      )}
+      <ComponentPreview code={`const { register, handleSubmit } = useForm({
+  defaultValues: { fieldA: "", fieldB: "" },
+})
+
+{/* Typing in one field does not re-render siblings */}
+<form onSubmit={handleSubmit((data) => setSubmitted(data))}>
+  <input {...register("fieldA")} />
+  <input {...register("fieldB")} />
+  <Button type="submit">Submit</Button>
+</form>`}>
+        <div>
+          <form
+            onSubmit={handleSubmit((data) => setSubmitted(data))}
+          >
+            <IsolatedField name="fieldA" register={register} />
+            <IsolatedField name="fieldB" register={register} />
+            <Button type="submit" data-pg="uf-isolation-submit">
+              Submit
+            </Button>
+          </form>
+          {submitted && (
+            <pre data-pg="uf-isolation-result">
+              {JSON.stringify(submitted)}
+            </pre>
+          )}
+        </div>
+      </ComponentPreview>
     </section>
   )
 }
@@ -79,81 +114,115 @@ function BuiltInValidation() {
   return (
     <section className="pg-section" data-pg="uf-builtin">
       <h3>Built-in validation</h3>
-      <form
-        onSubmit={handleSubmit(
-          (data) => setResult(JSON.stringify(data)),
-          (errs) => setResult("invalid:" + JSON.stringify(errs))
-        )}
-      >
+      <ComponentPreview code={`const { register, handleSubmit, formState: { errors },
+  setError, clearErrors, trigger,
+} = useForm({
+  defaultValues: { username: "", age: "" },
+  mode: "onSubmit",
+})
+
+<form onSubmit={handleSubmit(onValid, onInvalid)}>
+  <input placeholder="username" {...register("username", {
+    required: "Username is required",
+    minLength: { value: 3, message: "Min 3 chars" },
+  })} />
+  {errors.username && <span>{errors.username.message}</span>}
+
+  <input type="number" placeholder="age" {...register("age", {
+    required: "Age is required",
+    min: { value: 1, message: "Min 1" },
+  })} />
+  {errors.age && <span>{errors.age.message}</span>}
+
+  <Button type="submit">Submit</Button>
+  <Button onClick={() => setError("username", { type: "manual", message: "Already taken" })}>
+    Set error
+  </Button>
+  <Button onClick={() => clearErrors("username")}>Clear error</Button>
+  <Button onClick={() => trigger("username")}>Trigger</Button>
+</form>`}>
         <div>
-          <input
-            data-pg="uf-builtin-username"
-            placeholder="username"
-            {...register("username", {
-              required: "Username is required",
-              minLength: { value: 3, message: "Min 3 chars" },
-            })}
-          />
-          {errors.username && (
-            <span data-pg="uf-builtin-err-username">
-              {errors.username.message}
-            </span>
+          <form
+            onSubmit={handleSubmit(
+              (data) => setResult(JSON.stringify(data)),
+              (errs) => setResult("invalid:" + JSON.stringify(errs))
+            )}
+          >
+            <div>
+              <input
+                data-pg="uf-builtin-username"
+                placeholder="username"
+                {...register("username", {
+                  required: "Username is required",
+                  minLength: { value: 3, message: "Min 3 chars" },
+                })}
+              />
+              {errors.username && (
+                <span data-pg="uf-builtin-err-username">
+                  {errors.username.message}
+                </span>
+              )}
+            </div>
+            <div>
+              <input
+                data-pg="uf-builtin-age"
+                placeholder="age"
+                type="number"
+                {...register("age", {
+                  required: "Age is required",
+                  min: { value: 1, message: "Min 1" },
+                  max: { value: 150, message: "Max 150" },
+                })}
+              />
+              {errors.age && (
+                <span data-pg="uf-builtin-err-age">{errors.age.message}</span>
+              )}
+            </div>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBlockStart: "0.5rem" }}>
+              <Button type="submit" data-pg="uf-builtin-submit">
+                Submit
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                data-pg="uf-builtin-set-error"
+                onClick={() =>
+                  setError("username", {
+                    type: "manual",
+                    message: "Already taken",
+                  })
+                }
+              >
+                Set error
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                data-pg="uf-builtin-clear"
+                onClick={() => clearErrors("username")}
+              >
+                Clear error
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                data-pg="uf-builtin-trigger"
+                onClick={() => trigger("username")}
+              >
+                Trigger
+              </Button>
+            </div>
+          </form>
+          {result && (
+            <pre data-pg="uf-builtin-result" style={{ whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+              {result}
+            </pre>
           )}
         </div>
-        <div>
-          <input
-            data-pg="uf-builtin-age"
-            placeholder="age"
-            type="number"
-            {...register("age", {
-              required: "Age is required",
-              min: { value: 1, message: "Min 1" },
-              max: { value: 150, message: "Max 150" },
-            })}
-          />
-          {errors.age && (
-            <span data-pg="uf-builtin-err-age">{errors.age.message}</span>
-          )}
-        </div>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBlockStart: "0.5rem" }}>
-          <Button type="submit" data-pg="uf-builtin-submit">
-            Submit
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            data-pg="uf-builtin-set-error"
-            onClick={() =>
-              setError("username", {
-                type: "manual",
-                message: "Already taken",
-              })
-            }
-          >
-            Set error
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            data-pg="uf-builtin-clear"
-            onClick={() => clearErrors("username")}
-          >
-            Clear error
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            data-pg="uf-builtin-trigger"
-            onClick={() => trigger("username")}
-          >
-            Trigger
-          </Button>
-        </div>
-      </form>
-      {result && <pre data-pg="uf-builtin-result">{result}</pre>}
+      </ComponentPreview>
     </section>
   )
 }
@@ -170,46 +239,63 @@ function WatchDemo() {
   return (
     <section className="pg-section" data-pg="uf-watch">
       <h3>Watch / setValue / reset</h3>
-      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
-        <input data-pg="uf-watch-first" {...register("first")} />
-        <input data-pg="uf-watch-last" {...register("last")} />
-        <span>watched: </span><span data-pg="uf-watch-value">{first}</span>
-      </div>
-      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBlockStart: "0.5rem" }}>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          data-pg="uf-watch-setval"
-          onClick={() =>
-            setValue("first", "Updated", { shouldDirty: true })
-          }
-        >
-          setValue
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          data-pg="uf-watch-reset"
-          onClick={() => reset()}
-        >
-          Reset
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          data-pg="uf-watch-getvals"
-          onClick={() => {
-            const v = getValues()
-            document.querySelector('[data-pg="uf-watch-getvals-out"]').textContent = JSON.stringify(v)
-          }}
-        >
-          getValues
-        </Button>
-        <span data-pg="uf-watch-getvals-out"></span>
-      </div>
+      <ComponentPreview code={`const { register, watch, setValue, reset, getValues } = useForm({
+  defaultValues: { first: "Jane", last: "Doe" },
+})
+const first = watch("first")
+
+<input {...register("first")} />
+<input {...register("last")} />
+<span>watched: {first}</span>
+
+<Button onClick={() => setValue("first", "Updated", { shouldDirty: true })}>
+  setValue
+</Button>
+<Button onClick={() => reset()}>Reset</Button>
+<Button onClick={() => console.log(getValues())}>getValues</Button>`}>
+        <div>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+            <input data-pg="uf-watch-first" {...register("first")} />
+            <input data-pg="uf-watch-last" {...register("last")} />
+            <span>watched: </span><span data-pg="uf-watch-value">{first}</span>
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBlockStart: "0.5rem" }}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              data-pg="uf-watch-setval"
+              onClick={() =>
+                setValue("first", "Updated", { shouldDirty: true })
+              }
+            >
+              setValue
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              data-pg="uf-watch-reset"
+              onClick={() => reset()}
+            >
+              Reset
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              data-pg="uf-watch-getvals"
+              onClick={() => {
+                const v = getValues()
+                document.querySelector('[data-pg="uf-watch-getvals-out"]').textContent = JSON.stringify(v)
+              }}
+            >
+              getValues
+            </Button>
+            <span data-pg="uf-watch-getvals-out"></span>
+          </div>
+        </div>
+      </ComponentPreview>
     </section>
   )
 }
@@ -226,22 +312,32 @@ function FormStateDemo() {
   return (
     <section className="pg-section" data-pg="uf-formstate">
       <h3>formState</h3>
-      <input data-pg="uf-formstate-color" {...register("color")} />
-      <div style={{ marginBlockStart: "0.5rem" }}>
-        isDirty: <span data-pg="uf-formstate-dirty">{String(isDirty)}</span>
-      </div>
-      <div>
-        dirtyFields:{" "}
-        <span data-pg="uf-formstate-dirtyfields">
-          {JSON.stringify(dirtyFields)}
-        </span>
-      </div>
-      <div>
-        touchedFields:{" "}
-        <span data-pg="uf-formstate-touched">
-          {JSON.stringify(touchedFields)}
-        </span>
-      </div>
+      <ComponentPreview code={`const { register, formState: { isDirty, dirtyFields, touchedFields } } =
+  useForm({ defaultValues: { color: "red" } })
+
+<input {...register("color")} />
+<div>isDirty: {String(isDirty)}</div>
+<div>dirtyFields: {JSON.stringify(dirtyFields)}</div>
+<div>touchedFields: {JSON.stringify(touchedFields)}</div>`}>
+        <div>
+          <input data-pg="uf-formstate-color" {...register("color")} />
+          <div style={{ marginBlockStart: "0.5rem" }}>
+            isDirty: <span data-pg="uf-formstate-dirty">{String(isDirty)}</span>
+          </div>
+          <div>
+            dirtyFields:{" "}
+            <span data-pg="uf-formstate-dirtyfields">
+              {JSON.stringify(dirtyFields)}
+            </span>
+          </div>
+          <div>
+            touchedFields:{" "}
+            <span data-pg="uf-formstate-touched">
+              {JSON.stringify(touchedFields)}
+            </span>
+          </div>
+        </div>
+      </ComponentPreview>
     </section>
   )
 }
@@ -262,28 +358,51 @@ function ControllerDemo() {
         Escape hatch for controlled components that own their state and don't
         expose a DOM node for <code>register</code> to read.
       </p>
-      <form onSubmit={handleSubmit((d) => setResult(JSON.stringify(d)))}>
-        <Controller
-          name="rating"
-          control={control}
-          render={({ field }) => (
-            <input
-              data-pg="uf-controller-rating"
-              type="range"
-              min="1"
-              max="5"
-              value={field.value}
-              onChange={(e) => field.onChange(Number(e.target.value))}
-              onBlur={field.onBlur}
-              ref={field.ref}
+      <ComponentPreview code={`const { control, handleSubmit } = useForm({
+  defaultValues: { rating: 3 },
+})
+
+<form onSubmit={handleSubmit(onSubmit)}>
+  <Controller
+    name="rating"
+    control={control}
+    render={({ field }) => (
+      <input
+        type="range" min="1" max="5"
+        value={field.value}
+        onChange={(e) => field.onChange(Number(e.target.value))}
+        onBlur={field.onBlur}
+        ref={field.ref}
+      />
+    )}
+  />
+  <Button type="submit">Submit</Button>
+</form>`}>
+        <div>
+          <form onSubmit={handleSubmit((d) => setResult(JSON.stringify(d)))}>
+            <Controller
+              name="rating"
+              control={control}
+              render={({ field }) => (
+                <input
+                  data-pg="uf-controller-rating"
+                  type="range"
+                  min="1"
+                  max="5"
+                  value={field.value}
+                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                />
+              )}
             />
-          )}
-        />
-        <Button type="submit" data-pg="uf-controller-submit">
-          Submit
-        </Button>
-      </form>
-      {result && <pre data-pg="uf-controller-result">{result}</pre>}
+            <Button type="submit" data-pg="uf-controller-submit">
+              Submit
+            </Button>
+          </form>
+          {result && <pre data-pg="uf-controller-result">{result}</pre>}
+        </div>
+      </ComponentPreview>
     </section>
   )
 }
@@ -313,18 +432,39 @@ function ContextDemo() {
   return (
     <section className="pg-section" data-pg="uf-context">
       <h3>FormProvider</h3>
-      <FormProvider {...methods}>
-        <form onSubmit={methods.handleSubmit((d) => setResult(JSON.stringify(d)))}>
-          <ContextChild />
-          <SafeContextProbe hook="uf-ctx-safe-inside" />
-          <Button type="submit" data-pg="uf-ctx-submit">Submit</Button>
-        </form>
-      </FormProvider>
-      {result && <pre data-pg="uf-ctx-result">{result}</pre>}
-      <p style={{ margin: 0 }}>
-        <code>useFormContextSafe</code> outside any provider:{" "}
-        <SafeContextProbe hook="uf-ctx-safe-outside" />
-      </p>
+      <ComponentPreview code={`const methods = useForm({ defaultValues: { email: "" } })
+
+<FormProvider {...methods}>
+  <form onSubmit={methods.handleSubmit(onSubmit)}>
+    <ContextChild />
+    <Button type="submit">Submit</Button>
+  </form>
+</FormProvider>
+
+function ContextChild() {
+  const { register, formState: { errors } } = useFormContext()
+  return (
+    <div>
+      <input {...register("email", { required: "Email required" })} />
+      {errors.email && <span>{errors.email.message}</span>}
+    </div>
+  )
+}`}>
+        <div>
+          <FormProvider {...methods}>
+            <form onSubmit={methods.handleSubmit((d) => setResult(JSON.stringify(d)))}>
+              <ContextChild />
+              <SafeContextProbe hook="uf-ctx-safe-inside" />
+              <Button type="submit" data-pg="uf-ctx-submit">Submit</Button>
+            </form>
+          </FormProvider>
+          {result && <pre data-pg="uf-ctx-result">{result}</pre>}
+          <p style={{ margin: 0 }}>
+            <code>useFormContextSafe</code> outside any provider:{" "}
+            <SafeContextProbe hook="uf-ctx-safe-outside" />
+          </p>
+        </div>
+      </ComponentPreview>
     </section>
   )
 }
@@ -343,68 +483,88 @@ function FieldArrayDemo() {
   return (
     <section className="pg-section" data-pg="uf-fieldarray">
       <h3>useFieldArray</h3>
-      <form onSubmit={handleSubmit((d) => setResult(JSON.stringify(d)))}>
-        {fields.map((f, i) => (
-          <div key={f.id} style={{ display: "flex", gap: 4 }}>
-            <input
-              data-pg={`uf-fa-item-${i}`}
-              {...register(`items.${i}.name`)}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              data-pg={`uf-fa-remove-${i}`}
-              onClick={() => remove(i)}
-            >
-              X
-            </Button>
-          </div>
-        ))}
-        <span data-pg="uf-fa-count">{fields.length}</span>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBlockStart: "0.5rem" }}>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            data-pg="uf-fa-append"
-            onClick={() => append({ name: "" })}
-          >
-            Append
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            data-pg="uf-fa-prepend"
-            onClick={() => prepend({ name: "prepended" })}
-          >
-            Prepend
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            data-pg="uf-fa-swap"
-            onClick={() => { if (fields.length >= 2) swap(0, 1) }}
-          >
-            Swap 0,1
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            data-pg="uf-fa-move"
-            onClick={() => { if (fields.length >= 2) move(0, fields.length - 1) }}
-          >
-            Move 0→end
-          </Button>
-          <Button type="submit" data-pg="uf-fa-submit">
-            Submit
-          </Button>
+      <ComponentPreview code={`const { control, register, handleSubmit } = useForm({
+  defaultValues: { items: [{ name: "first" }] },
+})
+const { fields, append, remove, swap, move, prepend } =
+  useFieldArray({ control, name: "items" })
+
+<form onSubmit={handleSubmit(onSubmit)}>
+  {fields.map((f, i) => (
+    <div key={f.id}>
+      <input {...register(\`items.\${i}.name\`)} />
+      <Button onClick={() => remove(i)}>X</Button>
+    </div>
+  ))}
+  <Button onClick={() => append({ name: "" })}>Append</Button>
+  <Button onClick={() => prepend({ name: "prepended" })}>Prepend</Button>
+  <Button type="submit">Submit</Button>
+</form>`}>
+        <div>
+          <form onSubmit={handleSubmit((d) => setResult(JSON.stringify(d)))}>
+            {fields.map((f, i) => (
+              <div key={f.id} style={{ display: "flex", gap: 4 }}>
+                <input
+                  data-pg={`uf-fa-item-${i}`}
+                  {...register(`items.${i}.name`)}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  data-pg={`uf-fa-remove-${i}`}
+                  onClick={() => remove(i)}
+                >
+                  X
+                </Button>
+              </div>
+            ))}
+            <span data-pg="uf-fa-count">{fields.length}</span>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBlockStart: "0.5rem" }}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                data-pg="uf-fa-append"
+                onClick={() => append({ name: "" })}
+              >
+                Append
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                data-pg="uf-fa-prepend"
+                onClick={() => prepend({ name: "prepended" })}
+              >
+                Prepend
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                data-pg="uf-fa-swap"
+                onClick={() => { if (fields.length >= 2) swap(0, 1) }}
+              >
+                Swap 0,1
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                data-pg="uf-fa-move"
+                onClick={() => { if (fields.length >= 2) move(0, fields.length - 1) }}
+              >
+                Move 0→end
+              </Button>
+              <Button type="submit" data-pg="uf-fa-submit">
+                Submit
+              </Button>
+            </div>
+          </form>
+          {result && <pre data-pg="uf-fa-result">{result}</pre>}
         </div>
-      </form>
-      {result && <pre data-pg="uf-fa-result">{result}</pre>}
+      </ComponentPreview>
     </section>
   )
 }
@@ -423,35 +583,52 @@ function NestedPaths() {
   return (
     <section className="pg-section" data-pg="uf-nested">
       <h3>Nested paths</h3>
-      <form onSubmit={handleSubmit((d) => setResult(JSON.stringify(d)))}>
-        <input
-          data-pg="uf-nested-city"
-          {...register("user.address.city")}
-        />
-        <input
-          data-pg="uf-nested-zip"
-          {...register("user.address.zip")}
-        />
-        <div style={{ display: "flex", gap: "0.5rem", marginBlockStart: "0.5rem" }}>
-          <Button type="submit" data-pg="uf-nested-submit">
-            Submit
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            data-pg="uf-nested-setval"
-            onClick={() =>
-              setValue("user.address.city", "Seattle", {
-                shouldDirty: true,
-              })
-            }
-          >
-            Set city
-          </Button>
+      <ComponentPreview code={`const { register, handleSubmit, setValue } = useForm({
+  defaultValues: {
+    user: { address: { city: "Portland", zip: "97201" } },
+  },
+})
+
+<form onSubmit={handleSubmit(onSubmit)}>
+  <input {...register("user.address.city")} />
+  <input {...register("user.address.zip")} />
+  <Button type="submit">Submit</Button>
+  <Button onClick={() => setValue("user.address.city", "Seattle", { shouldDirty: true })}>
+    Set city
+  </Button>
+</form>`}>
+        <div>
+          <form onSubmit={handleSubmit((d) => setResult(JSON.stringify(d)))}>
+            <input
+              data-pg="uf-nested-city"
+              {...register("user.address.city")}
+            />
+            <input
+              data-pg="uf-nested-zip"
+              {...register("user.address.zip")}
+            />
+            <div style={{ display: "flex", gap: "0.5rem", marginBlockStart: "0.5rem" }}>
+              <Button type="submit" data-pg="uf-nested-submit">
+                Submit
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                data-pg="uf-nested-setval"
+                onClick={() =>
+                  setValue("user.address.city", "Seattle", {
+                    shouldDirty: true,
+                  })
+                }
+              >
+                Set city
+              </Button>
+            </div>
+          </form>
+          {result && <pre data-pg="uf-nested-result">{result}</pre>}
         </div>
-      </form>
-      {result && <pre data-pg="uf-nested-result">{result}</pre>}
+      </ComponentPreview>
     </section>
   )
 }
@@ -502,39 +679,63 @@ function ResolverDemo() {
   return (
     <section className="pg-section" data-pg="uf-resolver">
       <h3>Resolver</h3>
-      <form
-        onSubmit={handleSubmit(
-          (data) => setResult("ok:" + JSON.stringify(data)),
-          (errs) => setResult("invalid:" + JSON.stringify(errs))
-        )}
-      >
-        <input data-pg="uf-resolver-email" placeholder="email" {...register("email")} />
-        {errors.email && (
-          <span data-pg="uf-resolver-err-email">{errors.email.message}</span>
-        )}
-        <input data-pg="uf-resolver-age" placeholder="age" {...register("age")} />
-        {errors.age && (
-          <span data-pg="uf-resolver-err-age">{errors.age.message}</span>
-        )}
-        <input
-          data-pg="uf-resolver-city"
-          placeholder="city"
-          {...register("address.city")}
-        />
-        {errors.address?.city && (
-          <span data-pg="uf-resolver-err-city">{errors.address.city.message}</span>
-        )}
-        <Button type="submit" data-pg="uf-resolver-submit">Submit</Button>
-      </form>
-      {result && <pre data-pg="uf-resolver-result">{result}</pre>}
-      <pre data-pg="uf-resolver-opts" style={{ display: "none" }}>
-        {lastResolverOptions ? JSON.stringify({
-          hasFields: typeof lastResolverOptions.fields === "object",
-          hasNames: Array.isArray(lastResolverOptions.names),
-          criteriaMode: lastResolverOptions.criteriaMode,
-          shouldUseNativeValidation: lastResolverOptions.shouldUseNativeValidation,
-        }) : ""}
-      </pre>
+      <ComponentPreview code={`async function myResolver(values, _context, options) {
+  const errors = {}
+  if (!values.email)
+    errors.email = { type: "required", message: "Email required" }
+  if (Object.keys(errors).length > 0)
+    return { values: {}, errors }
+  return { values, errors: {} }
+}
+
+const { register, handleSubmit, formState: { errors } } = useForm({
+  defaultValues: { email: "", age: "", address: { city: "" } },
+  resolver: myResolver,
+})
+
+<form onSubmit={handleSubmit(onValid, onInvalid)}>
+  <input placeholder="email" {...register("email")} />
+  {errors.email && <span>{errors.email.message}</span>}
+  <input placeholder="age" {...register("age")} />
+  <input placeholder="city" {...register("address.city")} />
+  <Button type="submit">Submit</Button>
+</form>`}>
+        <div>
+          <form
+            onSubmit={handleSubmit(
+              (data) => setResult("ok:" + JSON.stringify(data)),
+              (errs) => setResult("invalid:" + JSON.stringify(errs))
+            )}
+          >
+            <input data-pg="uf-resolver-email" placeholder="email" {...register("email")} />
+            {errors.email && (
+              <span data-pg="uf-resolver-err-email">{errors.email.message}</span>
+            )}
+            <input data-pg="uf-resolver-age" placeholder="age" {...register("age")} />
+            {errors.age && (
+              <span data-pg="uf-resolver-err-age">{errors.age.message}</span>
+            )}
+            <input
+              data-pg="uf-resolver-city"
+              placeholder="city"
+              {...register("address.city")}
+            />
+            {errors.address?.city && (
+              <span data-pg="uf-resolver-err-city">{errors.address.city.message}</span>
+            )}
+            <Button type="submit" data-pg="uf-resolver-submit">Submit</Button>
+          </form>
+          {result && <pre data-pg="uf-resolver-result">{result}</pre>}
+          <pre data-pg="uf-resolver-opts" style={{ display: "none" }}>
+            {lastResolverOptions ? JSON.stringify({
+              hasFields: typeof lastResolverOptions.fields === "object",
+              hasNames: Array.isArray(lastResolverOptions.names),
+              criteriaMode: lastResolverOptions.criteriaMode,
+              shouldUseNativeValidation: lastResolverOptions.shouldUseNativeValidation,
+            }) : ""}
+          </pre>
+        </div>
+      </ComponentPreview>
     </section>
   )
 }
@@ -556,26 +757,43 @@ function ValidationModes() {
   return (
     <section className="pg-section" data-pg="uf-modes">
       <h3>Validation modes (onBlur)</h3>
-      <form onSubmit={handleSubmit(() => {})}>
-        <input
-          data-pg="uf-modes-field"
-          {...register("field", { required: "Required" })}
-        />
-        {errors.field && (
-          <span data-pg="uf-modes-err">{errors.field.message}</span>
-        )}
-        <div style={{ marginBlockStart: "0.5rem" }}>
-          isSubmitted:{" "}
-          <span data-pg="uf-modes-submitted">{String(isSubmitted)}</span>
-        </div>
+      <ComponentPreview code={`const { register, handleSubmit, formState: { errors, isSubmitted, isValid } } =
+  useForm({
+    defaultValues: { field: "" },
+    mode: "onBlur",
+    reValidateMode: "onChange",
+  })
+
+<form onSubmit={handleSubmit(() => {})}>
+  <input {...register("field", { required: "Required" })} />
+  {errors.field && <span>{errors.field.message}</span>}
+  <div>isSubmitted: {String(isSubmitted)}</div>
+  <div>isValid: {String(isValid)}</div>
+  <Button type="submit">Submit</Button>
+</form>`}>
         <div>
-          isValid:{" "}
-          <span data-pg="uf-modes-valid">{String(isValid)}</span>
+          <form onSubmit={handleSubmit(() => {})}>
+            <input
+              data-pg="uf-modes-field"
+              {...register("field", { required: "Required" })}
+            />
+            {errors.field && (
+              <span data-pg="uf-modes-err">{errors.field.message}</span>
+            )}
+            <div style={{ marginBlockStart: "0.5rem" }}>
+              isSubmitted:{" "}
+              <span data-pg="uf-modes-submitted">{String(isSubmitted)}</span>
+            </div>
+            <div>
+              isValid:{" "}
+              <span data-pg="uf-modes-valid">{String(isValid)}</span>
+            </div>
+            <Button type="submit" data-pg="uf-modes-submit" style={{ marginBlockStart: "0.5rem" }}>
+              Submit
+            </Button>
+          </form>
         </div>
-        <Button type="submit" data-pg="uf-modes-submit" style={{ marginBlockStart: "0.5rem" }}>
-          Submit
-        </Button>
-      </form>
+      </ComponentPreview>
     </section>
   )
 }
@@ -653,6 +871,22 @@ export default function UseFormPage() {
     <>
       <h2>useForm</h2>
       <p>Zero-dependency form engine shaped like react-hook-form — <code>register</code> for DOM inputs, <code>Controller</code> for controlled components, validation, field arrays, and nested paths.</p>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { useForm } from "./lib/use-form"
+
+const { register, handleSubmit } = useForm({
+  defaultValues: { email: "" },
+})
+
+<form onSubmit={handleSubmit((data) => console.log(data))}>
+  <input placeholder="Email" {...register("email")} />
+  <Button type="submit">Send</Button>
+</form>`}>
+          <UsageDemo />
+        </ComponentPreview>
+      </section>
 
       <Docs />
       <RenderIsolation />

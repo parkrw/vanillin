@@ -24,7 +24,7 @@ export default function InputGroupPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { InputGroup, InputGroupInput, InputGroupAddon } from "./ui/input-group/input-group"
+        <ComponentPreview defaultTab="code" code={`import { InputGroup, InputGroupInput, InputGroupAddon } from "./ui/input-group/input-group"
 import "./ui/input-group/input-group.css"
 
 <InputGroup>

@@ -17,7 +17,7 @@ export default function LabelPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Label } from "./ui/label/label"
+        <ComponentPreview defaultTab="code" code={`import { Label } from "./ui/label/label"
 import "./ui/label/label.css"
 
 <Label>Email address</Label>`}>

@@ -37,7 +37,7 @@ export default function FieldPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Field, FieldGroup, FieldLabel, FieldDescription } from "./ui/field/field"
+        <ComponentPreview defaultTab="code" code={`import { Field, FieldGroup, FieldLabel, FieldDescription } from "./ui/field/field"
 import "./ui/field/field.css"
 
 <FieldGroup>

@@ -63,6 +63,23 @@ Measured on `main` at `7fbb916` — do not re-derive, but do re-check before ass
 
 The first two are already covered above (no preview at all). `data-table` is the standout defect in the second group: 1251 lines carrying three previews. `sidebar` at 3 is thin for a component with 24 exports. `command` and `accordion` have counts that look fine — **check them at the running site before rewriting anything**, since the user's complaint may be about which examples exist rather than how many.
 
+## Audit — measured 2026-08-13 on `3af9122`, all 82 pages
+
+Machine-measured per page: `LINES`, `PREV` = `<ComponentPreview` count, `CODE` = bare `<CodeBlock` count, `INST` = `<InstallSnippet`, `API` = `<ApiReference`, `EMD` = em dashes. Full table in the branch history; the defects it surfaced are below.
+
+**Corrections to the numbers this file shipped with.** The census table above (0/1/2-3/4-6/7-8 buckets) is accurate. The "six pages the user named" table is not: it lists `command` at 7 previews and `accordion` at 9. Measured, `command` has **3** and `accordion` has **4**. Both are therefore below the bar, not at it, which resolves the file's own open question about whether the user's complaint was about *which* examples exist: both counts were simply wrong.
+
+**Defects the source audit found that the file did not list:**
+
+- **`use-form.jsx` has no `InstallSnippet` at all** (and 2 `ApiReference`). It is the only component page in the site missing its install block.
+- **`ApiReference` is not one-per-page across the site.** `form` has 5, `field`/`card`/`avatar`/`button-group` have 3, and eight more have 2. On multi-export components (`Card` + `CardHeader` + `CardTitle` …) a table per sub-component is defensible and reads better than one merged table, so this is **accepted, not a defect** — but it means "exactly one `ApiReference`" describes `button.jsx`, not the house rule. Recorded so the next reader does not "fix" it.
+- **`tabs.jsx` carries 2 bare `CodeBlock`s** and cannot take previews around its tab fixtures: `tests/tabs.test.mjs:5` grabs `[role="tablist"]` `.first()`, and `ComponentPreview` renders `ui/tabs` internally. `tests/forced-colors.test.mjs:70` and `tests/tokens-surfaces.test.mjs:143` have the same exposure via `.tabs-trigger`.
+- **Em dashes are concentrated, not spread.** `resizable.jsx` alone holds 43 of the 353. `theming` and `configuration` hold 25 each. Ten pages have zero.
+- **`docs/` pages are the bare-`CodeBlock` cluster**: `configuration` (12), `theming` (7), `cli` (7), `installation` (6). Command-line pages legitimately keep `CodeBlock`; `theming` and `configuration` describe visible outcomes and should render them.
+- **`introduction.jsx` has neither a preview nor a code block** — 147 lines of unbroken prose as the site's first Get Started page.
+
+**Structural finding that shaped the whole task.** `TabsContent` returns `null` when inactive (`ui/tabs/tabs.jsx:59`), so an inactive preview tab's content **is not in the DOM**. Two consequences, both load-bearing: sub-task 0a's `defaultTab="code"` hides the Usage demo from any test that reaches it, and wrapping any test-driven fixture in a preview breaks that test. Every page brief carried this.
+
 ## Sub-tasks
 
 - [ ] 0a. **Usage sections open on the Code tab.** `site/code-example.jsx:52` hardcodes `<Tabs defaultValue="preview">`. Add a prop (`defaultTab`, defaulting to `"preview"` so nothing else changes) and pass `defaultTab="code"` from every page's **Usage** section only — the reader arriving at Usage wants the import and JSX to copy, not a rendering of a button they can already see below. Examples/variants sections keep opening on Preview. Do this **before** the page work so the 73 pages are written against the final API, and check `tests/` for anything selecting the active tab. Files: `site/code-example.jsx`, then every page's Usage block.
@@ -103,4 +120,14 @@ Done when: every component page and every `docs/` page is complete by its own pa
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** IN PROGRESS — salvaged after an interrupted 12-agent fan-out (2026-08-13); suite 759/761 + clean build on this commit (2026-08-15).
+
+**Landed (this commit):** sub-task 0a (`defaultTab` prop, all 53 Usage sections open on Code), sub-task 1 audit (section above), `use-form` 0→11 previews, `form-fields` 0→8, home hero fixes, `data-table` 1→7 previews with all 23 `data-pg` fixtures intact, and every small-page rewrite whose tests pass (~30 pages).
+
+**Reverted to baseline and stashed** as `stash@{0}` on this worktree ("task82 interrupted-worker pages") — 20 pages whose workers were killed mid-write and failed 137 tests: dropdown-menu, context-menu, toast, menubar, select, tooltip, popover, dialog, hover-card, alert-dialog, command, accordion, toggle-group, pagination, switch, resizable, scroll-area, checkbox, empty, direction. The stash is reference material for redoing them, not a fast path — treat each page as unreviewed.
+
+**Two defects fixed during salvage, both one line:**
+- `use-form.jsx` result `<pre>`: a long one-line string gives the demo wrapper a min-content width wider than `pg-preview-content`, which centers it — the whole form shifts under the sticky sidebar and clicks land on nav links. Fixed with `pre-wrap`/`break-all` on that pre. **For task 81:** `pg-preview-content` needs a width constraint; any wide demo content reproduces this silently.
+- `slider.jsx:173`: worker wrote `${price[0]}` unescaped inside a `code={`…`}` template literal — evaluates at render, throws, unmounts the whole app. This aborted the `cursor`/`forced-colors`/`slider` suites and shrank the run to 732 registered tests (an aborted file registers 1 FAIL, not its N tests). Swept all pages for the pattern: single instance. Worth a lint or a sweep after any batch page rewrite: `(?<!\\)\$\{` inside `code={`…`}`.
+
+**Remaining:** the 20 stashed pages (sub-tasks 3, 7 partially), em-dash sweep (334 left, deliberately last), and whatever of sub-tasks 4/5 the audit still lists.

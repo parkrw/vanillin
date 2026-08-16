@@ -28,7 +28,7 @@ export default function TablePage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Table, TableHeader, TableBody, TableRow,
+        <ComponentPreview defaultTab="code" code={`import { Table, TableHeader, TableBody, TableRow,
   TableHead, TableCell, TableCaption } from "./ui/table/table"
 import "./ui/table/table.css"
 

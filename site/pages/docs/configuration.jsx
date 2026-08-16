@@ -1,4 +1,10 @@
-import { CodeBlock } from "../../code-example.jsx"
+import { Button } from "../../../ui/button/button.jsx"
+import { Badge } from "../../../ui/badge/badge.jsx"
+import { Input } from "../../../ui/input/input.jsx"
+import "../../../ui/button/button.css"
+import "../../../ui/badge/badge.css"
+import "../../../ui/input/input.css"
+import { CodeBlock, ComponentPreview } from "../../code-example.jsx"
 import "../../code-example.css"
 
 export default function ConfigurationPage() {
@@ -94,9 +100,29 @@ export default function ConfigurationPage() {
 
       <p>
         Values must be simple <code>oklch(L C H)</code>. Mid-lightness
-        colours (around L 0.58) may not support an accessible foreground
-        — nudge the lightness up or down.
+        colours (around L 0.58) may not support an accessible foreground;
+        nudge the lightness up or down.
       </p>
+
+      <p>
+        The derived tokens at work on real components:
+      </p>
+
+      <ComponentPreview code={`<Button>Primary</Button>
+<Button variant="secondary">Secondary</Button>
+<Button variant="outline">Outline</Button>
+<Button variant="destructive">Destructive</Button>
+<Badge>Badge</Badge>
+<Badge variant="secondary">Secondary</Badge>`}>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+          <Button>Primary</Button>
+          <Button variant="secondary">Secondary</Button>
+          <Button variant="outline">Outline</Button>
+          <Button variant="destructive">Destructive</Button>
+          <Badge>Badge</Badge>
+          <Badge variant="secondary">Secondary</Badge>
+        </div>
+      </ComponentPreview>
 
       <h3>theme.radius</h3>
 
@@ -129,6 +155,29 @@ export default function ConfigurationPage() {
       <CodeBlock language="json" code={`"density": "compact"
 // or a raw number
 "density": 0.9`} />
+
+      <p>
+        Density is scoped via <code>data-density</code> on any element,
+        so different regions of a page can use different scales:
+      </p>
+
+      <ComponentPreview code={`<div data-density="compact">
+  <Input placeholder="Compact" />
+</div>
+<Input placeholder="Comfortable (default)" />
+<div data-density="spacious">
+  <Input placeholder="Spacious" />
+</div>`}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", maxWidth: "20rem" }}>
+          <div data-density="compact">
+            <Input placeholder="Compact" />
+          </div>
+          <Input placeholder="Comfortable (default)" />
+          <div data-density="spacious">
+            <Input placeholder="Spacious" />
+          </div>
+        </div>
+      </ComponentPreview>
 
       <h3>theme.motion</h3>
 

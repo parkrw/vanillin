@@ -560,7 +560,7 @@ export default function FormPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Form, FormField, FormItem, FormLabel,
+        <ComponentPreview defaultTab="code" code={`import { Form, FormField, FormItem, FormLabel,
   FormControl, FormDescription, FormMessage } from "./ui/form/form"
 import "./ui/form/form.css"
 

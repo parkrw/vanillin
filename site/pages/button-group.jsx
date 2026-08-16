@@ -19,7 +19,7 @@ export default function ButtonGroupPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { ButtonGroup } from "./ui/button-group/button-group"
+        <ComponentPreview defaultTab="code" code={`import { ButtonGroup } from "./ui/button-group/button-group"
 import "./ui/button-group/button-group.css"
 import { Button } from "./ui/button/button"
 import "./ui/button/button.css"

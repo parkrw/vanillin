@@ -17,7 +17,7 @@ export default function SkeletonPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Skeleton } from "./ui/skeleton/skeleton"
+        <ComponentPreview defaultTab="code" code={`import { Skeleton } from "./ui/skeleton/skeleton"
 import "./ui/skeleton/skeleton.css"
 
 <Skeleton style={{ height: "1rem", width: "16rem" }} />`}>

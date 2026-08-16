@@ -17,7 +17,7 @@ export default function NativeSelectPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { NativeSelect, NativeSelectOption } from "./ui/native-select/native-select"
+        <ComponentPreview defaultTab="code" code={`import { NativeSelect, NativeSelectOption } from "./ui/native-select/native-select"
 import "./ui/native-select/native-select.css"
 
 <NativeSelect>

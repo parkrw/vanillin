@@ -1,4 +1,12 @@
-import { CodeBlock } from "../../code-example.jsx"
+import { Button } from "../../../ui/button/button.jsx"
+import { Card, CardHeader, CardTitle, CardContent } from "../../../ui/card/card.jsx"
+import { Badge } from "../../../ui/badge/badge.jsx"
+import { Input } from "../../../ui/input/input.jsx"
+import "../../../ui/button/button.css"
+import "../../../ui/card/card.css"
+import "../../../ui/badge/badge.css"
+import "../../../ui/input/input.css"
+import { CodeBlock, ComponentPreview } from "../../code-example.jsx"
 import "../../code-example.css"
 
 export default function ThemingPage() {
@@ -110,6 +118,26 @@ export default function ThemingPage() {
         </li>
       </ul>
 
+      <p>
+        The core semantic tokens applied to real components:
+      </p>
+
+      <ComponentPreview code={`<Button>Primary</Button>
+<Button variant="secondary">Secondary</Button>
+<Button variant="destructive">Destructive</Button>
+<Button variant="outline">Outline</Button>
+<Badge>Default</Badge>
+<Badge variant="secondary">Muted</Badge>`}>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+          <Button>Primary</Button>
+          <Button variant="secondary">Secondary</Button>
+          <Button variant="destructive">Destructive</Button>
+          <Button variant="outline">Outline</Button>
+          <Badge>Default</Badge>
+          <Badge variant="secondary">Muted</Badge>
+        </div>
+      </ComponentPreview>
+
       <h3>Light and dark in one declaration</h3>
 
       <p>
@@ -127,7 +155,7 @@ export default function ThemingPage() {
         the explicit override hook. It sets{" "}
         <code>color-scheme:&nbsp;dark</code>, which makes every{" "}
         <code>light-dark()</code> resolve to its second argument. The kit
-        does not follow the OS colour scheme automatically &mdash; light
+        does not follow the OS colour scheme automatically: light
         mode is the default regardless of <code>prefers-color-scheme</code>,
         and <code>.dark</code> is the only way to switch.
       </p>
@@ -231,7 +259,7 @@ export default function ThemingPage() {
         <strong>Deliberately not derived:</strong> the status families
         (<code>--success</code>, <code>--warning</code>, <code>--info</code>,{" "}
         <code>--destructive</code>) keep their defaults regardless of brand —
-        a red &ldquo;success&rdquo; because the brand is red would be worse
+        a red "success" because the brand is red would be worse
         than an off-palette green. Override them token by token in{" "}
         <code>theme.light</code> / <code>theme.dark</code> if needed; those
         literal overrides also win over any derived token. The{" "}
@@ -307,7 +335,7 @@ export default function ThemingPage() {
       <p>
         Apply them with the <code>&lt;Density&gt;</code> component or set{" "}
         <code>data-density</code> directly on any element. They are scoped,
-        not global &mdash; a compact table inside a comfortable page is the
+        not global: a compact table inside a comfortable page is the
         intended use case. Nesting works: a <code>data-density</code> inside
         another one wins.
       </p>
@@ -329,6 +357,62 @@ export default function ThemingPage() {
         directly. The named modes are the API, but the raw variable stays
         supported.
       </p>
+
+      <ComponentPreview code={`<div data-density="compact">
+  <Card>
+    <CardHeader><CardTitle>Compact</CardTitle></CardHeader>
+    <CardContent>
+      <Input placeholder="Search..." />
+      <Button style={{ marginTop: "0.5rem" }}>Confirm</Button>
+    </CardContent>
+  </Card>
+</div>
+
+<Card>
+  <CardHeader><CardTitle>Comfortable</CardTitle></CardHeader>
+  <CardContent>
+    <Input placeholder="Search..." />
+    <Button style={{ marginTop: "0.5rem" }}>Save</Button>
+  </CardContent>
+</Card>
+
+<div data-density="spacious">
+  <Card>
+    <CardHeader><CardTitle>Spacious</CardTitle></CardHeader>
+    <CardContent>
+      <Input placeholder="Search..." />
+      <Button style={{ marginTop: "0.5rem" }}>Apply</Button>
+    </CardContent>
+  </Card>
+</div>`}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(14rem, 1fr))", gap: "1rem" }}>
+          <div data-density="compact">
+            <Card>
+              <CardHeader><CardTitle>Compact</CardTitle></CardHeader>
+              <CardContent>
+                <Input placeholder="Search..." />
+                <Button style={{ marginTop: "0.5rem" }}>Confirm</Button>
+              </CardContent>
+            </Card>
+          </div>
+          <Card>
+            <CardHeader><CardTitle>Comfortable</CardTitle></CardHeader>
+            <CardContent>
+              <Input placeholder="Search..." />
+              <Button style={{ marginTop: "0.5rem" }}>Save</Button>
+            </CardContent>
+          </Card>
+          <div data-density="spacious">
+            <Card>
+              <CardHeader><CardTitle>Spacious</CardTitle></CardHeader>
+              <CardContent>
+                <Input placeholder="Search..." />
+                <Button style={{ marginTop: "0.5rem" }}>Apply</Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </ComponentPreview>
 
       <h3>Browser support</h3>
 

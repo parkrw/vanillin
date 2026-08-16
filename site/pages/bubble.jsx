@@ -19,7 +19,7 @@ export default function BubblePage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Bubble, BubbleContent } from "./ui/bubble/bubble"
+        <ComponentPreview defaultTab="code" code={`import { Bubble, BubbleContent } from "./ui/bubble/bubble"
 import "./ui/bubble/bubble.css"
 
 <Bubble>

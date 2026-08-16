@@ -17,7 +17,7 @@ export default function SeparatorPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Separator } from "./ui/separator/separator"
+        <ComponentPreview defaultTab="code" code={`import { Separator } from "./ui/separator/separator"
 import "./ui/separator/separator.css"
 
 <p>Content above</p>

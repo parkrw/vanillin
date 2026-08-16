@@ -1,7 +1,29 @@
-import { CodeBlock } from "../../code-example.jsx"
+import { useState } from "react"
+import { s } from "../../../lib/schema.js"
+import { Input } from "../../../ui/input/input.jsx"
+import { Badge } from "../../../ui/badge/badge.jsx"
+import "../../../ui/input/input.css"
+import "../../../ui/badge/badge.css"
+import { CodeBlock, ComponentPreview } from "../../code-example.jsx"
 import "../../code-example.css"
 
+const emailSchema = s.string().min(1, "Email required").email()
+const coerced = s.coerce.number().int().min(18)
+const strict = s.number()
+
+function formatResult(result) {
+  if (result.success) return { ok: true, text: JSON.stringify(result.data) }
+  return { ok: false, text: result.error.issues[0].message }
+}
+
 export default function SchemaPage() {
+  const [email, setEmail] = useState("")
+  const [age, setAge] = useState("")
+
+  const emailResult = email ? formatResult(emailSchema.safeParse(email)) : null
+  const coercedResult = age ? formatResult(coerced.safeParse(age)) : null
+  const strictResult = age ? formatResult(strict.safeParse(age)) : null
+
   return (
     <>
       <h2>Schema</h2>
@@ -37,6 +59,31 @@ const { register, handleSubmit, formState } = useForm({
         failures without a <code>path</code> land
         under <code>errors.root</code>.
       </p>
+
+      <p>
+        Type an email to see validation in action. The schema
+        below rejects empty strings and values that are not valid
+        email addresses:
+      </p>
+
+      <ComponentPreview code={`const emailSchema = s.string().min(1, "Email required").email()
+
+const result = emailSchema.safeParse(value)
+// { success: true, data: "user@example.com" }
+// { success: false, error: { issues: [{ message: "Invalid email" }] } }`}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "24rem" }}>
+          <Input
+            placeholder="user@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          {emailResult && (
+            <Badge variant={emailResult.ok ? "success" : "destructive"}>
+              {emailResult.ok ? `Valid: ${emailResult.text}` : emailResult.text}
+            </Badge>
+          )}
+        </div>
+      </ComponentPreview>
 
       <h3>The API subset</h3>
 
@@ -108,6 +155,44 @@ if (!result.success) console.log(result.error.issues)`} />
         <code>s.coerce.boolean()</code>,
         or <code>s.coerce.date()</code>.
       </p>
+
+      <p>
+        Type a number to see the difference. The strict schema rejects
+        any string; the coerced schema parses it, then applies the
+        refinements:
+      </p>
+
+      <ComponentPreview code={`// Strict: rejects the string "42"
+s.number().safeParse("42")
+// { success: false, error: "Expected number, received string" }
+
+// Coerced: parses the string, then validates
+s.coerce.number().int().min(18).safeParse("25")
+// { success: true, data: 25 }`}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: "24rem" }}>
+          <Input
+            placeholder='Try "25", "10", "abc", or "3.5"'
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+          />
+          {age && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <code style={{ fontSize: "0.75rem", flexShrink: 0 }}>s.number()</code>
+                <Badge variant={strictResult?.ok ? "success" : "destructive"}>
+                  {strictResult?.ok ? strictResult.text : strictResult?.text}
+                </Badge>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <code style={{ fontSize: "0.75rem", flexShrink: 0 }}>s.coerce.number().int().min(18)</code>
+                <Badge variant={coercedResult?.ok ? "success" : "destructive"}>
+                  {coercedResult?.ok ? coercedResult.text : coercedResult?.text}
+                </Badge>
+              </div>
+            </div>
+          )}
+        </div>
+      </ComponentPreview>
 
       <p>
         Two coercions diverge from zod by design:{" "}

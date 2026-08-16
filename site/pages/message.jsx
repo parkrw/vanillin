@@ -28,7 +28,7 @@ export default function MessagePage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Message, MessageAvatar, MessageContent, MessageHeader } from "./ui/message/message"
+        <ComponentPreview defaultTab="code" code={`import { Message, MessageAvatar, MessageContent, MessageHeader } from "./ui/message/message"
 import { Bubble, BubbleContent } from "./ui/bubble/bubble"
 import { Avatar, AvatarFallback } from "./ui/avatar/avatar"
 

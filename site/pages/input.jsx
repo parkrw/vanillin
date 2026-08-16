@@ -24,7 +24,7 @@ export default function InputPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
-        <ComponentPreview code={`import { Input } from "./ui/input/input"
+        <ComponentPreview defaultTab="code" code={`import { Input } from "./ui/input/input"
 import "./ui/input/input.css"
 
 <Input placeholder="Type something..." />`}>
