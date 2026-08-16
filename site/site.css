@@ -527,14 +527,44 @@
   max-inline-size: var(--typeset-measure);
 }
 
-/* RHYTHM DISABLED FOR BISECT */
+/* ------------------------------------------------------------------ */
+/*  Page rhythm                                                        */
+/* ------------------------------------------------------------------ */
+
+/* One contract, two gaps: --pg-flow separates a page's sections,
+   --pg-flow-tight separates a heading from what it introduces. The gaps sit
+   on the *following* sibling's top margin with the heading's own bottom
+   margin zeroed, so a UA paragraph margin can never collapse over the token
+   and pages stay uniform without their own spacing. Pages must not re-space
+   .pg-section — a per-page margin here is the bug this contract replaced. */
+
+.pg-breadcrumb {
+  margin-block: 0 var(--pg-flow-tight);
+}
+
+.pg-main > h2 {
+  margin-block: 0;
+}
+
+.pg-main > h2 + * {
+  margin-block-start: var(--pg-flow-tight);
+}
+
+.pg-section {
+  margin-block: var(--pg-flow);
+}
 
 .pg-section > h3 {
+  margin-block: 0;
   font-size: 0.875rem;
   color: color-mix(in oklab, var(--foreground) 80%, var(--background));
   padding-left: 0.5rem;
   border-left: 2px solid var(--pg-accent);
   scroll-margin-top: calc(var(--pg-topnav-h) + 1rem);
+}
+
+.pg-section > h3 + * {
+  margin-block-start: var(--pg-flow-tight);
 }
 
 .pg-desc {
