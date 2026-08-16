@@ -20,10 +20,27 @@
   --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   --pg-topnav-h: 3.5rem;
+
+  /* Content column. Wider than the prose measure on purpose: this column
+     carries prose *and* wide code blocks *and* component previews, so the
+     shell is sized for the widest of the three and prose is clamped
+     separately by --typeset-measure below. */
+  --pg-main-max: 68rem;
+
+  /* Page rhythm — two gaps, nothing else. See "Page rhythm" below. */
+  --pg-flow: 2rem;
+  --pg-flow-tight: 0.75rem;
+
+  /* The scrolled topnav's bottom boundary. --border measures 1.26:1 against
+     --background (task 71's sweep), which is invisible; WCAG 1.4.11 wants
+     3:1 on a boundary this load-bearing. Local to the topnav because 227
+     surface call sites depend on --border staying soft. */
+  --pg-topnav-border: oklch(0.62 0 0);
 }
 
 .dark {
   --pg-accent: oklch(0.87 0.19 168);
+  --pg-topnav-border: oklch(0.52 0 0);
 }
 
 /* ------------------------------------------------------------------ */
@@ -44,11 +61,17 @@
   flex: 1;
 }
 
-/* When home page is shown, no sidebar or rail — main spans full width */
+/* When home page is shown, no sidebar or rail — main spans full width.
+   `:has()` takes its argument's specificity, so this outranks the 72rem rule
+   below and home stays single-column at every width. */
 .pg-body:has(.pg-main--home) {
   grid-template-columns: 1fr;
 }
 
+/* 72rem drops the rail. Two rules, one decision: the track list loses its
+   third column here and `.pg-rail` goes `display: none` (see Right rail), so
+   the freed width goes to the content column instead of stranding a gap.
+   Keep the two in step — a change to either alone strands the other. */
 @media (max-width: 72rem) {
   .pg-body {
     grid-template-columns: auto 1fr;
@@ -75,9 +98,12 @@
     border-color var(--motion-fast) var(--motion-ease);
 }
 
+/* Content scrolls *under* this bar, so the background has to stop the page
+   reading through it — 82% did not — and the boundary has to stay legible
+   against both the bar and the page below it. */
 .pg-topnav[data-scrolled="true"] {
-  border-bottom-color: var(--border);
-  background: color-mix(in oklab, var(--background) 82%, transparent);
+  border-bottom-color: var(--pg-topnav-border);
+  background: color-mix(in oklab, var(--background) 94%, transparent);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
 }
@@ -457,6 +483,7 @@
   background: color-mix(in oklab, var(--pg-accent) 35%, transparent);
 }
 
+/* Paired with the 72rem rule on `.pg-body` — see Shell. */
 @media (max-width: 72rem) {
   .pg-rail {
     display: none;
@@ -467,34 +494,44 @@
 /*  Main content                                                       */
 /* ------------------------------------------------------------------ */
 
+/* The column is capped, so it has to be centred in its `1fr` track or it
+   pins to the sidebar and leaves a dead gap before the rail — at 2560 that
+   gap was 1214px. */
 .pg-main {
   padding: 2rem 2.5rem;
-  max-width: 56rem;
+  max-inline-size: var(--pg-main-max);
+  /* `width` is load-bearing: auto margins on a grid item suppress the default
+     stretch, so without it the column shrinks to its content instead of
+     filling the track up to the cap. */
+  width: 100%;
+  margin-inline: auto;
   min-width: 0;
+
+  /* Prose measure, consumed by the rules below and by styles/typeset.css
+     wherever a docs page opts into .typeset. ~68 characters. */
+  --typeset-measure: 62ch;
 }
 
 .pg-main--home {
-  max-width: 80rem;
-  width: 100%;
-  margin: 0 auto;
+  max-inline-size: 80rem;
 }
 
-.pg-breadcrumb {
-  margin-bottom: 1rem;
+/* Only flow text takes the measure. Previews, code blocks and tables use the
+   full column, which is why the column is wider than the measure. */
+.pg-main > p,
+.pg-main > ul,
+.pg-main > ol,
+.pg-section > p,
+.pg-section > ul,
+.pg-section > ol {
+  max-inline-size: var(--typeset-measure);
 }
 
-.pg-main > h2 {
-  margin-top: 0;
-}
-
-.pg-section {
-  margin-block: 2rem;
-}
+/* RHYTHM DISABLED FOR BISECT */
 
 .pg-section > h3 {
   font-size: 0.875rem;
   color: color-mix(in oklab, var(--foreground) 80%, var(--background));
-  margin-bottom: 0.75rem;
   padding-left: 0.5rem;
   border-left: 2px solid var(--pg-accent);
   scroll-margin-top: calc(var(--pg-topnav-h) + 1rem);
