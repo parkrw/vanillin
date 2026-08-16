@@ -109,7 +109,7 @@ export default function CommandPage() {
   return (
     <>
       <h2>Command</h2>
-      <p>A searchable command palette for actions, navigation, and fuzzy-filtered lists — the building block behind ⌘K interfaces.</p>
+      <p>A searchable command palette for actions, navigation, and fuzzy-filtered lists. It is the building block behind ⌘K interfaces.</p>
 
       <InstallSnippet slug="command" />
 
@@ -119,6 +119,33 @@ export default function CommandPage() {
 
       <section className="pg-section">
         <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Command, CommandInput, CommandList, CommandEmpty, CommandItem } from "./ui/command/command"
+import "./ui/command/command.css"
+
+<Command className="command--bordered">
+  <CommandInput placeholder="Search actions..." />
+  <CommandList>
+    <CommandEmpty>No results found.</CommandEmpty>
+    <CommandItem value="new-file" onSelect={handleSelect}>New file</CommandItem>
+    <CommandItem value="open-file" onSelect={handleSelect}>Open file</CommandItem>
+  </CommandList>
+</Command>`}>
+          <Command className="command--bordered">
+            <CommandInput placeholder="Search actions..." />
+            <CommandList>
+              <CommandEmpty>No results found.</CommandEmpty>
+              <CommandItem value="new-file" onSelect={select}>New file</CommandItem>
+              <CommandItem value="open-file" onSelect={select}>Open file</CommandItem>
+            </CommandList>
+          </Command>
+        </ComponentPreview>
+        <p className="pg-desc">
+          <code>Command</code> owns the search state and the highlight; you supply the items. Nothing is fetched or routed for you.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Groups, shortcuts, and separators</h3>
         <ComponentPreview code={`import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandShortcut, CommandSeparator } from "./ui/command/command"
 import "./ui/command/command.css"
 
@@ -175,6 +202,9 @@ import "./ui/command/command.css"
             </CommandList>
           </Command>
         </ComponentPreview>
+        <p className="pg-desc">
+          A group renders its heading only while at least one of its items survives the filter, and a separator between two hidden groups hides with them. The list never leaves a stray divider behind.
+        </p>
       </section>
 
       <section className="pg-section">
@@ -219,7 +249,7 @@ import "./ui/command/command.css"
       <section className="pg-section">
         <h3>Wire your own actions</h3>
         <p>
-          Each <code>CommandItem</code> fires <code>onSelect(value)</code> when activated via Enter or click. Wire it to your app's router, state, or side effects — there is no built-in action system. The dialog variant calls <code>onOpenChange(false)</code> on selection so the palette closes automatically.
+          Each <code>CommandItem</code> fires <code>onSelect(value)</code> when activated via Enter or click. Wire it to your app's router, state, or side effects; there is no built-in action system. The dialog variant calls <code>onOpenChange(false)</code> on selection so the palette closes automatically.
         </p>
       </section>
 
@@ -265,20 +295,32 @@ import "./ui/command/command.css"
         <p>
           When <code>shouldFilter={"{false}"}</code>, the component does not
           score or reorder items. The consumer owns filtering and ordering
-          entirely — useful for server-backed palettes.
+          entirely, which is what a server-backed palette needs.
         </p>
-        <Command className="command--bordered" shouldFilter={false}>
-          <CommandInput placeholder="Typing never filters" data-pg="cmd-nofilter-input" />
-          <CommandList data-pg="cmd-nofilter-list">
-            <CommandEmpty>No results found.</CommandEmpty>
-            <CommandItem value="alpha" onSelect={select}>
-              Alpha
-            </CommandItem>
-            <CommandItem value="beta" onSelect={select}>
-              Beta
-            </CommandItem>
-          </CommandList>
-        </Command>
+        <ComponentPreview code={`<Command shouldFilter={false}>
+  <CommandInput placeholder="Typing never filters" />
+  <CommandList>
+    <CommandEmpty>No results found.</CommandEmpty>
+    <CommandItem value="alpha" onSelect={select}>Alpha</CommandItem>
+    <CommandItem value="beta" onSelect={select}>Beta</CommandItem>
+  </CommandList>
+</Command>`}>
+          <Command className="command--bordered" shouldFilter={false}>
+            <CommandInput placeholder="Typing never filters" data-pg="cmd-nofilter-input" />
+            <CommandList data-pg="cmd-nofilter-list">
+              <CommandEmpty>No results found.</CommandEmpty>
+              <CommandItem value="alpha" onSelect={select}>
+                Alpha
+              </CommandItem>
+              <CommandItem value="beta" onSelect={select}>
+                Beta
+              </CommandItem>
+            </CommandList>
+          </Command>
+        </ComponentPreview>
+        <p className="pg-desc">
+          <code>CommandEmpty</code> also stops firing, since the component no longer knows whether a result is missing. Render your own empty state from the response.
+        </p>
       </section>
 
       <section className="pg-section">
@@ -286,15 +328,29 @@ import "./ui/command/command.css"
         <p>
           Filtering uses a fuzzy scorer that ranks candidates by match
           quality and re-sorts the list via CSS <code>order</code>. Try
-          typing <strong>"gp"</strong> — "Git Push" surfaces first because
+          typing <strong>"gp"</strong>: "Git Push" surfaces first because
           both initials match at word boundaries, even though "Grep" is
           authored earlier.
         </p>
         <p>
           A custom <code>filter</code> prop returning only 0 or 1 preserves
-          DOM (authored) order — that is the back-compat story for anyone
+          DOM (authored) order, which is the back-compat story for anyone
           who wrote a binary filter before scoring existed.
         </p>
+        <ComponentPreview code={`{/* Default filtering: no props needed. */}
+<Command>
+  <CommandInput placeholder='Try "gp"...' />
+  <CommandList>
+    <CommandEmpty>No results found.</CommandEmpty>
+    <CommandGroup heading="Git">
+      <CommandItem value="Git Status" onSelect={select}>Git Status</CommandItem>
+      <CommandItem value="Git Push" onSelect={select}>Git Push</CommandItem>
+    </CommandGroup>
+    <CommandGroup heading="Tools">
+      <CommandItem value="Grep" onSelect={select}>Grep</CommandItem>
+    </CommandGroup>
+  </CommandList>
+</Command>`}>
         <Command className="command--bordered" data-pg="cmd-fuzzy">
           <CommandInput placeholder='Try "gp"...' data-pg="cmd-fuzzy-input" />
           <CommandList data-pg="cmd-fuzzy-list">
@@ -323,6 +379,10 @@ import "./ui/command/command.css"
             </CommandGroup>
           </CommandList>
         </Command>
+        </ComponentPreview>
+        <p className="pg-desc">
+          Re-sorting happens through CSS <code>order</code>, so the DOM never reshuffles and focus survives every keystroke.
+        </p>
       </section>
 
       <section className="pg-section">
@@ -333,11 +393,11 @@ import "./ui/command/command.css"
           <a href="https://developer.mozilla.org/en-US/docs/Web/API/CSS_Custom_Highlight_API">
             CSS Custom Highlight API
           </a>
-          . No <code>&lt;mark&gt;</code> injection, no DOM mutation — the
+          . No <code>&lt;mark&gt;</code> injection and no DOM mutation: the
           browser paints ranges directly over existing text nodes.
         </p>
         <p>
-          Try typing <strong>"cal"</strong> in the default demo above — the
+          Try typing <strong>"cal"</strong> in the grouped demo above and the
           matching substring is painted. For non-contiguous fuzzy matches
           (e.g. <strong>"gp"</strong> → "Git Push"), no highlight appears
           because there is no contiguous substring; the fuzzy scorer surfaced
@@ -346,14 +406,14 @@ import "./ui/command/command.css"
         <p>
           <code>::highlight()</code> supports only{" "}
           <code>color</code>, <code>background-color</code>,{" "}
-          <code>text-decoration</code>, and <code>text-shadow</code> — no
-          padding, no border-radius. The visual is a translucent background
+          <code>text-decoration</code>, and <code>text-shadow</code>, with no
+          padding and no border-radius. The visual is a translucent background
           tinted with <code>var(--primary)</code>.
         </p>
         <p>
           Progressive enhancement: in browsers without{" "}
-          <code>CSS.highlights</code> the feature is simply absent —
-          filtering still works, only the paint is missing. Supported in
+          <code>CSS.highlights</code> the feature is simply absent. Filtering
+          still works, only the paint is missing. Supported in
           Chrome 105+, Edge 105+, Safari 17.2+, and Firefox 132+.
         </p>
       </section>
@@ -366,7 +426,21 @@ import "./ui/command/command.css"
           It suppresses the empty state so "No results" does not flash
           during the fetch.
         </p>
-        <AsyncCommandDemo onSelect={select} />
+        <ComponentPreview code={`<Command shouldFilter={false}>
+  <CommandInput value={query} onValueChange={setQuery} />
+  <CommandList>
+    {loading && <CommandLoading>Fetching results...</CommandLoading>}
+    {!loading && items.length === 0 && <CommandEmpty>No results found.</CommandEmpty>}
+    {items.map((item) => (
+      <CommandItem key={item} value={item} onSelect={select}>{item}</CommandItem>
+    ))}
+  </CommandList>
+</Command>`}>
+          <AsyncCommandDemo onSelect={select} />
+        </ComponentPreview>
+        <p className="pg-desc">
+          Type a few characters and watch the status line appear before the results settle. Render <code>CommandEmpty</code> only when the fetch has finished, or "No results" flashes on every keystroke.
+        </p>
       </section>
 
       <ApiReference props={[
