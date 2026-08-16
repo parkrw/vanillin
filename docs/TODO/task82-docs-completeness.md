@@ -90,8 +90,8 @@ Machine-measured per page: `LINES`, `PREV` = `<ComponentPreview` count, `CODE` =
 - [ ] 4. The six system pages — one consistent page type, applied to all six.
 - [ ] 5. `site/pages/docs/` — the seven Get Started/reference pages, with `contracts.jsx` given the most attention.
 - [ ] 6. **Home page** — the progress/badge mismatch first (one-line content fix), then the zero-dependencies badge, then the hero layout and what the showcase shows.
-- [ ] 7. **The 29 pages at 0-1 previews**, worst-first by the census. `data-table` (1251 lines, 1 preview) leads; then `sidebar`, `carousel`, `resizable`, `scroll-area`, `calendar`. Every example becomes a `ComponentPreview` with a working demo — a `CodeBlock` on its own is what this task is removing.
-- [ ] 8. **Em-dash sweep** across `site/pages/`. Do this **last**: every sub-task above writes new prose, and sweeping first means sweeping twice. Verify with `grep -ro "—" site/pages | wc -l` reaching 0.
+- [x] 7. **The 29 pages at 0-1 previews**, worst-first by the census. `data-table` (1251 lines, 1 preview) leads; then `sidebar`, `carousel`, `resizable`, `scroll-area`, `calendar`. Every example becomes a `ComponentPreview` with a working demo — a `CodeBlock` on its own is what this task is removing.
+- [ ] 8. **Em-dash sweep** (partial: 334 → 160) across `site/pages/`. Do this **last**: every sub-task above writes new prose, and sweeping first means sweeping twice. Verify with `grep -ro "—" site/pages | wc -l` reaching 0.
 - [ ] 9. Anything else sub-task 1 turned up, cheapest first.
 
 ## Rules carried forward from 76/77 — read these, they were each learned the hard way
@@ -123,7 +123,12 @@ Done when: every component page and every `docs/` page is complete by its own pa
 **Status:** IN PROGRESS
 **Branch:** `docs/completeness` (salvage merged to `main` at `09f05f3`)  **PR:** none  **Updated:** 2026-08-16
 
-- **Landed:** salvage merged — `defaultTab` API, the audit above, use-form/form-fields/home/data-table + ~30 small pages to standard. Merged `main` verified **760/762**, build clean (only the pre-existing slider-cursor pair fails).
-- **Repo state:** `main` clean, 10 commits ahead of origin (user pushes). Worktree `../vanillin-task82` on `docs/completeness`. Stash "task82 interrupted-worker pages" holds 20 half-written page rewrites — reference only, treat as unreviewed.
-- **Next:** redo the 20 stashed pages (sub-tasks 3 + 7): dropdown-menu, context-menu, toast, menubar, select, tooltip, popover, dialog, hover-card, alert-dialog, command, accordion, toggle-group, pagination, switch, resizable, scroll-area, checkbox, empty, direction. Then em-dash sweep (334 left, last).
-- **Gotchas:** unescaped `${…}` inside a `code={`…`}` template literal renders as a ReferenceError and unmounts the whole app — one instance aborted three suites; grep `(?<!\\)\$\{` inside code props after any batch rewrite. Wide one-line demo content (long `<pre>` strings) shifts the demo under the sidebar via `pg-preview-content` centering — flagged for task 81. Suite runner trusts anything on :5199 — see ISSUES H4 before believing a surprising run.
+- **Landed:** salvage merged (`defaultTab` API, the audit above, use-form/form-fields/home/data-table + ~30 small pages). **All 20 pages named in the previous Next line are now done** across 6 commits on `docs/completeness` (`74a7b44` … `e12fc91`), plus a partial em-dash sweep (`734fa91`). Verified **760/762**, build clean; the 2 failures are the pre-existing slider-cursor pair.
+- **Repo state:** worktree `../vanillin-task82` on `docs/completeness`, 7 commits ahead of `main`, tree clean. Not pushed, no PR. Stash "task82 interrupted-worker pages" is still unpopped and now obsolete: the 20 pages were rewritten from scratch, not from it.
+- **Next:** finish the em-dash sweep. **160 left**, concentrated in 11 files: `docs/theming` (25), `docs/configuration` (24), `form-fields` (19), `container-queries` (17), `docs/schema` (14), `use-form` (13), `form` (11), `docs/cli` (11), `data-table` (10), `docs/introduction` (7), `docs/installation` (7). Done when `grep -ro "—" site/pages | wc -l` is 0.
+- **Gotchas:**
+  - **Viewport-anchored tests break when a page gets taller above the fixture.** Adding a Usage section above `context-trigger` pushed it past 720px and failed 11 context-menu tests that drive raw `page.mouse` at `boundingBox()` coords. Same exposure on `resizable` (`r-horizontal`), `scroll-area` (`sa-vertical`), and `toast`. Fix: keep the tested demo as the **first** section and put the `defaultTab="code"` Usage section after it.
+  - **`defaultTab="code"` removes the demo from the DOM** (`TabsContent` returns `null` when inactive). Any page whose test selects inside the old Usage demo needs that demo moved to a preview-tab section named "Default", with a fresh Usage section carrying different ids/labels.
+  - `empty.jsx`'s Default demo must stay **outside** a preview: `tests/empty.test.mjs` asserts `frame.x === heading.x` on the page grid (ISSUES H3). Every other Empty demo is wrapped, each with its own `.pg-empty-frame` so the "one frame per empty demo" count assertion holds.
+  - `accordion` tests index `.accordion` by `.first()`/`.nth(1)`, so new demos must go after the Multiple section.
+  - Unescaped `${…}` inside a `` code={`…`} `` template literal unmounts the whole app; grep after every batch. Suite runner trusts anything on :5199 (ISSUES H4).
