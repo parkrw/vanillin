@@ -16,6 +16,11 @@
  * navigation-menu defect as clean — the intruding element is one row of
  * triggers across the panel's middle, and the three points straddle it.
  *
+ * Triggers are addressed by component class where one exists and by the docs
+ * page's `data-pg` hook where it does not (`ui/context-menu`'s trigger renders
+ * no class of its own). Those hooks belong to `site/pages/**`; if a page drops
+ * one the probe reports `no-trigger`, which is loud rather than a silent pass.
+ *
  *   node scripts/probe-stacking.mjs              # every overlay
  *   node scripts/probe-stacking.mjs select combo # substring filter on route
  *   node scripts/probe-stacking.mjs --json       # machine-readable
@@ -44,14 +49,14 @@ const filters = argv.filter((a) => !a.startsWith("--"))
 const CASES = [
   { route: "navigation-menu", panel: ".navigation-menu-viewport, .navigation-menu-content:not([hidden])", open: "hover", trigger: ".navigation-menu-trigger" },
   { route: "dropdown-menu", panel: ".dropdown-menu", open: "click", trigger: "[aria-haspopup='menu']" },
-  { route: "context-menu", panel: ".context-menu", open: "contextmenu", trigger: "[data-pg='context-target'], .pg-context-target" },
+  { route: "context-menu", panel: ".context-menu", open: "contextmenu", trigger: "[data-pg='context-trigger']" },
   { route: "popover", panel: ".popover", open: "click", trigger: "[aria-haspopup='dialog']" },
   { route: "tooltip", panel: ".tooltip", open: "hover", trigger: "[aria-describedby], .tooltip-trigger" },
   { route: "hover-card", panel: ".hover-card", open: "hover", trigger: ".hover-card-trigger" },
   { route: "select", panel: ".select-content", open: "click", trigger: ".select-trigger" },
   { route: "combobox", panel: ".combobox-content", open: "click", trigger: ".combobox-trigger, .combobox-input" },
   { route: "menubar", panel: ".menubar-content", open: "click", trigger: ".menubar-trigger" },
-  { route: "command", panel: ".command-dialog, .command", open: "click", trigger: "[aria-haspopup='dialog'], .command-trigger" },
+  { route: "command", panel: ".command-dialog", open: "click", trigger: "[data-pg='cmd-dialog-trigger']" },
 ]
 
 const cases = filters.length ? CASES.filter((c) => filters.some((f) => c.route.includes(f))) : CASES
@@ -90,35 +95,46 @@ function measure({ panel }) {
   const style = getComputedStyle(el)
 
   // `elementFromPoint` reports hit-testing order, not paint order, so a panel
-  // that deliberately ignores the pointer (tooltip) can never win it. Those are
-  // unmeasurable here rather than defective — say so instead of reporting 49/49.
-  if (style.pointerEvents === "none") {
-    return { opened: true, unmeasurable: "pointer-events: none", zIndex: style.zIndex, position: style.position }
-  }
+  // that deliberately ignores the pointer (tooltip, `tooltip.css:18`) can never
+  // win it and reported 49/49 covered on the first run. Lend it the pointer for
+  // the length of the measurement and the hit test answers the paint-order
+  // question instead. No event is dispatched and the pointer does not move, so
+  // the tooltip's own hover bookkeeping never sees this.
+  //
+  // Residual blind spot, and the reason this is `forced` rather than plain
+  // `ok`: an intruder that is itself `pointer-events: none` still paints over
+  // the panel and is still invisible here. Only the panel is lent the pointer.
+  const forced = style.pointerEvents === "none"
+  if (forced) el.style.setProperty("pointer-events", "auto", "important")
 
   // 7x7 interior grid, inset so a 1px border does not count as an intruder.
   const STEPS = 7
   const inset = 4
   const covered = []
-  for (let row = 0; row < STEPS; row++) {
-    for (let col = 0; col < STEPS; col++) {
-      const x = box.left + inset + ((box.width - inset * 2) * col) / (STEPS - 1)
-      const y = box.top + inset + ((box.height - inset * 2) * row) / (STEPS - 1)
-      if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) continue
-      const hit = document.elementFromPoint(x, y)
-      if (!hit) continue
-      if (hit === el || el.contains(hit)) continue
-      covered.push({
-        at: [Math.round(x), Math.round(y)],
-        by: (hit.className && String(hit.className).slice(0, 60)) || hit.tagName,
-      })
+  try {
+    for (let row = 0; row < STEPS; row++) {
+      for (let col = 0; col < STEPS; col++) {
+        const x = box.left + inset + ((box.width - inset * 2) * col) / (STEPS - 1)
+        const y = box.top + inset + ((box.height - inset * 2) * row) / (STEPS - 1)
+        if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) continue
+        const hit = document.elementFromPoint(x, y)
+        if (!hit) continue
+        if (hit === el || el.contains(hit)) continue
+        covered.push({
+          at: [Math.round(x), Math.round(y)],
+          by: (hit.className && String(hit.className).slice(0, 60)) || hit.tagName,
+        })
+      }
     }
+  } finally {
+    if (forced) el.style.removeProperty("pointer-events")
   }
 
   // Collapse to distinct intruders — one bug reports as one line, not 20 points.
   const intruders = [...new Set(covered.map((c) => c.by))]
   return {
     opened: true,
+    forced,
     zIndex: style.zIndex,
     position: style.position,
     points: STEPS * STEPS,
@@ -155,8 +171,7 @@ try {
 
       const found = await page.evaluate(measure, testCase)
       if (!found.opened) results.push({ ...record, status: "never-opened" })
-      else if (found.unmeasurable) results.push({ ...record, status: "unmeasurable", ...found })
-      else results.push({ ...record, status: found.coveredPoints ? "COVERED" : "ok", ...found })
+      else results.push({ ...record, status: found.coveredPoints ? "COVERED" : found.forced ? "ok-forced" : "ok", ...found })
     } catch (error) {
       results.push({ ...record, status: "error", error: String(error).split("\n")[0].slice(0, 120) })
     }
@@ -173,15 +188,13 @@ if (asJson) {
     const head = `${r.route.padEnd(18)} ${r.status.padEnd(12)}`
     if (r.status === "COVERED") {
       console.log(`${head} ${r.coveredPoints}/${r.points} points  z=${r.zIndex} pos=${r.position}  under: ${r.intruders.join(", ")}`)
-    } else if (r.status === "ok") {
-      console.log(`${head} z=${r.zIndex} pos=${r.position}`)
-    } else if (r.status === "unmeasurable") {
-      console.log(`${head} ${r.unmeasurable}  z=${r.zIndex} pos=${r.position}`)
+    } else if (r.status === "ok" || r.status === "ok-forced") {
+      console.log(`${head} z=${r.zIndex} pos=${r.position}${r.forced ? "  (pointer-events lent for the hit test)" : ""}`)
     } else {
       console.log(`${head} ${r.error ?? ""}`)
     }
   }
   const bad = results.filter((r) => r.status === "COVERED").length
-  const unmeasured = results.filter((r) => r.status !== "ok" && r.status !== "COVERED").length
+  const unmeasured = results.filter((r) => !r.status.startsWith("ok") && r.status !== "COVERED").length
   console.log(`\n${results.length} overlays: ${bad} covered, ${unmeasured} not measured.`)
 }
