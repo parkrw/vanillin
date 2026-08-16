@@ -630,6 +630,10 @@ recording instead of fixing):
 
 ## H. Test-quality gaps
 
+### H4. `tests/run.mjs` accepts an imposter dev server — the suite can silently test the wrong tree
+**Status:** open  **Found:** task82 salvage, 2026-08-16
+`run.mjs` spawns vite with `--strictPort` but never checks that the child survived; `waitForServer()` just fetches `:5199`, so anything already on the port answers and the whole suite runs against *that* tree. Hit for real: an orphaned vite rooted in `../vanillin-task82` made merged `main` read 755-758/762 with phantom deterministic failures (nav-menu z-index "regression", slider `@fs` 403) that vanished once the orphan was killed. Cheapest fix: fail fast when the spawned vite exits (`vite.on("exit", ...)` before `waitForServer`), or fetch a nonce file vite serves only from the expected root.
+
 ### H1. ~~Assertions that hold for the wrong value~~ — SWEPT (`c7f0664d119e`)
 
 `.data-table-pinned`'s `inset-inline-start === "0px"` was also true for

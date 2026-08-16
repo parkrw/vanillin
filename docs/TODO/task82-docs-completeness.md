@@ -120,14 +120,10 @@ Done when: every component page and every `docs/` page is complete by its own pa
 
 ## Handoff
 
-**Status:** IN PROGRESS — salvaged after an interrupted 12-agent fan-out (2026-08-13); suite 759/761 + clean build on this commit (2026-08-15).
+**Status:** IN PROGRESS
+**Branch:** `docs/completeness` (salvage merged to `main` at `09f05f3`)  **PR:** none  **Updated:** 2026-08-16
 
-**Landed (this commit):** sub-task 0a (`defaultTab` prop, all 53 Usage sections open on Code), sub-task 1 audit (section above), `use-form` 0→11 previews, `form-fields` 0→8, home hero fixes, `data-table` 1→7 previews with all 23 `data-pg` fixtures intact, and every small-page rewrite whose tests pass (~30 pages).
-
-**Reverted to baseline and stashed** as `stash@{0}` on this worktree ("task82 interrupted-worker pages") — 20 pages whose workers were killed mid-write and failed 137 tests: dropdown-menu, context-menu, toast, menubar, select, tooltip, popover, dialog, hover-card, alert-dialog, command, accordion, toggle-group, pagination, switch, resizable, scroll-area, checkbox, empty, direction. The stash is reference material for redoing them, not a fast path — treat each page as unreviewed.
-
-**Two defects fixed during salvage, both one line:**
-- `use-form.jsx` result `<pre>`: a long one-line string gives the demo wrapper a min-content width wider than `pg-preview-content`, which centers it — the whole form shifts under the sticky sidebar and clicks land on nav links. Fixed with `pre-wrap`/`break-all` on that pre. **For task 81:** `pg-preview-content` needs a width constraint; any wide demo content reproduces this silently.
-- `slider.jsx:173`: worker wrote `${price[0]}` unescaped inside a `code={`…`}` template literal — evaluates at render, throws, unmounts the whole app. This aborted the `cursor`/`forced-colors`/`slider` suites and shrank the run to 732 registered tests (an aborted file registers 1 FAIL, not its N tests). Swept all pages for the pattern: single instance. Worth a lint or a sweep after any batch page rewrite: `(?<!\\)\$\{` inside `code={`…`}`.
-
-**Remaining:** the 20 stashed pages (sub-tasks 3, 7 partially), em-dash sweep (334 left, deliberately last), and whatever of sub-tasks 4/5 the audit still lists.
+- **Landed:** salvage merged — `defaultTab` API, the audit above, use-form/form-fields/home/data-table + ~30 small pages to standard. Merged `main` verified **760/762**, build clean (only the pre-existing slider-cursor pair fails).
+- **Repo state:** `main` clean, 10 commits ahead of origin (user pushes). Worktree `../vanillin-task82` on `docs/completeness`. Stash "task82 interrupted-worker pages" holds 20 half-written page rewrites — reference only, treat as unreviewed.
+- **Next:** redo the 20 stashed pages (sub-tasks 3 + 7): dropdown-menu, context-menu, toast, menubar, select, tooltip, popover, dialog, hover-card, alert-dialog, command, accordion, toggle-group, pagination, switch, resizable, scroll-area, checkbox, empty, direction. Then em-dash sweep (334 left, last).
+- **Gotchas:** unescaped `${…}` inside a `code={`…`}` template literal renders as a ReferenceError and unmounts the whole app — one instance aborted three suites; grep `(?<!\\)\$\{` inside code props after any batch rewrite. Wide one-line demo content (long `<pre>` strings) shifts the demo under the sidebar via `pg-preview-content` centering — flagged for task 81. Suite runner trusts anything on :5199 — see ISSUES H4 before believing a surprising run.
