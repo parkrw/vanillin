@@ -1,3 +1,4 @@
+import { useState } from "react"
 import {
   Accordion,
   AccordionItem,
@@ -13,6 +14,8 @@ import "../install-snippet.css"
 import "../api-reference.css"
 
 export default function AccordionPage() {
+  const [openPanel, setOpenPanel] = useState("shipping")
+
   return (
     <>
       <h2>Accordion</h2>
@@ -21,15 +24,15 @@ export default function AccordionPage() {
       <InstallSnippet slug="accordion" />
 
       <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview code={`import { Accordion, AccordionItem, AccordionTrigger,
-  AccordionContent } from "./ui/accordion/accordion"
-import "./ui/accordion/accordion.css"
-
-<Accordion type="single" collapsible>
+        <h3>Default</h3>
+        <ComponentPreview code={`<Accordion type="single" collapsible defaultValue="item-1">
   <AccordionItem value="item-1">
-    <AccordionTrigger>Section title</AccordionTrigger>
-    <AccordionContent>Panel content.</AccordionContent>
+    <AccordionTrigger>Is it accessible?</AccordionTrigger>
+    <AccordionContent>Yes. It adheres to the WAI-ARIA design pattern.</AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="item-2">
+    <AccordionTrigger>Is it styled?</AccordionTrigger>
+    <AccordionContent>Yes. It comes with default styles.</AccordionContent>
   </AccordionItem>
 </Accordion>`}>
           <Accordion type="single" collapsible defaultValue="item-1" style={{ maxWidth: "24rem" }}>
@@ -53,6 +56,9 @@ import "./ui/accordion/accordion.css"
             </AccordionItem>
           </Accordion>
         </ComponentPreview>
+        <p className="pg-desc">
+          <code>type="single"</code> closes the open panel when another opens. Adding <code>collapsible</code> also lets the reader close the last one, leaving nothing open.
+        </p>
       </section>
 
       <section className="pg-section">
@@ -82,6 +88,74 @@ import "./ui/accordion/accordion.css"
             </AccordionItem>
           </Accordion>
         </ComponentPreview>
+        <p className="pg-desc">
+          In multiple mode the value is an array, so every panel toggles on its own and the component never closes one for you.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Accordion, AccordionItem, AccordionTrigger,
+  AccordionContent } from "./ui/accordion/accordion"
+import "./ui/accordion/accordion.css"
+
+<Accordion type="single" collapsible>
+  <AccordionItem value="item-1">
+    <AccordionTrigger>Section title</AccordionTrigger>
+    <AccordionContent>Panel content.</AccordionContent>
+  </AccordionItem>
+</Accordion>`}>
+          <Accordion type="single" collapsible style={{ maxWidth: "24rem" }}>
+            <AccordionItem value="item-1">
+              <AccordionTrigger>Section title</AccordionTrigger>
+              <AccordionContent>Panel content.</AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </ComponentPreview>
+        <p className="pg-desc">
+          Every item needs a <code>value</code>: it is what the accordion tracks as open, and what you pass to <code>defaultValue</code> or <code>value</code>.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Controlled</h3>
+        <ComponentPreview code={`const [open, setOpen] = useState("shipping")
+
+<Accordion type="single" collapsible value={open} onValueChange={setOpen}>
+  <AccordionItem value="shipping">
+    <AccordionTrigger>Shipping</AccordionTrigger>
+    <AccordionContent>Ships in two business days.</AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="returns">
+    <AccordionTrigger>Returns</AccordionTrigger>
+    <AccordionContent>Thirty days, no questions.</AccordionContent>
+  </AccordionItem>
+</Accordion>`}>
+          <div style={{ width: "100%" }}>
+            <Accordion
+              type="single"
+              collapsible
+              value={openPanel}
+              onValueChange={setOpenPanel}
+              style={{ maxWidth: "24rem" }}
+            >
+              <AccordionItem value="shipping">
+                <AccordionTrigger>Shipping</AccordionTrigger>
+                <AccordionContent>Ships in two business days.</AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="returns">
+                <AccordionTrigger>Returns</AccordionTrigger>
+                <AccordionContent>Thirty days, no questions.</AccordionContent>
+              </AccordionItem>
+            </Accordion>
+            <p className="pg-desc">
+              Open panel: {openPanel || "none"}
+            </p>
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          <code>onValueChange</code> receives an empty string when the last panel closes under <code>collapsible</code>, so the parent can tell "nothing open" from "first item open".
+        </p>
       </section>
 
       <section className="pg-section">
@@ -101,6 +175,9 @@ import "./ui/accordion/accordion.css"
             </AccordionItem>
           </Accordion>
         </ComponentPreview>
+        <p className="pg-desc">
+          A disabled item keeps its place in the stack but drops out of arrow-key navigation, so Home and End skip past it rather than parking focus on a trigger that will not open.
+        </p>
       </section>
 
       <section className="pg-section">
@@ -140,6 +217,9 @@ import "./ui/accordion/accordion.css"
             </AccordionItem>
           </Accordion>
         </ComponentPreview>
+        <p className="pg-desc">
+          Panel content is ordinary JSX, so code, links, and lists all render. The height animation measures the content, which means it works whatever you put in there.
+        </p>
       </section>
 
       <ApiReference title="Accordion" props={[
