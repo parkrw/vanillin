@@ -164,4 +164,38 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(after > before, true, `expected rail to grow, ${before} → ${after}`)
     await page.evaluate(() => localStorage.removeItem("pg-rail-width"))
   })
+
+  await test("content column clears both side menus by the gutter", async () => {
+    const gutters = async () => page.evaluate(() => {
+      const main = document.querySelector(".pg-main")
+      const cs = getComputedStyle(main)
+      const box = main.getBoundingClientRect()
+      const sidebar = document.querySelector(".pg-sidebar").getBoundingClientRect()
+      // The rail stays in the DOM below 72rem — CSS hides it, so read display.
+      const el = document.querySelector(".pg-rail")
+      const rail = el && getComputedStyle(el).display !== "none" ? el : null
+      return {
+        left: box.left + parseFloat(cs.paddingLeft) - sidebar.right,
+        right: rail ? rail.getBoundingClientRect().left - (box.right - parseFloat(cs.paddingRight)) : null,
+      }
+    })
+
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto(`${baseUrl}/#checkbox`)
+    await page.waitForSelector('[data-pg="rail"]')
+    const wide = await gutters()
+    eq(wide.left >= 80, true, `expected >=80px before the sidebar, got ${wide.left}`)
+    eq(wide.right >= 80, true, `expected >=80px before the rail, got ${wide.right}`)
+
+    // Below 72rem the rail is gone and the gutter steps down, but the column
+    // must still clear the sidebar rather than butting against it.
+    await page.setViewportSize({ width: 1024, height: 900 })
+    await page.goto(`${baseUrl}/#checkbox`)
+    await page.waitForSelector(".pg-section > h3")
+    const narrow = await gutters()
+    eq(narrow.right, null, "expected the rail to be dropped below 72rem")
+    eq(narrow.left >= 40, true, `expected >=40px before the sidebar, got ${narrow.left}`)
+
+    await page.setViewportSize({ width: 1280, height: 720 })
+  })
 }

@@ -25,7 +25,15 @@
      carries prose *and* wide code blocks *and* component previews, so the
      shell is sized for the widest of the three and prose is clamped
      separately by --typeset-measure below. */
-  --pg-main-max: 68rem;
+  --pg-main-max: 72rem;
+
+  /* Breathing room between the content column and the two side menus. It is
+     `.pg-main`'s inline padding rather than a grid column-gap on purpose:
+     padding is the *only* inset the home page (single-track grid) and the
+     rail-less layout below 72rem have, so one token covers all three cases.
+     A gap would need three. Independent of both menus' drag-resize, since
+     they resize the 1fr track and the padding sits inside it. */
+  --pg-gutter: 5rem;
 
   /* Page rhythm — two gaps, nothing else. See "Page rhythm" below. */
   --pg-flow: 2rem;
@@ -68,13 +76,20 @@
   grid-template-columns: 1fr;
 }
 
-/* 72rem drops the rail. Two rules, one decision: the track list loses its
+/* 72rem drops the rail. Three rules, one decision: the track list loses its
    third column here and `.pg-rail` goes `display: none` (see Right rail), so
    the freed width goes to the content column instead of stranding a gap.
    Keep the two in step — a change to either alone strands the other. */
 @media (max-width: 72rem) {
   .pg-body {
     grid-template-columns: auto 1fr;
+  }
+
+  /* Third rule, same decision: below here only the sidebar is left to clear,
+     and the track is narrow enough that the wide gutter would cost more
+     column than the air is worth (at 1152 it takes 160 of 922). */
+  :root {
+    --pg-gutter: 2.5rem;
   }
 }
 
@@ -498,7 +513,7 @@
    pins to the sidebar and leaves a dead gap before the rail — at 2560 that
    gap was 1214px. */
 .pg-main {
-  padding: 2rem 2.5rem;
+  padding: 2rem var(--pg-gutter);
   max-inline-size: var(--pg-main-max);
   /* `width` is load-bearing: auto margins on a grid item suppress the default
      stretch, so without it the column shrinks to its content instead of
