@@ -28,4 +28,14 @@ User request 2026-08-17. These panels mount inside the home-page console mock, b
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** COMPLETE  **Branch:** `feat/console-panels` (pushed)  **PR:** none, user declined  **Updated:** 2026-08-17
+
+- **Landed:** `site/showcase/panels/index.js` exports `SupportPanel`, `SettingsPanel`, `StatusShowcase` — zero-prop, self-contained, `ackp-` prefixed, Acme Cloud branding. Sending a reply appends to the thread, attachments stage and unstage, every ticket row action toasts, the API key row reveals a placeholder, and eight widgets sweep 0-100% at durations from 3s to 20s.
+- **Repo state:** clean, 3 commits. Suite **775/778** (`VANILLIN_TEST_PORT=5243 npm test`), the 3 failures being the known slider-cursor pair plus the navigation-menu hover flake; `npm run build` clean; `grep -ri cloudkey site/showcase/panels` empty.
+- **Next:** supervisor wires the three exports into task 88's console slots after both branches merge. None of `site/showcase/console.*` was touched.
+- **Gotchas:**
+  - The panels have **no docs-site route**. They render from `site/showcase/panels/fixture.html`, which vite's dev server serves and the production build ignores (only `site/index.html` is a build input). If the supervisor gives them a real route, the fixture and its suite still work unchanged.
+  - **No panel renders a `<Toaster/>`.** The host does that once; two toasters in one tree queue against each other. The console already has one.
+  - The status sweep is a CSS animation on the registered `--ackp-progress` custom property; one rAF only mirrors that value into the readout text and `aria-valuenow`, so the animation stays the single source of truth. `prefers-reduced-motion` kills the animation and parks each widget on its own `--ackp-static`.
+  - `.ackp-bar .progress-indicator` needs `!important`: `ui/progress` writes the indicator transform inline from `value`, and these widgets drive it from the animated property instead.
+  - `docs/TODO/README.md` was **not** touched — it is shared with task 88's worker, so the row and Resume pointer are the supervisor's to update.
