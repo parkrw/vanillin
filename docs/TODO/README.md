@@ -1,5 +1,7 @@
 # Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–79)
 
+**Resume:** `docs/TODO/task86-usage-section-order.md` → Handoff (COMPLETE, PR #7 open). **The suite baseline is 759/762, not 760/762** — the third failure is the known `navigation-menu` hover-delay flake, confirmed against unmodified sources.
+
 **Resume:** three user-requested tasks seeded 2026-08-16: **85** (shell width + column-to-menus gap), **86** (Default-then-Usage section order), **87** (home cloud-console showcase, **blocked on the user's "VCD 10.6" design reference**). **Next: 85 + 86 (Owns disjoint — spawnable together), then 87 once unblocked, then 84, 74, console kit.** 82 COMPLETE 2026-08-16 (suite 760/762); worktree `../vanillin-task82`, branches `docs/completeness`/`docs/emdash-sweep`, and the "task82 interrupted-worker pages" stash are all safe to remove. **Batch 4 landed after an interrupted run (2026-08-16).** The 82 worker (Opus 5, `--effort max` from since-fixed skill text) fanned out 12 subagents and was killed mid-flight on 2026-08-13; a salvage session sorted the wreckage. Merged into `main`: **83 complete** (`fix/overlay-stacking` — nav-menu viewport z-index + regression test + probe covers all ten overlays) and **82 partial** (`docs/completeness` — `defaultTab` API, full page audit in the task file, use-form/form-fields/home/data-table + ~30 small pages to standard). Merged suite **759/761**, build clean; the 2 failures are the pre-existing slider-cursor pair. **82's remaining work:** 20 pages whose half-written rewrites were reverted (stashed as "task82 interrupted-worker pages" for reference — treat as unreviewed), plus the em-dash sweep (334 left, do last). **81 merged 2026-08-16** (`docs/layout-measure`, finish commit `66533a1`); post-merge suite **760/762** — only the slider-cursor pair. Worktrees `../vanillin-task{81,83}` are safe to remove; `../vanillin-task82` stays. **Next: 82's remaining 20 pages, then 84, 74 (now unblocked), console kit.** Run `/cycle --adjust` to reconcile. Note for future fan-outs: caps now live in `~/.claude/CLAUDE.md` — max 4 agents total, never `--effort max`, workers at session model or one tier lower.
 
 ## Handoff — batch 3 merged, batch 4 ready to spawn
@@ -187,7 +189,7 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 83  | overlay-stacking         | ~S  | [x]    | merged 2026-08-16 — nav-menu viewport z-index + regression test; probe covers all ten overlays [^83] |
 | 84  | token-guard              | ~S  | [ ]    | preventive — nothing broken today; build gate on undefined tokens [^84] |
 | 85  | shell-width-gap          | ~S  | [ ]    | user 2026-08-16 — column cap re-pick + ~double the column-to-menus spacing; owns `site/site.css`; 74 now deps on it |
-| 86  | usage-section-order      | ~M  | [ ]    | user 2026-08-16 — Default section leads, Usage (code tab) second, on every page; raw-coord test pages keep fixture first |
+| 86  | usage-section-order      | ~M  | [x]    | complete 2026-08-16 — 68/75 pages Default→Usage, 7 documented exceptions, PR #7; suite 759/762 [^86] |
 | 87  | home-console-showcase    | ~L  | [B]    | user 2026-08-16 — VCD 10.6 cloud-console mock below hero, kit-only, glass accents; **blocked on design reference** |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
@@ -517,6 +519,26 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
     across the panel's middle — the grid is load-bearing), and `elementFromPoint`
     measures hit-testing rather than painting, so `pointer-events: none`
     overlays like tooltip false-positive at 49/49 until explicitly excluded.
+
+[^86]: **Landed 2026-08-16** on `docs/usage-order` (4 commits, PR #7). Seven pages
+    are deliberate exceptions: `home.jsx` and the five system pages
+    (`container-queries`, `density`, `primitives`, `typography`,
+    `view-transitions`) carry no `InstallSnippet` and no `ApiReference` — they are
+    the alternative page type 82 licensed, and a `van add` snippet would be a lie
+    on all six — plus `navigation-menu`, whose Usage sits third so the two menu
+    fixtures stay adjacent for task 83's overlap test.
+    **The task file's premise was half wrong.** It recorded that only Usage
+    sections carried `defaultTab="code"`; `message-scroller.jsx` had five more, on
+    sections whose "preview" was a placeholder sentence. Those are `CodeBlock`s
+    now — prose about a mechanism was never a demo, so a Preview tab was never the
+    right control for them.
+    **The 720px trap bites in both directions.** Task 82 pushed fixtures down by
+    adding sections *above* them; this task did the same to `slider.jsx`'s `Range`
+    (y=746). The fix that generalises is **rename, don't move** — `resizable`,
+    `scroll-area` and `progress` kept their raw-coordinate fixtures leading and
+    only had the heading changed, which adds no height at all. Where a move was
+    unavoidable, prose had to be cut from above the fixture to pay for it.
+    `scripts/sweep-section-order.mjs` reruns the whole guard.
 
 [^84]: Added 2026-08-07 from a user report that `styles/typeset.css` read five
     `--typeset-*` tokens `defaults.css` did not define, so every heading computed

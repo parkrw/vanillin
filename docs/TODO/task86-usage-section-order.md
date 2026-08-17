@@ -49,4 +49,11 @@ User request 2026-08-16: "I ONLY want usage section to be code on page load and 
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
+**Branch:** `docs/usage-order`  **PR:** #7 (open)  **Updated:** 2026-08-16
+
+- **Landed:** 68 of 75 pages open with a Default demo and carry Usage immediately after it; all 69 `defaultTab="code"` occurrences are on a Usage section, one per page. The seven exceptions and why they hold are in the section above.
+- **Repo state:** clean, 4 commits pushed. `scripts/sweep-section-order.mjs` reruns the guard.
+- **Next:** task 84 (`token-guard`) — 85 is in flight in a sibling worktree and 74 collides with its `Owns`.
+- **Gotchas:** `slider.jsx`'s `Range` fixture sits ~30px above the 720px fold. **Task 85 owns `site/site.css`** — a column-width or section-spacing change will move it, and `slider.test.mjs`'s `clickAt` reads raw `boundingBox()` coords with no scroll, so it fails silently-looking ("upper follows click expected 90, got 75"). Re-run `node tests/run.mjs slider` after 85 merges.
+- **Baseline correction:** the full suite on this machine is **759/762**, not 760/762. The third failure is `navigation-menu: hover opens after delay` — verified not ours by restoring the original `navigation-menu.jsx` and re-running the full suite, which failed identically.
