@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Showcase panels fixture</title>
+  </head>
+  <body>
+    <!--
+      Test fixture for tests/showcase-panels.test.mjs. The panels are built to
+      be mounted inside the console mock, which task 88 owns concurrently, so
+      they have no route on the docs site yet. Vite's dev server serves any
+      HTML file under site/, and only site/index.html is a build input, so this
+      page exists for the suite without reaching production.
+    -->
+    <div id="root"></div>
+    <script type="module" src="./fixture.jsx"></script>
+  </body>
+</html>
