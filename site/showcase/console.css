@@ -1,5 +1,5 @@
-/* CloudKey console showcase. Everything is scoped under .ck-console and
-   styled from kit tokens; the only new values are the CloudKey brand gold,
+/* Acme Cloud console showcase. Everything is scoped under .ck-console and
+   styled from kit tokens; the only new values are the Acme Cloud brand gold,
    declared once here as scoped custom properties. */
 
 .ck-console {

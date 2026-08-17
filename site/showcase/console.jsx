@@ -93,10 +93,10 @@ import {
   REGIONS,
   SERVICES,
   findService,
-  SERVERS,
-  FLAVORS,
+  INSTANCES,
+  SIZES,
   QUOTAS,
-  IMAGES,
+  MACHINE_IMAGES,
   NETWORKS,
   VOLUMES,
   TASKS,
@@ -217,8 +217,8 @@ function ConsoleTopbar({ project, setProject, region, setRegion, onOpenPalette }
     <header className="ck-topbar">
       <div className="ck-brand">
         <span className="ck-brand-mark"><KeyIcon /></span>
-        <span className="ck-brand-name">CloudKey</span>
-        <Badge variant="secondary">10.6</Badge>
+        <span className="ck-brand-name">Acme Cloud</span>
+        <Badge variant="secondary">1.0.0</Badge>
       </div>
       <Separator orientation="vertical" decorative className="ck-topbar-sep" />
       <DropdownMenu>
@@ -271,7 +271,7 @@ function ConsoleTopbar({ project, setProject, region, setRegion, onOpenPalette }
           pwilliams
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>pwilliams@cloudkey.io</DropdownMenuLabel>
+          <DropdownMenuLabel>ops@acme.cloud</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => fakeTask("Rotate API key", "New key delivered to your inbox")}>
             Rotate API key
@@ -403,9 +403,9 @@ function Dashboard() {
   )
 }
 
-/* ── Servers table (the advanced data-table composition) ─────────────── */
+/* ── Instances table (the advanced data-table composition) ───────────── */
 
-function serverColumns(onDetails) {
+function instanceColumns(onDetails) {
   return [
     {
       id: "select",
@@ -448,8 +448,8 @@ function serverColumns(onDetails) {
       header: ({ column }) => <DataTableColumnHeader column={column} title="Zone" />,
     },
     {
-      accessorKey: "flavor",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Flavor" />,
+      accessorKey: "size",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Size" />,
     },
     {
       accessorKey: "ip",
@@ -477,7 +477,7 @@ function serverColumns(onDetails) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onSelect={() => onDetails(row.original)}>View details</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => fakeTask("Start server", row.original.name)}>Start</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => fakeTask("Start instance", row.original.name)}>Start</DropdownMenuItem>
             <DropdownMenuItem onSelect={() => fakeTask("Soft reboot", row.original.name)}>Soft reboot</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -493,12 +493,12 @@ function serverColumns(onDetails) {
   ]
 }
 
-function ServersView({ project, onDetails }) {
+function InstancesView({ project, onDetails }) {
   const data = useMemo(
-    () => (project === "admin" ? SERVERS : SERVERS.filter((s) => s.project === project)),
+    () => (project === "admin" ? INSTANCES : INSTANCES.filter((s) => s.project === project)),
     [project]
   )
-  const columns = useMemo(() => serverColumns(onDetails), [onDetails])
+  const columns = useMemo(() => instanceColumns(onDetails), [onDetails])
   const table = useDataTable({ data, columns, initialPageSize: 6 })
   const selected = Object.keys(table.getState().rowSelection).length
   const { pageIndex } = table.getState().pagination
@@ -507,22 +507,22 @@ function ServersView({ project, onDetails }) {
   return (
     <div className="ck-view">
       <div className="ck-page-head">
-        <h4 className="ck-page-title">Servers</h4>
+        <h4 className="ck-page-title">Instances</h4>
         <span className="ck-page-count">{data.length} in {project}</span>
       </div>
       <div className="ck-actions">
-        <Button size="sm" className="ck-accent-btn" onClick={() => fakeTask("Launch server", "Scheduling on az-east-1a")}>
-          Launch Server
+        <Button size="sm" className="ck-accent-btn" onClick={() => fakeTask("Launch instance", "Scheduling on az-east-1a")}>
+          Launch instance
         </Button>
         <ButtonGroup>
-          <Button variant="outline" size="sm" disabled={!selected} onClick={() => fakeTask("Start", `${selected} server(s)`)}>Start</Button>
-          <Button variant="outline" size="sm" disabled={!selected} onClick={() => fakeTask("Stop", `${selected} server(s)`)}>Stop</Button>
-          <Button variant="outline" size="sm" disabled={!selected} onClick={() => fakeTask("Live migrate", `${selected} server(s)`)}>Migrate</Button>
+          <Button variant="outline" size="sm" disabled={!selected} onClick={() => fakeTask("Start", `${selected} instance(s)`)}>Start</Button>
+          <Button variant="outline" size="sm" disabled={!selected} onClick={() => fakeTask("Stop", `${selected} instance(s)`)}>Stop</Button>
+          <Button variant="outline" size="sm" disabled={!selected} onClick={() => fakeTask("Live migrate", `${selected} instance(s)`)}>Migrate</Button>
         </ButtonGroup>
         <div className="ck-actions-spacer" />
         <Input
           className="ck-filter"
-          placeholder="Filter servers..."
+          placeholder="Filter instances..."
           value={table.getState().globalFilter}
           onChange={(e) => table.setGlobalFilter(e.target.value)}
         />
@@ -566,7 +566,7 @@ function ServersView({ project, onDetails }) {
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="ck-table-empty">
-                  No servers match.
+                  No instances match.
                 </TableCell>
               </TableRow>
             )}
@@ -664,26 +664,26 @@ function UnderConstruction({ name }) {
 function PageContent({ svc, page, project, onDetails }) {
   if (svc === "overview") return <Dashboard />
   switch (page) {
-    case "Servers":
-      return <ServersView project={project} onDetails={onDetails} />
-    case "Flavors":
+    case "Instances":
+      return <InstancesView project={project} onDetails={onDetails} />
+    case "Instance sizes":
       return (
         <SimpleTable
-          title="Flavors"
-          count={`${FLAVORS.length} flavors`}
-          cols={["Name", "VCPUs", "RAM", "Root disk", "Public"]}
-          rows={FLAVORS.map((f) => [<code className="ck-mono" key="n">{f.name}</code>, f.vcpus, f.ram, f.disk, f.pub])}
+          title="Instance sizes"
+          count={`${SIZES.length} sizes`}
+          cols={["Name", "vCPUs", "Memory", "Root disk", "Public"]}
+          rows={SIZES.map((f) => [<code className="ck-mono" key="n">{f.name}</code>, f.vcpus, f.ram, f.disk, f.pub])}
         />
       )
     case "Quotas":
       return <QuotasView />
-    case "Images":
+    case "Machine images":
       return (
         <SimpleTable
-          title="Images"
-          count={`${IMAGES.length} images`}
+          title="Machine images"
+          count={`${MACHINE_IMAGES.length} images`}
           cols={["Name", "Format", "Size", "Status", "Visibility"]}
-          rows={IMAGES.map((i) => [
+          rows={MACHINE_IMAGES.map((i) => [
             i.name,
             <code className="ck-mono" key="f">{i.format}</code>,
             i.size,
@@ -775,36 +775,36 @@ function ConsoleTaskbar() {
 
 /* ── Detail sheet ────────────────────────────────────────────────────── */
 
-function ServerSheet({ server, onOpenChange }) {
+function InstanceSheet({ instance, onOpenChange }) {
   return (
-    <Sheet open={!!server} onOpenChange={onOpenChange}>
+    <Sheet open={!!instance} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="ck-glass-panel">
-        {server && (
+        {instance && (
           <>
             <SheetHeader>
-              <SheetTitle>{server.name}</SheetTitle>
+              <SheetTitle>{instance.name}</SheetTitle>
               <SheetDescription>
-                {server.flavor} in {server.az}
+                {instance.size} in {instance.az}
               </SheetDescription>
             </SheetHeader>
             <div className="ck-sheet-body">
               <ItemGroup>
                 <Item size="sm">
                   <ItemContent><ItemTitle>Status</ItemTitle></ItemContent>
-                  <ItemActions><StatusBadge value={server.status} /></ItemActions>
+                  <ItemActions><StatusBadge value={instance.status} /></ItemActions>
                 </Item>
                 <Item size="sm">
                   <ItemContent><ItemTitle>IP address</ItemTitle></ItemContent>
-                  <ItemActions><code className="ck-mono">{server.ip}</code></ItemActions>
+                  <ItemActions><code className="ck-mono">{instance.ip}</code></ItemActions>
                 </Item>
                 <Item size="sm">
                   <ItemContent><ItemTitle>Project</ItemTitle></ItemContent>
-                  <ItemActions><Badge variant="outline">{server.project}</Badge></ItemActions>
+                  <ItemActions><Badge variant="outline">{instance.project}</Badge></ItemActions>
                 </Item>
                 <Item size="sm">
                   <ItemContent>
                     <ItemTitle>Owner</ItemTitle>
-                    <ItemDescription>Launched by {server.user}</ItemDescription>
+                    <ItemDescription>Launched by {instance.user}</ItemDescription>
                   </ItemContent>
                 </Item>
               </ItemGroup>
@@ -812,20 +812,20 @@ function ServerSheet({ server, onOpenChange }) {
               <div className="ck-util">
                 <div className="ck-util-row">
                   <span className="ck-util-label">CPU</span>
-                  <Progress value={server.cpu} className="ck-util-bar" data-tone={server.cpu >= 85 ? "warning" : "success"} />
-                  <span className="ck-util-val">{server.cpu}%</span>
+                  <Progress value={instance.cpu} className="ck-util-bar" data-tone={instance.cpu >= 85 ? "warning" : "success"} />
+                  <span className="ck-util-val">{instance.cpu}%</span>
                 </div>
                 <div className="ck-util-row">
                   <span className="ck-util-label">Memory</span>
-                  <Progress value={server.mem} className="ck-util-bar" data-tone={server.mem >= 85 ? "warning" : "success"} />
-                  <span className="ck-util-val">{server.mem}%</span>
+                  <Progress value={instance.mem} className="ck-util-bar" data-tone={instance.mem >= 85 ? "warning" : "success"} />
+                  <span className="ck-util-val">{instance.mem}%</span>
                 </div>
               </div>
             </div>
             <SheetFooter>
               <Button
                 variant="outline"
-                onClick={() => fakeTask("Soft reboot", server.name)}
+                onClick={() => fakeTask("Soft reboot", instance.name)}
               >
                 Soft reboot
               </Button>
@@ -877,22 +877,22 @@ function ConsolePalette({ open, onOpenChange, onNavigate }) {
         <CommandSeparator />
         <CommandGroup heading="Actions">
           <CommandItem
-            value="launch server create instance"
-            onSelect={() => { fakeTask("Launch server", "Scheduling on az-east-1a"); onOpenChange(false) }}
+            value="launch instance create server"
+            onSelect={() => { fakeTask("Launch instance", "Scheduling on az-east-1a"); onOpenChange(false) }}
           >
-            Launch a server
+            Launch an instance
           </CommandItem>
           <CommandItem
             value="create volume block storage"
-            onSelect={() => { fakeTask("Create volume", "ceph-ssd, 100 GB"); onOpenChange(false) }}
+            onSelect={() => { fakeTask("Create volume", "fast-ssd, 100 GB"); onOpenChange(false) }}
           >
             Create a volume
           </CommandItem>
           <CommandItem
-            value="upload image glance"
-            onSelect={() => { fakeTask("Upload image", "ubuntu-24.04-ck"); onOpenChange(false) }}
+            value="upload machine image"
+            onSelect={() => { fakeTask("Upload machine image", "ubuntu-24.04-acme"); onOpenChange(false) }}
           >
-            Upload an image
+            Upload a machine image
           </CommandItem>
         </CommandGroup>
       </CommandList>
@@ -907,7 +907,7 @@ export default function ConsoleShowcase() {
   const [project, setProject] = useState("engineering")
   const [region, setRegion] = useState("Dallas")
   const [paletteOpen, setPaletteOpen] = useState(false)
-  const [detailServer, setDetailServer] = useState(null)
+  const [detailInstance, setDetailInstance] = useState(null)
 
   const navigate = (svcId, page) => {
     const svc = findService(svcId)
@@ -938,7 +938,7 @@ export default function ConsoleShowcase() {
                   <BreadcrumbList>
                     <BreadcrumbItem>
                       <BreadcrumbLink as="button" type="button" onClick={() => navigate("overview")}>
-                        CloudKey
+                        Acme Cloud
                       </BreadcrumbLink>
                     </BreadcrumbItem>
                     {svc && (
@@ -972,7 +972,7 @@ export default function ConsoleShowcase() {
                     </div>
                     {svc.pages.map((p) => (
                       <TabsContent key={p} value={p} className="ck-content">
-                        <PageContent svc={view.svc} page={p} project={project} onDetails={setDetailServer} />
+                        <PageContent svc={view.svc} page={p} project={project} onDetails={setDetailInstance} />
                       </TabsContent>
                     ))}
                   </Tabs>
@@ -982,7 +982,7 @@ export default function ConsoleShowcase() {
                 <>
                   <div className="ck-toolbar">{crumbs}</div>
                   <div className="ck-content">
-                    <PageContent svc={view.svc} page={view.page} project={project} onDetails={setDetailServer} />
+                    <PageContent svc={view.svc} page={view.page} project={project} onDetails={setDetailInstance} />
                   </div>
                 </>
               )
@@ -992,7 +992,7 @@ export default function ConsoleShowcase() {
         </ResizablePanel>
       </ResizablePanelGroup>
       <ConsolePalette open={paletteOpen} onOpenChange={setPaletteOpen} onNavigate={navigate} />
-      <ServerSheet server={detailServer} onOpenChange={(open) => !open && setDetailServer(null)} />
+      <InstanceSheet instance={detailInstance} onOpenChange={(open) => !open && setDetailInstance(null)} />
       <Toaster position="bottom-right" richColors />
     </div>
   )
