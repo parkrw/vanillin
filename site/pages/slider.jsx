@@ -19,11 +19,6 @@ export default function SliderPage() {
 
       <section className="pg-section">
         <h3>Default</h3>
-        <p>
-          A single thumb at a starting value. Arrow keys move by one step,
-          Shift+Arrow by 10, Home/End jump to the extremes. Clicking the
-          track jumps the thumb to that position.
-        </p>
         <div className="pg-row" style={{ width: "60%" }}>
           <Slider defaultValue={[33]} aria-label="Default" />
         </div>
@@ -187,6 +182,14 @@ import "./ui/slider/slider.css"
         { name: "disabled", type: "boolean", default: "false", description: "Prevents interaction" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />
+
+      <section className="pg-section">
+        <h3>Keyboard</h3>
+        <p>
+          Arrow keys move by one step, Shift+Arrow by 10, and Home/End jump to the
+          extremes. Clicking the track jumps the nearest thumb to that position.
+        </p>
+      </section>
     </>
   )
 }

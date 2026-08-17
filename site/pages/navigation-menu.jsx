@@ -93,28 +93,6 @@ export default function NavigationMenuPage() {
       </section>
 
       <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview defaultTab="code" code={`import { NavigationMenu, NavigationMenuList, NavigationMenuItem,
-  NavigationMenuTrigger, NavigationMenuContent, NavigationMenuLink,
-  NavigationMenuViewport } from "./ui/navigation-menu/navigation-menu"
-import "./ui/navigation-menu/navigation-menu.css"
-
-<NavigationMenu>
-  <NavigationMenuList>
-    <NavigationMenuItem>
-      <NavigationMenuTrigger>Products</NavigationMenuTrigger>
-      <NavigationMenuContent>
-        <NavigationMenuLink href="#">Overview</NavigationMenuLink>
-      </NavigationMenuContent>
-    </NavigationMenuItem>
-  </NavigationMenuList>
-  <NavigationMenuViewport />
-</NavigationMenu>`}>
-          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
-        </ComponentPreview>
-      </section>
-
-      <section className="pg-section">
         <h3>Per-item popover mode</h3>
         <p style={{ fontSize: "0.8125rem", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
           Each trigger anchors its own popover panel. Better for wide menus
@@ -169,6 +147,28 @@ import "./ui/navigation-menu/navigation-menu.css"
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { NavigationMenu, NavigationMenuList, NavigationMenuItem,
+  NavigationMenuTrigger, NavigationMenuContent, NavigationMenuLink,
+  NavigationMenuViewport } from "./ui/navigation-menu/navigation-menu"
+import "./ui/navigation-menu/navigation-menu.css"
+
+<NavigationMenu>
+  <NavigationMenuList>
+    <NavigationMenuItem>
+      <NavigationMenuTrigger>Products</NavigationMenuTrigger>
+      <NavigationMenuContent>
+        <NavigationMenuLink href="#">Overview</NavigationMenuLink>
+      </NavigationMenuContent>
+    </NavigationMenuItem>
+  </NavigationMenuList>
+  <NavigationMenuViewport />
+</NavigationMenu>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
