@@ -36,7 +36,6 @@ export default function CarouselPage() {
 
       <InstallSnippet slug="carousel" />
 
-      {/* Default: one item per view */}
       <section className="pg-section">
         <h3>Default</h3>
         <ComponentPreview code={`<Carousel>

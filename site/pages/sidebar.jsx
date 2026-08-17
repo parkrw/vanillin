@@ -277,8 +277,6 @@ import "./ui/sidebar/sidebar.css"
         </ComponentPreview>
       </section>
 
-
-
       <section className="pg-section" data-pg="sb-icon">
         <h3>Icon collapsible (starts collapsed)</h3>
         <div

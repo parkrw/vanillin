@@ -189,7 +189,7 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 83  | overlay-stacking         | ~S  | [x]    | merged 2026-08-16 — nav-menu viewport z-index + regression test; probe covers all ten overlays [^83] |
 | 84  | token-guard              | ~S  | [ ]    | preventive — nothing broken today; build gate on undefined tokens [^84] |
 | 85  | shell-width-gap          | ~S  | [ ]    | user 2026-08-16 — column cap re-pick + ~double the column-to-menus spacing; owns `site/site.css`; 74 now deps on it |
-| 86  | usage-section-order      | ~M  | [x]    | complete 2026-08-16 — 68/75 pages Default→Usage, 7 documented exceptions, PR #7; suite 759/762 [^86] |
+| 86  | usage-section-order      | ~M  | [x]    | complete 2026-08-16 — 69/75 pages Default→Usage, 7 documented exceptions, PR #7; suite 759/762 [^86] |
 | 87  | home-console-showcase    | ~L  | [B]    | user 2026-08-16 — VCD 10.6 cloud-console mock below hero, kit-only, glass accents; **blocked on design reference** |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density

@@ -38,6 +38,83 @@ export default function SheetPage() {
       <InstallSnippet slug="sheet" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Sheet>
+  <SheetTrigger as={Button} variant="outline">Open sheet</SheetTrigger>
+  <SheetContent>
+    <SheetHeader>
+      <SheetTitle>Edit profile</SheetTitle>
+      <SheetDescription>Make changes to your profile here.</SheetDescription>
+    </SheetHeader>
+    <Field>
+      <FieldLabel htmlFor="name">Name</FieldLabel>
+      <Input id="name" defaultValue="Pedro Duarte" />
+    </Field>
+    <SheetFooter>
+      <SheetClose as={Button} variant="outline">Close</SheetClose>
+      <Button>Save changes</Button>
+    </SheetFooter>
+  </SheetContent>
+</Sheet>`}>
+          <Sheet>
+            <SheetTrigger as={Button} variant="outline">Open sheet</SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Edit profile</SheetTitle>
+                <SheetDescription>Make changes to your profile here.</SheetDescription>
+              </SheetHeader>
+              <Field>
+                <FieldLabel htmlFor="sheet-default-name">Name</FieldLabel>
+                <Input id="sheet-default-name" defaultValue="Pedro Duarte" />
+              </Field>
+              <SheetFooter>
+                <SheetClose as={Button} variant="outline">Close</SheetClose>
+                <Button>Save changes</Button>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Sheet, SheetTrigger, SheetClose, SheetContent,
+  SheetHeader, SheetFooter, SheetTitle, SheetDescription }
+  from "./ui/sheet/sheet"
+import "./ui/sheet/sheet.css"
+
+<Sheet>
+  <SheetTrigger as={Button} variant="outline">View session</SheetTrigger>
+  <SheetContent>
+    <SheetHeader>
+      <SheetTitle>Session details</SheetTitle>
+      <SheetDescription>Signed in from Chrome on macOS.</SheetDescription>
+    </SheetHeader>
+    <p>Last active 2 minutes ago.</p>
+    <SheetFooter>
+      <Button variant="destructive">Sign out</Button>
+      <SheetClose as={Button} variant="outline">Done</SheetClose>
+    </SheetFooter>
+  </SheetContent>
+</Sheet>`}>
+          <Sheet>
+            <SheetTrigger as={Button} variant="outline">View session</SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Session details</SheetTitle>
+                <SheetDescription>Signed in from Chrome on macOS.</SheetDescription>
+              </SheetHeader>
+              <p>Last active 2 minutes ago.</p>
+              <SheetFooter>
+                <Button variant="destructive">Sign out</Button>
+                <SheetClose as={Button} variant="outline">Done</SheetClose>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Sides</h3>
         <p>
           <code>side</code> on <code>SheetContent</code> picks the edge the
@@ -85,44 +162,6 @@ export default function SheetPage() {
               </Sheet>
             ))}
           </div>
-        </ComponentPreview>
-      </section>
-
-      <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview defaultTab="code" code={`import { Sheet, SheetTrigger, SheetClose, SheetContent,
-  SheetHeader, SheetFooter, SheetTitle, SheetDescription }
-  from "./ui/sheet/sheet"
-import "./ui/sheet/sheet.css"
-
-<Sheet>
-  <SheetTrigger as={Button} variant="outline">View session</SheetTrigger>
-  <SheetContent>
-    <SheetHeader>
-      <SheetTitle>Session details</SheetTitle>
-      <SheetDescription>Signed in from Chrome on macOS.</SheetDescription>
-    </SheetHeader>
-    <p>Last active 2 minutes ago.</p>
-    <SheetFooter>
-      <Button variant="destructive">Sign out</Button>
-      <SheetClose as={Button} variant="outline">Done</SheetClose>
-    </SheetFooter>
-  </SheetContent>
-</Sheet>`}>
-          <Sheet>
-            <SheetTrigger as={Button} variant="outline">View session</SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Session details</SheetTitle>
-                <SheetDescription>Signed in from Chrome on macOS.</SheetDescription>
-              </SheetHeader>
-              <p>Last active 2 minutes ago.</p>
-              <SheetFooter>
-                <Button variant="destructive">Sign out</Button>
-                <SheetClose as={Button} variant="outline">Done</SheetClose>
-              </SheetFooter>
-            </SheetContent>
-          </Sheet>
         </ComponentPreview>
       </section>
 

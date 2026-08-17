@@ -25,7 +25,7 @@ User request 2026-08-16: "I ONLY want usage section to be code on page load and 
 
 ## What the sweep found, and the exceptions it leaves
 
-**68 of 75 pages now read Default → Usage, and all 69 `defaultTab="code"` occurrences are on a Usage section, one per page.** Seven pages are deliberate exceptions:
+**69 of 75 pages now read Default → Usage, and all 69 `defaultTab="code"` occurrences are on a Usage section, one per page.** Seven pages are deliberate exceptions:
 
 - `home.jsx` and the five **system pages** (`container-queries`, `density`, `primitives`, `typography`, `view-transitions`) have no Default/Usage section and are not getting one. They carry no `InstallSnippet` and no `ApiReference` — they are the alternative page type task 82 licensed for documenting a system rather than a component, and a `van add` snippet would be a lie on all six.
 - `navigation-menu.jsx` puts Usage **third**: `Default | Per-item popover mode | Usage | Controlled`. Task 83's regression test requires the open viewport panel to overlap the *later* menu's trigger row, and a Usage section between them separates the two fixtures by ~430px — more than any shortening of the code block can recover. Tests win over shape.
@@ -38,6 +38,10 @@ User request 2026-08-16: "I ONLY want usage section to be code on page load and 
 - `resizable.jsx` and `scroll-area.jsx` kept their raw-coordinate fixtures leading; the fixture itself was renamed to `Default` (`Horizontal` / `Vertical`), which adds no height. `progress.jsx` likewise: `Default (animates 13 → 66)` → `Default`.
 
 **Three pages needed a real Default demo written**, because their Usage preview's children were the placeholder "See the live demos below." — `calendar` and `carousel` promoted their first real fixture (`cal-single`, `c-basic`), and `data-table` got a new minimal `DefaultDemo` (4 rows, 3 columns, no sorting UI). Its tests all scope to a `data-pg` root, so the extra table above them is safe.
+
+**`sheet.jsx` needed a Default demo split out of its variant section** (found in review, not by the first sweep). It led with `Sides`, which renders four triggers — a variant demo, not a Default one. It now leads with a single right-side sheet whose trigger reads `Open sheet`; the label matters, because `sheet.test.mjs` selects with `button:has-text("Open right")` under strict mode. `Sides` stays, third.
+
+**The guard only checked Usage's index, which is how `sheet.jsx` read as clean.** `scripts/sweep-section-order.mjs` now also fails a page whose leading section is not named `Default`. A page can be ordered correctly and still open on the wrong demo.
 
 ## Gotchas (inherited from task 82 — each cost a debugging session)
 
@@ -52,7 +56,7 @@ User request 2026-08-16: "I ONLY want usage section to be code on page load and 
 **Status:** COMPLETE
 **Branch:** `docs/usage-order`  **PR:** #7 (open)  **Updated:** 2026-08-16
 
-- **Landed:** 68 of 75 pages open with a Default demo and carry Usage immediately after it; all 69 `defaultTab="code"` occurrences are on a Usage section, one per page. The seven exceptions and why they hold are in the section above.
+- **Landed:** 69 of 75 pages open with a Default demo and carry Usage immediately after it; all 69 `defaultTab="code"` occurrences are on a Usage section, one per page. The seven exceptions and why they hold are in the section above.
 - **Repo state:** clean, 4 commits pushed. `scripts/sweep-section-order.mjs` reruns the guard.
 - **Next:** task 84 (`token-guard`) — 85 is in flight in a sibling worktree and 74 collides with its `Owns`.
 - **Gotchas:** `slider.jsx`'s `Range` fixture sits ~30px above the 720px fold. **Task 85 owns `site/site.css`** — a column-width or section-spacing change will move it, and `slider.test.mjs`'s `clickAt` reads raw `boundingBox()` coords with no scroll, so it fails silently-looking ("upper follows click expected 90, got 75"). Re-run `node tests/run.mjs slider` after 85 merges.

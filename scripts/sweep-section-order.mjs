@@ -56,9 +56,10 @@ for (const r of rows) {
   if (usageIdx === -1) problems.push("no Usage section")
   else if (usageIdx !== 1) problems.push(`Usage at index ${usageIdx} (want 1); leading section = "${names[0] ?? "-"}"`)
   if (usageIdx !== -1 && codeSecs.length === 0) problems.push("Usage has no defaultTab=code")
-  if (names[0] && names[0].toLowerCase() !== "default" && usageIdx !== 0) {
-    // informational only, folded into the index message above
-  }
+  // Checking only Usage's index misses a page that is ordered right but whose
+  // leading section is a variant demo rather than the Default one — sheet.jsx
+  // read as clean at "Sides | Usage | ..." until this check existed.
+  if (usageIdx === 1 && names[0].toLowerCase() !== "default") problems.push(`leading section is "${names[0]}", want "Default"`)
   if (problems.length) violators.push({ file: r.file, names, problems })
 }
 
