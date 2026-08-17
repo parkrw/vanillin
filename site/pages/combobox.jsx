@@ -84,6 +84,25 @@ import "./ui/combobox/combobox.css"
       </section>
 
       <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Combobox, ComboboxInput, ComboboxContent, ComboboxList, ComboboxItem, ComboboxEmpty } from "./ui/combobox/combobox"
+import "./ui/combobox/combobox.css"
+
+<Combobox>
+  <ComboboxInput placeholder="Search framework..." />
+  <ComboboxContent>
+    <ComboboxEmpty>No framework found.</ComboboxEmpty>
+    <ComboboxList>
+      <ComboboxItem value="next">Next.js</ComboboxItem>
+      <ComboboxItem value="svelte">SvelteKit</ComboboxItem>
+    </ComboboxList>
+  </ComboboxContent>
+</Combobox>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Multiple selection</h3>
         <ComponentPreview code={`<Combobox multiple value={values} onValueChange={setValues} showClear>
   <ComboboxInput placeholder="Pick languages" />

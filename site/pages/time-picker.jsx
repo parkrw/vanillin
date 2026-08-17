@@ -23,7 +23,7 @@ export default function TimePickerPage() {
       <InstallSnippet slug="time-picker" />
 
       <section className="pg-section">
-        <h3>12-hour (en-US default)</h3>
+        <h3>Default</h3>
         <ComponentPreview code={`import { TimePicker } from "./ui/time-picker/time-picker"
 import "./ui/time-picker/time-picker.css"
 
@@ -36,6 +36,18 @@ const [time, setTime] = useState({ hour: 14, minute: 30, second: 0 })
               {pad(time.hour)}:{pad(time.minute)}
             </span>
           </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { TimePicker } from "./ui/time-picker/time-picker"
+import "./ui/time-picker/time-picker.css"
+
+const [time, setTime] = useState("09:30")
+
+<TimePicker value={time} onValueChange={setTime} />`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
         </ComponentPreview>
       </section>
 

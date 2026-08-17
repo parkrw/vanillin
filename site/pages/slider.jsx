@@ -30,6 +30,18 @@ export default function SliderPage() {
       </section>
 
       <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Slider } from "./ui/slider/slider"
+import "./ui/slider/slider.css"
+
+<Slider defaultValue={[33]} aria-label="Volume" />`}>
+          <div style={{ width: "60%" }}>
+            <Slider defaultValue={[50]} aria-label="Usage demo" />
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Range (two thumbs)</h3>
         <p>
           Pass two entries in the value array for a range slider. Each
@@ -77,18 +89,6 @@ export default function SliderPage() {
         <div className="pg-row" style={{ height: "12rem" }}>
           <Slider defaultValue={[30]} orientation="vertical" aria-label="Vertical" />
         </div>
-      </section>
-
-      <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview defaultTab="code" code={`import { Slider } from "./ui/slider/slider"
-import "./ui/slider/slider.css"
-
-<Slider defaultValue={[33]} aria-label="Volume" />`}>
-          <div style={{ width: "60%" }}>
-            <Slider defaultValue={[50]} aria-label="Usage demo" />
-          </div>
-        </ComponentPreview>
       </section>
 
       <section className="pg-section">

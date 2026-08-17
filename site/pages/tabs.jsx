@@ -91,6 +91,38 @@ export default function TabsPage() {
       </section>
 
       <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs/tabs"
+import "./ui/tabs/tabs.css"
+
+<Tabs defaultValue="account">
+  <TabsList>
+    <TabsTrigger value="account">Account</TabsTrigger>
+    <TabsTrigger value="password">Password</TabsTrigger>
+  </TabsList>
+  <TabsContent value="account">
+    Account settings here.
+  </TabsContent>
+  <TabsContent value="password">
+    Password form here.
+  </TabsContent>
+</Tabs>`}>
+          <Tabs defaultValue="account" style={{ maxWidth: "24rem" }}>
+            <TabsList>
+              <TabsTrigger value="account">Account</TabsTrigger>
+              <TabsTrigger value="password">Password</TabsTrigger>
+            </TabsList>
+            <TabsContent value="account">
+              <p style={{ fontSize: "0.875rem", padding: "0.5rem 0" }}>Account settings here.</p>
+            </TabsContent>
+            <TabsContent value="password">
+              <p style={{ fontSize: "0.875rem", padding: "0.5rem 0" }}>Password form here.</p>
+            </TabsContent>
+          </Tabs>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Disabled</h3>
         <p>
           A disabled trigger is skipped by arrow-key navigation and cannot be
@@ -136,38 +168,6 @@ export default function TabsPage() {
         <p className="pg-desc" style={{ fontSize: "0.875rem" }}>
           Active tab: <strong>{controlled}</strong>
         </p>
-      </section>
-
-      <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview defaultTab="code" code={`import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs/tabs"
-import "./ui/tabs/tabs.css"
-
-<Tabs defaultValue="account">
-  <TabsList>
-    <TabsTrigger value="account">Account</TabsTrigger>
-    <TabsTrigger value="password">Password</TabsTrigger>
-  </TabsList>
-  <TabsContent value="account">
-    Account settings here.
-  </TabsContent>
-  <TabsContent value="password">
-    Password form here.
-  </TabsContent>
-</Tabs>`}>
-          <Tabs defaultValue="account" style={{ maxWidth: "24rem" }}>
-            <TabsList>
-              <TabsTrigger value="account">Account</TabsTrigger>
-              <TabsTrigger value="password">Password</TabsTrigger>
-            </TabsList>
-            <TabsContent value="account">
-              <p style={{ fontSize: "0.875rem", padding: "0.5rem 0" }}>Account settings here.</p>
-            </TabsContent>
-            <TabsContent value="password">
-              <p style={{ fontSize: "0.875rem", padding: "0.5rem 0" }}>Password form here.</p>
-            </TabsContent>
-          </Tabs>
-        </ComponentPreview>
       </section>
 
       <section className="pg-section">

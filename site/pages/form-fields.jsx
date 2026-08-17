@@ -817,6 +817,25 @@ export default function FormFieldsPage() {
       <InstallSnippet slug="form-fields" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`const { handleSubmit, control, formState } = useForm({
+  defaultValues: { name: "" },
+})
+
+<Form form={{ formState }} onSubmit={handleSubmit(onSubmit)}>
+  <TextField
+    name="name"
+    control={control}
+    label="Name"
+    placeholder="Enter your name"
+  />
+  <Button type="submit">Save</Button>
+</Form>`}>
+          <UsageDemo />
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { TextField } from "./ui/form-fields/form-fields"
 import "./ui/form-fields/form-fields.css"

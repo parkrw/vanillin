@@ -22,7 +22,7 @@ export default function ProgressPage() {
       <InstallSnippet slug="progress" />
 
       <section className="pg-section">
-        <h3>Default (animates 13 → 66)</h3>
+        <h3>Default</h3>
         <p>
           The bar transitions smoothly when <code>value</code> changes. This
           demo starts at 13 and moves to 66 after 500 ms, showing the CSS
@@ -31,6 +31,18 @@ export default function ProgressPage() {
         <div className="pg-row" style={{ width: "60%" }}>
           <Progress value={progress} />
         </div>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Progress } from "./ui/progress/progress"
+import "./ui/progress/progress.css"
+
+<Progress value={33} />`}>
+          <div style={{ width: "60%" }}>
+            <Progress value={33} />
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
@@ -48,18 +60,6 @@ export default function ProgressPage() {
           <Progress value={100} aria-label="Complete" />
           <Progress value={30} max={40} aria-label="Custom max" />
         </div>
-      </section>
-
-      <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview defaultTab="code" code={`import { Progress } from "./ui/progress/progress"
-import "./ui/progress/progress.css"
-
-<Progress value={33} />`}>
-          <div style={{ width: "60%" }}>
-            <Progress value={33} />
-          </div>
-        </ComponentPreview>
       </section>
 
       <section className="pg-section">

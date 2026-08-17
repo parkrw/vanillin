@@ -30,6 +30,16 @@ import "./ui/textarea/textarea.css"
       </section>
 
       <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Textarea } from "./ui/textarea/textarea"
+import "./ui/textarea/textarea.css"
+
+<Textarea placeholder="Type your message here." />`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>With Label</h3>
         <ComponentPreview code={`<Label htmlFor="bio">Bio</Label>
 <Textarea id="bio" placeholder="Tell us about yourself" />`}>

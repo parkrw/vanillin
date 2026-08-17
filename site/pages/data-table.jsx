@@ -887,6 +887,43 @@ function ServerSideDemo() {
 
 // ── Focused demos ────────────────────────────────────────────────────
 
+function DefaultDemo() {
+  const table = useDataTable({
+    data: sampleContacts.slice(0, 4),
+    columns: [
+      { accessorKey: "name", header: "Name" },
+      { accessorKey: "role", header: "Role" },
+      { accessorKey: "dept", header: "Department" },
+    ],
+  })
+  return (
+    <Table>
+      <TableHeader>
+        {table.getHeaderGroups().map((hg) => (
+          <TableRow key={hg.id}>
+            {hg.headers.map((header) => (
+              <TableHead key={header.id}>
+                {flexRender(header.column.columnDef.header, header.getContext())}
+              </TableHead>
+            ))}
+          </TableRow>
+        ))}
+      </TableHeader>
+      <TableBody>
+        {table.getRowModel().rows.map((row) => (
+          <TableRow key={row.id}>
+            {row.getVisibleCells().map((cell) => (
+              <TableCell key={cell.id}>
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
+}
+
 function SortingDemo() {
   const table = useDataTable({
     data: sampleContacts,
@@ -1254,6 +1291,20 @@ export default function DataTablePage() {
       <p>A headless table engine with sorting, filtering, pagination, row selection, column sizing, pinning, grouping, and server-side modes, composed with vanillin's Table primitives.</p>
 
       <InstallSnippet slug="data-table" />
+
+      <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`const table = useDataTable({
+  data: contacts,
+  columns: [
+    { accessorKey: "name", header: "Name" },
+    { accessorKey: "role", header: "Role" },
+    { accessorKey: "dept", header: "Department" },
+  ],
+})`}>
+          <DefaultDemo />
+        </ComponentPreview>
+      </section>
 
       <section className="pg-section">
         <h3>Usage</h3>

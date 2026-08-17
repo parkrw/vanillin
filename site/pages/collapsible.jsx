@@ -75,20 +75,6 @@ export default function CollapsiblePage() {
       </section>
 
       <section className="pg-section">
-        <h3>Uncontrolled, default open</h3>
-        <Collapsible defaultOpen style={{ maxWidth: "22rem" }}>
-          <CollapsibleTrigger as={Button} variant="outline">
-            Toggle details
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div style={{ paddingTop: "0.5rem", fontSize: "0.875rem" }}>
-              These details render only while open.
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </section>
-
-      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "./ui/collapsible/collapsible"
 import "./ui/collapsible/collapsible.css"
@@ -109,6 +95,20 @@ import { Button } from "./ui/button/button"
             </CollapsibleContent>
           </Collapsible>
         </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Uncontrolled, default open</h3>
+        <Collapsible defaultOpen style={{ maxWidth: "22rem" }}>
+          <CollapsibleTrigger as={Button} variant="outline">
+            Toggle details
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div style={{ paddingTop: "0.5rem", fontSize: "0.875rem" }}>
+              These details render only while open.
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </section>
 
       <section className="pg-section">

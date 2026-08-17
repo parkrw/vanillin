@@ -26,7 +26,7 @@ export default function InputOTPPage() {
       <InstallSnippet slug="input-otp" />
 
       <section className="pg-section">
-        <h3>Default (6 slots)</h3>
+        <h3>Default</h3>
         <ComponentPreview code={`import { InputOTP, InputOTPGroup, InputOTPSlot } from "./ui/input-otp/input-otp"
 import "./ui/input-otp/input-otp.css"
 
@@ -44,6 +44,22 @@ import "./ui/input-otp/input-otp.css"
               ))}
             </InputOTPGroup>
           </InputOTP>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { InputOTP, InputOTPGroup, InputOTPSlot } from "./ui/input-otp/input-otp"
+import "./ui/input-otp/input-otp.css"
+
+<InputOTP maxLength={6}>
+  <InputOTPGroup>
+    {Array.from({ length: 6 }, (_, i) => (
+      <InputOTPSlot key={i} index={i} />
+    ))}
+  </InputOTPGroup>
+</InputOTP>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
         </ComponentPreview>
       </section>
 

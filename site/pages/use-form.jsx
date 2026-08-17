@@ -873,6 +873,20 @@ export default function UseFormPage() {
       <p>Zero-dependency form engine shaped like react-hook-form: <code>register</code> for DOM inputs, <code>Controller</code> for controlled components, validation, field arrays, and nested paths.</p>
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`const { register, handleSubmit } = useForm({
+  defaultValues: { email: "" },
+})
+
+<form onSubmit={handleSubmit((data) => console.log(data))}>
+  <input placeholder="Email" {...register("email")} />
+  <Button type="submit">Send</Button>
+</form>`}>
+          <UsageDemo />
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { useForm } from "./lib/use-form"
 
