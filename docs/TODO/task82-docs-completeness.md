@@ -82,17 +82,17 @@ Machine-measured per page: `LINES`, `PREV` = `<ComponentPreview` count, `CODE` =
 
 ## Sub-tasks
 
-- [ ] 0a. **Usage sections open on the Code tab.** `site/code-example.jsx:52` hardcodes `<Tabs defaultValue="preview">`. Add a prop (`defaultTab`, defaulting to `"preview"` so nothing else changes) and pass `defaultTab="code"` from every page's **Usage** section only — the reader arriving at Usage wants the import and JSX to copy, not a rendering of a button they can already see below. Examples/variants sections keep opening on Preview. Do this **before** the page work so the 73 pages are written against the final API, and check `tests/` for anything selecting the active tab. Files: `site/code-example.jsx`, then every page's Usage block.
-- [ ] 0b. **Read `site/pages/button.jsx` and `site/pages/combobox.jsx` first.** They are the standard the user named. Everything below means "bring this page up to those two".
-- [ ] 1. **Audit and record.** Open all 75 component pages and all 7 `docs/` pages at the dev server; write the concrete defect per page into this file before fixing anything. A list written from reading source will miss the visual ones. Do this first — it sizes the rest. Use the preview census above as the worklist skeleton, worst-first.
-- [ ] 2. `use-form.jsx` and `form-fields.jsx` — bring to the task-76 template.
-- [ ] 3. `drawer.jsx` and `sheet.jsx` — real examples (sides/directions, controlled, with a form inside), matching sibling overlay pages.
-- [ ] 4. The six system pages — one consistent page type, applied to all six.
-- [ ] 5. `site/pages/docs/` — the seven Get Started/reference pages, with `contracts.jsx` given the most attention.
-- [ ] 6. **Home page** — the progress/badge mismatch first (one-line content fix), then the zero-dependencies badge, then the hero layout and what the showcase shows.
+- [x] 0a. **Usage sections open on the Code tab.** `site/code-example.jsx:52` hardcodes `<Tabs defaultValue="preview">`. Add a prop (`defaultTab`, defaulting to `"preview"` so nothing else changes) and pass `defaultTab="code"` from every page's **Usage** section only — the reader arriving at Usage wants the import and JSX to copy, not a rendering of a button they can already see below. Examples/variants sections keep opening on Preview. Do this **before** the page work so the 73 pages are written against the final API, and check `tests/` for anything selecting the active tab. Files: `site/code-example.jsx`, then every page's Usage block.
+- [x] 0b. **Read `site/pages/button.jsx` and `site/pages/combobox.jsx` first.** They are the standard the user named. Everything below means "bring this page up to those two".
+- [x] 1. **Audit and record.** Open all 75 component pages and all 7 `docs/` pages at the dev server; write the concrete defect per page into this file before fixing anything. A list written from reading source will miss the visual ones. Do this first — it sizes the rest. Use the preview census above as the worklist skeleton, worst-first.
+- [x] 2. `use-form.jsx` and `form-fields.jsx` — bring to the task-76 template.
+- [x] 3. `drawer.jsx` and `sheet.jsx` — real examples (sides/directions, controlled, with a form inside), matching sibling overlay pages.
+- [x] 4. The six system pages — one consistent page type, applied to all six.
+- [x] 5. `site/pages/docs/` — the seven Get Started/reference pages, with `contracts.jsx` given the most attention.
+- [x] 6. **Home page** — the progress/badge mismatch first (one-line content fix), then the zero-dependencies badge, then the hero layout and what the showcase shows.
 - [x] 7. **The 29 pages at 0-1 previews**, worst-first by the census. `data-table` (1251 lines, 1 preview) leads; then `sidebar`, `carousel`, `resizable`, `scroll-area`, `calendar`. Every example becomes a `ComponentPreview` with a working demo — a `CodeBlock` on its own is what this task is removing.
-- [ ] 8. **Em-dash sweep** (partial: 334 → 160) across `site/pages/`. Do this **last**: every sub-task above writes new prose, and sweeping first means sweeping twice. Verify with `grep -ro "—" site/pages | wc -l` reaching 0.
-- [ ] 9. Anything else sub-task 1 turned up, cheapest first.
+- [x] 8. **Em-dash sweep** across `site/pages/`. Done 2026-08-16: `grep -ro "—" site/pages | wc -l` is 0.
+- [x] 9. Anything else sub-task 1 turned up, cheapest first.
 
 ## Rules carried forward from 76/77 — read these, they were each learned the hard way
 
@@ -120,12 +120,12 @@ Done when: every component page and every `docs/` page is complete by its own pa
 
 ## Handoff
 
-**Status:** IN PROGRESS
-**Branch:** `docs/completeness` (salvage merged to `main` at `09f05f3`)  **PR:** none  **Updated:** 2026-08-16
+**Status:** COMPLETE
+**Branch:** `docs/emdash-sweep` (merged to `main`; earlier batches via `docs/completeness`)  **PR:** none  **Updated:** 2026-08-16
 
-- **Landed:** salvage merged (`defaultTab` API, the audit above, use-form/form-fields/home/data-table + ~30 small pages). **All 20 pages named in the previous Next line are now done** across 6 commits on `docs/completeness` (`74a7b44` … `e12fc91`), plus a partial em-dash sweep (`734fa91`). Verified **760/762**, build clean; the 2 failures are the pre-existing slider-cursor pair.
-- **Repo state:** worktree `../vanillin-task82` on `docs/completeness`, 7 commits ahead of `main`, tree clean. Not pushed, no PR. Stash "task82 interrupted-worker pages" is still unpopped and now obsolete: the 20 pages were rewritten from scratch, not from it.
-- **Next:** finish the em-dash sweep. **160 left**, concentrated in 11 files: `docs/theming` (25), `docs/configuration` (24), `form-fields` (19), `container-queries` (17), `docs/schema` (14), `use-form` (13), `form` (11), `docs/cli` (11), `data-table` (10), `docs/introduction` (7), `docs/installation` (7). Done when `grep -ro "—" site/pages | wc -l` is 0.
+- **Landed:** everything. Salvage batch (`defaultTab` API, audit, use-form/form-fields/home/data-table + ~30 small pages), the 20 redone pages (`74a7b44` … `e12fc91`), the full em-dash sweep (0 left in `site/pages/`), and `sheet.jsx` to the preview standard (6 previews, controlled/form/non-dismissible/scrollable examples) — sheet was named in sub-task 3 but missed by the 20-page batch. Verified **760/762**, build clean; the 2 failures are the pre-existing slider-cursor pair.
+- **Repo state:** worktree `../vanillin-task82` and branches `docs/completeness` / `docs/emdash-sweep` are safe to remove. Stash "task82 interrupted-worker pages" is obsolete (pages rewritten from scratch) — safe to drop.
+- **Remaining pages at 0-1 previews, all deliberate:** `home` (hero page type), `navigation-menu` (77b decision re-confirmed: demos too interactive for preview tabs), `container-queries` (system page, live resize panels).
 - **Gotchas:**
   - **Viewport-anchored tests break when a page gets taller above the fixture.** Adding a Usage section above `context-trigger` pushed it past 720px and failed 11 context-menu tests that drive raw `page.mouse` at `boundingBox()` coords. Same exposure on `resizable` (`r-horizontal`), `scroll-area` (`sa-vertical`), and `toast`. Fix: keep the tested demo as the **first** section and put the `defaultTab="code"` Usage section after it.
   - **`defaultTab="code"` removes the demo from the DOM** (`TabsContent` returns `null` when inactive). Any page whose test selects inside the old Usage demo needs that demo moved to a preview-tab section named "Default", with a fresh Usage section carrying different ids/labels.
