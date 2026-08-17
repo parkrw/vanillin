@@ -42,4 +42,10 @@ The doubling lands exactly where the user sees it (any laptop width — the whol
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
+**Branch:** `docs/shell-width-gap` (pushed)  **PR:** none (declined)  **Updated:** 2026-08-16
+
+- **Landed:** the content column clears both side menus by 80px at every laptop width (was 40px), and caps at 72rem instead of 68rem so the wider gutter costs the column only 16px on a big display. One token, `--pg-gutter`, steps down to 2.5rem inside the existing 72rem block where the rail already drops.
+- **Repo state:** clean, one commit `c8e175bdd733`. Suite **761/763** (baseline 760/762 + the new gutter test); the 2 failures are the pre-existing slider-cursor pair. `sweep-pages.mjs` byte-identical to the baseline I measured on the stashed tree: 0 contrast, 0 overflow @1280, 72 pages @380 (task 74's defect).
+- **Next:** task **86** (Default-then-Usage section order) — `Owns` is `site/pages/**`, disjoint from this.
+- **Gotchas:** the cap is dead weight below 1602px — sidebar 230 + rail 220 + 72rem means the column only stops growing above that, so **any future "the column is too wide/narrow" report from a laptop is about the gutter, not `--pg-main-max`**. The gutter is `.pg-main` padding rather than a grid `column-gap` on purpose: padding is the only inset the home page's single-track grid and the rail-less sub-72rem layout have, so a gap would need three declarations to cover what one token does. **Task 74 is now unblocked** — it owns the shell next and must keep `--pg-gutter` as the single knob.
