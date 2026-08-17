@@ -175,8 +175,7 @@
 
 .ck-nav-link {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  align-items: center;
   gap: 0.5rem;
   inline-size: 100%;
   padding: 0.375rem 0.75rem 0.375rem 1rem;
@@ -217,13 +216,19 @@
   padding-inline-start: 0.75rem;
 }
 
-.ck-nav-code {
-  font-size: 0.6875rem;
+.ck-nav-icon {
+  display: flex;
+  flex-shrink: 0;
   color: var(--muted-foreground);
-  opacity: 0.75;
 }
 
-.ck-nav-link[data-active] .ck-nav-code {
+.ck-nav-icon svg {
+  inline-size: 0.9375rem;
+  block-size: 0.9375rem;
+}
+
+.ck-nav-link:hover .ck-nav-icon,
+.ck-nav-link[data-active] .ck-nav-icon {
   color: inherit;
 }
 
@@ -546,6 +551,13 @@
 
 .ck-empty {
   min-block-size: 18rem;
+}
+
+/* Mount point for a panel task 89 owns; it reads as a placeholder, not a bug. */
+.ck-panel-slot {
+  padding: 2.5rem 1rem;
+  color: var(--muted-foreground);
+  text-align: center;
 }
 
 /* ── Taskbar ────────────────────────────────────────────────────────── */

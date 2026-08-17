@@ -4,40 +4,42 @@
 export const PROJECTS = ["admin", "engineering", "data-science", "marketing"]
 export const REGIONS = ["Dallas", "Salt Lake City", "Chicago"]
 
-export const SERVICES = [
+export const NAV_GROUPS = [
   {
-    label: "Compute",
+    label: "Platform",
     items: [
-      { id: "instances", name: "Instances", code: "Compute", pages: ["Instances", "Instance sizes", "Quotas"] },
-      { id: "images", name: "Machine images", code: "Images", pages: ["Machine images"] },
+      { id: "overview", name: "Overview", pages: ["Dashboard"] },
+      { id: "vdc", name: "Virtual data centers", pages: ["Data centers", "Quotas"] },
+      { id: "resources", name: "Resources", pages: ["Instances", "Instance sizes", "Machine images"] },
+      { id: "networking", name: "Networking", pages: ["Networks", "Public IPs"] },
+      { id: "storage", name: "Storage", pages: ["Volumes", "Snapshots"] },
     ],
   },
   {
-    label: "Network",
+    label: "Operations",
     items: [
-      { id: "networking", name: "Networking", code: "Network", pages: ["Networks"] },
-      { id: "balancers", name: "Load balancers", code: "Balancers", pages: ["Load balancers"] },
+      { id: "metrics", name: "Metrics", pages: ["Utilization"] },
+      { id: "events", name: "Events", pages: ["Event log"] },
+      { id: "service-health", name: "Service health", pages: ["Services"] },
     ],
   },
   {
-    label: "Storage",
+    label: "Account",
     items: [
-      { id: "volumes", name: "Block storage", code: "Volumes", pages: ["Volumes"] },
-      { id: "buckets", name: "Object storage", code: "Buckets", pages: ["Buckets"] },
-    ],
-  },
-  {
-    label: "Access",
-    items: [
-      { id: "identity", name: "Identity", code: "Access", pages: ["Projects"] },
+      { id: "billing", name: "Billing", pages: ["Invoices"] },
+      { id: "contacts", name: "Contacts", pages: ["Contacts"] },
+      { id: "support", name: "Support", pages: ["Support"] },
+      { id: "security", name: "Security", pages: ["Access keys"] },
+      { id: "your-data", name: "Your data", pages: ["Exports"] },
+      { id: "settings", name: "Settings", pages: ["Settings"] },
     ],
   },
 ]
 
 export function findService(id) {
-  for (const cat of SERVICES) {
-    const svc = cat.items.find((s) => s.id === id)
-    if (svc) return { ...svc, category: cat.label }
+  for (const group of NAV_GROUPS) {
+    const svc = group.items.find((s) => s.id === id)
+    if (svc) return { ...svc, category: group.label }
   }
   return null
 }
@@ -146,4 +148,34 @@ export const STATS = [
   { num: "18", label: "Services", sub: "all active", tone: "success" },
   { num: "10", label: "Projects", sub: "10 enabled", tone: "success" },
   { num: "6", label: "Public IPs", sub: "of 128 pool", tone: "success" },
+]
+
+export const DATA_CENTERS = [
+  { name: "dal-1", region: "Dallas", hosts: "4", instances: "19", status: "Active" },
+  { name: "dal-2", region: "Dallas", hosts: "2", instances: "6", status: "Maintenance" },
+  { name: "slc-1", region: "Salt Lake City", hosts: "2", instances: "11", status: "Active" },
+  { name: "chi-1", region: "Chicago", hosts: "2", instances: "11", status: "Active" },
+]
+
+export const SNAPSHOTS = [
+  { name: "snap-db-prod-nightly", source: "data-vol-01", size: "500 GB", created: "6 hrs ago", status: "Available" },
+  { name: "snap-ml-checkpoint", source: "data-vol-07", size: "1000 GB", created: "25 min ago", status: "Running" },
+  { name: "snap-web-golden", source: "vol-root-42", size: "50 GB", created: "3 days ago", status: "Available" },
+  { name: "snap-cache-pre-upgrade", source: "vol-root-78", size: "100 GB", created: "1 week ago", status: "Available" },
+]
+
+export const PUBLIC_IPS = [
+  { address: "203.0.113.14", attached: "web-prod-01", network: "external-net", status: "In-use" },
+  { address: "203.0.113.15", attached: "web-prod-02", network: "external-net", status: "In-use" },
+  { address: "203.0.113.16", attached: "api-prod-01", network: "external-net", status: "In-use" },
+  { address: "203.0.113.31", attached: "", network: "external-net", status: "Available" },
+  { address: "203.0.113.32", attached: "", network: "external-net", status: "Available" },
+]
+
+export const UPLOADED_IMAGES = [
+  { name: "ubuntu-24.04-acme.img", size: "2.4 GB", state: "done" },
+  { name: "rocky-9.3-hardened.img", size: "1.8 GB", state: "done" },
+  { name: "win2022-eval.vhd", size: "8.2 GB", state: "uploading" },
+  { name: "coreos-40-edge.img", size: "780 MB", state: "processing" },
+  { name: "legacy-appliance.img", size: "512 MB", state: "error" },
 ]

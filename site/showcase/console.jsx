@@ -91,7 +91,7 @@ import { useDataTable, flexRender } from "../../lib/use-data-table.js"
 import {
   PROJECTS,
   REGIONS,
-  SERVICES,
+  NAV_GROUPS,
   findService,
   INSTANCES,
   SIZES,
@@ -99,6 +99,9 @@ import {
   MACHINE_IMAGES,
   NETWORKS,
   VOLUMES,
+  DATA_CENTERS,
+  SNAPSHOTS,
+  PUBLIC_IPS,
   TASKS,
   UTILIZATION,
   HEALTH,
@@ -185,6 +188,109 @@ const BoxIcon = () =>
       <line x1="12" y1="22.08" x2="12" y2="12" />
     </>
   )
+
+/* Nav iconography, keyed by nav item id. */
+const NAV_ICONS = {
+  overview: () =>
+    icon(
+      <>
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+      </>
+    ),
+  vdc: () =>
+    icon(
+      <>
+        <rect x="2" y="3" width="20" height="7" rx="2" />
+        <rect x="2" y="14" width="20" height="7" rx="2" />
+        <line x1="6" y1="6.5" x2="6.01" y2="6.5" />
+        <line x1="6" y1="17.5" x2="6.01" y2="17.5" />
+      </>
+    ),
+  resources: BoxIcon,
+  networking: () =>
+    icon(
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <path d="M12 3a14 14 0 010 18 14 14 0 010-18z" />
+      </>
+    ),
+  storage: () =>
+    icon(
+      <>
+        <ellipse cx="12" cy="5" rx="8" ry="3" />
+        <path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5" />
+        <path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3" />
+      </>
+    ),
+  metrics: () =>
+    icon(
+      <>
+        <line x1="6" y1="20" x2="6" y2="13" />
+        <line x1="12" y1="20" x2="12" y2="4" />
+        <line x1="18" y1="20" x2="18" y2="9" />
+      </>
+    ),
+  events: () => icon(<path d="M22 12h-4l-3 8-4-16-3 8H2" />),
+  "service-health": () =>
+    icon(
+      <>
+        <path d="M12 21s8-4 8-10V5l-8-3-8 3v6c0 6 8 10 8 10z" />
+        <polyline points="9 11.5 11 13.5 15 9.5" />
+      </>
+    ),
+  billing: () =>
+    icon(
+      <>
+        <rect x="2" y="5" width="20" height="14" rx="2" />
+        <line x1="2" y1="10" x2="22" y2="10" />
+      </>
+    ),
+  contacts: () =>
+    icon(
+      <>
+        <path d="M15 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
+        <circle cx="8.5" cy="7" r="3.5" />
+        <path d="M22 21v-2a4 4 0 00-3-3.87" />
+      </>
+    ),
+  support: () =>
+    icon(
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="12" r="3.5" />
+        <line x1="5.6" y1="5.6" x2="9.5" y2="9.5" />
+        <line x1="14.5" y1="14.5" x2="18.4" y2="18.4" />
+        <line x1="14.5" y1="9.5" x2="18.4" y2="5.6" />
+        <line x1="5.6" y1="18.4" x2="9.5" y2="14.5" />
+      </>
+    ),
+  security: () =>
+    icon(
+      <>
+        <rect x="4" y="11" width="16" height="10" rx="2" />
+        <path d="M8 11V7a4 4 0 018 0v4" />
+      </>
+    ),
+  "your-data": () =>
+    icon(
+      <>
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+        <polyline points="7.5 10.5 12 15 16.5 10.5" />
+        <line x1="12" y1="15" x2="12" y2="3" />
+      </>
+    ),
+  settings: () =>
+    icon(
+      <>
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6" />
+      </>
+    ),
+}
 
 /* ── Shared bits ─────────────────────────────────────────────────────── */
 
@@ -287,6 +393,11 @@ function ConsoleTopbar({ project, setProject, region, setRegion, onOpenPalette }
 
 /* ── Navigation pane ─────────────────────────────────────────────────── */
 
+function NavIcon({ id }) {
+  const Glyph = NAV_ICONS[id]
+  return <span className="ck-nav-icon">{Glyph ? <Glyph /> : null}</span>
+}
+
 function ConsoleNav({ view, onNavigate }) {
   return (
     <ScrollArea className="ck-nav-scroll">
@@ -297,18 +408,19 @@ function ConsoleNav({ view, onNavigate }) {
           data-active={view.svc === "overview" || undefined}
           onClick={() => onNavigate("overview")}
         >
+          <NavIcon id="overview" />
           Overview
         </button>
         <Separator decorative className="ck-nav-sep" />
-        {SERVICES.map((cat) => (
-          <Collapsible key={cat.label} defaultOpen className="ck-nav-cat">
+        {NAV_GROUPS.map((group) => (
+          <Collapsible key={group.label} className="ck-nav-cat">
             <CollapsibleTrigger className="ck-nav-cat-trigger">
-              {cat.label}
+              {group.label}
               <span className="ck-nav-cat-caret" aria-hidden="true">&#9662;</span>
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="ck-nav-cat-items">
-                {cat.items.map((svc) => (
+                {group.items.map((svc) => (
                   <button
                     key={svc.id}
                     type="button"
@@ -316,8 +428,8 @@ function ConsoleNav({ view, onNavigate }) {
                     data-active={view.svc === svc.id || undefined}
                     onClick={() => onNavigate(svc.id)}
                   >
+                    <NavIcon id={svc.id} />
                     {svc.name}
-                    <span className="ck-nav-code">{svc.code}</span>
                   </button>
                 ))}
               </div>
@@ -330,6 +442,71 @@ function ConsoleNav({ view, onNavigate }) {
 }
 
 /* ── Overview dashboard ──────────────────────────────────────────────── */
+
+function UtilizationCard() {
+  return (
+    <Card>
+      <CardHeader><CardTitle className="ck-card-title">Resource utilization</CardTitle></CardHeader>
+      <CardContent className="ck-util">
+        {UTILIZATION.map((u) => (
+          <div key={u.label} className="ck-util-row">
+            <span className="ck-util-label">{u.label}</span>
+            <Progress value={u.pct} className="ck-util-bar" data-tone={u.tone} />
+            <span className="ck-util-val">{u.pct}% · {u.detail}</span>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )
+}
+
+function HealthCard() {
+  return (
+    <Card>
+      <CardHeader><CardTitle className="ck-card-title">Service health</CardTitle></CardHeader>
+      <CardContent>
+        <ItemGroup>
+          {HEALTH.map((h) => (
+            <Item key={h.name} size="sm" className="ck-health-row">
+              <ItemContent>
+                <ItemTitle>{h.name}</ItemTitle>
+              </ItemContent>
+              <ItemActions>
+                <StatusDot status={h.tone} label={null} />
+                <span className="ck-health-val" data-tone={h.tone}>{h.value}</span>
+              </ItemActions>
+            </Item>
+          ))}
+        </ItemGroup>
+      </CardContent>
+    </Card>
+  )
+}
+
+function EventsCard() {
+  return (
+    <Card>
+      <CardHeader><CardTitle className="ck-card-title">Recent events</CardTitle></CardHeader>
+      <CardContent>
+        <ItemGroup>
+          {EVENTS.map((e) => (
+            <Item key={e.text + e.target} size="sm" className="ck-event-row">
+              <StatusDot status={e.tone} label={null} />
+              <ItemContent>
+                <ItemTitle className="ck-event-text">
+                  <code>{e.text}</code> {e.target}
+                </ItemTitle>
+              </ItemContent>
+              <ItemActions>
+                <span className="ck-event-time">{e.time}</span>
+              </ItemActions>
+            </Item>
+          ))}
+        </ItemGroup>
+      </CardContent>
+    </Card>
+  )
+}
 
 function Dashboard() {
   return (
@@ -348,57 +525,22 @@ function Dashboard() {
         ))}
       </div>
       <div className="ck-dash-grid">
-        <Card>
-          <CardHeader><CardTitle className="ck-card-title">Resource utilization</CardTitle></CardHeader>
-          <CardContent className="ck-util">
-            {UTILIZATION.map((u) => (
-              <div key={u.label} className="ck-util-row">
-                <span className="ck-util-label">{u.label}</span>
-                <Progress value={u.pct} className="ck-util-bar" data-tone={u.tone} />
-                <span className="ck-util-val">{u.pct}% · {u.detail}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle className="ck-card-title">Service health</CardTitle></CardHeader>
-          <CardContent>
-            <ItemGroup>
-              {HEALTH.map((h) => (
-                <Item key={h.name} size="sm" className="ck-health-row">
-                  <ItemContent>
-                    <ItemTitle>{h.name}</ItemTitle>
-                  </ItemContent>
-                  <ItemActions>
-                    <StatusDot status={h.tone} label={null} />
-                    <span className="ck-health-val" data-tone={h.tone}>{h.value}</span>
-                  </ItemActions>
-                </Item>
-              ))}
-            </ItemGroup>
-          </CardContent>
-        </Card>
+        <UtilizationCard />
+        <HealthCard />
       </div>
-      <Card>
-        <CardHeader><CardTitle className="ck-card-title">Recent events</CardTitle></CardHeader>
-        <CardContent>
-          <ItemGroup>
-            {EVENTS.map((e) => (
-              <Item key={e.text + e.target} size="sm" className="ck-event-row">
-                <StatusDot status={e.tone} label={null} />
-                <ItemContent>
-                  <ItemTitle className="ck-event-text">
-                    <code>{e.text}</code> {e.target}
-                  </ItemTitle>
-                </ItemContent>
-                <ItemActions>
-                  <span className="ck-event-time">{e.time}</span>
-                </ItemActions>
-              </Item>
-            ))}
-          </ItemGroup>
-        </CardContent>
-      </Card>
+      <EventsCard />
+    </div>
+  )
+}
+
+function CardPage({ title, count, children }) {
+  return (
+    <div className="ck-view">
+      <div className="ck-page-head">
+        <h4 className="ck-page-title">{title}</h4>
+        {count && <span className="ck-page-count">{count}</span>}
+      </div>
+      {children}
     </div>
   )
 }
@@ -645,6 +787,21 @@ function QuotasView() {
   )
 }
 
+function PanelSlot({ name }) {
+  return (
+    <CardPage title={name}>
+      <Card>
+        <CardContent className="ck-panel-slot">The {name} panel loads here.</CardContent>
+      </Card>
+    </CardPage>
+  )
+}
+
+/* Task 89 builds the real panels under site/showcase/panels/; each slot below
+   is the single line that gets swapped for its component once both land. */
+const SupportPanelSlot = () => <PanelSlot name="Support" />
+const SettingsPanelSlot = () => <PanelSlot name="Settings" />
+
 function UnderConstruction({ name }) {
   return (
     <Empty className="ck-empty">
@@ -677,6 +834,60 @@ function PageContent({ svc, page, project, onDetails }) {
       )
     case "Quotas":
       return <QuotasView />
+    case "Data centers":
+      return (
+        <SimpleTable
+          title="Data centers"
+          count={`${DATA_CENTERS.length} data centers`}
+          cols={["Name", "Region", "Hosts", "Instances", "Status"]}
+          rows={DATA_CENTERS.map((d) => [
+            <code className="ck-mono" key="n">{d.name}</code>,
+            d.region,
+            d.hosts,
+            d.instances,
+            <StatusBadge key="s" value={d.status} />,
+          ])}
+        />
+      )
+    case "Public IPs":
+      return (
+        <SimpleTable
+          title="Public IPs"
+          count={`${PUBLIC_IPS.length} addresses`}
+          cols={["Address", "Attached to", "Network", "Status"]}
+          rows={PUBLIC_IPS.map((a) => [
+            <code className="ck-mono" key="a">{a.address}</code>,
+            a.attached || "none",
+            a.network,
+            <StatusBadge key="s" value={a.status} />,
+          ])}
+        />
+      )
+    case "Snapshots":
+      return (
+        <SimpleTable
+          title="Snapshots"
+          count={`${SNAPSHOTS.length} snapshots`}
+          cols={["Name", "Source volume", "Size", "Created", "Status"]}
+          rows={SNAPSHOTS.map((n) => [
+            n.name,
+            <code className="ck-mono" key="v">{n.source}</code>,
+            n.size,
+            n.created,
+            <StatusBadge key="s" value={n.status} />,
+          ])}
+        />
+      )
+    case "Utilization":
+      return <CardPage title="Utilization" count="last 24 hours"><UtilizationCard /></CardPage>
+    case "Event log":
+      return <CardPage title="Event log" count={`${EVENTS.length} events`}><EventsCard /></CardPage>
+    case "Services":
+      return <CardPage title="Services" count={`${HEALTH.length} groups`}><HealthCard /></CardPage>
+    case "Support":
+      return <SupportPanelSlot />
+    case "Settings":
+      return <SettingsPanelSlot />
     case "Machine images":
       return (
         <SimpleTable
@@ -860,12 +1071,12 @@ function ConsolePalette({ open, onOpenChange, onNavigate }) {
           <CommandItem value="overview dashboard" onSelect={() => go("overview")}>
             Overview
           </CommandItem>
-          {SERVICES.flatMap((cat) =>
-            cat.items.flatMap((svc) =>
+          {NAV_GROUPS.flatMap((group) =>
+            group.items.flatMap((svc) =>
               svc.pages.map((page) => (
                 <CommandItem
                   key={`${svc.id}-${page}`}
-                  value={`${svc.name} ${svc.code} ${page}`}
+                  value={`${group.label} ${svc.name} ${page}`}
                   onSelect={() => go(svc.id, page)}
                 >
                   {svc.name}: {page}
