@@ -29,6 +29,17 @@ export default function BadgePage() {
       <InstallSnippet slug="badge" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Badge>Default</Badge>
+<Badge variant="secondary">Secondary</Badge>`}>
+          <div className="pg-row">
+            <Badge>Default</Badge>
+            <Badge variant="secondary">Secondary</Badge>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Badge } from "./ui/badge/badge"
 import "./ui/badge/badge.css"

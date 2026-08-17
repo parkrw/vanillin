@@ -16,6 +16,19 @@ export default function SeparatorPage() {
       <InstallSnippet slug="separator" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<p>Content above</p>
+<Separator />
+<p>Content below</p>`}>
+          <div>
+            <p style={{ margin: "0 0 0.75rem" }}>Content above</p>
+            <Separator />
+            <p style={{ margin: "0.75rem 0 0" }}>Content below</p>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Separator } from "./ui/separator/separator"
 import "./ui/separator/separator.css"

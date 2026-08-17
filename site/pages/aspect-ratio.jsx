@@ -16,6 +16,21 @@ export default function AspectRatioPage() {
       <InstallSnippet slug="aspect-ratio" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<AspectRatio ratio={16 / 9}>
+  <img src="..." alt="..." style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+</AspectRatio>`}>
+          <div style={{ maxWidth: "28rem" }}>
+            <AspectRatio ratio={16 / 9}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "var(--radius-lg)", backgroundColor: "var(--muted)", color: "var(--muted-foreground)", width: "100%", height: "100%" }}>
+                16 : 9
+              </div>
+            </AspectRatio>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { AspectRatio } from "./ui/aspect-ratio/aspect-ratio"
 import "./ui/aspect-ratio/aspect-ratio.css"

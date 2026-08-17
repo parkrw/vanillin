@@ -56,6 +56,25 @@ import "./ui/radio-group/radio-group.css"
       </section>
 
       <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { RadioGroup, RadioGroupItem } from "./ui/radio-group/radio-group"
+import "./ui/radio-group/radio-group.css"
+
+<RadioGroup defaultValue="comfortable">
+  <div>
+    <RadioGroupItem value="default" id="r1" />
+    <Label htmlFor="r1">Default</Label>
+  </div>
+  <div>
+    <RadioGroupItem value="comfortable" id="r2" />
+    <Label htmlFor="r2">Comfortable</Label>
+  </div>
+</RadioGroup>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Disabled Item</h3>
         <ComponentPreview code={`<RadioGroup defaultValue="active">
   <div className="pg-row">

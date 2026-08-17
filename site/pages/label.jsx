@@ -16,6 +16,13 @@ export default function LabelPage() {
       <InstallSnippet slug="label" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Label>Email address</Label>`}>
+          <Label>Email address</Label>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Label } from "./ui/label/label"
 import "./ui/label/label.css"

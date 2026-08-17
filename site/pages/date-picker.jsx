@@ -62,7 +62,7 @@ export default function DatePickerPage() {
       <InstallSnippet slug="date-picker" />
 
       <section className="pg-section">
-        <h3>Single date</h3>
+        <h3>Default</h3>
         <ComponentPreview code={`import { Calendar } from "./ui/calendar/calendar"
 import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover/popover"
 import "./ui/date-picker/date-picker.css"
@@ -114,6 +114,25 @@ const [open, setOpen] = useState(false)
               </span>
             </p>
           </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover/popover"
+import { Calendar } from "./ui/calendar/calendar"
+
+const [date, setDate] = useState()
+
+<Popover>
+  <PopoverTrigger as={Button} variant="outline">
+    {date ? date.toLocaleDateString() : "Pick a date"}
+  </PopoverTrigger>
+  <PopoverContent>
+    <Calendar mode="single" selected={date} onSelect={setDate} />
+  </PopoverContent>
+</Popover>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
         </ComponentPreview>
       </section>
 

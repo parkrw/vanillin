@@ -87,6 +87,25 @@ export default function AttachmentPage() {
       <InstallSnippet slug="attachment" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Attachment state="done">
+  <AttachmentMedia><FileIcon /></AttachmentMedia>
+  <AttachmentContent>
+    <AttachmentTitle>report.pdf</AttachmentTitle>
+    <AttachmentDescription>1.2 MB</AttachmentDescription>
+  </AttachmentContent>
+</Attachment>`}>
+          <Attachment state="done">
+            <AttachmentMedia><FileIcon /></AttachmentMedia>
+            <AttachmentContent>
+              <AttachmentTitle>report.pdf</AttachmentTitle>
+              <AttachmentDescription>1.2 MB</AttachmentDescription>
+            </AttachmentContent>
+          </Attachment>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Attachment, AttachmentMedia, AttachmentContent, AttachmentTitle, AttachmentDescription } from "./ui/attachment/attachment"
 import "./ui/attachment/attachment.css"

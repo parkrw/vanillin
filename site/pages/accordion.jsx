@@ -62,6 +62,30 @@ export default function AccordionPage() {
       </section>
 
       <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Accordion, AccordionItem, AccordionTrigger,
+  AccordionContent } from "./ui/accordion/accordion"
+import "./ui/accordion/accordion.css"
+
+<Accordion type="single" collapsible>
+  <AccordionItem value="item-1">
+    <AccordionTrigger>Section title</AccordionTrigger>
+    <AccordionContent>Panel content.</AccordionContent>
+  </AccordionItem>
+</Accordion>`}>
+          <Accordion type="single" collapsible style={{ maxWidth: "24rem" }}>
+            <AccordionItem value="item-1">
+              <AccordionTrigger>Section title</AccordionTrigger>
+              <AccordionContent>Panel content.</AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </ComponentPreview>
+        <p className="pg-desc">
+          Every item needs a <code>value</code>: it is what the accordion tracks as open, and what you pass to <code>defaultValue</code> or <code>value</code>.
+        </p>
+      </section>
+
+      <section className="pg-section">
         <h3>Multiple</h3>
         <ComponentPreview code={`<Accordion type="multiple" defaultValue={["a", "b"]}>
   <AccordionItem value="a">
@@ -90,30 +114,6 @@ export default function AccordionPage() {
         </ComponentPreview>
         <p className="pg-desc">
           In multiple mode the value is an array, so every panel toggles on its own and the component never closes one for you.
-        </p>
-      </section>
-
-      <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview defaultTab="code" code={`import { Accordion, AccordionItem, AccordionTrigger,
-  AccordionContent } from "./ui/accordion/accordion"
-import "./ui/accordion/accordion.css"
-
-<Accordion type="single" collapsible>
-  <AccordionItem value="item-1">
-    <AccordionTrigger>Section title</AccordionTrigger>
-    <AccordionContent>Panel content.</AccordionContent>
-  </AccordionItem>
-</Accordion>`}>
-          <Accordion type="single" collapsible style={{ maxWidth: "24rem" }}>
-            <AccordionItem value="item-1">
-              <AccordionTrigger>Section title</AccordionTrigger>
-              <AccordionContent>Panel content.</AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </ComponentPreview>
-        <p className="pg-desc">
-          Every item needs a <code>value</code>: it is what the accordion tracks as open, and what you pass to <code>defaultValue</code> or <code>value</code>.
         </p>
       </section>
 

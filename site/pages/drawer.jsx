@@ -34,6 +34,39 @@ export default function DrawerPage() {
       <InstallSnippet slug="drawer" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Drawer>
+  <DrawerTrigger as={Button} variant="outline">Open drawer</DrawerTrigger>
+  <DrawerContent>
+    <DrawerHeader>
+      <DrawerTitle>Notifications</DrawerTitle>
+      <DrawerDescription>Your recent notifications.</DrawerDescription>
+    </DrawerHeader>
+    <p>You have 3 unread messages.</p>
+    <DrawerFooter>
+      <Button>Mark all read</Button>
+      <DrawerClose as={Button} variant="outline">Dismiss</DrawerClose>
+    </DrawerFooter>
+  </DrawerContent>
+</Drawer>`}>
+          <Drawer>
+            <DrawerTrigger as={Button} variant="outline">Open drawer</DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>Notifications</DrawerTitle>
+                <DrawerDescription>Your recent notifications.</DrawerDescription>
+              </DrawerHeader>
+              <p>You have 3 unread messages.</p>
+              <DrawerFooter>
+                <Button>Mark all read</Button>
+                <DrawerClose as={Button} variant="outline">Dismiss</DrawerClose>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Drawer, DrawerTrigger, DrawerClose, DrawerContent,
   DrawerHeader, DrawerFooter, DrawerTitle, DrawerDescription }

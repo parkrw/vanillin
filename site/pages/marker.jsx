@@ -43,24 +43,6 @@ export default function MarkerPage() {
       <InstallSnippet slug="marker" />
 
       <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview defaultTab="code" code={`import { Marker, MarkerIcon, MarkerContent } from "./ui/marker/marker"
-import "./ui/marker/marker.css"
-
-<Marker>
-  <MarkerIcon><CheckIcon /></MarkerIcon>
-  <MarkerContent>Explored 4 files</MarkerContent>
-</Marker>`}>
-          <div style={{ maxWidth: "28rem" }}>
-            <Marker>
-              <MarkerIcon><CheckIcon /></MarkerIcon>
-              <MarkerContent>Explored 4 files</MarkerContent>
-            </Marker>
-          </div>
-        </ComponentPreview>
-      </section>
-
-      <section className="pg-section">
         <h3>Default</h3>
         <ComponentPreview code={`<Marker>
   <MarkerIcon><CheckIcon /></MarkerIcon>
@@ -84,6 +66,24 @@ import "./ui/marker/marker.css"
             </Marker>
             <Marker>
               <MarkerContent>A default marker without icon</MarkerContent>
+            </Marker>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Marker, MarkerIcon, MarkerContent } from "./ui/marker/marker"
+import "./ui/marker/marker.css"
+
+<Marker>
+  <MarkerIcon><CheckIcon /></MarkerIcon>
+  <MarkerContent>Explored 4 files</MarkerContent>
+</Marker>`}>
+          <div style={{ maxWidth: "28rem" }}>
+            <Marker>
+              <MarkerIcon><CheckIcon /></MarkerIcon>
+              <MarkerContent>Explored 4 files</MarkerContent>
             </Marker>
           </div>
         </ComponentPreview>

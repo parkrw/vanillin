@@ -118,6 +118,27 @@ export default function CommandPage() {
       </p>
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Command className="command--bordered">
+  <CommandInput placeholder="Search actions..." />
+  <CommandList>
+    <CommandEmpty>No results found.</CommandEmpty>
+    <CommandItem value="new-file" onSelect={handleSelect}>New file</CommandItem>
+    <CommandItem value="open-file" onSelect={handleSelect}>Open file</CommandItem>
+  </CommandList>
+</Command>`}>
+          <Command className="command--bordered">
+            <CommandInput placeholder="Search actions..." />
+            <CommandList>
+              <CommandEmpty>No results found.</CommandEmpty>
+              <CommandItem value="new-file" onSelect={select}>New file</CommandItem>
+              <CommandItem value="open-file" onSelect={select}>Open file</CommandItem>
+            </CommandList>
+          </Command>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Command, CommandInput, CommandList, CommandEmpty, CommandItem } from "./ui/command/command"
 import "./ui/command/command.css"

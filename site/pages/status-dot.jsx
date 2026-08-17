@@ -22,6 +22,19 @@ export default function StatusDotPage() {
       <InstallSnippet slug="status-dot" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<StatusDot status="success" />
+<StatusDot status="error" ring />
+<StatusDot status="warning" size="lg" />`}>
+          <div className="pg-row">
+            <StatusDot status="success" />
+            <StatusDot status="error" ring />
+            <StatusDot status="warning" size="lg" />
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { StatusDot } from "./ui/status-dot/status-dot"
 import "./ui/status-dot/status-dot.css"

@@ -35,7 +35,7 @@ export default function ScrollAreaPage() {
       <p>An overlay-scrollbar container with thumb drag, track click, hover and scroll indicators, overflow-edge detection, and RTL support.</p>
 
       <section className="pg-section">
-        <h3>Vertical</h3>
+        <h3>Default</h3>
         <ComponentPreview code={`<ScrollArea style={{ blockSize: "12rem", inlineSize: "12rem" }}>
   <div style={{ padding: "1rem" }}>
     <h4>Tags</h4>
@@ -64,6 +64,32 @@ export default function ScrollAreaPage() {
         </ComponentPreview>
         <p className="pg-desc">
           A vertical bar is rendered for you when the content overflows. The bar overlays the content instead of taking layout space, so the box does not reflow when it appears.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { ScrollArea, ScrollBar } from "./ui/scroll-area/scroll-area"
+import "./ui/scroll-area/scroll-area.css"
+
+<ScrollArea style={{ blockSize: "12rem" }}>
+  <div style={{ padding: "1rem" }}>
+    {/* scrollable content */}
+  </div>
+  <ScrollBar orientation="horizontal" />
+</ScrollArea>`}>
+          <ScrollArea style={{ ...frame, blockSize: "8rem", inlineSize: "14rem" }}>
+            <div style={{ padding: "1rem" }}>
+              {tags.slice(0, 10).map((tag) => (
+                <div key={tag} style={{ fontSize: "0.875rem", marginBlockEnd: "0.5rem" }}>
+                  {tag}
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </ComponentPreview>
+        <p className="pg-desc">
+          The area needs a bounded size from its own styles or its container. Without one there is nothing to overflow and no bar appears.
         </p>
       </section>
 
@@ -341,32 +367,6 @@ export default function ScrollAreaPage() {
       </section>
 
       <InstallSnippet slug="scroll-area" />
-
-      <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview defaultTab="code" code={`import { ScrollArea, ScrollBar } from "./ui/scroll-area/scroll-area"
-import "./ui/scroll-area/scroll-area.css"
-
-<ScrollArea style={{ blockSize: "12rem" }}>
-  <div style={{ padding: "1rem" }}>
-    {/* scrollable content */}
-  </div>
-  <ScrollBar orientation="horizontal" />
-</ScrollArea>`}>
-          <ScrollArea style={{ ...frame, blockSize: "8rem", inlineSize: "14rem" }}>
-            <div style={{ padding: "1rem" }}>
-              {tags.slice(0, 10).map((tag) => (
-                <div key={tag} style={{ fontSize: "0.875rem", marginBlockEnd: "0.5rem" }}>
-                  {tag}
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </ComponentPreview>
-        <p className="pg-desc">
-          The area needs a bounded size from its own styles or its container. Without one there is nothing to overflow and no bar appears.
-        </p>
-      </section>
 
       <ApiReference props={[
         { name: "overflowEdgeThreshold", type: "number", default: "0", description: "Pixels of overflow before data-overflow-* attributes appear" },

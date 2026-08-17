@@ -62,22 +62,6 @@ export default function EmptyPage() {
       <InstallSnippet slug="empty" />
 
       <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview defaultTab="code" code={`import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "./ui/empty/empty"
-import "./ui/empty/empty.css"
-
-<Empty>
-  <EmptyHeader>
-    <EmptyMedia><InboxIcon /></EmptyMedia>
-    <EmptyTitle>Nothing here</EmptyTitle>
-    <EmptyDescription>Content will appear when available.</EmptyDescription>
-  </EmptyHeader>
-</Empty>`}>
-          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
-        </ComponentPreview>
-      </section>
-
-      <section className="pg-section">
         <h3>Default</h3>
         <div className="pg-empty-frame" data-pg="empty-frame">
           <Empty data-pg="empty-default">
@@ -93,6 +77,22 @@ import "./ui/empty/empty.css"
         <p className="pg-desc">
           <code>Empty</code> paints no bounds of its own: it centres itself in whatever box you give it. The dashed frame belongs to the docs site, not the component, so you can see where the box ends.
         </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "./ui/empty/empty"
+import "./ui/empty/empty.css"
+
+<Empty>
+  <EmptyHeader>
+    <EmptyMedia><InboxIcon /></EmptyMedia>
+    <EmptyTitle>Nothing here</EmptyTitle>
+    <EmptyDescription>Content will appear when available.</EmptyDescription>
+  </EmptyHeader>
+</Empty>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">

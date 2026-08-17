@@ -49,6 +49,25 @@ export default function TogglePage() {
       <InstallSnippet slug="toggle" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Toggle aria-label="Toggle bold">
+  <BoldIcon />
+</Toggle>
+<Toggle aria-label="Toggle italic">
+  <ItalicIcon />
+  Italic
+</Toggle>`}>
+          <Toggle aria-label="Toggle bold">
+            <BoldIcon />
+          </Toggle>
+          <Toggle aria-label="Toggle italic">
+            <ItalicIcon />
+            Italic
+          </Toggle>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Toggle } from "./ui/toggle/toggle"
 import "./ui/toggle/toggle.css"

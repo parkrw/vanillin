@@ -40,6 +40,21 @@ export default function FormatPage() {
       <InstallSnippet slug="format" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<RelativeTime date={Date.now() - 300_000} />
+<Bytes value={1024} />
+<Duration value={90_000} />
+<Cost value={12.40} />`}>
+          <div className="pg-row" style={{ gap: "1.5rem" }}>
+            <span><RelativeTime date={now - FIVE_MIN} /></span>
+            <span><Bytes value={1024} /></span>
+            <span><Duration value={90_000} /></span>
+            <span><Cost value={12.40} /></span>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { RelativeTime, Bytes, Duration, Cost } from "./ui/format/format"
 import "./ui/format/format.css"

@@ -25,6 +25,13 @@ export default function KbdPage() {
       <InstallSnippet slug="kbd" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Kbd>K</Kbd>`}>
+          <Kbd>K</Kbd>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Kbd } from "./ui/kbd/kbd"
 import "./ui/kbd/kbd.css"

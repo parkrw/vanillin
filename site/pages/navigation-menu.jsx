@@ -11,6 +11,8 @@ import {
   navigationMenuTriggerStyle,
 } from "../../ui/navigation-menu/navigation-menu.jsx"
 import "../../ui/navigation-menu/navigation-menu.css"
+import { ComponentPreview } from "../code-example.jsx"
+import "../code-example.css"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
 import "../install-snippet.css"
@@ -32,7 +34,7 @@ export default function NavigationMenuPage() {
       <p>A site navigation bar with hover-triggered dropdown panels, directional content animations, and full keyboard support.</p>
 
       <section className="pg-section">
-        <h3>Viewport mode (default)</h3>
+        <h3>Default</h3>
         <p style={{ fontSize: "0.8125rem", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
           One shared viewport morphs its size when switching between items.
           Content slides directionally; the indicator arrow follows the active
@@ -145,6 +147,28 @@ export default function NavigationMenuPage() {
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { NavigationMenu, NavigationMenuList, NavigationMenuItem,
+  NavigationMenuTrigger, NavigationMenuContent, NavigationMenuLink,
+  NavigationMenuViewport } from "./ui/navigation-menu/navigation-menu"
+import "./ui/navigation-menu/navigation-menu.css"
+
+<NavigationMenu>
+  <NavigationMenuList>
+    <NavigationMenuItem>
+      <NavigationMenuTrigger>Products</NavigationMenuTrigger>
+      <NavigationMenuContent>
+        <NavigationMenuLink href="#">Overview</NavigationMenuLink>
+      </NavigationMenuContent>
+    </NavigationMenuItem>
+  </NavigationMenuList>
+  <NavigationMenuViewport />
+</NavigationMenu>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">

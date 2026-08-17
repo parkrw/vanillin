@@ -56,6 +56,27 @@ export default function ItemPage() {
       <InstallSnippet slug="item" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Item>
+  <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+  <ItemContent>
+    <ItemTitle>Project Notes</ItemTitle>
+    <ItemDescription>Last edited 2 hours ago</ItemDescription>
+  </ItemContent>
+</Item>`}>
+          <div style={{ maxWidth: "28rem" }}>
+            <Item>
+              <ItemMedia variant="icon"><FileIcon /></ItemMedia>
+              <ItemContent>
+                <ItemTitle>Project Notes</ItemTitle>
+                <ItemDescription>Last edited 2 hours ago</ItemDescription>
+              </ItemContent>
+            </Item>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription } from "./ui/item/item"
 import "./ui/item/item.css"

@@ -40,7 +40,7 @@ export default function ResizablePage() {
       <p>Resizable panels split a container into adjustable regions separated by draggable handles, with keyboard support, collapsing, persistence, and nesting.</p>
 
       <section className="pg-section">
-        <h3>Horizontal</h3>
+        <h3>Default</h3>
         <p>
           Two panels side by side. Drag the separator or use keyboard arrows
           when focused. <code>minSize</code> prevents either panel from
@@ -71,6 +71,37 @@ export default function ResizablePage() {
         </ComponentPreview>
         <p className="pg-desc">
           The group needs a height from its container. It fills whatever box you give it and never sizes itself.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "./ui/resizable/resizable"
+import "./ui/resizable/resizable.css"
+
+<ResizablePanelGroup direction="horizontal">
+  <ResizablePanel id="left" defaultSize={50} minSize={20}>
+    Left
+  </ResizablePanel>
+  <ResizableHandle />
+  <ResizablePanel id="right" defaultSize={50} minSize={20}>
+    Right
+  </ResizablePanel>
+</ResizablePanelGroup>`}>
+          <div style={frameStyle}>
+            <ResizablePanelGroup direction="horizontal">
+              <ResizablePanel id="u-left" defaultSize={50} minSize={20}>
+                <div style={panelStyle}>Left</div>
+              </ResizablePanel>
+              <ResizableHandle />
+              <ResizablePanel id="u-right" defaultSize={50} minSize={20}>
+                <div style={panelStyle}>Right</div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          Panels need <code>id</code> only when the group persists its layout, but giving every panel one keeps the saved key stable if you reorder them.
         </p>
       </section>
 
@@ -323,37 +354,6 @@ const [sidebarState, setSidebarState] = useState("expanded")
       </section>
 
       <InstallSnippet slug="resizable" />
-
-      <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview defaultTab="code" code={`import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "./ui/resizable/resizable"
-import "./ui/resizable/resizable.css"
-
-<ResizablePanelGroup direction="horizontal">
-  <ResizablePanel id="left" defaultSize={50} minSize={20}>
-    Left
-  </ResizablePanel>
-  <ResizableHandle />
-  <ResizablePanel id="right" defaultSize={50} minSize={20}>
-    Right
-  </ResizablePanel>
-</ResizablePanelGroup>`}>
-          <div style={frameStyle}>
-            <ResizablePanelGroup direction="horizontal">
-              <ResizablePanel id="u-left" defaultSize={50} minSize={20}>
-                <div style={panelStyle}>Left</div>
-              </ResizablePanel>
-              <ResizableHandle />
-              <ResizablePanel id="u-right" defaultSize={50} minSize={20}>
-                <div style={panelStyle}>Right</div>
-              </ResizablePanel>
-            </ResizablePanelGroup>
-          </div>
-        </ComponentPreview>
-        <p className="pg-desc">
-          Panels need <code>id</code> only when the group persists its layout, but giving every panel one keeps the saved key stable if you reorder them.
-        </p>
-      </section>
 
       <ApiReference props={[
         { name: "ResizablePanelGroup: direction", type: '"horizontal" | "vertical"', description: "Axis along which panels are laid out" },

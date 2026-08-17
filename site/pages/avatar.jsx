@@ -28,6 +28,21 @@ export default function AvatarPage() {
       <InstallSnippet slug="avatar" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Avatar>
+  <AvatarImage src="/avatar.jpg" alt="Casey Nolan" />
+  <AvatarFallback>CN</AvatarFallback>
+</Avatar>`}>
+          <div className="pg-row">
+            <Avatar>
+              <AvatarImage src={PORTRAIT} alt="Casey Nolan" />
+              <AvatarFallback>CN</AvatarFallback>
+            </Avatar>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar/avatar"
 import "./ui/avatar/avatar.css"

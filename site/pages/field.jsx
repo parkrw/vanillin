@@ -36,6 +36,27 @@ export default function FieldPage() {
       <InstallSnippet slug="field" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<FieldGroup>
+  <Field>
+    <FieldLabel htmlFor="name">Name</FieldLabel>
+    <Input id="name" placeholder="Ada Lovelace" />
+    <FieldDescription>Shown on your public profile.</FieldDescription>
+  </Field>
+</FieldGroup>`}>
+          <div style={{ maxWidth: "24rem" }}>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="field-name">Name</FieldLabel>
+                <Input id="field-name" placeholder="Ada Lovelace" />
+                <FieldDescription>Shown on your public profile.</FieldDescription>
+              </Field>
+            </FieldGroup>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Field, FieldGroup, FieldLabel, FieldDescription } from "./ui/field/field"
 import "./ui/field/field.css"

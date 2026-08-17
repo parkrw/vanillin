@@ -38,6 +38,27 @@ export default function AlertPage() {
       <InstallSnippet slug="alert" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Alert>
+  <InfoIcon />
+  <AlertTitle>Heads up!</AlertTitle>
+  <AlertDescription>
+    You can add components using the CLI.
+  </AlertDescription>
+</Alert>`}>
+          <div style={{ maxWidth: "32rem" }}>
+            <Alert>
+              <InfoIcon />
+              <AlertTitle>Heads up!</AlertTitle>
+              <AlertDescription>
+                You can add components and dependencies to your app using the CLI.
+              </AlertDescription>
+            </Alert>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Alert, AlertTitle, AlertDescription } from "./ui/alert/alert"
 import "./ui/alert/alert.css"

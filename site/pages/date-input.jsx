@@ -54,7 +54,7 @@ export default function DateInputPage() {
       <InstallSnippet slug="date-input" />
 
       <section className="pg-section">
-        <h3>Typeable date input + calendar</h3>
+        <h3>Default</h3>
         <ComponentPreview code={`import { DateInput } from "./ui/date-input/date-input"
 import "./ui/date-input/date-input.css"
 
@@ -107,6 +107,18 @@ const [date, setDate] = useState(null)
               </span>
             </p>
           </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { DateInput } from "./ui/date-input/date-input"
+import "./ui/date-input/date-input.css"
+
+const [date, setDate] = useState(null)
+
+<DateInput value={date} onValueChange={setDate} placeholder="Tomorrow, next friday, 12/25..." />`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
         </ComponentPreview>
       </section>
 

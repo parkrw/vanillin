@@ -22,6 +22,34 @@ export default function CardPage() {
       <InstallSnippet slug="card" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Card>
+  <CardHeader>
+    <CardTitle>Title</CardTitle>
+    <CardDescription>Description.</CardDescription>
+  </CardHeader>
+  <CardContent>Content here.</CardContent>
+  <CardFooter>
+    <Button>Save</Button>
+  </CardFooter>
+</Card>`}>
+          <Card style={{ width: "100%", maxWidth: "22rem" }}>
+            <CardHeader>
+              <CardTitle>Card Title</CardTitle>
+              <CardDescription>Card description goes here.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p style={{ margin: 0 }}>Card content area.</p>
+            </CardContent>
+            <CardFooter>
+              <Button>Save</Button>
+              <Button variant="outline">Cancel</Button>
+            </CardFooter>
+          </Card>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Card, CardHeader, CardTitle, CardDescription,
   CardContent, CardFooter } from "./ui/card/card"

@@ -38,6 +38,37 @@ export default function MenubarPage() {
       <InstallSnippet slug="menubar" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Menubar>
+  <MenubarMenu>
+    <MenubarTrigger>Actions</MenubarTrigger>
+    <MenubarContent>
+      <MenubarItem onSelect={() => run("deploy")}>
+        Deploy
+        <MenubarShortcut>Ctrl+D</MenubarShortcut>
+      </MenubarItem>
+      <MenubarSeparator />
+      <MenubarItem onSelect={() => run("rollback")}>Roll back</MenubarItem>
+    </MenubarContent>
+  </MenubarMenu>
+</Menubar>`}>
+          <Menubar>
+            <MenubarMenu>
+              <MenubarTrigger>Actions</MenubarTrigger>
+              <MenubarContent>
+                <MenubarItem onSelect={() => setLastAction("deploy")}>
+                  Deploy
+                  <MenubarShortcut>Ctrl+D</MenubarShortcut>
+                </MenubarItem>
+                <MenubarSeparator />
+                <MenubarItem onSelect={() => setLastAction("rollback")}>Roll back</MenubarItem>
+              </MenubarContent>
+            </MenubarMenu>
+          </Menubar>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarShortcut, MenubarSeparator } from "./ui/menubar/menubar"
 import "./ui/menubar/menubar.css"

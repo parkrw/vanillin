@@ -19,14 +19,21 @@ export default function SliderPage() {
 
       <section className="pg-section">
         <h3>Default</h3>
-        <p>
-          A single thumb at a starting value. Arrow keys move by one step,
-          Shift+Arrow by 10, Home/End jump to the extremes. Clicking the
-          track jumps the thumb to that position.
-        </p>
         <div className="pg-row" style={{ width: "60%" }}>
           <Slider defaultValue={[33]} aria-label="Default" />
         </div>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Slider } from "./ui/slider/slider"
+import "./ui/slider/slider.css"
+
+<Slider defaultValue={[33]} aria-label="Volume" />`}>
+          <div style={{ width: "60%" }}>
+            <Slider defaultValue={[50]} aria-label="Usage demo" />
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
@@ -77,18 +84,6 @@ export default function SliderPage() {
         <div className="pg-row" style={{ height: "12rem" }}>
           <Slider defaultValue={[30]} orientation="vertical" aria-label="Vertical" />
         </div>
-      </section>
-
-      <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview defaultTab="code" code={`import { Slider } from "./ui/slider/slider"
-import "./ui/slider/slider.css"
-
-<Slider defaultValue={[33]} aria-label="Volume" />`}>
-          <div style={{ width: "60%" }}>
-            <Slider defaultValue={[50]} aria-label="Usage demo" />
-          </div>
-        </ComponentPreview>
       </section>
 
       <section className="pg-section">
@@ -187,6 +182,14 @@ import "./ui/slider/slider.css"
         { name: "disabled", type: "boolean", default: "false", description: "Prevents interaction" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />
+
+      <section className="pg-section">
+        <h3>Keyboard</h3>
+        <p>
+          Arrow keys move by one step, Shift+Arrow by 10, and Home/End jump to the
+          extremes. Clicking the track jumps the nearest thumb to that position.
+        </p>
+      </section>
     </>
   )
 }

@@ -18,6 +18,17 @@ export default function BubblePage() {
       <InstallSnippet slug="bubble" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Bubble>
+  <BubbleContent>Hello there</BubbleContent>
+</Bubble>`}>
+          <Bubble>
+            <BubbleContent>Hello there</BubbleContent>
+          </Bubble>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Bubble, BubbleContent } from "./ui/bubble/bubble"
 import "./ui/bubble/bubble.css"
