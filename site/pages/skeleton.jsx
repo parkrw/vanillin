@@ -16,6 +16,13 @@ export default function SkeletonPage() {
       <InstallSnippet slug="skeleton" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Skeleton style={{ height: "1rem", width: "16rem" }} />`}>
+          <Skeleton style={{ height: "1rem", width: "16rem" }} />
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Skeleton } from "./ui/skeleton/skeleton"
 import "./ui/skeleton/skeleton.css"

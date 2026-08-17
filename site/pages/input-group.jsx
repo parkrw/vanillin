@@ -23,6 +23,28 @@ export default function InputGroupPage() {
       <InstallSnippet slug="input-group" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<InputGroup>
+  <InputGroupAddon>
+    <SearchIcon />
+  </InputGroupAddon>
+  <InputGroupInput placeholder="Search..." />
+</InputGroup>`}>
+          <div className="pg-row" style={{ maxWidth: "24rem" }}>
+            <InputGroup>
+              <InputGroupAddon>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
+              </InputGroupAddon>
+              <InputGroupInput placeholder="Search..." />
+            </InputGroup>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { InputGroup, InputGroupInput, InputGroupAddon } from "./ui/input-group/input-group"
 import "./ui/input-group/input-group.css"

@@ -32,6 +32,45 @@ export default function AlertDialogPage() {
       <InstallSnippet slug="alert-dialog" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<AlertDialog>
+  <AlertDialogTrigger as={Button} variant="outline">
+    Discard draft
+  </AlertDialogTrigger>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Discard this draft?</AlertDialogTitle>
+      <AlertDialogDescription>
+        Your unsaved edits will be lost.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Keep editing</AlertDialogCancel>
+      <AlertDialogAction>Discard</AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>`}>
+          <AlertDialog>
+            <AlertDialogTrigger as={Button} variant="outline">
+              Discard draft
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Discard this draft?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Your unsaved edits will be lost.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Keep editing</AlertDialogCancel>
+                <AlertDialogAction>Discard</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from "./ui/alert-dialog/alert-dialog"
 import "./ui/alert-dialog/alert-dialog.css"

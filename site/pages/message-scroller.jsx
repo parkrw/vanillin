@@ -16,7 +16,7 @@ import "../../ui/message-scroller/message-scroller.css"
 import "../../ui/message/message.css"
 import "../../ui/bubble/bubble.css"
 import "../../ui/button/button.css"
-import { ComponentPreview } from "../code-example.jsx"
+import { CodeBlock, ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
 import "../code-example.css"
@@ -64,33 +64,7 @@ export default function MessageScrollerPage() {
       <InstallSnippet slug="message-scroller" />
 
       <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview defaultTab="code" code={`import {
-  MessageScroller, MessageScrollerButton, MessageScrollerContent,
-  MessageScrollerItem, MessageScrollerProvider, MessageScrollerViewport,
-} from "./ui/message-scroller/message-scroller"
-import "./ui/message-scroller/message-scroller.css"
-
-<MessageScrollerProvider>
-  <MessageScroller style={{ blockSize: "18rem" }}>
-    <MessageScrollerViewport>
-      <MessageScrollerContent>
-        {messages.map(msg => (
-          <MessageScrollerItem key={msg.id} messageId={msg.id}>
-            {msg.text}
-          </MessageScrollerItem>
-        ))}
-      </MessageScrollerContent>
-    </MessageScrollerViewport>
-    <MessageScrollerButton />
-  </MessageScroller>
-</MessageScrollerProvider>`}>
-          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demo below.</p>
-        </ComponentPreview>
-      </section>
-
-      <section className="pg-section">
-        <h3>Stick-to-bottom transcript</h3>
+        <h3>Default</h3>
         <p>
           Pinned to the live edge: appending keeps the newest message in view. Scroll up (wheel,
           keys, scrollbar) to release; scroll back to the bottom to re-engage. Prepending keeps
@@ -130,8 +104,34 @@ import "./ui/message-scroller/message-scroller.css"
       </section>
 
       <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import {
+  MessageScroller, MessageScrollerButton, MessageScrollerContent,
+  MessageScrollerItem, MessageScrollerProvider, MessageScrollerViewport,
+} from "./ui/message-scroller/message-scroller"
+import "./ui/message-scroller/message-scroller.css"
+
+<MessageScrollerProvider>
+  <MessageScroller style={{ blockSize: "18rem" }}>
+    <MessageScrollerViewport>
+      <MessageScrollerContent>
+        {messages.map(msg => (
+          <MessageScrollerItem key={msg.id} messageId={msg.id}>
+            {msg.text}
+          </MessageScrollerItem>
+        ))}
+      </MessageScrollerContent>
+    </MessageScrollerViewport>
+    <MessageScrollerButton />
+  </MessageScroller>
+</MessageScrollerProvider>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demo below.</p>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Follow and release</h3>
-        <ComponentPreview defaultTab="code" code={`// The scroller tracks two states via data-state on the root:
+        <CodeBlock language="jsx" code={`// The scroller tracks two states via data-state on the root:
 //   "following": pinned to the live edge, new items auto-scroll
 //   "released": user scrolled away, new items do not move the viewport
 //
@@ -153,12 +153,11 @@ import "./ui/message-scroller/message-scroller.css"
     </MessageScrollerViewport>
     <MessageScrollerButton />
   </MessageScroller>
-</MessageScrollerProvider>`}>
-          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+</MessageScrollerProvider>`} />
+        <p className="pg-desc">
             The live demo above shows both states. Scroll up to release, click the
             button or scroll to the end to re-engage.
           </p>
-        </ComponentPreview>
         <p>
           The <code>data-state</code> attribute on the root element reflects <code>"following"</code> or{" "}
           <code>"released"</code>. Use it to style the scroller differently when the user has scrolled
@@ -168,7 +167,7 @@ import "./ui/message-scroller/message-scroller.css"
 
       <section className="pg-section">
         <h3>Prepend preserves position</h3>
-        <ComponentPreview defaultTab="code" code={`// When messages are prepended (older history loaded above), the
+        <CodeBlock language="jsx" code={`// When messages are prepended (older history loaded above), the
 // viewport adjusts scrollTop so the currently-viewed message stays
 // in place. This works by tracking childList mutations and
 // compensating for the height difference.
@@ -177,12 +176,11 @@ import "./ui/message-scroller/message-scroller.css"
   <MessageScrollerContent>
     {/* prepending items here won't jump the user's view */}
   </MessageScrollerContent>
-</MessageScrollerViewport>`}>
-          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+</MessageScrollerViewport>`} />
+        <p className="pg-desc">
             Click "Prepend 3 older" in the demo above and notice your scroll position
             holds steady.
           </p>
-        </ComponentPreview>
         <p>
           <code>preserveScrollOnPrepend</code> is on by default. It compensates for the
           added height of newly prepended children so that the message the reader was looking at
@@ -193,7 +191,7 @@ import "./ui/message-scroller/message-scroller.css"
 
       <section className="pg-section">
         <h3>Scroll-to-bottom button</h3>
-        <ComponentPreview defaultTab="code" code={`// MessageScrollerButton is inert (disabled, data-active="false")
+        <CodeBlock language="jsx" code={`// MessageScrollerButton is inert (disabled, data-active="false")
 // when the viewport is already at the live edge, and active when
 // there is content below the fold. Click calls scrollToEnd().
 
@@ -202,12 +200,11 @@ import "./ui/message-scroller/message-scroller.css"
 // Custom children replace the default chevron icon:
 <MessageScrollerButton>
   ↓ New messages
-</MessageScrollerButton>`}>
-          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+</MessageScrollerButton>`} />
+        <p className="pg-desc">
             The button in the demo above shows this in action. Scroll up to see it
             activate, then click to jump back.
           </p>
-        </ComponentPreview>
         <p>
           The button carries <code>data-active="true"</code> when there is content below the
           fold, <code>"false"</code> when at the bottom. It is also <code>disabled</code> when
@@ -217,7 +214,7 @@ import "./ui/message-scroller/message-scroller.css"
 
       <section className="pg-section">
         <h3>Visibility and scrollable hooks</h3>
-        <ComponentPreview defaultTab="code" code={`import {
+        <CodeBlock language="jsx" code={`import {
   useMessageScrollerVisibility,
   useMessageScrollerScrollable,
   useMessageScroller,
@@ -237,11 +234,10 @@ function StatusBar() {
       <button onClick={scrollToStart}>Jump to oldest</button>
     </div>
   )
-}`}>
-          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+}`} />
+        <p className="pg-desc">
             The readout below the demo above uses both hooks live.
           </p>
-        </ComponentPreview>
         <p>
           <code>useMessageScrollerVisibility</code> uses an <code>IntersectionObserver</code> scoped
           to the viewport. It reports which <code>messageId</code> values are on screen and which
@@ -263,7 +259,7 @@ function StatusBar() {
 
       <section className="pg-section">
         <h3>Default scroll position</h3>
-        <ComponentPreview defaultTab="code" code={`// "end" (default): starts pinned to the bottom
+        <CodeBlock language="jsx" code={`// "end" (default): starts pinned to the bottom
 <MessageScrollerProvider defaultScrollPosition="end">
 
 // "start": starts at the top, browsers' natural position
@@ -283,12 +279,11 @@ function StatusBar() {
       </MessageScrollerContent>
     </MessageScrollerViewport>
   </MessageScroller>
-</MessageScrollerProvider>`}>
-          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+</MessageScrollerProvider>`} />
+        <p className="pg-desc">
             The <code>last-anchor</code> mode is useful for restoring a read position when
             the user returns to a conversation.
           </p>
-        </ComponentPreview>
         <p>
           <code>defaultScrollPosition</code> controls where the viewport starts on mount.
           The <code>"last-anchor"</code> option looks for the first <code>MessageScrollerItem</code>{" "}

@@ -22,6 +22,13 @@ export default function ButtonPage() {
       <InstallSnippet slug="button" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Button>Click me</Button>`}>
+          <Button>Click me</Button>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Button } from "./ui/button/button"
 import "./ui/button/button.css"

@@ -16,6 +16,13 @@ export default function SpinnerPage() {
       <InstallSnippet slug="spinner" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Spinner />`}>
+          <Spinner />
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Spinner } from "./ui/spinner/spinner"
 import "./ui/spinner/spinner.css"

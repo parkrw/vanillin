@@ -23,6 +23,15 @@ export default function InputPage() {
       <InstallSnippet slug="input" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Input placeholder="Type something..." />`}>
+          <div style={{ maxWidth: "20rem" }}>
+            <Input placeholder="Type something..." />
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Input } from "./ui/input/input"
 import "./ui/input/input.css"

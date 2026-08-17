@@ -16,6 +16,24 @@ export default function NativeSelectPage() {
       <InstallSnippet slug="native-select" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<NativeSelect>
+  <NativeSelectOption value="apple">Apple</NativeSelectOption>
+  <NativeSelectOption value="banana">Banana</NativeSelectOption>
+  <NativeSelectOption value="cherry">Cherry</NativeSelectOption>
+</NativeSelect>`}>
+          <div className="pg-row">
+            <NativeSelect defaultValue="" style={{ maxWidth: "16rem" }}>
+              <NativeSelectOption value="" disabled>Select a fruit</NativeSelectOption>
+              <NativeSelectOption value="apple">Apple</NativeSelectOption>
+              <NativeSelectOption value="banana">Banana</NativeSelectOption>
+              <NativeSelectOption value="cherry">Cherry</NativeSelectOption>
+            </NativeSelect>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { NativeSelect, NativeSelectOption } from "./ui/native-select/native-select"
 import "./ui/native-select/native-select.css"

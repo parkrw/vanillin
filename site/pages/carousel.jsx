@@ -36,27 +36,9 @@ export default function CarouselPage() {
 
       <InstallSnippet slug="carousel" />
 
+      {/* Default: one item per view */}
       <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview defaultTab="code" code={`import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "./ui/carousel/carousel"
-import "./ui/carousel/carousel.css"
-
-<Carousel>
-  <CarouselContent>
-    <CarouselItem>Slide 1</CarouselItem>
-    <CarouselItem>Slide 2</CarouselItem>
-    <CarouselItem>Slide 3</CarouselItem>
-  </CarouselContent>
-  <CarouselPrevious />
-  <CarouselNext />
-</Carousel>`}>
-          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
-        </ComponentPreview>
-      </section>
-
-      {/* Basic: one item per view */}
-      <section className="pg-section">
-        <h3>Basic</h3>
+        <h3>Default</h3>
         <ComponentPreview code={`<Carousel>
   <CarouselContent>
     {Array.from({ length: 5 }, (_, i) => (
@@ -81,6 +63,24 @@ import "./ui/carousel/carousel.css"
               <CarouselNext />
             </Carousel>
           </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "./ui/carousel/carousel"
+import "./ui/carousel/carousel.css"
+
+<Carousel>
+  <CarouselContent>
+    <CarouselItem>Slide 1</CarouselItem>
+    <CarouselItem>Slide 2</CarouselItem>
+    <CarouselItem>Slide 3</CarouselItem>
+  </CarouselContent>
+  <CarouselPrevious />
+  <CarouselNext />
+</Carousel>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
         </ComponentPreview>
       </section>
 

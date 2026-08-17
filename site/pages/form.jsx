@@ -559,6 +559,24 @@ export default function FormPage() {
       <InstallSnippet slug="form" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Form form={{ formState }}>
+  <FormField name="email">
+    <FormItem>
+      <FormLabel>Email</FormLabel>
+      <FormControl as={Input} {...register("email")} />
+      <FormDescription>We will never share your email.</FormDescription>
+      <FormMessage />
+    </FormItem>
+  </FormField>
+</Form>`}>
+          <p style={{ color: "var(--muted-foreground)", fontStyle: "italic" }}>
+            See the interactive demos below for full working examples.
+          </p>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Form, FormField, FormItem, FormLabel,
   FormControl, FormDescription, FormMessage } from "./ui/form/form"

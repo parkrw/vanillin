@@ -18,6 +18,21 @@ export default function ButtonGroupPage() {
       <InstallSnippet slug="button-group" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<ButtonGroup aria-label="Actions">
+  <Button variant="outline">Archive</Button>
+  <Button variant="outline">Report</Button>
+  <Button variant="outline">Snooze</Button>
+</ButtonGroup>`}>
+          <ButtonGroup aria-label="Actions">
+            <Button variant="outline">Archive</Button>
+            <Button variant="outline">Report</Button>
+            <Button variant="outline">Snooze</Button>
+          </ButtonGroup>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { ButtonGroup } from "./ui/button-group/button-group"
 import "./ui/button-group/button-group.css"

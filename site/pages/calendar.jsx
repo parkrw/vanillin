@@ -28,23 +28,7 @@ export default function CalendarPage() {
       <InstallSnippet slug="calendar" />
 
       <section className="pg-section">
-        <h3>Usage</h3>
-        <ComponentPreview defaultTab="code" code={`import { Calendar } from "./ui/calendar/calendar"
-import "./ui/calendar/calendar.css"
-
-const [date, setDate] = useState(new Date())
-
-<Calendar
-  mode="single"
-  selected={date}
-  onSelect={setDate}
-/>`}>
-          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
-        </ComponentPreview>
-      </section>
-
-      <section className="pg-section">
-        <h3>Single</h3>
+        <h3>Default</h3>
         <ComponentPreview code={`<Calendar
   mode="single"
   selected={date}
@@ -70,6 +54,22 @@ const [date, setDate] = useState(new Date())
               </span>
             </p>
           </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Usage</h3>
+        <ComponentPreview defaultTab="code" code={`import { Calendar } from "./ui/calendar/calendar"
+import "./ui/calendar/calendar.css"
+
+const [date, setDate] = useState(new Date())
+
+<Calendar
+  mode="single"
+  selected={date}
+  onSelect={setDate}
+/>`}>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>See the live demos below.</p>
         </ComponentPreview>
       </section>
 

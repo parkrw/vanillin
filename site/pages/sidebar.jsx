@@ -192,6 +192,57 @@ export default function SidebarPage() {
 
       <InstallSnippet slug="sidebar" />
 
+      <section className="pg-section" data-pg="sb-main">
+        <h3>Default</h3>
+        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1rem" }}>
+          <label style={{ fontSize: "0.8125rem" }}>
+            variant:{" "}
+            <select value={variant} onChange={(e) => setVariant(e.target.value)} style={{ fontSize: "0.8125rem" }}>
+              <option>sidebar</option>
+              <option>floating</option>
+              <option>inset</option>
+            </select>
+          </label>
+          <label style={{ fontSize: "0.8125rem" }}>
+            collapsible:{" "}
+            <select value={collapsible} onChange={(e) => setCollapsible(e.target.value)} style={{ fontSize: "0.8125rem" }}>
+              <option>offcanvas</option>
+              <option>icon</option>
+              <option>none</option>
+            </select>
+          </label>
+        </div>
+        <div
+          className="sidebar-demo-frame"
+          style={{
+            position: "relative",
+            height: "32rem",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-lg)",
+            overflow: "hidden",
+            contain: "layout size",
+          }}
+        >
+          <SidebarProvider
+            defaultOpen
+            style={{
+              "--sidebar-width": "16rem",
+              "--sidebar-width-icon": "3rem",
+              minHeight: "100%",
+            }}
+          >
+            <DemoSidebar variant={variant} collapsible={collapsible} />
+            <SidebarInset>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem", borderBottom: "1px solid var(--border)" }}>
+                <SidebarTrigger />
+                <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>Dashboard</span>
+              </div>
+              <SidebarStateDisplay />
+            </SidebarInset>
+          </SidebarProvider>
+        </div>
+      </section>
+
       <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import {
@@ -226,60 +277,7 @@ import "./ui/sidebar/sidebar.css"
         </ComponentPreview>
       </section>
 
-      <section className="pg-section">
-        <h3>Controls</h3>
-        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1rem" }}>
-          <label style={{ fontSize: "0.8125rem" }}>
-            variant:{" "}
-            <select value={variant} onChange={(e) => setVariant(e.target.value)} style={{ fontSize: "0.8125rem" }}>
-              <option>sidebar</option>
-              <option>floating</option>
-              <option>inset</option>
-            </select>
-          </label>
-          <label style={{ fontSize: "0.8125rem" }}>
-            collapsible:{" "}
-            <select value={collapsible} onChange={(e) => setCollapsible(e.target.value)} style={{ fontSize: "0.8125rem" }}>
-              <option>offcanvas</option>
-              <option>icon</option>
-              <option>none</option>
-            </select>
-          </label>
-        </div>
-      </section>
 
-      <section className="pg-section" data-pg="sb-main">
-        <h3>Default (left, offcanvas)</h3>
-        <div
-          className="sidebar-demo-frame"
-          style={{
-            position: "relative",
-            height: "32rem",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--radius-lg)",
-            overflow: "hidden",
-            contain: "layout size",
-          }}
-        >
-          <SidebarProvider
-            defaultOpen
-            style={{
-              "--sidebar-width": "16rem",
-              "--sidebar-width-icon": "3rem",
-              minHeight: "100%",
-            }}
-          >
-            <DemoSidebar variant={variant} collapsible={collapsible} />
-            <SidebarInset>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem", borderBottom: "1px solid var(--border)" }}>
-                <SidebarTrigger />
-                <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>Dashboard</span>
-              </div>
-              <SidebarStateDisplay />
-            </SidebarInset>
-          </SidebarProvider>
-        </div>
-      </section>
 
       <section className="pg-section" data-pg="sb-icon">
         <h3>Icon collapsible (starts collapsed)</h3>

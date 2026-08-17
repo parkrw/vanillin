@@ -33,6 +33,19 @@ export default function DirectionPage() {
       </p>
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<DirectionProvider dir="rtl">
+  <Slider defaultValue={30} aria-label="Volume" />
+</DirectionProvider>`}>
+          <div style={{ maxWidth: "24rem", width: "100%" }}>
+            <DirectionProvider dir="rtl">
+              <Slider defaultValue={30} aria-label="Volume" />
+            </DirectionProvider>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <p>
           Import <code>DirectionProvider</code> from <code>lib/direction.jsx</code> and wrap the subtree that needs mirroring. Components that read direction (slider, tabs, dropdown-menu, combobox, sidebar) pick it up from context.

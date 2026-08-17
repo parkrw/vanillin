@@ -27,6 +27,35 @@ export default function MessagePage() {
       <InstallSnippet slug="message" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Message>
+  <MessageAvatar>
+    <Avatar><AvatarFallback>AL</AvatarFallback></Avatar>
+  </MessageAvatar>
+  <MessageContent>
+    <MessageHeader>Ada</MessageHeader>
+    <Bubble variant="secondary">
+      <BubbleContent>Morning!</BubbleContent>
+    </Bubble>
+  </MessageContent>
+</Message>`}>
+          <div style={{ maxWidth: "28rem" }}>
+            <Message>
+              <MessageAvatar>
+                <Avatar><AvatarFallback>AL</AvatarFallback></Avatar>
+              </MessageAvatar>
+              <MessageContent>
+                <MessageHeader>Ada</MessageHeader>
+                <Bubble variant="secondary">
+                  <BubbleContent>Morning!</BubbleContent>
+                </Bubble>
+              </MessageContent>
+            </Message>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Message, MessageAvatar, MessageContent, MessageHeader } from "./ui/message/message"
 import { Bubble, BubbleContent } from "./ui/bubble/bubble"

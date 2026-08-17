@@ -29,6 +29,46 @@ export default function PaginationPage() {
       <InstallSnippet slug="pagination" />
 
       <section className="pg-section">
+        <h3>Default</h3>
+        <ComponentPreview code={`<Pagination>
+  <PaginationContent>
+    <PaginationItem><PaginationPrevious href="#" /></PaginationItem>
+    <PaginationItem><PaginationLink href="#">1</PaginationLink></PaginationItem>
+    <PaginationItem><PaginationLink href="#" isActive>2</PaginationLink></PaginationItem>
+    <PaginationItem><PaginationLink href="#">3</PaginationLink></PaginationItem>
+    <PaginationItem><PaginationEllipsis /></PaginationItem>
+    <PaginationItem><PaginationNext href="#" /></PaginationItem>
+  </PaginationContent>
+</Pagination>`}>
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious href="#pagination" />
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationLink href="#pagination">1</PaginationLink>
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationLink href="#pagination" isActive>2</PaginationLink>
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationLink href="#pagination">3</PaginationLink>
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationEllipsis />
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationNext href="#pagination" />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </ComponentPreview>
+        <p className="pg-desc">
+          The active link carries <code>aria-current="page"</code> and switches from ghost to outline. The ellipsis is <code>aria-hidden</code> with screen-reader text, so it never reads as a page you can go to.
+        </p>
+      </section>
+
+      <section className="pg-section">
         <h3>Usage</h3>
         <ComponentPreview defaultTab="code" code={`import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext, PaginationEllipsis } from "./ui/pagination/pagination"
 import "./ui/pagination/pagination.css"
@@ -74,46 +114,6 @@ import "./ui/pagination/pagination.css"
         </ComponentPreview>
         <p className="pg-desc">
           <code>Pagination</code> renders a labelled <code>nav</code> and <code>PaginationContent</code> a <code>ul</code>, so a screen reader announces the control as navigation with a list of pages.
-        </p>
-      </section>
-
-      <section className="pg-section">
-        <h3>Default</h3>
-        <ComponentPreview code={`<Pagination>
-  <PaginationContent>
-    <PaginationItem><PaginationPrevious href="#" /></PaginationItem>
-    <PaginationItem><PaginationLink href="#">1</PaginationLink></PaginationItem>
-    <PaginationItem><PaginationLink href="#" isActive>2</PaginationLink></PaginationItem>
-    <PaginationItem><PaginationLink href="#">3</PaginationLink></PaginationItem>
-    <PaginationItem><PaginationEllipsis /></PaginationItem>
-    <PaginationItem><PaginationNext href="#" /></PaginationItem>
-  </PaginationContent>
-</Pagination>`}>
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious href="#pagination" />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink href="#pagination">1</PaginationLink>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink href="#pagination" isActive>2</PaginationLink>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink href="#pagination">3</PaginationLink>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationEllipsis />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationNext href="#pagination" />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </ComponentPreview>
-        <p className="pg-desc">
-          The active link carries <code>aria-current="page"</code> and switches from ghost to outline. The ellipsis is <code>aria-hidden</code> with screen-reader text, so it never reads as a page you can go to.
         </p>
       </section>
 
