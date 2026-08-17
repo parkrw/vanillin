@@ -1,0 +1,568 @@
+/*
+ * Acme Cloud showcase panels. Everything is scoped under .ackp-panel and
+ * styled from kit tokens only: no raw colour values, no hard-coded radii.
+ * The `ackp-` prefix keeps these classes clear of the console's `ck-` set,
+ * so the two can be mounted in the same tree.
+ */
+
+/*
+ * The sweep for the status widgets. Registering it as <number> is what makes
+ * it animatable and readable: the CSS animation interpolates it on the
+ * compositor and getComputedStyle reports the interpolated value, so the
+ * readout can mirror one source of truth instead of running its own clock.
+ */
+@property --ackp-progress {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+.ackp-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  color: var(--foreground);
+  background-color: var(--background);
+  font-size: 0.8125rem;
+  /* Named container so a nested ui/card (itself an unnamed inline-size
+     container) cannot capture these queries. */
+  container: ackp-panel / inline-size;
+}
+
+/* ── Panel header ─────────────────────────────────────────────────────── */
+
+.ackp-panel-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.ackp-panel-heading {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-1) / 2);
+}
+
+.ackp-panel-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.ackp-panel-sub {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.ackp-panel-badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ackp-panel-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-inline-start: auto;
+}
+
+.ackp-mono {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.ackp-menu-danger {
+  color: var(--destructive);
+}
+
+/* ── Support panel ────────────────────────────────────────────────────── */
+
+.ackp-support-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@container ackp-panel (min-width: 60rem) {
+  .ackp-support-grid {
+    grid-template-columns: minmax(22rem, 2fr) minmax(0, 3fr);
+    align-items: start;
+  }
+}
+
+.ackp-thread-card,
+.ackp-tickets-card {
+  min-inline-size: 0;
+}
+
+.ackp-thread-head,
+.ackp-tickets-head {
+  gap: var(--space-2);
+}
+
+.ackp-thread-title,
+.ackp-tickets-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.875rem;
+}
+
+.ackp-thread-meta {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.ackp-thread-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ackp-thread-scroll {
+  block-size: 18rem;
+}
+
+.ackp-thread-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-inline-end: var(--space-2);
+}
+
+.ackp-msg-author {
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.ackp-msg-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-block-start: var(--space-1);
+}
+
+.ackp-file-chip {
+  gap: calc(var(--space-1) / 2);
+}
+
+.ackp-file-chip svg {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+}
+
+/* ── Draft composer ───────────────────────────────────────────────────── */
+
+.ackp-composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ackp-composer-input {
+  resize: none;
+}
+
+.ackp-composer-files {
+  max-inline-size: 100%;
+}
+
+.ackp-composer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ackp-composer-hint {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  margin-inline-end: auto;
+}
+
+/* ── Tickets table ────────────────────────────────────────────────────── */
+
+.ackp-tickets-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.ackp-tickets-filter {
+  inline-size: 12rem;
+  block-size: 2rem;
+}
+
+.ackp-tickets-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ackp-table-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.ackp-table {
+  font-size: 0.75rem;
+}
+
+/* Rows stay one line tall so the row-action column is where the eye expects
+   it; the scroller handles anything that still does not fit. */
+.ackp-table td,
+.ackp-table th {
+  white-space: nowrap;
+}
+
+.ackp-cell-subject {
+  display: block;
+  max-inline-size: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ackp-cell-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.ackp-tickets-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.ackp-tickets-count {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.ackp-tickets-pager {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* ── Settings panel ───────────────────────────────────────────────────── */
+
+.ackp-settings-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+@container ackp-panel (min-width: 48rem) {
+  .ackp-settings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.ackp-profile-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block-end: var(--space-4);
+  margin-block-end: var(--space-4);
+  border-block-end: 1px solid var(--border);
+}
+
+.ackp-profile-avatar {
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+}
+
+.ackp-profile-id {
+  display: flex;
+  flex-direction: column;
+  margin-inline-end: auto;
+  min-inline-size: 0;
+}
+
+.ackp-profile-name {
+  font-weight: 600;
+}
+
+.ackp-profile-mail {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.ackp-org-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.ackp-key-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--muted);
+}
+
+.ackp-key-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.ackp-key-name {
+  font-weight: 600;
+}
+
+.ackp-key-age {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.ackp-key-value {
+  flex: 1 1 14rem;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--foreground);
+}
+
+.ackp-key-actions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.ackp-key-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-start: var(--space-3);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.ackp-pref-row {
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.ackp-pref-text {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-1) / 2);
+  min-inline-size: 0;
+}
+
+/* ── Status showcase ──────────────────────────────────────────────────── */
+
+.ackp-status-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+.ackp-widget {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background-color: var(--card);
+  /* Fixed literal, not var(--motion-*): an indeterminate loop must not track
+     --motion-scale (see AGENTS.md). Per-widget speed comes from the inline
+     --ackp-duration. */
+  animation: ackp-sweep var(--ackp-duration, 8s) linear infinite;
+}
+
+@keyframes ackp-sweep {
+  from {
+    --ackp-progress: 0;
+  }
+  to {
+    --ackp-progress: 100;
+  }
+}
+
+.ackp-widget[data-tone="success"] {
+  --ackp-tone: var(--success);
+}
+
+.ackp-widget[data-tone="warning"] {
+  --ackp-tone: var(--warning);
+}
+
+.ackp-widget[data-tone="info"] {
+  --ackp-tone: var(--info);
+}
+
+.ackp-widget[data-tone="error"] {
+  --ackp-tone: var(--destructive);
+}
+
+.ackp-widget-visual {
+  display: flex;
+  justify-content: center;
+}
+
+/* Rings */
+
+.ackp-ring-wrap {
+  position: relative;
+  inline-size: 7.5rem;
+  max-inline-size: 100%;
+  aspect-ratio: 1;
+}
+
+.ackp-ring {
+  inline-size: 100%;
+  block-size: 100%;
+  /* Start the sweep at twelve o'clock. */
+  transform: rotate(-90deg);
+}
+
+.ackp-ring-track,
+.ackp-ring-value {
+  fill: none;
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+
+.ackp-ring-track {
+  stroke: color-mix(in oklab, var(--ackp-tone) 28%, var(--muted));
+}
+
+.ackp-ring-value {
+  stroke: var(--ackp-tone);
+  /* 2 * pi * 42, the radius status-showcase.jsx draws. */
+  --ackp-circumference: 263.894;
+  stroke-dasharray: var(--ackp-circumference);
+  stroke-dashoffset: calc(var(--ackp-circumference) * 1px * (1 - var(--ackp-progress) / 100));
+}
+
+.ackp-readout {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.375rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+}
+
+/* Bars */
+
+.ackp-bar-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  inline-size: 100%;
+  padding-block: var(--space-4);
+}
+
+.ackp-bar-wrap .ackp-readout {
+  position: static;
+}
+
+.ackp-bar {
+  inline-size: 100%;
+  block-size: 0.75rem;
+  background-color: color-mix(in oklab, var(--ackp-tone) 28%, var(--muted));
+}
+
+/*
+ * ui/progress writes the indicator transform inline from its `value` prop, so
+ * an inline style always wins on specificity. These widgets drive the fill
+ * from the animated --ackp-progress instead, which is the one case where
+ * overriding it is the point; the transition is dropped so the compositor
+ * follows the animation rather than chasing it a frame behind.
+ */
+.ackp-bar .progress-indicator {
+  background-color: var(--ackp-tone);
+  transform: translateX(calc(-100% + var(--ackp-progress) * 1%)) !important;
+  transition: none;
+}
+
+/* Meta row: the oversized dot is the point of this showcase. */
+
+.ackp-widget-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+.ackp-widget-dot.ackp-widget-dot {
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  box-shadow: 0 0 0 0.375rem color-mix(in oklab, var(--ackp-tone) 20%, transparent);
+}
+
+.ackp-widget-text {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+/* Wraps rather than truncates: a gauge whose name is cut off says nothing. */
+.ackp-widget-label {
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+.ackp-widget-detail {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * Reduced motion: stop the loop and park each widget on its own static value,
+ * so the grid still shows a spread of gauges rather than eight empty rings.
+ * The readout mirrors --ackp-progress, so it lands on the same number.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .ackp-widget {
+    animation: none;
+    --ackp-progress: var(--ackp-static, 50);
+  }
+}
+
+/*
+ * Forced colours flatten the tone tokens to system colours, so the ring's
+ * fill-vs-track distinction disappears. Give the track a visible outline and
+ * let the readout carry the value.
+ */
+@media (forced-colors: active) {
+  .ackp-ring-track {
+    stroke: CanvasText;
+    stroke-width: 2;
+  }
+
+  .ackp-ring-value {
+    stroke: Highlight;
+  }
+}
