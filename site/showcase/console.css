@@ -122,6 +122,11 @@
   flex-shrink: 0;
 }
 
+.ck-theme-toggle svg {
+  inline-size: 1.0625rem;
+  block-size: 1.0625rem;
+}
+
 .ck-bell {
   position: relative;
 }

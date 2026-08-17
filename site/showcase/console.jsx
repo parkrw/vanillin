@@ -180,6 +180,16 @@ const EllipsisIcon = () =>
     </>
   )
 
+const SunIcon = () =>
+  icon(
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    </>
+  )
+
+const MoonIcon = () => icon(<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />)
+
 const BoxIcon = () =>
   icon(
     <>
@@ -319,6 +329,8 @@ function fakeTask(title, description) {
 /* ── Topbar ──────────────────────────────────────────────────────────── */
 
 function ConsoleTopbar({ project, setProject, region, setRegion, onOpenPalette }) {
+  // Decorative only: the icon flips, the page theme never moves.
+  const [moon, setMoon] = useState(false)
   return (
     <header className="ck-topbar">
       <div className="ck-brand">
@@ -361,6 +373,18 @@ function ConsoleTopbar({ project, setProject, region, setRegion, onOpenPalette }
         <SearchIcon />
         <span>Search resources...</span>
       </button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="ck-theme-toggle"
+        aria-label={moon ? "Switch to light theme" : "Switch to dark theme"}
+        onClick={() => {
+          setMoon((m) => !m)
+          toast("Theme switching is decorative in this demo")
+        }}
+      >
+        {moon ? <MoonIcon /> : <SunIcon />}
+      </Button>
       <Button
         variant="ghost"
         size="icon"
