@@ -97,6 +97,13 @@ import {
 } from "../../ui/table/table.jsx"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../ui/tabs/tabs.jsx"
 import { Toaster, toast } from "../../ui/toast/toast.jsx"
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "../../ui/tooltip/tooltip.jsx"
+import { cn } from "../../lib/cn.js"
 import { useDataTable, flexRender } from "../../lib/use-data-table.js"
 import {
   PROJECTS,
@@ -145,6 +152,7 @@ import "../../ui/status-dot/status-dot.css"
 import "../../ui/table/table.css"
 import "../../ui/tabs/tabs.css"
 import "../../ui/toast/toast.css"
+import "../../ui/tooltip/tooltip.css"
 import "./console.css"
 
 /* ── Inline icons (stroke inherits currentColor) ─────────────────────── */
@@ -225,6 +233,16 @@ const CloseIcon = () =>
     <>
       <line x1="6" y1="6" x2="18" y2="18" />
       <line x1="18" y1="6" x2="6" y2="18" />
+    </>
+  )
+
+const RefreshIcon = () =>
+  icon(
+    <>
+      <path d="M21 12a9 9 0 01-9 9 9 9 0 01-8.2-5.3" />
+      <path d="M3 12a9 9 0 019-9 9 9 0 018.2 5.3" />
+      <polyline points="21 3 20.2 8.3 15 7.5" />
+      <polyline points="3 21 3.8 15.7 9 16.5" />
     </>
   )
 
@@ -342,6 +360,36 @@ const NAV_ICONS = {
 
 /* ── Shared bits ─────────────────────────────────────────────────────── */
 
+/* Wraps a control whose own element is already claimed — a dropdown trigger,
+   a status dot — so the tooltip has something to anchor to. */
+function Tip({ label, side = "top", className, children }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger as="span" className={cn("ck-tip", className)}>
+        {children}
+      </TooltipTrigger>
+      <TooltipContent side={side}>{label}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+const TONE_LABEL = {
+  success: "Healthy",
+  warning: "Needs attention",
+  error: "Failing",
+  info: "Informational",
+  pending: "In progress",
+  neutral: "Idle",
+}
+
+function Dot({ tone, ...props }) {
+  return (
+    <Tip label={TONE_LABEL[tone] ?? tone}>
+      <StatusDot status={tone} label={null} {...props} />
+    </Tip>
+  )
+}
+
 const STATUS_TONE = {
   Active: "success",
   "In-use": "success",
@@ -362,14 +410,16 @@ function StatusBadge({ value }) {
 function RowActions({ name, items }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        as={Button}
-        variant="ghost"
-        size="icon"
-        aria-label={`Actions for ${name}`}
-      >
-        <EllipsisIcon />
-      </DropdownMenuTrigger>
+      <Tip label={`Actions for ${name}`}>
+        <DropdownMenuTrigger
+          as={Button}
+          variant="ghost"
+          size="icon"
+          aria-label={`Actions for ${name}`}
+        >
+          <EllipsisIcon />
+        </DropdownMenuTrigger>
+      </Tip>
       <DropdownMenuContent align="end">
         {items.map((item) =>
           item.danger ? (
@@ -417,7 +467,9 @@ function ConsoleTopbar({ project, setProject, region, setRegion, onOpenPalette }
       <div className="ck-brand">
         <span className="ck-brand-mark"><KeyIcon /></span>
         <span className="ck-brand-name">Acme Cloud</span>
-        <Badge variant="secondary">1.0.0</Badge>
+        <Tip label="Console release 1.0.0" side="bottom">
+          <Badge variant="secondary">1.0.0</Badge>
+        </Tip>
       </div>
       <Separator orientation="vertical" decorative className="ck-topbar-sep" />
       <DropdownMenu>
@@ -454,28 +506,36 @@ function ConsoleTopbar({ project, setProject, region, setRegion, onOpenPalette }
         <SearchIcon />
         <span>Search resources...</span>
       </button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="ck-theme-toggle"
-        aria-label={moon ? "Switch to light theme" : "Switch to dark theme"}
-        onClick={() => {
-          setMoon((m) => !m)
-          toast("Theme switching is decorative in this demo")
-        }}
-      >
-        {moon ? <MoonIcon /> : <SunIcon />}
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="ck-bell"
-        aria-label="Notifications, 1 unread"
-        onClick={() => toast.info("2 alarms firing", { description: "compute-node-down, storage-capacity-high" })}
-      >
-        <BellIcon />
-        <StatusDot status="error" size="sm" label={null} className="ck-bell-dot" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger
+          as={Button}
+          variant="ghost"
+          size="icon"
+          className="ck-theme-toggle"
+          aria-label={moon ? "Switch to light theme" : "Switch to dark theme"}
+          onClick={() => {
+            setMoon((m) => !m)
+            toast("Theme switching is decorative in this demo")
+          }}
+        >
+          {moon ? <MoonIcon /> : <SunIcon />}
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Theme</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger
+          as={Button}
+          variant="ghost"
+          size="icon"
+          className="ck-bell"
+          aria-label="Notifications, 1 unread"
+          onClick={() => toast.info("2 alarms firing", { description: "compute-node-down, storage-capacity-high" })}
+        >
+          <BellIcon />
+          <StatusDot status="error" size="sm" label={null} className="ck-bell-dot" />
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Notifications</TooltipContent>
+      </Tooltip>
       <DropdownMenu>
         <DropdownMenuTrigger as={Button} variant="ghost" size="sm" className="ck-user">
           <Avatar className="ck-user-avatar"><AvatarFallback>PW</AvatarFallback></Avatar>
@@ -519,10 +579,13 @@ function ConsoleNav({ view, onNavigate }) {
         <Separator decorative className="ck-nav-sep" />
         {NAV_GROUPS.map((group) => (
           <Collapsible key={group.label} className="ck-nav-cat">
-            <CollapsibleTrigger className="ck-nav-cat-trigger">
-              {group.label}
-              <span className="ck-nav-cat-caret" aria-hidden="true">&#9662;</span>
-            </CollapsibleTrigger>
+            <Tooltip>
+              <CollapsibleTrigger as={TooltipTrigger} className="ck-nav-cat-trigger">
+                {group.label}
+                <span className="ck-nav-cat-caret" aria-hidden="true">&#9662;</span>
+              </CollapsibleTrigger>
+              <TooltipContent side="right">Toggle {group.label}</TooltipContent>
+            </Tooltip>
             <CollapsibleContent>
               <div className="ck-nav-cat-items">
                 {group.items.map((svc) => (
@@ -577,7 +640,7 @@ function HealthCard() {
                 <ItemTitle>{h.name}</ItemTitle>
               </ItemContent>
               <ItemActions>
-                <StatusDot status={h.tone} label={null} />
+                <Dot tone={h.tone} />
                 <span className="ck-health-val" data-tone={h.tone}>{h.value}</span>
               </ItemActions>
             </Item>
@@ -596,7 +659,7 @@ function EventsCard() {
         <ItemGroup>
           {EVENTS.map((e) => (
             <Item key={e.text + e.target} size="sm" className="ck-event-row">
-              <StatusDot status={e.tone} label={null} />
+              <Dot tone={e.tone} />
               <ItemContent>
                 <ItemTitle className="ck-event-text">
                   <code>{e.text}</code> {e.target}
@@ -623,7 +686,7 @@ function Dashboard() {
               <div className="ck-stat-num">{s.num}</div>
               <div className="ck-stat-label">{s.label}</div>
               <div className="ck-stat-sub">
-                <StatusDot status={s.tone} size="sm" label={null} /> {s.sub}
+                <Dot tone={s.tone} size="sm" /> {s.sub}
               </div>
             </CardContent>
           </Card>
@@ -757,13 +820,30 @@ function InstancesView({ project, onDetails }) {
           <Button variant="outline" size="sm" disabled={!selected} onClick={() => fakeTask("Live migrate", `${selected} instance(s)`)}>Migrate</Button>
         </ButtonGroup>
         <div className="ck-actions-spacer" />
-        <Input
-          className="ck-filter"
-          placeholder="Filter instances..."
-          value={table.getState().globalFilter}
-          onChange={(e) => table.setGlobalFilter(e.target.value)}
-        />
-        <DataTableFacetedFilter column={table.getColumn("status")} title="Status" />
+        <Tooltip>
+          <TooltipTrigger
+            as={Button}
+            variant="ghost"
+            size="icon"
+            className="ck-refresh"
+            aria-label="Refresh instances"
+            onClick={() => toast("Inventory refreshed", { description: `${data.length} instances in ${project}` })}
+          >
+            <RefreshIcon />
+          </TooltipTrigger>
+          <TooltipContent>Refresh</TooltipContent>
+        </Tooltip>
+        <Tip label="Filter by name, zone or size">
+          <Input
+            className="ck-filter"
+            placeholder="Filter instances..."
+            value={table.getState().globalFilter}
+            onChange={(e) => table.setGlobalFilter(e.target.value)}
+          />
+        </Tip>
+        <Tip label="Filter by status">
+          <DataTableFacetedFilter column={table.getColumn("status")} title="Status" />
+        </Tip>
       </div>
       <DataTableScroller className="ck-table-wrap">
         <Table className="ck-table">
@@ -1150,7 +1230,7 @@ function ConsoleTaskbar() {
                   <TableCell>{t.task}</TableCell>
                   <TableCell><code className="ck-mono">{t.target}</code></TableCell>
                   <TableCell>
-                    <StatusDot status={t.status === "Running" ? "pending" : "success"} ring={t.status === "Running"} label={null} />{" "}
+                    <Dot tone={t.status === "Running" ? "pending" : "success"} ring={t.status === "Running"} />{" "}
                     {t.status}
                   </TableCell>
                   <TableCell>{t.started}</TableCell>
@@ -1309,83 +1389,85 @@ export default function ConsoleShowcase() {
   const svc = view.svc === "overview" ? null : findService(view.svc)
 
   return (
-    <div className="ck-console" data-pg="console">
-      <ConsoleTopbar
-        project={project}
-        setProject={setProject}
-        region={region}
-        setRegion={setRegion}
-        onOpenPalette={() => setPaletteOpen(true)}
-      />
-      <ResizablePanelGroup direction="horizontal" className="ck-body">
-        <ResizablePanel defaultSize={24} minSize={16} maxSize={36} className="ck-nav-panel">
-          <ConsoleNav view={view} onNavigate={navigate} />
-        </ResizablePanel>
-        <ResizableHandle className="ck-handle" />
-        <ResizablePanel className="ck-main">
-          <div className="ck-scroller">
-            {(() => {
-              const crumbs = (
-                <Breadcrumb>
-                  <BreadcrumbList>
-                    <BreadcrumbItem>
-                      <BreadcrumbLink as="button" type="button" onClick={() => navigate("overview")}>
-                        Acme Cloud
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>
-                    {svc && (
-                      <>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>{svc.category}</BreadcrumbItem>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>{svc.name}</BreadcrumbItem>
-                      </>
-                    )}
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                      <BreadcrumbPage>{view.page}</BreadcrumbPage>
-                    </BreadcrumbItem>
-                  </BreadcrumbList>
-                </Breadcrumb>
-              )
-              if (svc && svc.pages.length > 1) {
-                return (
-                  <Tabs
-                    value={view.page}
-                    onValueChange={(page) => setView((v) => ({ ...v, page }))}
-                  >
-                    <div className="ck-toolbar">
-                      {crumbs}
-                      <TabsList>
-                        {svc.pages.map((p) => (
-                          <TabsTrigger key={p} value={p}>{p}</TabsTrigger>
-                        ))}
-                      </TabsList>
-                    </div>
-                    {svc.pages.map((p) => (
-                      <TabsContent key={p} value={p} className="ck-content">
-                        <PageContent svc={view.svc} page={p} project={project} onDetails={setDetailInstance} />
-                      </TabsContent>
-                    ))}
-                  </Tabs>
+    <TooltipProvider delayDuration={250}>
+      <div className="ck-console" data-pg="console">
+        <ConsoleTopbar
+          project={project}
+          setProject={setProject}
+          region={region}
+          setRegion={setRegion}
+          onOpenPalette={() => setPaletteOpen(true)}
+        />
+        <ResizablePanelGroup direction="horizontal" className="ck-body">
+          <ResizablePanel defaultSize={24} minSize={16} maxSize={36} className="ck-nav-panel">
+            <ConsoleNav view={view} onNavigate={navigate} />
+          </ResizablePanel>
+          <ResizableHandle className="ck-handle" />
+          <ResizablePanel className="ck-main">
+            <div className="ck-scroller">
+              {(() => {
+                const crumbs = (
+                  <Breadcrumb>
+                    <BreadcrumbList>
+                      <BreadcrumbItem>
+                        <BreadcrumbLink as="button" type="button" onClick={() => navigate("overview")}>
+                          Acme Cloud
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
+                      {svc && (
+                        <>
+                          <BreadcrumbSeparator />
+                          <BreadcrumbItem>{svc.category}</BreadcrumbItem>
+                          <BreadcrumbSeparator />
+                          <BreadcrumbItem>{svc.name}</BreadcrumbItem>
+                        </>
+                      )}
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem>
+                        <BreadcrumbPage>{view.page}</BreadcrumbPage>
+                      </BreadcrumbItem>
+                    </BreadcrumbList>
+                  </Breadcrumb>
                 )
-              }
-              return (
-                <>
-                  <div className="ck-toolbar">{crumbs}</div>
-                  <div className="ck-content">
-                    <PageContent svc={view.svc} page={view.page} project={project} onDetails={setDetailInstance} />
-                  </div>
-                </>
-              )
-            })()}
-          </div>
-          <ConsoleTaskbar />
-        </ResizablePanel>
-      </ResizablePanelGroup>
-      <ConsolePalette open={paletteOpen} onOpenChange={setPaletteOpen} onNavigate={navigate} />
-      <InstanceSheet instance={detailInstance} onOpenChange={(open) => !open && setDetailInstance(null)} />
-      <Toaster position="bottom-right" richColors />
-    </div>
+                if (svc && svc.pages.length > 1) {
+                  return (
+                    <Tabs
+                      value={view.page}
+                      onValueChange={(page) => setView((v) => ({ ...v, page }))}
+                    >
+                      <div className="ck-toolbar">
+                        {crumbs}
+                        <TabsList>
+                          {svc.pages.map((p) => (
+                            <TabsTrigger key={p} value={p}>{p}</TabsTrigger>
+                          ))}
+                        </TabsList>
+                      </div>
+                      {svc.pages.map((p) => (
+                        <TabsContent key={p} value={p} className="ck-content">
+                          <PageContent svc={view.svc} page={p} project={project} onDetails={setDetailInstance} />
+                        </TabsContent>
+                      ))}
+                    </Tabs>
+                  )
+                }
+                return (
+                  <>
+                    <div className="ck-toolbar">{crumbs}</div>
+                    <div className="ck-content">
+                      <PageContent svc={view.svc} page={view.page} project={project} onDetails={setDetailInstance} />
+                    </div>
+                  </>
+                )
+              })()}
+            </div>
+            <ConsoleTaskbar />
+          </ResizablePanel>
+        </ResizablePanelGroup>
+        <ConsolePalette open={paletteOpen} onOpenChange={setPaletteOpen} onNavigate={navigate} />
+        <InstanceSheet instance={detailInstance} onOpenChange={(open) => !open && setDetailInstance(null)} />
+        <Toaster position="bottom-right" richColors />
+      </div>
+    </TooltipProvider>
   )
 }

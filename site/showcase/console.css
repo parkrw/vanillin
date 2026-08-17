@@ -93,6 +93,17 @@
   opacity: 0.5;
 }
 
+/* Tooltip anchor for a control whose own element is already spoken for. */
+.ck-tip {
+  display: inline-flex;
+  min-inline-size: 0;
+}
+
+.ck-refresh svg {
+  inline-size: 0.9375rem;
+  block-size: 0.9375rem;
+}
+
 .ck-topbar-spacer {
   flex: 1;
 }
