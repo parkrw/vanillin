@@ -113,16 +113,16 @@ function FormVsFormFields() {
         </p>
         <ul style={{ paddingInlineStart: "1.25rem", marginBlock: "0.5rem" }}>
           <li>
-            <strong><code>ui/form</code></strong> — engine-agnostic field
+            <strong><code>ui/form</code></strong>: engine-agnostic field
             primitives (<code>FormField</code>, <code>FormItem</code>,{" "}
             <code>FormLabel</code>, <code>FormControl</code>,{" "}
             <code>FormDescription</code>, <code>FormMessage</code>). Copying
             this into your project does <em>not</em> pull{" "}
-            <code>lib/use-form.js</code> — it inlines its own path helper on
+            <code>lib/use-form.js</code>; it inlines its own path helper on
             purpose.
           </li>
           <li>
-            <strong><code>ui/form-fields</code></strong> — one-element
+            <strong><code>ui/form-fields</code></strong>: one-element
             bindings (<code>TextField</code>, <code>SelectField</code>,
             etc.) that wire <code>ui/form</code> to{" "}
             <code>lib/use-form.js</code>. Copying this <em>does</em> bring
@@ -130,7 +130,7 @@ function FormVsFormFields() {
             description + error and nothing unusual.
           </li>
           <li>
-            <strong><code>lib/use-form</code></strong> — the form engine
+            <strong><code>lib/use-form</code></strong>: the form engine
             itself (react-hook-form-shaped). Use it alone when there is no
             field UI at all: a search box, a filter bar, a form styled from
             scratch.
@@ -138,7 +138,7 @@ function FormVsFormFields() {
         </ul>
         <p>
           Mixing them is normal. A bound field and a hand-written one sit in the
-          same <code>&lt;Form&gt;</code> and produce identical markup — see the
+          same <code>&lt;Form&gt;</code> and produce identical markup; see the
           parity demo below.
         </p>
       </div>
@@ -166,7 +166,7 @@ function Docs() {
         <p>
           <code>name</code> (required), <code>label</code>,{" "}
           <code>description</code>, <code>rules</code>, and{" "}
-          <code>control</code> — the object from <code>useForm</code>. Omit{" "}
+          <code>control</code> (the object from <code>useForm</code>). Omit{" "}
           <code>control</code> and the field reads it from a{" "}
           <code>&lt;FormProvider&gt;</code> ancestor; with neither it throws by
           name. Everything else is forwarded to the underlying control.
@@ -175,7 +175,7 @@ function Docs() {
         <h4>Which layer to reach for</h4>
         <p>
           <strong><code>ui/form-fields</code></strong>{" "}
-          for ordinary fields — a label, a control, a description, an error.{" "}
+          for ordinary fields: a label, a control, a description, an error.{" "}
           <strong><code>ui/form</code></strong>{" "}
           when the layout is unusual or you are driving it with a different
           engine.{" "}
@@ -290,13 +290,13 @@ function ReplacesDemo() {
         line count, the right-hand version has three places to get wrong:{" "}
         <code>Controller</code> instead of <code>register</code>, the{" "}
         <code>FormField name</code> matching the <code>Controller name</code>,
-        and remembering <code>FormMessage</code> at all — drop it and the field
+        and remembering <code>FormMessage</code> at all: drop it and the field
         validates but never says so.
       </p>
       <p className="pg-description">
         One real difference: <code>FormControl</code> wrapping{" "}
         <code>&lt;Select&gt;</code> clones the ARIA props onto the{" "}
-        <code>Select</code> root, which does not forward unknown props — so
+        <code>Select</code> root, which does not forward unknown props, so
         they never reach the trigger. <code>SelectField</code> puts{" "}
         <code>FormControl</code> on <code>SelectTrigger</code> instead, where
         they land on a real button.
@@ -316,13 +316,13 @@ function ReplacesDemo() {
       >
         <div>
           <p className="pg-description" style={{ margin: "0 0 0.5rem" }}>
-            <strong>Bound</strong> — 8 lines
+            <strong>Bound</strong>: 8 lines
           </p>
           <pre data-pg="ff-source-bound">{BOUND_SOURCE}</pre>
         </div>
         <div>
           <p className="pg-description" style={{ margin: "0 0 0.5rem" }}>
-            <strong>Hand-wired</strong> — 30 lines
+            <strong>Hand-wired</strong>: 30 lines
           </p>
           <pre data-pg="ff-source-hand">{HAND_SOURCE}</pre>
         </div>
@@ -332,7 +332,7 @@ function ReplacesDemo() {
 }
 
 /* ================================================================== */
-/*  Provider path — no `control` prop                                  */
+/*  Provider path: no `control` prop                                  */
 /* ================================================================== */
 
 function ProviderPathDemo() {
@@ -410,7 +410,7 @@ function EscapeHatchDemo() {
         Every <code>&lt;XField&gt;</code> above is a thin call to{" "}
         <code>FormFieldBinding</code>, and so is anything you write yourself.
         It does the plumbing and hands back <code>field</code>; you decide what
-        to render. <code>controlled</code> is the one thing it cannot infer —
+        to render. <code>controlled</code> is the one thing it cannot infer:
         set it for a control with its own value channel, leave it off for a
         native input.
       </p>
@@ -496,7 +496,7 @@ function BoundFormDemo() {
       <p className="pg-description">
         Six fields, six lines. <code>TextField</code> and{" "}
         <code>TextareaField</code> are native inputs, so the binding wires them
-        with <code>register</code> — no <code>Controller</code>, no re-render
+        with <code>register</code>: no <code>Controller</code>, no re-render
         per keystroke. <code>SelectField</code>, <code>RadioGroupField</code>,{" "}
         <code>CheckboxField</code> and <code>SwitchField</code> render buttons
         and divs with no DOM value to read, so those get{" "}
@@ -638,7 +638,7 @@ function BoundFormDemo() {
 }
 
 /* ================================================================== */
-/*  Parity — bound field vs the same field hand-wired                  */
+/*  Parity: bound field vs the same field hand-wired                  */
 /* ================================================================== */
 
 const paritySchema = s.object({
@@ -658,7 +658,7 @@ function ParityDemo() {
       <p className="pg-description">
         The same field twice: once as <code>TextField</code>, once written out
         by hand. The rendered ids, <code>aria-describedby</code> and{" "}
-        <code>aria-invalid</code> are identical — the binding is a shorthand
+        <code>aria-invalid</code> are identical: the binding is a shorthand
         for exactly this markup, not a different thing.
       </p>
 
@@ -812,7 +812,7 @@ export default function FormFieldsPage() {
   return (
     <>
       <h2>Form Fields</h2>
-      <p>One-element bindings that wire <code>ui/form</code> to <code>lib/use-form</code> — a label, a control, a description, and an error in a single component.</p>
+      <p>One-element bindings that wire <code>ui/form</code> to <code>lib/use-form</code>: a label, a control, a description, and an error in a single component.</p>
 
       <InstallSnippet slug="form-fields" />
 
@@ -852,7 +852,7 @@ const { handleSubmit, control, formState } = useForm({
 
       <ApiReference title="TextField / TextareaField / SelectField / …" props={[
         { name: "name", type: "string", description: "Field name in the form (required)" },
-        { name: "control", type: "Control", description: "From useForm — omit if inside a FormProvider" },
+        { name: "control", type: "Control", description: "From useForm; omit if inside a FormProvider" },
         { name: "label", type: "string", description: "Field label text" },
         { name: "description", type: "string", description: "Help text below the control" },
         { name: "rules", type: "RegisterOptions", description: "Validation rules (passed to register or Controller)" },
@@ -861,7 +861,7 @@ const { handleSubmit, control, formState } = useForm({
 
       <ApiReference title="FormFieldBinding" props={[
         { name: "name", type: "string", description: "Field name in the form (required)" },
-        { name: "control", type: "Control", description: "From useForm — omit if inside a FormProvider" },
+        { name: "control", type: "Control", description: "From useForm; omit if inside a FormProvider" },
         { name: "label", type: "string", description: "Field label text" },
         { name: "description", type: "string", description: "Help text below the control" },
         { name: "controlled", type: "boolean", description: "Use Controller instead of register (set for non-native controls)" },

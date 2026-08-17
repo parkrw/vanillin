@@ -88,24 +88,24 @@ const result = emailSchema.safeParse(value)
       <h3>The API subset</h3>
 
       <p>
-        The API mirrors a deliberate subset of zod — anything supported
+        The API mirrors a deliberate subset of zod: anything supported
         here works the way zod's version does:
       </p>
 
       <ul>
         <li>
-          <strong>Primitives</strong> — <code>s.string()</code>,{" "}
+          <strong>Primitives</strong>: <code>s.string()</code>,{" "}
           <code>s.number()</code>, <code>s.boolean()</code>,{" "}
           <code>s.date()</code>, <code>s.literal(value)</code>,{" "}
           <code>s.enum([...])</code>
         </li>
         <li>
-          <strong>Composites</strong> — <code>s.object(shape)</code>,{" "}
+          <strong>Composites</strong>: <code>s.object(shape)</code>,{" "}
           <code>s.array(element)</code>, <code>s.union([...])</code>,{" "}
           <code>.optional()</code>, <code>.nullable()</code>
         </li>
         <li>
-          <strong>Refinements</strong> — <code>.min()</code>,{" "}
+          <strong>Refinements</strong>: <code>.min()</code>,{" "}
           <code>.max()</code>, <code>.length()</code>,{" "}
           <code>.regex()</code>, <code>.email()</code>,{" "}
           <code>.url()</code>, <code>.int()</code>,{" "}
@@ -113,13 +113,13 @@ const result = emailSchema.safeParse(value)
           message
         </li>
         <li>
-          <strong>Escape hatches</strong> —{" "}
+          <strong>Escape hatches</strong>:{" "}
           <code>.refine(fn, message)</code> (sync only; pass{" "}
           <code>{"{ message, path }"}</code> to target a sibling field)
           and <code>.transform(fn)</code>
         </li>
         <li>
-          <strong>Output</strong> — <code>.parse(v)</code> throws
+          <strong>Output</strong>: <code>.parse(v)</code> throws
           a <code>SchemaError</code>; <code>.safeParse(v)</code>{" "}
           returns <code>{"{ success, data }"}</code>{" "}
           or <code>{"{ success, error }"}</code>
@@ -139,7 +139,7 @@ if (!result.success) console.log(result.error.issues)`} />
       <p>
         Issues are <code>{"{ path, code, message }"}</code> where{" "}
         <code>path</code> is a dotted string through objects and arrays
-        (<code>"pets.0.tag"</code>) — the same addressing{" "}
+        (<code>"pets.0.tag"</code>): the same addressing{" "}
         <code>useForm</code> and <code>useFieldArray</code> use, so
         error paths match field names without conversion.
       </p>
@@ -148,7 +148,7 @@ if (!result.success) console.log(result.error.issues)`} />
 
       <p>
         Form inputs yield strings, but <code>s.number()</code>{" "}
-        rejects <code>"42"</code> — silent coercion in a validation
+        rejects <code>"42"</code>: silent coercion in a validation
         library is how bad data reaches a backend. Opt in per field
         with <code>s.coerce.string()</code>,{" "}
         <code>s.coerce.number()</code>,{" "}
@@ -198,12 +198,12 @@ s.coerce.number().int().min(18).safeParse("25")
         Two coercions diverge from zod by design:{" "}
         <code>s.coerce.number()</code> and <code>s.coerce.date()</code>{" "}
         leave <code>""</code> and <code>null</code> un-coerced (then
-        fail the type check) — an empty input is not zero,
+        fail the type check): an empty input is not zero,
         and <code>null</code> is not 1970.{" "}
         <code>s.coerce.string()</code> never
         produces <code>"null"</code>.{" "}
         <code>s.coerce.boolean()</code> matches
-        zod (<code>Boolean(v)</code>) — the
+        zod (<code>Boolean(v)</code>): the
         string <code>"false"</code> is truthy; checkboxes give real
         booleans.
       </p>
@@ -211,8 +211,8 @@ s.coerce.number().int().min(18).safeParse("25")
       <h3>Runtime only</h3>
 
       <p>
-        This kit is JSDoc-typed JSX, not TypeScript. Zod's main draw —
-        static type inference — cannot be reproduced here: there is
+        This kit is JSDoc-typed JSX, not TypeScript. Zod's main draw
+        (static type inference) cannot be reproduced here: there is
         no <code>s.infer&lt;&gt;</code>. Schemas validate values at
         runtime, nothing more. If you need inferred types, use zod
         directly; <code>useForm</code> accepts any resolver that
@@ -223,7 +223,7 @@ s.coerce.number().int().min(18).safeParse("25")
 
       <p>
         The resolver contract is the boundary, and it stays open.
-        Nothing in <code>useForm</code> knows about this library — a
+        Nothing in <code>useForm</code> knows about this library: a
         hand-written resolver or <code>@hookform/resolvers</code> +
         zod/valibot works the same way. Use <code>lib/schema.js</code>{" "}
         when you want validation without adding a dependency; use zod
@@ -233,7 +233,7 @@ s.coerce.number().int().min(18).safeParse("25")
       <h3>Out of scope</h3>
 
       <p>
-        Omitted deliberately — each is a real feature and each is a
+        Omitted deliberately: each is a real feature and each is a
         rabbit hole, and a correct subset beats a half-right superset:
         intersections, discriminated unions, recursive/lazy schemas,
         branded types, codecs, async refinements, <code>.catch()</code>,

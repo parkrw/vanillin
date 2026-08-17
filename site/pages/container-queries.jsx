@@ -118,7 +118,7 @@ export default function ContainerQueriesPage() {
       <section className="pg-section">
         <h3>The same components, three widths, one viewport</h3>
         <p>
-          The three panels below render the identical component tree — see{" "}
+          The three panels below render the identical component tree; see{" "}
           <code>Panel()</code> in this page's source. Resizing your window
           changes nothing about their relationship to each other, which is the
           whole point: each panel responds to itself.
@@ -142,7 +142,7 @@ export default function ContainerQueriesPage() {
       <section className="pg-section">
         <h3>Drag to resize</h3>
         <p>
-          A plain <code>resize: horizontal</code> panel — no JavaScript, no
+          A plain <code>resize: horizontal</code> panel: no JavaScript, no
           observer. Drag the bottom-right corner across roughly 320px, 500px and
           640px to watch each threshold trip independently.
         </p>
@@ -154,7 +154,7 @@ export default function ContainerQueriesPage() {
       <section className="pg-section">
         <h3>Stacked tables</h3>
         <p>
-          A table has no good narrow layout — horizontal scrolling hides the
+          A table has no good narrow layout: horizontal scrolling hides the
           columns that matter. Add <code>className="table--stack"</code> and
           below 40rem of container width every row becomes a card of
           label/value pairs.
@@ -201,7 +201,7 @@ export default function ContainerQueriesPage() {
           <em>visually</em> hidden and stays in the accessibility tree, so every
           value keeps its real column association. That is also why{" "}
           <code>ui/table</code> now sets explicit{" "}
-          <code>role="row"</code>/<code>role="cell"</code> attributes — changing{" "}
+          <code>role="row"</code>/<code>role="cell"</code> attributes: changing{" "}
           <code>display</code> on table parts otherwise strips their table
           semantics and the values would be announced as orphaned text.
         </p>
@@ -212,30 +212,30 @@ export default function ContainerQueriesPage() {
         <p>
           Containment is never global. <code>container-type</code> makes an
           element a layout and style containment boundary, which breaks children
-          that rely on percentage heights or on escaping overflow — so each
+          that rely on percentage heights or on escaping overflow, so each
           component declares its own, and only where its layout is genuinely
           self-contained.
         </p>
         <ul>
           <li>
-            <code>ui/card</code> — <code>vanillin-card</code>, below 20rem the
+            <code>ui/card</code>: <code>vanillin-card</code>, below 20rem the
             header action drops under the title and footer buttons stretch.
           </li>
           <li>
-            <code>ui/item</code> — <code>vanillin-item</code>, below 18rem the
+            <code>ui/item</code>: <code>vanillin-item</code>, below 18rem the
             actions take their own row.
           </li>
           <li>
-            <code>ui/field</code> — <code>vanillin-field</code>, from 40rem{" "}
+            <code>ui/field</code>: <code>vanillin-field</code>, from 40rem{" "}
             <code>orientation="responsive"</code> lays label and control out
             side by side.
           </li>
           <li>
-            <code>ui/table</code> — <code>vanillin-table</code> on the scroll
+            <code>ui/table</code>: <code>vanillin-table</code> on the scroll
             wrapper, driving <code>.table--stack</code> below 40rem.
           </li>
           <li>
-            <code>ui/dialog</code> and <code>ui/sheet</code> —{" "}
+            <code>ui/dialog</code> and <code>ui/sheet</code>:{" "}
             <code>vanillin-dialog</code>, header alignment and footer direction
             from 24rem of content width.
           </li>
@@ -243,7 +243,7 @@ export default function ContainerQueriesPage() {
         <p>
           <code>ui/sidebar</code> deliberately does not. It swaps to a Sheet
           through <code>matchMedia</code> in JavaScript, and a container query
-          cannot drive a render decision — a second mechanism would only
+          cannot drive a render decision; a second mechanism would only
           desynchronise from the first.
         </p>
       </section>
@@ -256,7 +256,7 @@ export default function ContainerQueriesPage() {
           <code>@container</code> resolves against the nearest{" "}
           <em>ancestor</em> container, so a rule that sets{" "}
           <code>container-type</code> on <code>.foo</code> and then queries{" "}
-          <code>.foo</code> silently reads some outer box — or never matches at
+          <code>.foo</code> silently reads some outer box, or never matches at
           all. Layout flips therefore live on the children:{" "}
           <code>flex-wrap</code> and <code>gap</code> are declared
           unconditionally on the container and only the children's{" "}
@@ -293,27 +293,27 @@ export default function ContainerQueriesPage() {
             <TableRow>
               <TableCell><code>vanillin-card</code></TableCell>
               <TableCell><code>ui/card</code></TableCell>
-              <TableCell>20rem — action drops under title, footer buttons stretch</TableCell>
+              <TableCell>20rem: action drops under title, footer buttons stretch</TableCell>
             </TableRow>
             <TableRow>
               <TableCell><code>vanillin-item</code></TableCell>
               <TableCell><code>ui/item</code></TableCell>
-              <TableCell>18rem — actions take their own row</TableCell>
+              <TableCell>18rem: actions take their own row</TableCell>
             </TableRow>
             <TableRow>
               <TableCell><code>vanillin-field</code></TableCell>
               <TableCell><code>ui/field</code></TableCell>
-              <TableCell>40rem — <code>orientation="responsive"</code> goes side by side</TableCell>
+              <TableCell>40rem: <code>orientation="responsive"</code> goes side by side</TableCell>
             </TableRow>
             <TableRow>
               <TableCell><code>vanillin-table</code></TableCell>
               <TableCell><code>ui/table</code></TableCell>
-              <TableCell>40rem — <code>.table--stack</code> lays rows as cards</TableCell>
+              <TableCell>40rem: <code>.table--stack</code> lays rows as cards</TableCell>
             </TableRow>
             <TableRow>
               <TableCell><code>vanillin-dialog</code></TableCell>
               <TableCell><code>ui/dialog</code>, <code>ui/sheet</code></TableCell>
-              <TableCell>24rem — header alignment and footer direction flip</TableCell>
+              <TableCell>24rem: header alignment and footer direction flip</TableCell>
             </TableRow>
           </TableBody>
         </Table>

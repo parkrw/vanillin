@@ -35,7 +35,7 @@ function UsageDemo() {
 }
 
 /* ================================================================== */
-/*  Section 1 — Render-isolation test                                  */
+/*  Section 1: Render-isolation test                                  */
 /* ================================================================== */
 
 const IsolatedField = memo(function IsolatedField({ name, register }) {
@@ -59,7 +59,7 @@ function RenderIsolation() {
     <section className="pg-section" data-pg="uf-isolation">
       <h3>Render isolation</h3>
       <p className="pg-desc">
-        Typing in one registered field does not re-render siblings — values live
+        Typing in one registered field does not re-render siblings: values live
         in a mutable ref, not React state.
       </p>
       <ComponentPreview code={`const { register, handleSubmit } = useForm({
@@ -94,7 +94,7 @@ function RenderIsolation() {
 }
 
 /* ================================================================== */
-/*  Section 2 — Built-in validation                                    */
+/*  Section 2: Built-in validation                                    */
 /* ================================================================== */
 
 function BuiltInValidation() {
@@ -228,7 +228,7 @@ function BuiltInValidation() {
 }
 
 /* ================================================================== */
-/*  Section 3 — Watch + setValue + reset                                */
+/*  Section 3: Watch + setValue + reset                                */
 /* ================================================================== */
 
 function WatchDemo() {
@@ -301,7 +301,7 @@ const first = watch("first")
 }
 
 /* ================================================================== */
-/*  Section 4 — formState (dirty / touched) — C7 fix: labeled lines    */
+/*  Section 4: formState (dirty / touched), C7 fix: labeled lines    */
 /* ================================================================== */
 
 function FormStateDemo() {
@@ -343,7 +343,7 @@ function FormStateDemo() {
 }
 
 /* ================================================================== */
-/*  Section 5 — Controller                                             */
+/*  Section 5: Controller                                             */
 /* ================================================================== */
 
 function ControllerDemo() {
@@ -408,7 +408,7 @@ function ControllerDemo() {
 }
 
 /* ================================================================== */
-/*  Section 6 — FormProvider / useFormContext                           */
+/*  Section 6: FormProvider / useFormContext                           */
 /* ================================================================== */
 
 function ContextChild() {
@@ -470,7 +470,7 @@ function ContextChild() {
 }
 
 /* ================================================================== */
-/*  Section 7 — useFieldArray                                          */
+/*  Section 7: useFieldArray                                          */
 /* ================================================================== */
 
 function FieldArrayDemo() {
@@ -570,7 +570,7 @@ const { fields, append, remove, swap, move, prepend } =
 }
 
 /* ================================================================== */
-/*  Section 8 — Nested paths                                           */
+/*  Section 8: Nested paths                                           */
 /* ================================================================== */
 
 function NestedPaths() {
@@ -634,7 +634,7 @@ function NestedPaths() {
 }
 
 /* ================================================================== */
-/*  Section 9 — Resolver                                               */
+/*  Section 9: Resolver                                               */
 /* ================================================================== */
 
 let lastResolverOptions = null
@@ -741,7 +741,7 @@ const { register, handleSubmit, formState: { errors } } = useForm({
 }
 
 /* ================================================================== */
-/*  Section 10 — Validation modes — C7 fix: labeled lines              */
+/*  Section 10: Validation modes, C7 fix: labeled lines              */
 /* ================================================================== */
 
 function ValidationModes() {
@@ -838,7 +838,7 @@ function Docs() {
       <h3>register vs Controller</h3>
       <p>
         <code>register</code> returns <code>{"{ name, ref, onChange, onBlur }"}</code>{" "}
-        and reads values from the DOM element — typing in one registered field
+        and reads values from the DOM element; typing in one registered field
         does <strong>not</strong> re-render siblings.{" "}
         <code>Controller</code> is the escape hatch for controlled components
         that own their state and don't expose a DOM node.
@@ -870,7 +870,7 @@ export default function UseFormPage() {
   return (
     <>
       <h2>useForm</h2>
-      <p>Zero-dependency form engine shaped like react-hook-form — <code>register</code> for DOM inputs, <code>Controller</code> for controlled components, validation, field arrays, and nested paths.</p>
+      <p>Zero-dependency form engine shaped like react-hook-form: <code>register</code> for DOM inputs, <code>Controller</code> for controlled components, validation, field arrays, and nested paths.</p>
 
       <section className="pg-section">
         <h3>Usage</h3>

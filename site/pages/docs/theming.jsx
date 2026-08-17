@@ -18,8 +18,8 @@ export default function ThemingPage() {
         Design tokens live in two files.{" "}
         <code>styles/defaults.css</code> holds every token value and is
         generated from <code>van.defaults.json</code>.{" "}
-        <code>styles/globals.css</code> holds the machinery — registrations,
-        derivation ramps, forced-colors repair — and is hand-written.
+        <code>styles/globals.css</code> holds the machinery (registrations,
+        derivation ramps, forced-colors repair) and is hand-written.
         Retheme by editing <code>van.config.json</code> and
         running <code>van build</code>, which generates
         a <code>van.css</code> imported after <code>globals.css</code>.
@@ -29,8 +29,8 @@ export default function ThemingPage() {
       <h3>The kit&apos;s own theme is generator output</h3>
 
       <p>
-        <code>van.defaults.json</code> is a real, complete config — the same
-        schema a consumer writes — and{" "}
+        <code>van.defaults.json</code> is a real, complete config (the same
+        schema a consumer writes) and{" "}
         <code>styles/defaults.css</code> is what the generator makes of it. It
         is committed, and the vite build regenerates it before resolving any
         CSS, so it cannot drift from its config.
@@ -47,7 +47,7 @@ export default function ThemingPage() {
       <p>
         What stays hand-written in <code>globals.css</code> is everything that
         is not a value to choose: the <code>@property</code> registrations
-        (whose <code>initial-value</code> must be computationally independent —
+        (whose <code>initial-value</code> must be computationally independent:
         no <code>var()</code>, no <code>rem</code>), the ramps that derive from
         a generated root (<code>--radius-sm</code>…<code>--radius-xl</code>{" "}
         from <code>--radius</code>, <code>--space-*</code> from{" "}
@@ -76,7 +76,7 @@ export default function ThemingPage() {
       </p>
 
       <CodeBlock language="text" code={`1. defaults.css       generated token values
-2. forced-colors.css  repair layer — overrides (1)
+2. forced-colors.css  repair layer, overrides (1)
 3. globals.css        machinery + base element styles
 4. component CSS      imported per component
 5. your van.css       imported after globals.css`} />
@@ -84,7 +84,7 @@ export default function ThemingPage() {
       <p>
         Your own <code>van.css</code> comes last and wins. Note that it wins
         over <code>[data-density]</code> too, since both target the root at
-        equal specificity — if you set <code>theme.density</code> there you are
+        equal specificity; if you set <code>theme.density</code> there you are
         pinning it, not defaulting it.
       </p>
 
@@ -97,7 +97,7 @@ export default function ThemingPage() {
 
       <ul>
         <li>
-          <strong>Colour</strong> (<code>{"syntax: \"<color>\""}</code>) —
+          <strong>Colour</strong> (<code>{"syntax: \"<color>\""}</code>):
           core semantics (<code>--primary</code>, <code>--secondary</code>,{" "}
           <code>--accent</code>, <code>--destructive</code>,{" "}
           <code>--muted</code>, and their <code>-foreground</code> variants),
@@ -107,12 +107,12 @@ export default function ThemingPage() {
           <code>--info</code>), charts, and sidebar.
         </li>
         <li>
-          <strong>Length</strong> (<code>{"syntax: \"<length>\""}</code>) —
+          <strong>Length</strong> (<code>{"syntax: \"<length>\""}</code>):
           the radius ramp: <code>--radius</code> plus{" "}
           <code>--radius-sm</code> through <code>--radius-xl</code>.
         </li>
         <li>
-          <strong>Number</strong> (<code>{"syntax: \"<number>\""}</code>) —
+          <strong>Number</strong> (<code>{"syntax: \"<number>\""}</code>):
           scale factors: <code>--motion-scale</code> and{" "}
           <code>--density-scale</code>.
         </li>
@@ -248,7 +248,7 @@ export default function ThemingPage() {
       <p>
         Every key gets a dark-mode variant (lightness boosted, chroma
         slightly reduced) and a foreground picked by <em>measured</em> WCAG
-        contrast — the candidate with the higher ratio wins, and generation
+        contrast: the candidate with the higher ratio wins, and generation
         fails if neither reaches 4.5:1. Mid-lightness colours (around
         oklch&nbsp;L&nbsp;0.58) support no accessible foreground; nudge the
         lightness either way. Values must be the simple{" "}
@@ -258,12 +258,12 @@ export default function ThemingPage() {
       <p>
         <strong>Deliberately not derived:</strong> the status families
         (<code>--success</code>, <code>--warning</code>, <code>--info</code>,{" "}
-        <code>--destructive</code>) keep their defaults regardless of brand —
+        <code>--destructive</code>) keep their defaults regardless of brand:
         a red "success" because the brand is red would be worse
         than an off-palette green. Override them token by token in{" "}
         <code>theme.light</code> / <code>theme.dark</code> if needed; those
         literal overrides also win over any derived token. The{" "}
-        <code>-hover</code> tokens are never emitted either — they
+        <code>-hover</code> tokens are never emitted either: they
         auto-derive in <code>globals.css</code> from whatever the base
         tokens resolve to.
       </p>
@@ -274,7 +274,7 @@ export default function ThemingPage() {
         The <code>components</code> section
         in <code>van.config.json</code> overrides tokens, adds variants,
         and defines sizes for individual components. All values are CSS
-        property maps — the generator expands shorthands
+        property maps: the generator expands shorthands
         (<code>bg</code>, <code>fg</code>, <code>radius</code>) and
         emits scoped custom properties in <code>van.css</code>.
       </p>
@@ -303,15 +303,15 @@ export default function ThemingPage() {
 
       <ul>
         <li>
-          <strong><code>tokens</code></strong> — base property overrides
+          <strong><code>tokens</code></strong>: base property overrides
           applied to the component root.
         </li>
         <li>
-          <strong><code>variants</code></strong> — named property maps
+          <strong><code>variants</code></strong>: named property maps
           applied when a variant is active.
         </li>
         <li>
-          <strong><code>sizes</code></strong> — named property maps keyed
+          <strong><code>sizes</code></strong>: named property maps keyed
           by size name, same structure as variants.
         </li>
       </ul>
@@ -423,17 +423,17 @@ export default function ThemingPage() {
 
       <ul>
         <li>
-          <code>light-dark()</code> — Baseline 2024, supported in all
+          <code>light-dark()</code>: Baseline 2024, supported in all
           evergreen browsers.
         </li>
         <li>
           <strong>Relative colour syntax</strong> (<code>oklch(from
-          ...)</code>) — Baseline 2024. <code>CSS.supports</code> alone
+          ...)</code>): Baseline 2024. <code>CSS.supports</code> alone
           lies about this in some builds; the check uses a real
           computed-value round-trip.
         </li>
         <li>
-          <code>@property</code> — Baseline 2024 (Safari 15.4+,
+          <code>@property</code>: Baseline 2024 (Safari 15.4+,
           Firefox 128+, Chrome 85+).
         </li>
       </ul>
@@ -460,7 +460,7 @@ export default function ThemingPage() {
       <p>
         Disabled states rely on <code>pointer-events:&nbsp;none</code> (or an
         explicit <code>cursor:&nbsp;not-allowed</code> for form inputs) to
-        suppress the pointer — no <code>:not(:disabled)</code> guard is needed
+        suppress the pointer; no <code>:not(:disabled)</code> guard is needed
         in the base rule.
       </p>
 
@@ -469,21 +469,21 @@ export default function ThemingPage() {
       </p>
       <ul>
         <li>
-          <strong>Slider</strong> thumb — <code>grab</code>, changing to{" "}
+          <strong>Slider</strong> thumb: <code>grab</code>, changing to{" "}
           <code>grabbing</code> during a drag (via{" "}
           <code>data-dragging</code> on the root).
         </li>
         <li>
-          <strong>Resizable</strong> handle — <code>col-resize</code> or{" "}
+          <strong>Resizable</strong> handle: <code>col-resize</code> or{" "}
           <code>row-resize</code> depending on group direction.
         </li>
         <li>
-          <strong>Carousel</strong> track — <code>grab</code> at rest,{" "}
+          <strong>Carousel</strong> track: <code>grab</code> at rest,{" "}
           <code>grabbing</code> once the 5&nbsp;px drag dead zone is passed
           (via <code>data-dragging</code> on the content element).
         </li>
         <li>
-          <strong>Scroll area</strong> thumb — <code>default</code>, matching
+          <strong>Scroll area</strong> thumb: <code>default</code>, matching
           native scrollbar behavior.
         </li>
       </ul>

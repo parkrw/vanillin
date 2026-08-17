@@ -44,25 +44,25 @@ export default function ConfigurationPage() {
 
       <ul>
         <li>
-          <code>theme</code> — colours, radius, density, motion, fonts,
+          <code>theme</code>: colours, radius, density, motion, fonts,
           typeset, and per-mode overrides
         </li>
         <li>
-          <code>components</code> — per-component token, variant, and size
+          <code>components</code>: per-component token, variant, and size
           overrides
         </li>
         <li>
-          <code>paths</code> — where the CLI writes files
+          <code>paths</code>: where the CLI writes files
           (<code>ui</code>, <code>lib</code>, <code>styles</code>,{" "}
           <code>css</code>)
         </li>
         <li>
-          <code>framework</code> — one of <code>next-app</code>,{" "}
+          <code>framework</code>: one of <code>next-app</code>,{" "}
           <code>next-pages</code>, <code>vite</code>, <code>remix</code>,{" "}
           <code>astro</code>, <code>unknown</code>
         </li>
         <li>
-          <code>rsc</code> — boolean; when true, copied components that
+          <code>rsc</code>: boolean; when true, copied components that
           call hooks get a <code>"use client"</code> directive
         </li>
       </ul>
@@ -76,10 +76,10 @@ export default function ConfigurationPage() {
         for <code>{"{ primary: \"...\" }"}</code>.
       </p>
 
-      <CodeBlock language="json" code={`// String shorthand — sets primary only
+      <CodeBlock language="json" code={`// String shorthand: sets primary only
 "brand": "oklch(0.55 0.2 265)"
 
-// Object form — all four keys are optional
+// Object form: all four keys are optional
 "brand": {
   "primary":   "oklch(0.55 0.2 265)",
   "secondary": "oklch(0.65 0.14 190)",
@@ -91,7 +91,7 @@ export default function ConfigurationPage() {
         Each key derives a full token pair (<code>--primary</code> +{" "}
         <code>--primary-foreground</code>) with a dark-mode variant.
         Foregrounds are picked by measured WCAG contrast. The{" "}
-        <code>neutral</code> key tints the greys — its hue threads
+        <code>neutral</code> key tints the greys: its hue threads
         through <code>--secondary</code>, <code>--muted</code>, and{" "}
         <code>--accent</code> at the existing lightness ramp. An
         explicit <code>secondary</code> or <code>accent</code> wins
@@ -141,9 +141,9 @@ export default function ConfigurationPage() {
       </p>
 
       <ul>
-        <li><code>"compact"</code> — 0.875</li>
-        <li><code>"comfortable"</code> — 1 (default)</li>
-        <li><code>"spacious"</code> — 1.25</li>
+        <li><code>"compact"</code>: 0.875</li>
+        <li><code>"comfortable"</code>: 1 (default)</li>
+        <li><code>"spacious"</code>: 1.25</li>
       </ul>
 
       <p>
@@ -185,13 +185,13 @@ export default function ConfigurationPage() {
 
       <ul>
         <li>
-          <code>scale</code> — number (0–3). Multiplies{" "}
+          <code>scale</code>: number (0–3). Multiplies{" "}
           <code>--motion-scale</code>, which drives{" "}
           <code>--motion-fast</code> and <code>--motion-medium</code>.
           Set to 0 to disable all animation.
         </li>
         <li>
-          <code>ease</code> — a CSS easing string, sets{" "}
+          <code>ease</code>: a CSS easing string, sets{" "}
           <code>--motion-ease</code>.
         </li>
       </ul>
@@ -221,15 +221,15 @@ export default function ConfigurationPage() {
       </p>
 
       <ul>
-        <li><code>size</code> — base font-size string (e.g. <code>"1rem"</code>)</li>
-        <li><code>leading</code> — line-height multiplier, clamped 1–3</li>
-        <li><code>flow</code> — block spacing string (e.g. <code>"1.5rem"</code>)</li>
+        <li><code>size</code>: base font-size string (e.g. <code>"1rem"</code>)</li>
+        <li><code>leading</code>: line-height multiplier, clamped 1–3</li>
+        <li><code>flow</code>: block spacing string (e.g. <code>"1.5rem"</code>)</li>
         <li>
-          <code>font</code> — object with <code>body</code>,{" "}
+          <code>font</code>: object with <code>body</code>,{" "}
           <code>heading</code>, <code>mono</code> keys
         </li>
         <li>
-          <code>presets</code> — named bundles of <code>size</code>,{" "}
+          <code>presets</code>: named bundles of <code>size</code>,{" "}
           <code>leading</code>, <code>flow</code>
         </li>
       </ul>
@@ -255,7 +255,7 @@ export default function ConfigurationPage() {
         Per-mode colour token overrides. Keys are token names
         (matching <code>@property</code> registrations
         in <code>globals.css</code>), values are CSS colour strings.
-        These are literal overrides — they win over any derived value
+        These are literal overrides: they win over any derived value
         from <code>brand</code>.
       </p>
 
@@ -272,7 +272,7 @@ export default function ConfigurationPage() {
         Per-component customisation. Each key is a component slug; each
         value is an object with three optional sections:{" "}
         <code>tokens</code>, <code>variants</code>, and{" "}
-        <code>sizes</code>. All values are CSS property maps — keys are
+        <code>sizes</code>. All values are CSS property maps: keys are
         CSS property names (with shorthands <code>bg</code>,{" "}
         <code>fg</code>, <code>radius</code> expanded automatically),
         values are CSS strings.
@@ -340,10 +340,10 @@ export default function ConfigurationPage() {
       </p>
 
       <ul>
-        <li><code>ui</code> — component directory (default: <code>"ui"</code>)</li>
-        <li><code>lib</code> — primitives directory (default: <code>"lib"</code>)</li>
-        <li><code>styles</code> — stylesheet directory (default: <code>"styles"</code>)</li>
-        <li><code>css</code> — generated theme output (default: <code>"styles/van.css"</code>)</li>
+        <li><code>ui</code>: component directory (default: <code>"ui"</code>)</li>
+        <li><code>lib</code>: primitives directory (default: <code>"lib"</code>)</li>
+        <li><code>styles</code>: stylesheet directory (default: <code>"styles"</code>)</li>
+        <li><code>css</code>: generated theme output (default: <code>"styles/van.css"</code>)</li>
       </ul>
 
       <CodeBlock language="json" code={`"paths": {
