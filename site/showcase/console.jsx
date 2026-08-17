@@ -1,5 +1,15 @@
 import { Fragment, useMemo, useState } from "react"
 import { Avatar, AvatarFallback } from "../../ui/avatar/avatar.jsx"
+import {
+  Attachment,
+  AttachmentGroup,
+  AttachmentMedia,
+  AttachmentContent,
+  AttachmentTitle,
+  AttachmentDescription,
+  AttachmentActions,
+  AttachmentAction,
+} from "../../ui/attachment/attachment.jsx"
 import { Badge } from "../../ui/badge/badge.jsx"
 import {
   Breadcrumb,
@@ -97,6 +107,7 @@ import {
   SIZES,
   QUOTAS,
   MACHINE_IMAGES,
+  UPLOADED_IMAGES,
   NETWORKS,
   VOLUMES,
   DATA_CENTERS,
@@ -110,6 +121,7 @@ import {
 } from "./console-data.js"
 
 import "../../ui/avatar/avatar.css"
+import "../../ui/attachment/attachment.css"
 import "../../ui/badge/badge.css"
 import "../../ui/breadcrumb/breadcrumb.css"
 import "../../ui/button/button.css"
@@ -189,6 +201,32 @@ const SunIcon = () =>
   )
 
 const MoonIcon = () => icon(<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />)
+
+const DiskIcon = () =>
+  icon(
+    <>
+      <ellipse cx="12" cy="6" rx="7" ry="3" />
+      <path d="M5 6v12c0 1.66 3.13 3 7 3s7-1.34 7-3V6" />
+      <path d="M5 12c0 1.66 3.13 3 7 3s7-1.34 7-3" />
+    </>
+  )
+
+const UploadIcon = () =>
+  icon(
+    <>
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+      <polyline points="7.5 7.5 12 3 16.5 7.5" />
+      <line x1="12" y1="3" x2="12" y2="15" />
+    </>
+  )
+
+const CloseIcon = () =>
+  icon(
+    <>
+      <line x1="6" y1="6" x2="18" y2="18" />
+      <line x1="18" y1="6" x2="6" y2="18" />
+    </>
+  )
 
 const BoxIcon = () =>
   icon(
@@ -794,13 +832,14 @@ function InstancesView({ project, onDetails }) {
 
 /* `rows` are cell arrays; when `actions` is given each row grows a trailing
    menu cell, so one table shape serves every resource page. */
-function SimpleTable({ title, count, cols, rows, actions }) {
+function SimpleTable({ title, count, cols, rows, actions, children }) {
   return (
     <div className="ck-view">
       <div className="ck-page-head">
         <h4 className="ck-page-title">{title}</h4>
         <span className="ck-page-count">{count}</span>
       </div>
+      {children}
       <DataTableScroller className="ck-table-wrap">
         <Table className="ck-table">
           <TableHeader>
@@ -824,6 +863,53 @@ function SimpleTable({ title, count, cols, rows, actions }) {
         </Table>
       </DataTableScroller>
     </div>
+  )
+}
+
+const UPLOAD_STATUS = {
+  done: "Ready to launch",
+  uploading: "Uploading",
+  processing: "Converting",
+  error: "Upload failed",
+}
+
+function ImageUploads() {
+  return (
+    <Card>
+      <CardHeader><CardTitle className="ck-card-title">Uploads</CardTitle></CardHeader>
+      <CardContent className="ck-uploads">
+        <AttachmentGroup>
+          {UPLOADED_IMAGES.map((f) => (
+            <Attachment key={f.name} state={f.state} size="sm" className="ck-upload">
+              <AttachmentMedia><DiskIcon /></AttachmentMedia>
+              <AttachmentContent>
+                <AttachmentTitle>{f.name}</AttachmentTitle>
+                <AttachmentDescription>
+                  {f.size} · {UPLOAD_STATUS[f.state]}
+                </AttachmentDescription>
+              </AttachmentContent>
+              <AttachmentActions>
+                <AttachmentAction
+                  aria-label={`Remove ${f.name}`}
+                  onClick={() => toast(`Removed ${f.name}`, { description: "Nothing left the demo." })}
+                >
+                  <CloseIcon />
+                </AttachmentAction>
+              </AttachmentActions>
+            </Attachment>
+          ))}
+        </AttachmentGroup>
+        <Button
+          variant="outline"
+          size="sm"
+          className="ck-upload-btn"
+          onClick={() => fakeTask("Upload machine image", "Pick a disk image from your workstation")}
+        >
+          <UploadIcon />
+          Upload image
+        </Button>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -986,7 +1072,9 @@ function PageContent({ svc, page, project, onDetails }) {
             name: i.name,
             items: [{ label: "Launch instance" }, { label: "Copy to region" }, { label: "Share with project" }, { label: "Deprecate" }, { label: "Delete", danger: true }],
           }))}
-        />
+        >
+          <ImageUploads />
+        </SimpleTable>
       )
     case "Networks":
       return (

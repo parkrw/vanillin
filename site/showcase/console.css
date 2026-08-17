@@ -576,6 +576,27 @@
   text-align: center;
 }
 
+/* ── Machine image uploads ──────────────────────────────────────────── */
+
+.ck-uploads {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ck-upload {
+  inline-size: 15rem;
+}
+
+.ck-upload-btn {
+  flex-shrink: 0;
+}
+
+.ck-upload-btn svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+}
+
 /* ── Taskbar ────────────────────────────────────────────────────────── */
 
 .ck-taskbar {
