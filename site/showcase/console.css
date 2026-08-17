@@ -405,6 +405,17 @@
   text-decoration: underline;
 }
 
+/* ui/dropdown-menu has no destructive item variant, so the console declares
+   one from the kit's destructive token rather than a raw colour. */
+.ck-menu-danger {
+  color: var(--destructive);
+}
+
+.ck-menu-danger:focus {
+  background-color: color-mix(in oklab, var(--destructive) 14%, transparent);
+  color: var(--destructive);
+}
+
 .ck-mono {
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: 0.75rem;

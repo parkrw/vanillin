@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { Fragment, useMemo, useState } from "react"
 import { Avatar, AvatarFallback } from "../../ui/avatar/avatar.jsx"
 import { Badge } from "../../ui/badge/badge.jsx"
 import {
@@ -319,6 +319,49 @@ function StatusBadge({ value }) {
   return <Badge variant={STATUS_TONE[value] ?? "outline"}>{value}</Badge>
 }
 
+/* A row menu. Non-destructive entries queue a fake task; destructive ones
+   report the demo's protection, both naming the row. */
+function RowActions({ name, items }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        as={Button}
+        variant="ghost"
+        size="icon"
+        aria-label={`Actions for ${name}`}
+      >
+        <EllipsisIcon />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {items.map((item) =>
+          item.danger ? (
+            <Fragment key={item.label}>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="ck-menu-danger"
+                onSelect={() =>
+                  toast.error(`${item.label} blocked`, {
+                    description: `${name} is protected in this demo.`,
+                  })
+                }
+              >
+                {item.label}
+              </DropdownMenuItem>
+            </Fragment>
+          ) : (
+            <DropdownMenuItem
+              key={item.label}
+              onSelect={item.onSelect ?? (() => fakeTask(item.label, name))}
+            >
+              {item.label}
+            </DropdownMenuItem>
+          )
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 function fakeTask(title, description) {
   toast.promise(new Promise((resolve) => setTimeout(resolve, 1400)), {
     loading: `${title}...`,
@@ -632,28 +675,18 @@ function instanceColumns(onDetails) {
       enableSorting: false,
       enableHiding: false,
       cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            as={Button}
-            variant="ghost"
-            size="icon"
-            aria-label={`Actions for ${row.original.name}`}
-          >
-            <EllipsisIcon />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => onDetails(row.original)}>View details</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => fakeTask("Start instance", row.original.name)}>Start</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => fakeTask("Soft reboot", row.original.name)}>Soft reboot</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="ck-menu-danger"
-              onSelect={() => toast.error("Delete blocked", { description: `${row.original.name} is protected in this demo.` })}
-            >
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <RowActions
+          name={row.original.name}
+          items={[
+            { label: "View details", onSelect: () => onDetails(row.original) },
+            { label: "Start" },
+            { label: "Stop" },
+            { label: "Reboot" },
+            { label: "Resize" },
+            { label: "Snapshot" },
+            { label: "Delete", danger: true },
+          ]}
+        />
       ),
     },
   ]
@@ -759,7 +792,9 @@ function InstancesView({ project, onDetails }) {
 
 /* ── Simple resource tables ──────────────────────────────────────────── */
 
-function SimpleTable({ title, count, cols, rows }) {
+/* `rows` are cell arrays; when `actions` is given each row grows a trailing
+   menu cell, so one table shape serves every resource page. */
+function SimpleTable({ title, count, cols, rows, actions }) {
   return (
     <div className="ck-view">
       <div className="ck-page-head">
@@ -771,12 +806,18 @@ function SimpleTable({ title, count, cols, rows }) {
           <TableHeader>
             <TableRow>
               {cols.map((c) => <TableHead key={c}>{c}</TableHead>)}
+              {actions && <TableHead />}
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.map((r, i) => (
               <TableRow key={i}>
                 {r.map((cell, j) => <TableCell key={j}>{cell}</TableCell>)}
+                {actions && (
+                  <TableCell>
+                    <RowActions name={actions[i].name} items={actions[i].items} />
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
@@ -854,6 +895,10 @@ function PageContent({ svc, page, project, onDetails }) {
           count={`${SIZES.length} sizes`}
           cols={["Name", "vCPUs", "Memory", "Root disk", "Public"]}
           rows={SIZES.map((f) => [<code className="ck-mono" key="n">{f.name}</code>, f.vcpus, f.ram, f.disk, f.pub])}
+          actions={SIZES.map((f) => ({
+            name: f.name,
+            items: [{ label: "Launch instance" }, { label: "Copy specification" }, { label: "Set as project default" }, { label: "Retire", danger: true }],
+          }))}
         />
       )
     case "Quotas":
@@ -871,6 +916,10 @@ function PageContent({ svc, page, project, onDetails }) {
             d.instances,
             <StatusBadge key="s" value={d.status} />,
           ])}
+          actions={DATA_CENTERS.map((d) => ({
+            name: d.name,
+            items: [{ label: "View hosts" }, { label: "Add capacity" }, { label: "Drain for maintenance" }, { label: "Decommission", danger: true }],
+          }))}
         />
       )
     case "Public IPs":
@@ -885,6 +934,10 @@ function PageContent({ svc, page, project, onDetails }) {
             a.network,
             <StatusBadge key="s" value={a.status} />,
           ])}
+          actions={PUBLIC_IPS.map((a) => ({
+            name: a.address,
+            items: [{ label: "Attach to instance" }, { label: "Detach" }, { label: "Set reverse DNS" }, { label: "Release", danger: true }],
+          }))}
         />
       )
     case "Snapshots":
@@ -900,6 +953,10 @@ function PageContent({ svc, page, project, onDetails }) {
             n.created,
             <StatusBadge key="s" value={n.status} />,
           ])}
+          actions={SNAPSHOTS.map((n) => ({
+            name: n.name,
+            items: [{ label: "Restore to volume" }, { label: "Clone" }, { label: "Export" }, { label: "Delete", danger: true }],
+          }))}
         />
       )
     case "Utilization":
@@ -925,6 +982,10 @@ function PageContent({ svc, page, project, onDetails }) {
             <StatusBadge key="s" value={i.status} />,
             i.visibility,
           ])}
+          actions={MACHINE_IMAGES.map((i) => ({
+            name: i.name,
+            items: [{ label: "Launch instance" }, { label: "Copy to region" }, { label: "Share with project" }, { label: "Deprecate" }, { label: "Delete", danger: true }],
+          }))}
         />
       )
     case "Networks":
@@ -940,6 +1001,10 @@ function PageContent({ svc, page, project, onDetails }) {
             n.external,
             <StatusBadge key="b" value={n.status} />,
           ])}
+          actions={NETWORKS.map((n) => ({
+            name: n.name,
+            items: [{ label: "Edit network" }, { label: "Add subnet" }, { label: "Attach instance" }, { label: "Manage firewall" }, { label: "Delete", danger: true }],
+          }))}
         />
       )
     case "Volumes":
@@ -955,6 +1020,10 @@ function PageContent({ svc, page, project, onDetails }) {
             <code className="ck-mono" key="t">{v.type}</code>,
             v.attached || "–",
           ])}
+          actions={VOLUMES.map((v) => ({
+            name: v.name,
+            items: [{ label: "Attach" }, { label: "Detach" }, { label: "Extend" }, { label: "Snapshot" }, { label: "Delete", danger: true }],
+          }))}
         />
       )
     default:
