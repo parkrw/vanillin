@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react"
 import { Button } from "../../ui/button/button.jsx"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CardAction } from "../../ui/card/card.jsx"
 import { Badge } from "../../ui/badge/badge.jsx"
@@ -7,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../ui/tabs/tabs.jsx
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../../ui/table/table.jsx"
 import { Checkbox } from "../../ui/checkbox/checkbox.jsx"
 import { Avatar, AvatarFallback } from "../../ui/avatar/avatar.jsx"
+import { Skeleton } from "../../ui/skeleton/skeleton.jsx"
 import { CodeBlock } from "../code-example.jsx"
 import { categories } from "../registry.js"
 
@@ -19,7 +21,12 @@ import "../../ui/tabs/tabs.css"
 import "../../ui/table/table.css"
 import "../../ui/checkbox/checkbox.css"
 import "../../ui/avatar/avatar.css"
+import "../../ui/skeleton/skeleton.css"
 import "../code-example.css"
+
+// The console showcase pulls in a large slice of the kit, so it loads as its
+// own chunk instead of riding in the index bundle.
+const ConsoleShowcase = lazy(() => import("../showcase/console.jsx"))
 
 function HeroShowcase() {
   return (
@@ -116,6 +123,23 @@ export default function HomePage() {
           />
         </div>
         <HeroShowcase />
+      </section>
+
+      <Separator />
+
+      <section className="pg-home-console">
+        <h2>Compose something real</h2>
+        <p className="pg-desc">
+          A cloud console assembled entirely from kit components: resizable panes,
+          a filterable data table, a command palette, detail sheets, and toasts.
+          Drag the divider, sort a column, open a server. The glass chrome falls
+          back to solid surfaces under reduced transparency.
+        </p>
+        <Suspense
+          fallback={<Skeleton style={{ blockSize: "40rem", borderRadius: "var(--radius-lg)" }} />}
+        >
+          <ConsoleShowcase />
+        </Suspense>
       </section>
 
       <Separator />
