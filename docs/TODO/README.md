@@ -190,7 +190,7 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 86  | usage-section-order      | ~M  | [x]    | complete 2026-08-17 — Default→Usage on every page, 7 documented exceptions, PR #7; suite 759/762 [^86] |
 | 87  | home-console-showcase    | ~L  | [x]    | merged 2026-08-17 from `feat/home-console-showcase` — CloudKey console mock below hero, kit-only, glass; suite 760/762 on branch |
 | 88  | console-rebrand-nav      | ~L  | [ ]    | user 2026-08-17 — Acme Cloud 1.0.0, generic wording, grouped sidebar (collapsed), fake theme toggle, tooltips, row actions, image attachments; owns `site/showcase/console.*` |
-| 89  | console-panels           | ~L  | [ ]    | user 2026-08-17 — Support (thread + draft + tickets table), Settings, huge multi-speed progress rings; owns `site/showcase/panels/**`; head integrates after 88+89 merge |
+| 89  | console-panels           | ~L  | [x]    | complete 2026-08-17 on `feat/console-panels` (5 commits, pushed, no PR by user choice); suite 775/778 known-failures-only; SupportPanel/SettingsPanel/StatusShowcase from `site/showcase/panels/index.js`, `ackp-` prefix, container-query sized; head integrates after 88 merges |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
