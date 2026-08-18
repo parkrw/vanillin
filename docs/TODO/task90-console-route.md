@@ -24,3 +24,9 @@ User request 2026-08-18. Measured on main: the home embed gives the console 70re
 ## Handoff
 
 **Status:** NOT STARTED
+**Branch:** `docs/seed-task90` (seed; work goes on `feat/console-route`)  **PR:** none  **Updated:** 2026-08-18
+
+- **Landed:** nothing yet — task seeded from the user's 2026-08-18 review (sidebar reads as empty; standalone-app and screenshot-link alternatives rejected, see task header).
+- **Repo state:** clean. Local main holds merged batch 6 + integration (unpushed, user pushes); worktrees `../vanillin-task{88-console-rebrand,89-console-panels}` and branches `feat/console-rebrand-nav`, `feat/console-panels`, `feat/console-integrate`, `docs/seed-task88-89` are merged and removable; tmux window `@13` has two idle worker panes to kill. The two `On main:` stashes are old and unrelated.
+- **Next:** sub-task 1 — `defaultOpen` on the Platform `Collapsible` in `ConsoleNav` (`site/showcase/console.jsx`), then amend the collapsed-on-load test.
+- **Gotchas:** suite baseline **784/787**; drawer timeouts appear only under load — rerun `node tests/run.mjs drawer` in isolation before treating as regressions. Merging a worker branch whose tip was pushed trips the pre-merge-commit gate; the user concludes those merges themselves.
