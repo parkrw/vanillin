@@ -189,7 +189,7 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 85  | shell-width-gap          | ~S  | [x]    | complete 2026-08-16 on `docs/shell-width-gap` — gutter 40→80px, cap 68→72rem, one `--pg-gutter` token; suite 761/763 |
 | 86  | usage-section-order      | ~M  | [x]    | complete 2026-08-17 — Default→Usage on every page, 7 documented exceptions, PR #7; suite 759/762 [^86] |
 | 87  | home-console-showcase    | ~L  | [x]    | merged 2026-08-17 from `feat/home-console-showcase` — CloudKey console mock below hero, kit-only, glass; suite 760/762 on branch |
-| 88  | console-rebrand-nav      | ~L  | [ ]    | user 2026-08-17 — Acme Cloud 1.0.0, generic wording, grouped sidebar (collapsed), fake theme toggle, tooltips, row actions, image attachments; owns `site/showcase/console.*` |
+| 88  | console-rebrand-nav      | ~L  | [x]    | complete 2026-08-17 on `feat/console-rebrand-nav` (9 commits, pushed, no PR by user choice); suite 768/771 known-failures-only; Acme Cloud 1.0.0, grouped sidebar (collapsed), decorative theme toggle, tooltips, row actions, attachments; panel slots at `console.jsx` for 89; filed ISSUES C10 (no destructive menu-item variant) + `notes/tooltip-composition.md` |
 | 89  | console-panels           | ~L  | [x]    | complete 2026-08-17 on `feat/console-panels` (5 commits, pushed, no PR by user choice); suite 775/778 known-failures-only; SupportPanel/SettingsPanel/StatusShowcase from `site/showcase/panels/index.js`, `ackp-` prefix, container-query sized; head integrates after 88 merges |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
