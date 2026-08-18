@@ -27,4 +27,13 @@ User request 2026-08-17. The showcase lives below the home hero (`site/pages/hom
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** COMPLETE  **Branch:** `feat/console-rebrand-nav` (pushed)  **PR:** none, user declined  **Updated:** 2026-08-17
+
+- **Landed:** the showcase is Acme Cloud 1.0.0 with no OpenStack vocabulary left; the sidebar is three groups that load closed and open on click, 14 icon'd items each routing to a page; the topbar toggle flips a sun/moon and touches nothing on `document`; every icon-labelled control has a tooltip; seven resource tables carry row menus with destructive entries; `Resources → Machine images` has an `AttachmentGroup` upload row.
+- **Verify:** `npm run build` clean. `VANILLIN_TEST_PORT=5241 npm test` → **768/771**, the 8 new tests green and the same 3 known failures (slider-cursor pair + `navigation-menu` hover flake). `grep -ri cloudkey site/showcase` empty.
+- **Repo state:** clean, 8 commits on the branch.
+- **Next:** task 89's panels, then the supervisor swaps `SupportPanelSlot` / `SettingsPanelSlot` (`site/showcase/console.jsx:1033-1034`, one line each) for the real components.
+- **Gotchas:**
+  - "Overview" appears twice by design — the standalone link and the Platform group's first item share the `overview` id, so both light up together. Any Playwright text locator for it needs a scope.
+  - The destructive menu item is the console's own `.ck-menu-danger`; the kit has no destructive `DropdownMenuItem` variant. Task 87 referenced the class without defining it. Filed as ISSUES **C10**.
+  - Composing `Tooltip` with another trigger is order-sensitive and cost me two dead ends: see `docs/TODO/notes/tooltip-composition.md`.

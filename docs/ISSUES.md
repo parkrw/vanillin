@@ -283,6 +283,20 @@ Any consumer page with a drawer below the fold hits this. The `position:
 relative` exists for the `container-type: inline-size` container (task 39) —
 the fix needs to keep the container without breaking `:modal`.
 
+### C10. `ui/dropdown-menu` has no destructive item variant
+
+**Status:** open  **Found:** task 88, 2026-08-17
+
+`ui/button` and `ui/badge` both carry a `destructive` variant; menu items carry
+none, so a delete entry in a menu has no kit-sanctioned styling. Task 87 wrote
+`className="ck-menu-danger"` on the console's Delete item and never defined the
+class — it was dead markup until task 88 declared it in
+`site/showcase/console.css` from `--destructive`. Every consumer with a
+destructive menu item will re-derive the same rule. Cheapest fix: a
+`variant="destructive"` prop on `DropdownMenuItem` writing `data-variant`, with
+the two declarations in `dropdown-menu.css`; `ui/context-menu` and
+`ui/menubar` re-export the item, so they inherit it for free.
+
 ---
 
 ## D. Contrast and visual defects
