@@ -117,15 +117,21 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(await console_.locator(".ck-upload-btn").count(), 1)
   })
 
-  await test("Support and Settings render their panel slots", async () => {
+  await test("Support and Settings render their panels", async () => {
     await console_.locator(".ck-nav-cat-trigger", { hasText: "Account" }).click()
     await page.waitForSelector(".ck-nav-link:text-is('Support')")
-    for (const name of ["Support", "Settings"]) {
+    for (const [name, root] of [["Support", ".ackp-support"], ["Settings", ".ackp-settings"]]) {
       await console_.locator(`.ck-nav-link:text-is("${name}")`).click()
-      await page.waitForSelector(".ck-panel-slot")
-      eq(await console_.locator(".ck-panel-slot").textContent(), `The ${name} panel loads here.`)
-      eq(await console_.locator(".ck-page-title").textContent(), name)
+      await page.waitForSelector(root)
+      eq(await console_.locator(`${root} .ackp-panel-title`).first().textContent(), name)
     }
+  })
+
+  await test("Utilization page mounts the status showcase", async () => {
+    await console_.locator(".ck-nav-cat-trigger", { hasText: "Operations" }).click()
+    await console_.locator(".ck-nav-link:text-is('Metrics')").click()
+    await page.waitForSelector(".ackp-status")
+    eq(await console_.locator(".ackp-status .ackp-panel-title").textContent(), "Operations status")
   })
 
   await test("every icon-only control has a tooltip", async () => {

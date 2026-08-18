@@ -580,13 +580,6 @@
   min-block-size: 18rem;
 }
 
-/* Mount point for a panel task 89 owns; it reads as a placeholder, not a bug. */
-.ck-panel-slot {
-  padding: 2.5rem 1rem;
-  color: var(--muted-foreground);
-  text-align: center;
-}
-
 /* ── Machine image uploads ──────────────────────────────────────────── */
 
 .ck-uploads {

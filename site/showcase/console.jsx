@@ -127,6 +127,7 @@ import {
   STATS,
 } from "./console-data.js"
 
+import { SettingsPanel, StatusShowcase, SupportPanel } from "./panels/index.js"
 import "../../ui/avatar/avatar.css"
 import "../../ui/attachment/attachment.css"
 import "../../ui/badge/badge.css"
@@ -1018,21 +1019,6 @@ function QuotasView() {
   )
 }
 
-function PanelSlot({ name }) {
-  return (
-    <CardPage title={name}>
-      <Card>
-        <CardContent className="ck-panel-slot">The {name} panel loads here.</CardContent>
-      </Card>
-    </CardPage>
-  )
-}
-
-/* Task 89 builds the real panels under site/showcase/panels/; each slot below
-   is the single line that gets swapped for its component once both land. */
-const SupportPanelSlot = () => <PanelSlot name="Support" />
-const SettingsPanelSlot = () => <PanelSlot name="Settings" />
-
 function UnderConstruction({ name }) {
   return (
     <Empty className="ck-empty">
@@ -1126,15 +1112,20 @@ function PageContent({ svc, page, project, onDetails }) {
         />
       )
     case "Utilization":
-      return <CardPage title="Utilization" count="last 24 hours"><UtilizationCard /></CardPage>
+      return (
+        <CardPage title="Utilization" count="last 24 hours">
+          <UtilizationCard />
+          <StatusShowcase />
+        </CardPage>
+      )
     case "Event log":
       return <CardPage title="Event log" count={`${EVENTS.length} events`}><EventsCard /></CardPage>
     case "Services":
       return <CardPage title="Services" count={`${HEALTH.length} groups`}><HealthCard /></CardPage>
     case "Support":
-      return <SupportPanelSlot />
+      return <SupportPanel />
     case "Settings":
-      return <SettingsPanelSlot />
+      return <SettingsPanel />
     case "Machine images":
       return (
         <SimpleTable
