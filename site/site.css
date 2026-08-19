@@ -114,14 +114,14 @@
     border-color var(--motion-fast) var(--motion-ease);
 }
 
-/* Content scrolls *under* this bar, so the background has to stop the page
-   reading through it — 82% did not — and the boundary has to stay legible
-   against both the bar and the page below it. */
+/* Content scrolls *under* this bar. At 50% the blur, not the tint, is what
+   keeps the bar's text legible over passing content — thin it and the page
+   reads through (82% with 12px blur already did). */
 .pg-topnav[data-scrolled="true"] {
   border-bottom-color: var(--pg-topnav-border);
-  background: color-mix(in oklab, var(--background) 94%, transparent);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  background: color-mix(in oklab, var(--background) 50%, transparent);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
 }
 
 @media (prefers-reduced-transparency: reduce) {
