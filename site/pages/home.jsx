@@ -140,6 +140,11 @@ export default function HomePage() {
         >
           <ConsoleShowcase />
         </Suspense>
+        <div className="pg-console-open">
+          <Button as="a" href="#console" variant="outline" data-pg="console-open">
+            Open full console
+          </Button>
+        </div>
       </section>
 
       <Separator />

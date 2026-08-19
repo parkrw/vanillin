@@ -321,7 +321,7 @@ function Sidebar({ route }) {
 }
 
 function PageBreadcrumb({ route }) {
-  if (route === "home") return null
+  if (route === "home" || route === "console") return null
 
   const inDocs = route in docs
   const category = !inDocs ? categoryForSlug(route) : null
@@ -388,17 +388,27 @@ export function App() {
   }, [route])
 
   const isHome = route === "home"
+  const isConsole = route === "console"
+  const fullBleed = isHome || isConsole
 
   return (
     <div className="pg">
       <TopNav dark={dark} onPaletteOpen={() => setPaletteOpen(true)} />
       <div className="pg-body">
-        {!isHome && <Sidebar route={route} />}
-        <main className={isHome ? "pg-main pg-main--home" : "pg-main"}>
+        {!fullBleed && <Sidebar route={route} />}
+        <main
+          className={
+            isConsole ? "pg-main pg-main--console" : isHome ? "pg-main pg-main--home" : "pg-main"
+          }
+        >
           <PageBreadcrumb route={route} />
           {isHome ? (
             <Suspense fallback={null}>
               <HomePage />
+            </Suspense>
+          ) : isConsole ? (
+            <Suspense fallback={null}>
+              <ConsolePage />
             </Suspense>
           ) : entry?.page ? (
             <Suspense fallback={null}>
@@ -408,7 +418,7 @@ export function App() {
             <p>Not built yet.</p>
           )}
         </main>
-        {!isHome && <TableOfContents route={route} />}
+        {!fullBleed && <TableOfContents route={route} />}
       </div>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </div>
@@ -416,3 +426,4 @@ export function App() {
 }
 
 const HomePage = lazy(() => import("./pages/home.jsx"))
+const ConsolePage = lazy(() => import("./showcase/console.jsx"))

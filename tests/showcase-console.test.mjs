@@ -16,37 +16,46 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(text.includes("10.6"), false, "found the old version number")
   })
 
-  await test("the three nav groups load collapsed", async () => {
+  await test("Platform loads open; Operations and Account load collapsed", async () => {
     eq(await groups.count(), 3)
     eq(
       (await console_.locator(".ck-nav-cat-trigger").allTextContents()).join(" | "),
       "Platform▾ | Operations▾ | Account▾",
     )
-    for (const state of await console_.locator(".ck-nav-cat-trigger").evaluateAll((els) =>
-      els.map((el) => `${el.dataset.state}/${el.getAttribute("aria-expanded")}`)
-    )) {
-      eq(state, "closed/false")
-    }
+    eq(
+      (await console_.locator(".ck-nav-cat-trigger").evaluateAll((els) =>
+        els.map((el) => `${el.dataset.state}/${el.getAttribute("aria-expanded")}`)
+      )).join(" | "),
+      "open/true | closed/false | closed/false",
+    )
     // Counter-precondition: closed means unmounted, not merely zero-height —
     // a group whose content is present but clipped would pass a height check.
-    eq(await console_.locator(".ck-nav-cat .collapsible-content").count(), 0)
-  })
-
-  await test("clicking a group trigger expands only that group", async () => {
+    eq(await console_.locator(".ck-nav-cat .collapsible-content").count(), 1)
     const platform = groups.nth(0)
-    await platform.locator(".ck-nav-cat-trigger").click()
-    await page.waitForSelector(".ck-nav-cat .collapsible-content")
-    eq(await platform.locator(".ck-nav-cat-trigger").getAttribute("data-state"), "open")
     eq(
       (await platform.locator(".ck-nav-link").allTextContents()).join(" | "),
       "Overview | Virtual data centers | Resources | Networking | Storage",
     )
-    eq(await groups.nth(1).locator(".ck-nav-cat-trigger").getAttribute("data-state"), "closed")
-    eq(await groups.nth(2).locator(".ck-nav-cat-trigger").getAttribute("data-state"), "closed")
     // Every item carries an icon, and every icon is hidden from the a11y tree.
     const icons = platform.locator(".ck-nav-link .ck-nav-icon svg")
     eq(await icons.count(), 5)
     eq(await icons.evaluateAll((els) => els.every((el) => el.getAttribute("aria-hidden") === "true")), true)
+  })
+
+  await test("clicking a group trigger toggles only that group", async () => {
+    const operations = groups.nth(1)
+    await operations.locator(".ck-nav-cat-trigger").click()
+    await operations.locator(".collapsible-content").waitFor()
+    eq(await operations.locator(".ck-nav-cat-trigger").getAttribute("data-state"), "open")
+    eq(
+      (await operations.locator(".ck-nav-link").allTextContents()).join(" | "),
+      "Metrics | Events | Service health",
+    )
+    eq(await groups.nth(0).locator(".ck-nav-cat-trigger").getAttribute("data-state"), "open")
+    eq(await groups.nth(2).locator(".ck-nav-cat-trigger").getAttribute("data-state"), "closed")
+    // Restore the load state so later tests can open Operations themselves.
+    await operations.locator(".ck-nav-cat-trigger").click()
+    eq(await operations.locator(".ck-nav-cat-trigger").getAttribute("data-state"), "closed")
   })
 
   await test("the theme toggle flips its icon and changes nothing on the document", async () => {
@@ -154,4 +163,28 @@ export default async function run({ page, baseUrl, test, eq }) {
 
   // Leave the shared page on the console's own landing view.
   await console_.locator(".ck-nav-overview").click()
+
+  await test("the home affordance opens the full-viewport console route", async () => {
+    await page.locator('[data-pg="console-open"]').click()
+    await page.waitForFunction(() => window.location.hash === "#console")
+    await page.waitForSelector(".pg-main--console .ck-console")
+    eq(await page.locator(".pg-sidebar").count(), 0, "docs sidebar rendered on the console route")
+    eq(await page.locator(".pg-rail").count(), 0, "TOC rail rendered on the console route")
+    eq(await page.locator(".pg-breadcrumb").count(), 0, "docs breadcrumb rendered on the console route")
+    // Full viewport: the console's frame fills the width and reaches the
+    // bottom of the window instead of sitting in the embed's 40rem card.
+    const box = await page.locator(".pg-main--console .ck-console").boundingBox()
+    const viewport = page.viewportSize()
+    eq(Math.round(box.width), viewport.width, "console narrower than the viewport")
+    eq(Math.round(box.y + box.height), viewport.height, "console does not reach the viewport bottom")
+    // Interactive, not a decoration: Platform loads open here too.
+    eq(
+      await page.locator(".pg-main--console .ck-nav-cat-trigger").first().getAttribute("data-state"),
+      "open",
+    )
+  })
+
+  // Back to home for any suite that shares the page after this file.
+  await page.goto(`${baseUrl}/#home`)
+  await page.waitForSelector(".ck-console")
 }

@@ -44,6 +44,11 @@ export const docsGroups = [
         desc: "Manifests and hashes — how van diff tells kit changes from yours.",
         page: lazy(() => import("./pages/docs/contracts.jsx")),
       },
+      console: {
+        title: "Console demo",
+        desc: "The Acme Cloud showcase full screen: a working console built from kit components.",
+        page: lazy(() => import("./showcase/console.jsx")),
+      },
     },
   },
 ]

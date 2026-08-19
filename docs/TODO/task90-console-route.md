@@ -6,10 +6,10 @@ User request 2026-08-18. Measured on main: the home embed gives the console 70re
 
 ## Sub-tasks
 
-- [ ] 1. **Platform open by default.** `ConsoleNav` (`site/showcase/console.jsx`): the Platform `Collapsible` gets `defaultOpen`; Operations and Account stay closed. Amend the existing "nav groups are collapsed on load" test in `tests/showcase-console.test.mjs` to assert Platform open + the other two closed.
-- [ ] 2. **`#console` route, full-bleed.** The shell (`site/app.jsx:390-397`) branches on `isHome`; add a `console` route that renders `ConsoleShowcase` (default export, `site/showcase/console.jsx:1368`) full-viewport with no docs sidebar, no TOC, no breadcrumbs (`site/app.jsx:324` already returns null for home; extend). Register the slug so nav/⌘K can reach it (`site/registry.js` — note: `console` currently has no entry; check how the `cli` slug was added by task 78 for the pattern). Keep the lazy import pattern (`site/pages/home.jsx:29`).
-- [ ] 3. **Home link.** An "Open full console" affordance on/near the home embed (`site/pages/home.jsx:141`) linking to `#console`. Kit components only.
-- [ ] 4. **Tests.** New: `#console` route renders the console with the docs sidebar absent; home affordance navigates to it. Amended: sub-task 1's collapse assertions.
+- [x] 1. **Platform open by default.** `ConsoleNav` (`site/showcase/console.jsx`): the Platform `Collapsible` gets `defaultOpen`; Operations and Account stay closed. Amend the existing "nav groups are collapsed on load" test in `tests/showcase-console.test.mjs` to assert Platform open + the other two closed.
+- [x] 2. **`#console` route, full-bleed.** The shell (`site/app.jsx:390-397`) branches on `isHome`; add a `console` route that renders `ConsoleShowcase` (default export, `site/showcase/console.jsx:1368`) full-viewport with no docs sidebar, no TOC, no breadcrumbs (`site/app.jsx:324` already returns null for home; extend). Register the slug so nav/⌘K can reach it (`site/registry.js` — note: `console` currently has no entry; check how the `cli` slug was added by task 78 for the pattern). Keep the lazy import pattern (`site/pages/home.jsx:29`).
+- [x] 3. **Home link.** An "Open full console" affordance on/near the home embed (`site/pages/home.jsx:141`) linking to `#console`. Kit components only.
+- [x] 4. **Tests.** New: `#console` route renders the console with the docs sidebar absent; home affordance navigates to it. Amended: sub-task 1's collapse assertions.
 
 ## Verify / done
 
@@ -23,10 +23,10 @@ User request 2026-08-18. Measured on main: the home embed gives the console 70re
 
 ## Handoff
 
-**Status:** NOT STARTED
-**Branch:** `docs/seed-task90` (seed; work goes on `feat/console-route`)  **PR:** none  **Updated:** 2026-08-18
+**Status:** COMPLETE
+**Branch:** `feat/console-route`  **PR:** none (user pushes)  **Updated:** 2026-08-19
 
-- **Landed:** nothing yet — task seeded from the user's 2026-08-18 review (sidebar reads as empty; standalone-app and screenshot-link alternatives rejected, see task header).
-- **Repo state:** clean. Local main holds merged batch 6 + integration (unpushed, user pushes); worktrees `../vanillin-task{88-console-rebrand,89-console-panels}` and branches `feat/console-rebrand-nav`, `feat/console-panels`, `feat/console-integrate`, `docs/seed-task88-89` are merged and removable; tmux window `@13` has two idle worker panes to kill. The two `On main:` stashes are old and unrelated.
-- **Next:** sub-task 1 — `defaultOpen` on the Platform `Collapsible` in `ConsoleNav` (`site/showcase/console.jsx`), then amend the collapsed-on-load test.
-- **Gotchas:** suite baseline **784/787**; drawer timeouts appear only under load — rerun `node tests/run.mjs drawer` in isolation before treating as regressions. Merging a worker branch whose tip was pushed trips the pre-merge-commit gate; the user concludes those merges themselves.
+- **Landed:** all four sub-tasks in one commit (they interleave in `site/site.css` and the test file, so per-sub-task commits would each be red). Platform group `defaultOpen` in `ConsoleNav`; `#console` route registered in `docsGroups` Docs entries (cli pattern) and branched in `App` alongside `isHome` — single-column, no sidebar/TOC/breadcrumb, console fills `100vh - topnav` with the embed's card frame stripped via `.pg-main--console` overrides; "Open full console" `Button as="a"` under the home embed. Suite **785/788** (baseline 784/787 + the new route test; same 3 known failures).
+- **Repo state:** worktrees `../vanillin-task{88-console-rebrand,89-console-panels}` and branches `feat/console-rebrand-nav`, `feat/console-panels`, `feat/console-integrate`, `docs/seed-task88-89` are merged and removable; tmux window `@13` has two idle worker panes to kill. The two `On main:` stashes are old and unrelated.
+- **Next:** merge to local main, then 84 (token guard) or 74 (mobile) per the index order.
+- **Gotchas:** the existing "expands only that group" test now toggles Operations (Platform is open on load) and closes it again so later tests can open it themselves. The route test asserts the console box against `page.viewportSize()`; if a scrollbar ever appears on that route the width equality is the assertion to revisit.

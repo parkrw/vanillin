@@ -72,7 +72,8 @@
 /* When home page is shown, no sidebar or rail — main spans full width.
    `:has()` takes its argument's specificity, so this outranks the 72rem rule
    below and home stays single-column at every width. */
-.pg-body:has(.pg-main--home) {
+.pg-body:has(.pg-main--home),
+.pg-body:has(.pg-main--console) {
   grid-template-columns: 1fr;
 }
 
@@ -531,6 +532,21 @@
   max-inline-size: 80rem;
 }
 
+/* #console route: the showcase fills the viewport below the sticky topnav.
+   The embed's card frame (border, radius, shadow, 40rem height) belongs to
+   the home page; full screen it reads as chrome, so the frame comes off. */
+.pg-main--console {
+  max-inline-size: none;
+  padding: 0;
+}
+
+.pg-main--console .ck-console {
+  block-size: calc(100vh - var(--pg-topnav-h));
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 /* Only flow text takes the measure. Previews, code blocks and tables use the
    full column, which is why the column is wider than the measure. */
 .pg-main > p,
@@ -685,6 +701,12 @@
 
 .pg-hero-install {
   margin-top: 1.5rem;
+}
+
+.pg-console-open {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
 }
 
 /* The right-hand showcase is real kit output, not a screenshot. */

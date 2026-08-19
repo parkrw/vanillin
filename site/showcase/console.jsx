@@ -579,7 +579,7 @@ function ConsoleNav({ view, onNavigate }) {
         </button>
         <Separator decorative className="ck-nav-sep" />
         {NAV_GROUPS.map((group) => (
-          <Collapsible key={group.label} className="ck-nav-cat">
+          <Collapsible key={group.label} className="ck-nav-cat" defaultOpen={group.label === "Platform"}>
             <Tooltip>
               <CollapsibleTrigger as={TooltipTrigger} className="ck-nav-cat-trigger">
                 {group.label}
