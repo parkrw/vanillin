@@ -3,6 +3,20 @@ export default async function run({ page, baseUrl, test, eq }) {
   const chips = page.locator('[data-pg="badge-chips"]')
   await chips.waitFor()
 
+  await test("as='a' renders a real anchor; the default stays a span", async () => {
+    const links = page.locator('[data-pg="badge-links"] .badge')
+    eq(await links.count(), 2)
+    eq(
+      await links.first().evaluate((el) => `${el.tagName} ${el.getAttribute("href")}`),
+      "A #installation",
+    )
+    // Counter-precondition: without `as`, no anchor is produced.
+    eq(
+      await chips.locator(".badge--chip").first().evaluate((el) => el.tagName),
+      "SPAN",
+    )
+  })
+
   await test("chip: renders as a secondary badge with the chip modifier", async () => {
     const cls = await chips.locator(".badge--chip").first().getAttribute("class")
     eq(cls.includes("badge"), true, `has badge base: ${cls}`)

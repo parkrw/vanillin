@@ -15,9 +15,9 @@ import { cn } from "../../lib/cn.js"
  * Note: status-dot uses `error` for the same semantic state because that
  * is the console convention; badge keeps `destructive` for compatibility.
  */
-export function Badge({ variant = "default", className, ...props }) {
+export function Badge({ variant = "default", as: Comp = "span", className, ...props }) {
   return (
-    <span
+    <Comp
       className={cn(
         "badge",
         variant !== "default" && `badge--${variant}`,

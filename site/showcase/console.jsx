@@ -59,6 +59,11 @@ import {
   EmptyTitle,
   EmptyDescription,
 } from "../../ui/empty/empty.jsx"
+import {
+  HoverCard,
+  HoverCardTrigger,
+  HoverCardContent,
+} from "../../ui/hover-card/hover-card.jsx"
 import { Input } from "../../ui/input/input.jsx"
 import {
   Item,
@@ -141,6 +146,7 @@ import "../../ui/command/command.css"
 import "../../ui/data-table/data-table.css"
 import "../../ui/dropdown-menu/dropdown-menu.css"
 import "../../ui/empty/empty.css"
+import "../../ui/hover-card/hover-card.css"
 import "../../ui/input/input.css"
 import "../../ui/item/item.css"
 import "../../ui/progress/progress.css"
@@ -682,15 +688,27 @@ function Dashboard() {
     <div className="ck-dash">
       <div className="ck-stats">
         {STATS.map((s) => (
-          <Card key={s.label} className="ck-stat">
-            <CardContent className="ck-stat-body">
-              <div className="ck-stat-num">{s.num}</div>
-              <div className="ck-stat-label">{s.label}</div>
-              <div className="ck-stat-sub">
-                <Dot tone={s.tone} size="sm" /> {s.sub}
-              </div>
-            </CardContent>
-          </Card>
+          <HoverCard key={s.label} openDelay={200} closeDelay={150}>
+            <HoverCardTrigger as={Card} className="ck-stat">
+              <CardContent className="ck-stat-body">
+                <div className="ck-stat-num">{s.num}</div>
+                <div className="ck-stat-label">{s.label}</div>
+                <div className="ck-stat-sub">
+                  <Dot tone={s.tone} size="sm" /> {s.sub}
+                </div>
+              </CardContent>
+            </HoverCardTrigger>
+            <HoverCardContent className="ck-stat-hover">
+              <div className="ck-stat-hover-title">{s.label}</div>
+              {s.detail.map((d) => (
+                <div key={d.label} className="ck-stat-hover-row">
+                  {d.tone && <Dot tone={d.tone} size="sm" />}
+                  <span className="ck-stat-hover-label">{d.label}</span>
+                  <span className="ck-stat-hover-val">{d.value}</span>
+                </div>
+              ))}
+            </HoverCardContent>
+          </HoverCard>
         ))}
       </div>
       <div className="ck-dash-grid">

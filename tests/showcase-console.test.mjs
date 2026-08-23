@@ -42,6 +42,35 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(await icons.evaluateAll((els) => els.every((el) => el.getAttribute("aria-hidden") === "true")), true)
   })
 
+  await test("a stat card previews its breakdown in a hover card", async () => {
+    const stats = console_.locator(".ck-stat")
+    eq(await stats.count(), 6)
+    // Precondition: closed means not popover-open, not merely transparent.
+    eq(await page.locator(".ck-stat-hover:popover-open").count(), 0)
+    eq(await stats.nth(2).getAttribute("data-state"), "closed")
+
+    await stats.nth(2).hover() // Hosts
+    const card = page.locator(".ck-stat-hover:popover-open")
+    await card.waitFor()
+    eq(await stats.nth(2).getAttribute("data-state"), "open")
+    eq(await card.locator(".ck-stat-hover-title").textContent(), "Hosts")
+    eq(
+      (await card.locator(".ck-stat-hover-label").allTextContents()).join(" | "),
+      "dal-1 | dal-2 | slc-1 | chi-1",
+    )
+    eq(
+      (await card.locator(".ck-stat-hover-val").allTextContents()).join(" | "),
+      "4 hosts | 2 hosts | 2 hosts | 2 hosts",
+    )
+    // Counter-precondition: only the hovered stat's card opened.
+    eq(await page.locator(".ck-stat-hover:popover-open").count(), 1)
+
+    await page.mouse.move(0, 0)
+    await page.waitForFunction(
+      () => document.querySelectorAll(".ck-stat-hover:popover-open").length === 0
+    )
+  })
+
   await test("clicking a group trigger toggles only that group", async () => {
     const operations = groups.nth(1)
     await operations.locator(".ck-nav-cat-trigger").click()

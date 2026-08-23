@@ -88,6 +88,21 @@ import "./ui/badge/badge.css"
       </section>
 
       <section className="pg-section">
+        <h3>As link</h3>
+        <ComponentPreview code={`<Badge as="a" href="#installation" variant="secondary">
+  Installation
+</Badge>`}>
+          <div className="pg-row" data-pg="badge-links">
+            <Badge as="a" href="#installation" variant="secondary">Installation</Badge>
+            <Badge as="a" href="#button" variant="outline">Button docs</Badge>
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          <code>as="a"</code> renders a real anchor, so the badge navigates and shows up in the tab order.
+        </p>
+      </section>
+
+      <section className="pg-section">
         <h3>Chip</h3>
         <p>
           <code>Chip</code> is a badge with a dismiss button. Pass{" "}
@@ -184,6 +199,7 @@ import "./ui/badge/badge.css"
 
       <ApiReference title="Badge" props={[
         { name: "variant", type: '"default" | "secondary" | "destructive" | "outline" | "success" | "warning" | "info" | "destructive-soft"', default: '"default"', description: "Visual variant" },
+        { name: "as", type: "ElementType", default: '"span"', description: "Render as a different element/component (e.g. as=\"a\" for links)" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />
 

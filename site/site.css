@@ -764,6 +764,17 @@
   text-decoration: none;
 }
 
+.pg-home-cat-hover {
+  display: grid;
+  gap: 0.625rem;
+  width: 20rem;
+}
+
+.pg-home-cat-hover-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
 /* ------------------------------------------------------------------ */
 /*  View Transitions — theme toggle circular wipe                      */
 /* ------------------------------------------------------------------ */

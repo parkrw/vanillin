@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../ui/tabs/tabs.jsx
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../../ui/table/table.jsx"
 import { Checkbox } from "../../ui/checkbox/checkbox.jsx"
 import { Avatar, AvatarFallback } from "../../ui/avatar/avatar.jsx"
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "../../ui/hover-card/hover-card.jsx"
 import { Skeleton } from "../../ui/skeleton/skeleton.jsx"
 import { CodeBlock } from "../code-example.jsx"
 import { categories } from "../registry.js"
@@ -21,6 +22,7 @@ import "../../ui/tabs/tabs.css"
 import "../../ui/table/table.css"
 import "../../ui/checkbox/checkbox.css"
 import "../../ui/avatar/avatar.css"
+import "../../ui/hover-card/hover-card.css"
 import "../../ui/skeleton/skeleton.css"
 import "../code-example.css"
 
@@ -195,24 +197,38 @@ export default function HomePage() {
         </p>
         <div className="pg-home-cat-grid">
           {categories.map(({ label, desc, entries }) => (
-            <Card key={label} className="pg-home-cat-card">
-              <CardHeader>
-                <CardTitle>{label}</CardTitle>
-                <CardDescription>{desc}</CardDescription>
-              </CardHeader>
-              <CardContent>
+            <HoverCard key={label} openDelay={300} closeDelay={150}>
+              <HoverCardTrigger as={Card} className="pg-home-cat-card">
+                <CardHeader>
+                  <CardTitle>{label}</CardTitle>
+                  <CardDescription>{desc}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="pg-home-cat-tags">
+                    {Object.entries(entries).slice(0, 8).map(([slug, { title }]) => (
+                      <Badge key={slug} variant="secondary" as="a" href={`#${slug}`}>
+                        {title}
+                      </Badge>
+                    ))}
+                    {Object.keys(entries).length > 8 && (
+                      <Badge variant="outline">+{Object.keys(entries).length - 8}</Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </HoverCardTrigger>
+              <HoverCardContent className="pg-home-cat-hover">
+                <div className="pg-home-cat-hover-title">
+                  {label} · {Object.keys(entries).length} components
+                </div>
                 <div className="pg-home-cat-tags">
-                  {Object.entries(entries).slice(0, 8).map(([slug, { title }]) => (
+                  {Object.entries(entries).map(([slug, { title }]) => (
                     <Badge key={slug} variant="secondary" as="a" href={`#${slug}`}>
                       {title}
                     </Badge>
                   ))}
-                  {Object.keys(entries).length > 8 && (
-                    <Badge variant="outline">+{Object.keys(entries).length - 8}</Badge>
-                  )}
                 </div>
-              </CardContent>
-            </Card>
+              </HoverCardContent>
+            </HoverCard>
           ))}
         </div>
       </section>

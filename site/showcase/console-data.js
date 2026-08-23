@@ -142,12 +142,54 @@ export const EVENTS = [
 ]
 
 export const STATS = [
-  { num: "47", label: "Instances", sub: "38 active", tone: "success" },
-  { num: "3", label: "Regions", sub: "3 active", tone: "success" },
-  { num: "10", label: "Hosts", sub: "2 maintenance", tone: "warning" },
-  { num: "18", label: "Services", sub: "all active", tone: "success" },
-  { num: "10", label: "Projects", sub: "10 enabled", tone: "success" },
-  { num: "6", label: "Public IPs", sub: "of 128 pool", tone: "success" },
+  {
+    num: "47", label: "Instances", sub: "38 active", tone: "success",
+    detail: [
+      { label: "Active", value: "38", tone: "success" },
+      { label: "Shutoff", value: "7" },
+      { label: "Error", value: "2", tone: "error" },
+    ],
+  },
+  {
+    num: "3", label: "Regions", sub: "3 active", tone: "success",
+    detail: [
+      { label: "Dallas", value: "2 DCs", tone: "success" },
+      { label: "Salt Lake City", value: "1 DC", tone: "success" },
+      { label: "Chicago", value: "1 DC", tone: "success" },
+    ],
+  },
+  {
+    num: "10", label: "Hosts", sub: "2 maintenance", tone: "warning",
+    detail: [
+      { label: "dal-1", value: "4 hosts", tone: "success" },
+      { label: "dal-2", value: "2 hosts", tone: "warning" },
+      { label: "slc-1", value: "2 hosts", tone: "success" },
+      { label: "chi-1", value: "2 hosts", tone: "success" },
+    ],
+  },
+  {
+    num: "18", label: "Services", sub: "all active", tone: "success",
+    detail: [
+      { label: "Compute", value: "13 up", tone: "success" },
+      { label: "Block storage", value: "5 up", tone: "success" },
+    ],
+  },
+  {
+    num: "10", label: "Projects", sub: "10 enabled", tone: "success",
+    detail: [
+      { label: "engineering", value: "10 instances" },
+      { label: "data-science", value: "3 instances" },
+      { label: "marketing", value: "1 instance" },
+      { label: "7 more", value: "idle" },
+    ],
+  },
+  {
+    num: "6", label: "Public IPs", sub: "of 128 pool", tone: "success",
+    detail: [
+      { label: "In use", value: "6", tone: "success" },
+      { label: "Available", value: "122" },
+    ],
+  },
 ]
 
 export const DATA_CENTERS = [

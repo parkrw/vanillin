@@ -124,6 +124,36 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(await page.locator('[data-pg="rail"]').count(), 0)
   })
 
+  await test("category card hover previews the full component list", async () => {
+    await page.waitForSelector(".pg-home-cat-card")
+    const card = page.locator(".pg-home-cat-card").first()
+    // Precondition: the card itself truncates — 8 links plus a "+N" overflow badge.
+    const badges = card.locator(".pg-home-cat-tags .badge")
+    eq(await badges.count(), 9)
+    eq(await card.locator(".pg-home-cat-tags a.badge").count(), 8)
+    const overflow = Number((await badges.last().textContent()).replace("+", ""))
+    eq(overflow > 0, true, "first category expected to overflow")
+    eq(await card.getAttribute("data-state"), "closed")
+    eq(await page.locator(".pg-home-cat-hover:popover-open").count(), 0)
+
+    await card.hover()
+    const hover = page.locator(".pg-home-cat-hover:popover-open")
+    await hover.waitFor()
+    // The hover card holds the complete, untruncated list, every entry a link.
+    eq(await hover.locator(".pg-home-cat-tags a.badge").count(), 8 + overflow)
+    eq(
+      (await hover.locator(".pg-home-cat-hover-title").textContent()).endsWith(
+        `${8 + overflow} components`
+      ),
+      true,
+    )
+
+    await page.mouse.move(0, 0)
+    await page.waitForFunction(
+      () => document.querySelectorAll(".pg-home-cat-hover:popover-open").length === 0
+    )
+  })
+
   await test("rail TOC tracks scroll position", async () => {
     await page.goto(`${baseUrl}/#checkbox`)
     await page.waitForSelector(".pg-section > h3")
