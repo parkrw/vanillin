@@ -21,11 +21,12 @@
 
   --pg-topnav-h: 3.5rem;
 
-  /* Content column. Wider than the prose measure on purpose: this column
-     carries prose *and* wide code blocks *and* component previews, so the
-     shell is sized for the widest of the three and prose is clamped
-     separately by --typeset-measure below. */
-  --pg-main-max: 72rem;
+  /* Content column: a 40rem (640px) content box. The gutters are inside the
+     cap (border-box), so they're added on top of the 40rem rather than eating
+     into it — the calc tracks the gutter's 72rem step-down automatically.
+     Previews, code blocks and tables share this measure; prose is clamped
+     tighter still by --typeset-measure below. */
+  --pg-main-max: calc(40rem + 2 * var(--pg-gutter));
 
   /* Breathing room between the content column and the two side menus. It is
      `.pg-main`'s inline padding rather than a grid column-gap on purpose:
