@@ -99,4 +99,4 @@ Spawning parallel workers in git worktrees works; the job is coordination.
 - Stage diffs and stop. No AI attribution in commits — no `Co-Authored-By`, no trailers.
 - The ~500-net-line branch-size hook is advisory. Never split or restructure work because of it.
 - Every task ships its prose in the same PR as its code.
-- Pushing `main` deploys `site/dist` to GitHub Pages. **The workflow does not run tests**, so a red suite still deploys.
+- Pushing `main` deploys `site/dist` to GitHub Pages, **gated on the CI test job**: `npm run contracts` freshness, then `npm test`. PRs run the same job. A flaky timing test (`docs/ISSUES.md` §G) can block a deploy — re-run the job, don't weaken the gate.

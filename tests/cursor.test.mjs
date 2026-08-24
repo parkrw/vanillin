@@ -104,18 +104,21 @@ export default async function run({ page, baseUrl, repoRoot, test, eq, near }) {
     eq(cursor, "pointer")
   })
 
-  // ---- slider: grab at rest, grabbing during drag ----
+  // ---- slider: default cursor on the thumb, even mid-drag ----
+  // F4 (docs/ISSUES.md, settled 2026-08-02): .slider-thumb deliberately gets
+  // no cursor — grab would hide the hover/focus glow. Only native
+  // input[type="range"] gets grab/grabbing.
   await page.goto(`${baseUrl}/#slider`)
   await page.waitForSelector(".slider-thumb")
 
-  await test("slider thumb shows grab cursor at rest", async () => {
+  await test("slider thumb keeps the default cursor at rest", async () => {
     const cursor = await page.locator(".slider-thumb").first().evaluate(
       (el) => getComputedStyle(el).cursor,
     )
-    eq(cursor, "grab")
+    eq(cursor, "auto")
   })
 
-  await test("slider thumb shows grabbing cursor during drag", async () => {
+  await test("slider thumb keeps the default cursor during drag", async () => {
     const thumb = page.locator(".slider-thumb").first()
     const box = await thumb.boundingBox()
     const cx = box.x + box.width / 2
@@ -131,7 +134,7 @@ export default async function run({ page, baseUrl, repoRoot, test, eq, near }) {
     const thumbCursor = await page.locator(".slider-thumb").first().evaluate(
       (el) => getComputedStyle(el).cursor,
     )
-    eq(thumbCursor, "grabbing")
+    eq(thumbCursor, "auto")
     await page.mouse.up()
   })
 

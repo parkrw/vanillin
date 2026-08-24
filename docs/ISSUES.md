@@ -639,6 +639,13 @@ recording instead of fixing):
   tests (promise transition, held-still velocity); all passed 34/34 in
   isolation immediately after on identical code. G2-shaped load sensitivity,
   logged so the next full-suite reader doesn't re-investigate.
+- **G7.** One full-suite run under load (ci-test-gate worktree, 2026-08-23)
+  failed `select: item-aligned mode clamps to viewport and enables scroll
+  buttons` (scroll-up visible expected "visible", got "hidden") and `select:
+  scroll buttons hide at each scroll extreme` (click timeout); both passed
+  18/18 in isolation immediately after on identical code. G2-shaped load
+  sensitivity. Relevant now that CI runs the suite — a shared runner is a
+  loaded machine, so expect the G family there.
 
 ---
 
