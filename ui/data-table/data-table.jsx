@@ -120,6 +120,7 @@ function CheckIcon() {
  */
 export function DataTableFacetedFilter({ column, title, options: optionsProp, ...props }) {
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState("")
   const commandRef = useRef(null)
 
   // ui/popover is non-modal and moves no focus, but a filter is opened to be
@@ -128,6 +129,13 @@ export function DataTableFacetedFilter({ column, title, options: optionsProp, ..
   useEffect(() => {
     if (open) commandRef.current?.querySelector("input")?.focus()
   }, [open])
+
+  // The content stays mounted between opens, so the previous search would
+  // greet the next open with a pre-filtered list and a hidden "Clear filters".
+  const onOpenChange = (next) => {
+    setOpen(next)
+    if (next) setQuery("")
+  }
 
   const facets = column.getFacetedUniqueValues()
   const filterValue = column.getFilterValue()
@@ -145,7 +153,7 @@ export function DataTableFacetedFilter({ column, title, options: optionsProp, ..
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={onOpenChange}>
       {/* Rest lands on the trigger — the root Popover renders no DOM node. */}
       <PopoverTrigger as={Button} variant="outline" size="sm" className="data-table-facet-trigger" {...props}>
         <PlusCircle />
@@ -172,7 +180,7 @@ export function DataTableFacetedFilter({ column, title, options: optionsProp, ..
       </PopoverTrigger>
       <PopoverContent className="data-table-facet-content" align="start">
         <Command ref={commandRef}>
-          <CommandInput placeholder={title} />
+          <CommandInput placeholder={title} value={query} onValueChange={setQuery} />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>

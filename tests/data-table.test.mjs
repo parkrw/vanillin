@@ -569,6 +569,41 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(closed.onTrigger, true, "focus returned to the trigger")
   })
 
+  await test("facet: reopening starts with an empty query and the full list", async () => {
+    // The content stays mounted between opens, so without a reset the last
+    // query would greet the next open with a pre-filtered list.
+    const facetBtn = dt.locator(".data-table-facet-trigger")
+    const read = () =>
+      page.evaluate(() => {
+        const pop = document.querySelector(".data-table-facet-content:popover-open")
+        return {
+          value: pop.querySelector(".command-input").value,
+          visible: [...pop.querySelectorAll('[role="option"]')].filter((o) => !o.hidden).length,
+          painted: CSS.highlights?.has("vanillin-search") ?? false,
+        }
+      })
+
+    await facetBtn.click()
+    await page.waitForTimeout(150)
+    await page.keyboard.type("pen")
+    await page.waitForTimeout(150)
+    const before = await read()
+    await page.keyboard.press("Escape")
+    await page.waitForTimeout(150)
+    await facetBtn.click()
+    await page.waitForTimeout(150)
+    const after = await read()
+    await page.keyboard.press("Escape")
+    await page.waitForTimeout(100)
+
+    eq(before.value, "pen", "precondition: a query was typed before closing")
+    eq(before.visible, 2, "precondition: the query had narrowed the list")
+    eq(before.painted, true, "precondition: the match was painted")
+    eq(after.value, "", "query cleared on reopen")
+    eq(after.visible, 4, "every status listed again")
+    eq(after.painted, false, "stale highlight ranges released")
+  })
+
   // ── Multi-sort ─────────────────────────────────────────────────────
 
   await test("shift-click builds two-key sort and secondary orders ties", async () => {
