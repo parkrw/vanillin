@@ -751,6 +751,107 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(probe.textOverflow, "ellipsis", "dropped characters are marked with an ellipsis")
   })
 
+  await test("narrowed header clips its text instead of painting over the next header", async () => {
+    await dtSized.waitFor()
+    // Status at its 40px minimum: "Status" is wider than the column.
+    const statusResizer = dtSized.locator(".data-table-resizer").nth(1)
+    await statusResizer.focus()
+    await page.keyboard.press("Home")
+    // Drop focus so the handle's focus paint is not in the pixel sample.
+    await statusResizer.blur()
+    await dtSized.locator(".scroll-area-viewport").evaluate((el) => { el.scrollLeft = 0 })
+    await dtSized.locator(".table-header").scrollIntoViewIfNeeded()
+    await page.waitForTimeout(100)
+
+    // Measure inside try/finally: the pinning tests below drive this same demo,
+    // and a throw here must not leave the column at 40px.
+    let probe, ink
+    try {
+      probe = await dtSized.evaluate((root) => {
+        const heads = [...root.querySelectorAll(".table-head")]
+        const narrowed = heads[2]
+        const neighbour = heads[3]
+        const style = getComputedStyle(narrowed)
+        const box = (el) => {
+          const b = el.getBoundingClientRect()
+          return { x: b.x, y: b.y, width: b.width, height: b.height }
+        }
+        const text = document.createRange()
+        text.selectNodeContents(narrowed)
+        const label = document.createRange()
+        label.selectNodeContents(neighbour.querySelector(".data-table-sort-btn"))
+        return {
+          clientWidth: narrowed.clientWidth,
+          scrollWidth: narrowed.scrollWidth,
+          textWidth: text.getBoundingClientRect().width,
+          overflowX: style.overflowX,
+          textOverflow: style.textOverflow,
+          whiteSpace: style.whiteSpace,
+          neighbour: box(neighbour),
+          neighbourPadding: parseFloat(getComputedStyle(neighbour).paddingInlineStart),
+          neighbourLabel: box(label),
+        }
+      })
+
+      // Clipping is paint-only: layout still reports the full text box, and the
+      // later header hit-tests on top of the earlier one's overflow either way.
+      // So sample the pixels — the neighbour's leading padding must carry no
+      // ink, while its own label (the same sampling) must.
+      const png = (await page.screenshot()).toString("base64")
+      ink = await page.evaluate(
+        async ({ png, neighbour, neighbourPadding, neighbourLabel }) => {
+          const img = new Image()
+          img.src = `data:image/png;base64,${png}`
+          await img.decode()
+          const canvas = document.createElement("canvas")
+          canvas.width = img.width
+          canvas.height = img.height
+          const ctx = canvas.getContext("2d", { willReadFrequently: true })
+          ctx.drawImage(img, 0, 0)
+          const scale = img.width / window.innerWidth
+          const at = (x, y) => ctx.getImageData(Math.round(x * scale), Math.round(y * scale), 1, 1).data
+          const background = at(neighbour.x + 2, neighbour.y + 2)
+          const deviation = (x0, x1, y0, y1) => {
+            let strongest = 0
+            for (let x = x0; x <= x1; x++)
+              for (let y = y0; y <= y1; y++) {
+                const pixel = at(x, y)
+                for (const channel of [0, 1, 2])
+                  strongest = Math.max(strongest, Math.abs(pixel[channel] - background[channel]))
+              }
+            return strongest
+          }
+          const y0 = neighbourLabel.y
+          const y1 = neighbourLabel.y + neighbourLabel.height
+          return {
+            leadingPadding: deviation(neighbour.x + 1, neighbour.x + neighbourPadding - 2, y0, y1),
+            ownLabel: deviation(neighbourLabel.x, neighbourLabel.x + neighbourLabel.width, y0, y1),
+          }
+        },
+        { png, ...probe }
+      )
+    } finally {
+      await statusResizer.dblclick()
+      await page.waitForTimeout(50)
+    }
+
+    eq(
+      probe.textWidth > probe.clientWidth,
+      true,
+      `header text is wider than its column (${probe.textWidth} > ${probe.clientWidth})`
+    )
+    eq(
+      probe.scrollWidth > probe.clientWidth,
+      true,
+      `header content overflows its box (${probe.scrollWidth} > ${probe.clientWidth})`
+    )
+    eq(ink.ownLabel > 40, true, `sampling sees the neighbour's own label (${ink.ownLabel})`)
+    eq(ink.leadingPadding <= 8, true, `no ink in the neighbour's leading padding (${ink.leadingPadding})`)
+    eq(probe.whiteSpace, "nowrap", "header text stays on one line, so it clips per character")
+    eq(probe.overflowX, "hidden", "header clips instead of painting outside")
+    eq(probe.textOverflow, "ellipsis", "dropped characters are marked with an ellipsis")
+  })
+
   // ── Column pinning ────────────────────────────────────────────────
 
   await test("pin left: column stays at inset-inline-start 0 after horizontal scroll", async () => {

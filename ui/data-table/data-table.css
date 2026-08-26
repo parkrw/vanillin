@@ -236,9 +236,12 @@
  * than its column paints over the next one as the column narrows. Clip to the
  * column box and mark the dropped characters with an ellipsis.
  *
- * Body cells only: `overflow: hidden` on a `<th>` would also clip the resizer
- * handle, which sits 2px outside the header box (`inset-inline-end: -2px`).
+ * Header cells clip too, which is why the resizer handle sits inside the
+ * header box (`inset-inline-end: 0`): a handle straddling the edge would be
+ * clipped here, and the earlier -2px straddle also gave the last column 2px
+ * of scrollable overflow, so a table that fit its scroller still grew a bar.
  */
+.data-table-sized .table-head,
 .data-table-sized .table-cell {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -250,7 +253,7 @@
 .data-table-resizer {
   position: absolute;
   inset-block: 0;
-  inset-inline-end: -2px;
+  inset-inline-end: 0;
   width: 5px;
   cursor: col-resize;
   user-select: none;
