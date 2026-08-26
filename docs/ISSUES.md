@@ -642,7 +642,7 @@ recording instead of fixing):
 
 ---
 
-## G. Test flakes — all pre-existing, none fixed
+## G. Test flakes — G2, G4, G5, G7, G9, G10 fixed
 
 - **G1.** `message-scroller: button click returns to bottom and re-engages
   follow`. Reproduced on a clean base (285/286, then 286/286 on identical
@@ -653,27 +653,33 @@ recording instead of fixing):
   Never logged as fixed, though the last three full runs were green.
 - **G4.** ~~`navigation-menu: hover opens after delay, leave closes after grace`.~~
   Resolved: test removed. The delay assertion was inherently load-dependent.
-- **G5.** `slider: onValueCommit fires on pointerup and keydown` —
+- **G5.** ~~`slider: onValueCommit fires on pointerup and keydown` —
   `page.evaluate` fails with *Failed to fetch dynamically imported module*
-  on the `/@fs/` slider URL. Unlike G2/G4 it is **deterministic within a
-  window**: during batch 2 it failed 6+ consecutive runs across two worktrees
-  (including the untouched base) and then passed everywhere an hour later on
-  identical code. The same URL fetches fine (200) from a hand-driven page in
-  the same worktree, so the trigger is somewhere in harness/vite state, not
-  the page. Historically alternates with `vertical orientation + keys` as the
-  suite's third failure. New 2026-08-06.
+  on the `/@fs/` slider URL.~~ Resolved 2026-08-26. Never a flake: "harness
+  or vite state, not the page" was right, and the state was the dev server's
+  `base`. `vite.config.js` keyed it on `GITHUB_ACTIONS`, so on a runner the
+  dev server moved to `/vanillin/` and every root-absolute URL in the suite
+  404'd — hence "deterministic within a window" (the window being whether the
+  variable was set) and the 200 from a hand-driven page. `base` is now scoped
+  to `command === "build"`. Same root cause as the `showcase-panels` abort and
+  `docs-shell: page has exactly one h2`; all three had been red in CI since the
+  test gate landed (`9c483eaf8f0c`).
 - **G6.** One full-suite run under heavy parallel load (batch 2 supervision,
   2026-08-06) failed `scroll-area: thumb parks at end` and two `toast` timing
   tests (promise transition, held-still velocity); all passed 34/34 in
   isolation immediately after on identical code. G2-shaped load sensitivity,
   logged so the next full-suite reader doesn't re-investigate.
-- **G7.** One full-suite run under load (ci-test-gate worktree, 2026-08-23)
+- **G7.** ~~One full-suite run under load (ci-test-gate worktree, 2026-08-23)
   failed `select: item-aligned mode clamps to viewport and enables scroll
   buttons` (scroll-up visible expected "visible", got "hidden") and `select:
-  scroll buttons hide at each scroll extreme` (click timeout); both passed
-  18/18 in isolation immediately after on identical code. G2-shaped load
-  sensitivity. Relevant now that CI runs the suite — a shared runner is a
-  loaded machine, so expect the G family there.
+  scroll buttons hide at each scroll extreme` (click timeout).~~ Resolved
+  2026-08-26, and not load-shaped after all: the first test *sampled*
+  `data-state` on the scroll buttons, which an IntersectionObserver sets, so
+  it read "hidden" whenever the observer had not fired yet — the test three
+  lines below already waits for exactly that. It now waits too. The click
+  timeout was the cascade: the failed assertion skipped the `Escape`, and the
+  still-open listbox ate the next test's click (the G2 shape). Recurred in CI
+  2026-08-26 (`cbaea1a89223`), which is what made it reproducible.
 - **G8.** `carousel: loop clones: narrow carousel loops forward seamlessly` —
   failed once in a full run on `fix/data-table-page` (2026-08-26, a second
   vite dev server alive on :5173): after 10 `next` clicks the nearest item
@@ -682,6 +688,47 @@ recording instead of fixing):
   `waitForSnap` + 200ms, so a slow snap under load eats a click. G2-shaped.
   Not the data-table change set: carousel runs before data-table, and every
   rule that set added is scoped under `.data-table-*`.
+- **G9.** ~~`live-value: controlled: a rise flashes up…` (`expected "up", got
+  null`) and `…a fall flashes down…` (`expected "down", got null`, then `got
+  "up"`).~~ Resolved 2026-08-26. Red in CI on every run of the gate, green
+  everywhere locally, and the message told the story once both edges were
+  seen: `data-trend` is set from a post-commit effect and cleared on
+  `animationend`, so the sample after `click()` could land before the effect
+  *or* after the 600ms flash. The `got "up"` variant is the cascade — the
+  aborted rise test never ran its clear, so the fall test opened on a stale
+  flash. The suite now waits for the trend and widens the window with a
+  subtree-local `--motion-medium`.
+- **G10.** ~~`mode-toggle: the lamp actually rocks when clicked` — `and swings
+  back past upright — got -0.006deg`.~~ Resolved 2026-08-26. Two fixed offsets
+  into a `--motion-scale: 20` swing; the second landed on the zero crossing
+  between the extremes and read an upright lamp as a stalled one. Never seen
+  in CI, reproduced 2 runs in 3 under Chromium. The swing is now sampled every
+  frame in-page and the peaks come out of the series, which also gets the
+  decay assertion off a point sample.
+- **G11.** `forced-colors: high-contrast: focus outline is at least 3px` fails
+  under the Chromium that ships with `playwright-core` (`outline-width is
+  0px`) and passes under CI's Google Chrome. Not a flake and not the dev-server
+  base — it reproduces on both. Worth a look on its own terms: `.btn` opts out
+  of the outline entirely (`ui/button/button.css` sets `outline: none` and
+  draws its ring in `box-shadow`), so `@media (prefers-contrast: more) {
+  :focus-visible { outline-width: 3px } }` cannot reach the most common
+  control, and the test reads a first `.btn` that is the nav search trigger.
+  Left alone here rather than made to pass in one browser: the question is
+  whether high contrast is *delivered* for buttons, which is a design call.
+- **G12.** `view-transitions: view-transition-name is unique during transition
+  and cleared after` — `detail has shared-element name expected
+  "shared-element", got "none"`. Once in seven full runs (2026-08-26), 7/7 in
+  isolation six times over, and green in CI. Logged with a candidate mechanism
+  so the next reader starts from a hypothesis rather than the top:
+  `.pg-vt-detail` carries `viewTransitionName` **statically from JSX**, while
+  the back handler in `site/pages/view-transitions.jsx` *also* calls
+  `setTransitionName` on that same element and schedules a 500ms cleanup that
+  blanks the inline style. If React reuses the detail node across a
+  back-then-forward inside that 500ms — the style value is unchanged, so React
+  would not rewrite it — the stale cleanup lands on a live element and the name
+  reads "none". Unverified: worth an instrumented run before changing the
+  demo. Note the back path also names the outgoing detail rather than the
+  incoming card, which looks wrong on its own terms.
 
 ---
 

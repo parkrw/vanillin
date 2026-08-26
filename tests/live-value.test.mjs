@@ -7,6 +7,34 @@ export default async function run({ page, baseUrl, test, eq }) {
   const controlled = page.locator('[data-pg="lv-controlled"] .live-value')
   await controlled.waitFor()
 
+  /*
+   * Two timing traps live in this suite, and CI hit both (`expected "up", got
+   * null`, then `expected "down", got "up"` once the aborted test left its
+   * flash behind).
+   *
+   * `data-trend` is set from a post-commit effect, so it is not on the element
+   * the instant `click()` resolves — wait for it, never sample it. And the
+   * flash only lives for calc(--motion-medium * 3) = 600ms at the default
+   * scale, which is narrower than the round-trips needed to read colour and
+   * animation state on a loaded runner, so the colour assertions were racing
+   * the clear. --motion-medium is a documented subtree-local override
+   * (styles/globals.css), so widen the window for this demo and read the same
+   * mechanism without racing it. A real navigation drops the override.
+   */
+  await controlled.evaluate((el) => el.style.setProperty("--motion-medium", "1000ms"))
+  const flashed = (want) =>
+    page.waitForFunction(
+      ([sel, w]) => document.querySelector(sel).getAttribute("data-trend") === w,
+      [`[data-pg="lv-controlled"] .live-value`, want],
+      { timeout: 5000 },
+    )
+  const flashCleared = () =>
+    page.waitForFunction(
+      (sel) => !document.querySelector(sel).hasAttribute("data-trend"),
+      `[data-pg="lv-controlled"] .live-value`,
+      { timeout: 5000 },
+    )
+
   // Computed colour of `var(--token)` resolved inside the same container.
   const tokenColour = (token) =>
     page.evaluate((t) => {
@@ -26,7 +54,7 @@ export default async function run({ page, baseUrl, test, eq }) {
 
     await page.locator('[data-pg="lv-inc"]').click()
     eq(await controlled.textContent(), "43")
-    eq(await controlled.getAttribute("data-trend"), "up")
+    await flashed("up")
     // Transition target, not the mid-transition frame.
     await page.waitForFunction(
       ([sel, want]) => getComputedStyle(document.querySelector(sel)).color === want,
@@ -43,17 +71,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     )
 
     // The flash clears itself when the tick animation ends.
-    await controlled.evaluate((el) =>
-      new Promise((resolve) => {
-        if (!el.hasAttribute("data-trend")) return resolve()
-        new MutationObserver((_, obs) => {
-          if (!el.hasAttribute("data-trend")) {
-            obs.disconnect()
-            resolve()
-          }
-        }).observe(el, { attributes: true })
-      }),
-    )
+    await flashCleared()
     await page.waitForFunction(
       ([sel, want]) => getComputedStyle(document.querySelector(sel)).color === want,
       [`[data-pg="lv-controlled"] .live-value`, resting],
@@ -63,40 +81,35 @@ export default async function run({ page, baseUrl, test, eq }) {
   await test("controlled: a fall flashes down in --live-value-down with the down tick", async () => {
     await page.locator('[data-pg="lv-dec"]').click()
     eq(await controlled.textContent(), "42")
-    eq(await controlled.getAttribute("data-trend"), "down")
+    await flashed("down")
     await page.waitForFunction(
       ([sel, want]) => getComputedStyle(document.querySelector(sel)).color === want,
       [`[data-pg="lv-controlled"] .live-value`, await tokenColour("--info")],
     )
-    await page.waitForFunction(() => {
-      const el = document.querySelector('[data-pg="lv-controlled"] .live-value-text')
-      return el && getComputedStyle(el).animationName === "live-value-tick-down"
-    })
     eq(
       await controlled.locator(".live-value-text").evaluate((el) => getComputedStyle(el).animationName),
       "live-value-tick-down",
     )
-    await page.waitForFunction(
-      (sel) => !document.querySelector(sel).hasAttribute("data-trend"),
-      `[data-pg="lv-controlled"] .live-value`,
-    )
+    await flashCleared()
   })
 
   await test("controlled: two same-direction changes both flash", async () => {
     await page.locator('[data-pg="lv-inc"]').click()
+    await flashed("up")
     const firstKey = await controlled.locator(".live-value-text").evaluate((el) => {
       el.dataset.probe = "first"
       return el.dataset.probe
     })
     eq(firstKey, "first")
     await page.locator('[data-pg="lv-inc"]').click()
-    eq(await controlled.getAttribute("data-trend"), "up")
     // The text node was remounted, so the animation restarted from 0%.
-    eq(await controlled.locator(".live-value-text").getAttribute("data-probe"), null)
     await page.waitForFunction(
-      (sel) => !document.querySelector(sel).hasAttribute("data-trend"),
-      `[data-pg="lv-controlled"] .live-value`,
+      (sel) => !document.querySelector(sel).hasAttribute("data-probe"),
+      `[data-pg="lv-controlled"] .live-value-text`,
+      { timeout: 5000 },
     )
+    eq(await controlled.getAttribute("data-trend"), "up", "still flashing up after the second rise")
+    await flashCleared()
   })
 
   await test("sampled: one timer per interval; the slow one holds its first sample", async () => {

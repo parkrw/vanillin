@@ -32,8 +32,16 @@ function vanillinDefaults() {
   }
 }
 
-export default defineConfig({
-  base: process.env.GITHUB_ACTIONS ? "/vanillin/" : "/",
+/*
+ * `base` is a deploy concern: GitHub Pages serves the built site under
+ * /vanillin/. The dev server must stay at "/" even on a runner — the test
+ * suite drives it through root-absolute URLs (`/@id/react`, `/@fs/...`,
+ * `/showcase/panels/fixture.html`), and a prefixed base 404s every one of
+ * them. Keying this on GITHUB_ACTIONS alone is what kept CI red while the
+ * same suite passed locally (docs/ISSUES.md G5).
+ */
+export default defineConfig(({ command }) => ({
+  base: command === "build" && process.env.GITHUB_ACTIONS ? "/vanillin/" : "/",
   root: "site",
   plugins: [vanillinDefaults(), react()],
   resolve: {
@@ -41,4 +49,4 @@ export default defineConfig({
       "@": fileURLToPath(new URL(".", import.meta.url)),
     },
   },
-})
+}))
