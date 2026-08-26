@@ -245,9 +245,64 @@
     --sidebar-border: light-dark(oklch(0.7 0 0), oklch(0.55 0 0));
   }
 
-  /* Thicken focus outlines */
+  /* Thicken focus outlines.  The bare rule below only reaches elements
+     that kept the global outline; every family in the forced-colors focus
+     list above suppresses it (outline: none + a box-shadow ring), and with
+     outline-style: none the 3px here computes to 0 -- so "thicker focus"
+     silently delivered nothing on any of them.  (Newer Chrome reports the
+     specified width from getComputedStyle even when the style is none,
+     which is how a test can read 3px while nothing paints -- ISSUES G11.)
+     Repair with a real outline, same shape as the forced-colors list;
+     var(--ring) rather than Highlight, since outside forced-colors the
+     theme's tokens still apply. */
   :focus-visible {
     outline-width: 3px;
+  }
+
+  .btn:focus-visible,
+  .checkbox:focus-visible,
+  .switch:focus-visible,
+  .radio-group-item:focus-visible,
+  .select-trigger:focus-visible,
+  .input:focus-visible,
+  .textarea:focus-visible,
+  .native-select:focus-visible,
+  .tabs-trigger:focus-visible,
+  .tabs-content:focus-visible,
+  .toggle:focus-visible,
+  .accordion-trigger:focus-visible,
+  .slider-thumb:focus-visible,
+  .carousel:focus-visible,
+  .dialog-close:focus-visible,
+  .badge:focus-visible,
+  .attachment-trigger:focus-visible,
+  .date-input-field:focus-visible,
+  .navigation-menu-trigger:focus-visible,
+  .data-table-page-size > select:focus-visible,
+  .data-table-sort-btn:focus-visible,
+  .data-table-actions-trigger:focus-visible {
+    outline: 3px solid var(--ring) !important;
+    outline-offset: 2px !important;
+  }
+
+  .combobox-input-group:focus-within,
+  .time-picker:focus-within,
+  .input-group:focus-within {
+    outline: 3px solid var(--ring) !important;
+    outline-offset: 2px !important;
+  }
+
+  .input-otp-slot[data-active] {
+    outline: 3px solid var(--ring) !important;
+    outline-offset: -3px !important;
+  }
+
+  .menubar-trigger:focus,
+  .menubar-trigger[data-state="open"],
+  .navigation-menu-link:focus-visible,
+  .time-picker-segment:focus-visible {
+    outline: 3px solid var(--ring) !important;
+    outline-offset: -3px !important;
   }
 
   /* Full-opacity borders on outline-style badges and toggles */
