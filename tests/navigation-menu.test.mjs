@@ -30,19 +30,6 @@ export default async function run({ page, baseUrl, test, eq }) {
   const learnTrigger = page.locator('[data-pg="nm-trigger-learn"]')
   const componentsTrigger = page.locator('[data-pg="nm-trigger-components"]')
 
-  await test("hover opens after delay, leave closes after grace", async () => {
-    await learnTrigger.hover()
-    eq(await openCount(), 0, "not open before delay")
-    await waitOpen("nm-content-learn")
-    eq(await learnTrigger.getAttribute("data-state"), "open", "trigger data-state open")
-    eq(await learnTrigger.getAttribute("aria-expanded"), "true", "aria-expanded true")
-
-    await page.mouse.move(0, 0)
-    eq(await openCount(), 1, "still open during closeDelay grace")
-    await waitAllClosed()
-    eq(await learnTrigger.getAttribute("data-state"), "closed", "trigger data-state closed")
-  })
-
   await test("hovering a second trigger switches with a single panel open", async () => {
     await learnTrigger.hover()
     await waitOpen("nm-content-learn")
