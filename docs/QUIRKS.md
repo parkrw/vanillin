@@ -11,6 +11,8 @@ Traps that cost someone a debugging session. Rules and commands live in `AGENTS.
 - A border under a `mask-image`, filter or transform still reports full `border-width` in `getComputedStyle` while painting nothing. Assert pixels for anything those can suppress.
 - `styles/globals.css` has **no `p`/margin reset**. A bare `<p>` keeps its UA `margin-block: 1em`, and flex items don't collapse margins, so it *adds* to the parent's `gap`. Set `margin: 0` on prose you add.
 - `styles/van.css` must never be imported by `site/main.jsx` — it is a *consumer's* theme and at equal specificity wins on source order, re-theming the site and pinning `--density-scale`. There is a comment saying so; leave it.
+- `container-type: inline-size` zeroes the element's intrinsic contribution, so a parent's `min-inline-size: fit-content` cannot see through it — `ui/scroll-area`'s content stayed 576px around a 640px table and its ResizeObserver never fired (ISSUES C13). Put the container on an element sized by layout, not by its content.
+- Hit-testing cannot show one cell's text painting over the next: a later `position: relative` sibling hit-tests on top of the earlier one's overflow, so `elementFromPoint` answers with the neighbour either way. Sample pixels instead (ISSUES C12, the C5 technique).
 
 ## Tests
 

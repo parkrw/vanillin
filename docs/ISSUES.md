@@ -297,6 +297,40 @@ destructive menu item will re-derive the same rule. Cheapest fix: a
 the two declarations in `dropdown-menu.css`; `ui/context-menu` and
 `ui/menubar` re-export the item, so they inherit it for free.
 
+### C11. ~~Data-table toolbar wraps its second filter onto a new row~~ — FIXED (`686a77dd8c31`)
+
+Measured in the 40rem docs column: `.data-table-toolbar-filters` is 556px wide and held two `.data-table-filter` inputs at 256px each (`.input { width: 100% }` capped by `max-inline-size: 16rem`) plus a 91px facet trigger — 619px. A wrap container wraps before it shrinks, so "Filter emails…" dropped to a second row and the Columns button floated at mid-height. The inputs were also 36px tall beside 32px `size="sm"` buttons.
+
+Fixed with `.data-table-toolbar .data-table-filter { flex: 1 1 10rem; block-size: 2rem; padding-block: var(--space-1) }`: a small basis that grows to the existing 16rem cap (inputs now 220px, one row) at the sm button height. Two-class specificity beats `.input`'s `height` whatever the import order. Component CSS; the page markup was correct.
+
+### C12. ~~Sized data-table header text paints over the next header~~ — FIXED (`dfff963ad1f8`)
+
+C4 clipped body cells only, because `overflow: hidden` on a `<th>` would have clipped the resizer handle straddling the header's end edge. So a header narrowed below its text — Status at its 40px minimum, "Status" 43px wide, ending at x=524 while the `<th>` ends at 510 — painted over "Email". Hit-testing cannot see this: both headers are `position: relative`, so the later one hit-tests on top of the earlier one's overflow. The test samples pixels instead (the C5 technique).
+
+Fixed by extending the C4 clip to `.data-table-sized .table-head` and moving the resizer inside the header box (`inset-inline-end: 0`, was -2px). The handle keeps its 5px width and is hit-testable at the header's end edge. The -2px straddle had also given the last column 2px of scrollable overflow — viewport `scrollWidth` 642 for a 640px table, 578 against 576 once the table fit — so a table that fit its scroller still grew a horizontal bar. Gone with the same change.
+
+### C13. ~~`DataTableScroller`'s horizontal bar goes stale when columns change~~ — FIXED (`579564d74879`)
+
+Found while fixing C12: with Status hidden the sized table fit its viewport exactly (576 = 576, `scrollWidth` 576), yet `data-has-overflow-x` stayed set and the bar stayed visible until the next scroll event. `ui/scroll-area` detects x-overflow in `sync()`, which runs on scroll and from a ResizeObserver over the viewport and `.scroll-area-content`. Neither ever resized: `.table-container` has `container-type: inline-size`, and size containment zeroes its intrinsic contribution, so `.scroll-area-content { min-inline-size: fit-content }` resolved to 100% (576) whatever the table's width — measured 576 around a 640px table.
+
+Fixed in `data-table.css` by moving the container role: `.data-table-scroller .table-container { container-type: normal }` and `.data-table-scroller .scroll-area-viewport { container-type: inline-size; container-name: vanillin-table }`. The content now tracks the table (640 → 580 → 576 → 1200 across resizes and hides), so the observer fires and the flag follows. The viewport is the width `.table-container` had, so `.table--stack` switches at the same threshold (block at 480px; 640px is the inclusive 40rem edge). Column widths stay strict: Chrome sizes a fixed-layout table's intrinsic width from its column widths, not cell content (`id` at 40px measured 40). `ui/table` and `ui/scroll-area` are not modified.
+
+### C14. ~~Faceted filter opens without focusing its search input~~ — FIXED (`77a29e15524a`)
+
+Click or Enter on `.data-table-facet-trigger` opened the `role="dialog"` popover with `document.activeElement` still on the trigger; typing "pen" changed nothing (four options visible, no highlight ranges). `ui/popover` is non-modal and deliberately moves no focus, so the fix is the faceted filter's: a `useEffect` on `open` focuses the Command's input. Effect order does the timing — `PopoverContent`'s effect has already called `showPopover()` when the parent's effect runs, so the input is focusable. Escape still returns focus to the trigger (native popover focus restoration).
+
+This is also why I1 looked real in task 63: nothing typed reached the input. With focus in place "pen" registers one `vanillin-search` range; I1 stays closed and the suite now pins it.
+
+### C15. ~~Faceted filter keeps a stale query across close and reopen~~ — FIXED (`90c11aa01eea`)
+
+Type "pen", Escape, reopen: the input still read "pen", the list was still 2 of 4 options, and "Clear filters" was hidden by the filter. Upstream's popover unmounts its content on close, so the Command resets; ours stays mounted. Fixed by controlling `CommandInput`'s value in `DataTableFacetedFilter` and clearing it when the popover opens — not closes, which would repaint the list during the exit fade. The highlight registry is released with the query.
+
+### C16. ~~Data-table toolbar and pagination never wrap~~ — FIXED (`a2ad6b97cea4`)
+
+`.data-table-toolbar`, `.data-table-pagination` and `.data-table-page-controls` were `flex-wrap: nowrap` over `white-space: nowrap` children. At a 640px viewport (330px content column) the page controls are 395px wide and overflowed the page by 65px in the Payments and Grouping sections, forcing a document-wide horizontal scroll. Fixed with `flex-wrap: wrap` and row gaps on all three; the selection count takes `flex: 1 1 auto` so it claims its own row first, and the controls keep `margin-inline-start: auto` so they stay end-aligned when alone. Layout in the 40rem column is unchanged (one row).
+
+Not fixed here: the page's remaining overflow at 640px (`scrollWidth` 753 before and after) comes from the docs shell and code blocks, and at 380px the shell leaves a 70px content column — both K1, whose decision is still open.
+
 ---
 
 ## D. Contrast and visual defects
@@ -640,6 +674,14 @@ recording instead of fixing):
   18/18 in isolation immediately after on identical code. G2-shaped load
   sensitivity. Relevant now that CI runs the suite — a shared runner is a
   loaded machine, so expect the G family there.
+- **G8.** `carousel: loop clones: narrow carousel loops forward seamlessly` —
+  failed once in a full run on `fix/data-table-page` (2026-08-26, a second
+  vite dev server alive on :5173): after 10 `next` clicks the nearest item
+  was 9, not 0, so one advance was swallowed. 26/26 in isolation right after
+  and 810/810 on the next full run of identical code. Each click is gated on
+  `waitForSnap` + 200ms, so a slow snap under load eats a click. G2-shaped.
+  Not the data-table change set: carousel runs before data-table, and every
+  rule that set added is scoped under `.data-table-*`.
 
 ---
 
