@@ -34,10 +34,17 @@
   }
 }
 
-/* Exit state */
+/* Exit state. The explicit display is load-bearing: a consumer class that
+   sets `display` (for a grid/flex content layout) outranks the UA's
+   `[popover]:not(:popover-open) { display: none }`, leaving every *closed*
+   card rendered invisibly at the fixed-position default (viewport top-left)
+   where it swallows pointer events — this is how the site's category cards
+   once blocked the top navbar. The allow-discrete transition above still
+   defers the flip to none until the exit fade finishes. */
 .hover-card:not(:popover-open) {
   opacity: 0;
   transform: scale(0.96);
+  display: none;
 }
 
 /* Placement-aware transform origin */

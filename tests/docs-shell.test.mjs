@@ -129,26 +129,37 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(await page.locator('[data-pg="rail"]').count(), 0)
   })
 
-  await test("category card hover previews the full component list", async () => {
+  await test("category cards carry a live demo, hover previews the full list", async () => {
     await page.waitForSelector(".pg-home-cat-card")
-    const card = page.locator(".pg-home-cat-card").first()
-    // Precondition: the card itself truncates — 8 links plus a "+N" overflow badge.
-    const badges = card.locator(".pg-home-cat-tags .badge")
-    eq(await badges.count(), 9)
-    eq(await card.locator(".pg-home-cat-tags a.badge").count(), 8)
-    const overflow = Number((await badges.last().textContent()).replace("+", ""))
-    eq(overflow > 0, true, "first category expected to overflow")
-    eq(await card.getAttribute("data-state"), "closed")
+    const cards = page.locator(".pg-home-cat-card")
+    const cardCount = await cards.count()
+    eq(cardCount > 0, true, "expected category cards")
+    // Every card shows one component live instead of a truncated badge list —
+    // the only tag lists left are the ones inside the (closed) hover cards.
+    eq(await page.locator(".pg-home-cat-card .pg-home-cat-demo").count(), cardCount)
+    const tagsOutsideHover = await page.evaluate(
+      () =>
+        [...document.querySelectorAll(".pg-home-cat-card .pg-home-cat-tags")].filter(
+          (el) => !el.closest(".hover-card")
+        ).length
+    )
+    eq(tagsOutsideHover, 0)
+
+    // …and the full list moved into the footer trigger's hover card.
+    const more = cards.first().locator(".pg-home-cat-more")
+    const total = Number((await more.textContent()).match(/\d+/)[0])
+    eq(total > 0, true, "trigger names the component count")
+    eq(await more.getAttribute("data-state"), "closed")
     eq(await page.locator(".pg-home-cat-hover:popover-open").count(), 0)
 
-    await card.hover()
+    await more.hover()
     const hover = page.locator(".pg-home-cat-hover:popover-open")
     await hover.waitFor()
-    // The hover card holds the complete, untruncated list, every entry a link.
-    eq(await hover.locator(".pg-home-cat-tags a.badge").count(), 8 + overflow)
+    // The hover card holds the complete list, every entry a link.
+    eq(await hover.locator(".pg-home-cat-tags a.badge").count(), total)
     eq(
       (await hover.locator(".pg-home-cat-hover-title").textContent()).endsWith(
-        `${8 + overflow} components`
+        `${total} components`
       ),
       true,
     )
@@ -157,6 +168,26 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.waitForFunction(
       () => document.querySelectorAll(".pg-home-cat-hover:popover-open").length === 0
     )
+  })
+
+  await test("closed hover cards stay display:none, so nothing shadows the topnav", async () => {
+    // Regression: `.pg-home-cat-hover`'s display:grid used to beat the UA's
+    // closed-popover display:none, parking every closed card over the
+    // viewport's top-left corner where it swallowed the nav menu's hovers.
+    // The card closed by the previous test is still exit-fading (allow-discrete
+    // keeps display through the transition), so wait for the settled state.
+    await page.waitForFunction(() =>
+      [...document.querySelectorAll(".hover-card")].every(
+        (el) => el.matches(":popover-open") || getComputedStyle(el).display === "none"
+      )
+    )
+    // Counter-precondition: the trigger itself is what the pointer reaches.
+    const reachable = await page.evaluate(() => {
+      const t = document.querySelector(".pg-topnav .navigation-menu-trigger")
+      const r = t.getBoundingClientRect()
+      return t.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2))
+    })
+    eq(reachable, true, "topnav trigger not hit-testable at its own centre")
   })
 
   await test("rail TOC tracks scroll position", async () => {

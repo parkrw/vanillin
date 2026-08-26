@@ -645,32 +645,19 @@
   gap: 3rem;
 }
 
-/* Hero — copy on the left, live components on the right. Single column
-   below 64rem, where the copy re-centres. */
+/* Hero — centred copy; the console showcase right below it is the opening
+   visual, so the copy stays short and the section keeps no side column. */
 .pg-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  gap: 4rem;
-  align-items: center;
-  padding: 4rem 0 2rem;
+  display: flex;
+  justify-content: center;
+  padding: 3rem 0 0;
 }
 
 .pg-hero-copy {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-}
-
-@media (max-width: 64rem) {
-  .pg-hero {
-    grid-template-columns: 1fr;
-    gap: 3rem;
-  }
-
-  .pg-hero-copy {
-    align-items: center;
-    text-align: center;
-  }
+  align-items: center;
+  text-align: center;
 }
 
 .pg-hero-badge {
@@ -688,7 +675,7 @@
 .pg-hero-desc {
   font-size: 1.125rem;
   color: var(--muted-foreground);
-  max-width: 34rem;
+  max-width: 36rem;
   margin: 1rem 0 2rem;
   line-height: 1.6;
 }
@@ -700,8 +687,12 @@
   gap: 0.75rem;
 }
 
-.pg-hero-install {
-  margin-top: 1.5rem;
+/* Console section opens the page right under the hero copy — its intro
+   paragraph is centred to read as a hero subline, not a docs paragraph. */
+.pg-home-console-desc {
+  max-inline-size: 46rem;
+  margin: 0 auto 1.5rem;
+  text-align: center;
 }
 
 .pg-console-open {
@@ -710,31 +701,35 @@
   margin-top: 1rem;
 }
 
-/* The right-hand showcase is real kit output, not a screenshot. */
-.pg-hero-showcase {
+/* Support showcase — same card frame the console embed wears on this page,
+   so the two demos read as siblings. */
+.pg-home-support-frame {
+  margin-block-start: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+/* Install strip — the hero's old install snippet, given its own section. */
+.pg-home-install-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1rem;
+  margin-block-start: 1rem;
+}
+
+.pg-home-install-step {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
+  min-inline-size: 0;
 }
 
-.pg-hero-showcase-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.pg-hero-showcase-input {
-  max-width: 14rem;
-}
-
-.pg-hero-showcase-sep {
-  margin-block: 1rem;
-}
-
-.pg-hero-showcase-progress {
-  flex: 1;
-  min-width: 6rem;
+.pg-home-install-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
 }
 
 .pg-features-grid {
@@ -749,9 +744,116 @@
 
 .pg-home-cat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
   gap: 1rem;
   margin-top: 1rem;
+}
+
+/* Each category card hosts a live demo of one component; the demo area is a
+   flexible middle so the footer row lines up across the grid. */
+.pg-home-cat-demo {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 7.5rem;
+}
+
+.pg-home-cat-foot {
+  justify-content: space-between;
+}
+
+.pg-home-cat-demo-link {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-decoration: none;
+}
+
+.pg-home-cat-demo-link:hover {
+  color: var(--foreground);
+  text-decoration: underline;
+}
+
+.pg-home-cat-more {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--pg-accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pg-home-cat-more:hover {
+  text-decoration: underline;
+}
+
+/* Per-demo helpers — layout only, the components style themselves. */
+.pg-home-demo-avatars {
+  display: flex;
+  align-items: center;
+}
+
+.pg-home-demo-avatars > .avatar {
+  box-shadow: 0 0 0 2px var(--card);
+}
+
+.pg-home-demo-avatars > .avatar:not(:first-child) {
+  margin-inline-start: -1rem;
+}
+
+.pg-home-demo-avatars > .badge {
+  margin-inline-start: 0.75rem;
+}
+
+.pg-home-demo-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  inline-size: 100%;
+  max-inline-size: 14rem;
+}
+
+.pg-home-demo-skeleton-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pg-home-demo-tabs {
+  inline-size: 100%;
+  max-inline-size: 14rem;
+}
+
+.pg-home-demo-tabs-copy {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+}
+
+.pg-home-demo-accordion {
+  inline-size: 100%;
+  font-size: 0.875rem;
+}
+
+.pg-home-demo-bubbles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  inline-size: 100%;
+  font-size: 0.8125rem;
+}
+
+.pg-home-demo-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pg-home-demo-hint {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
 }
 
 .pg-home-cat-tags {
