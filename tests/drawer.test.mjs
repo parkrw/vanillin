@@ -127,9 +127,40 @@ export default async function run({ page, baseUrl, test, eq, near }) {
 
   // ── Swipe velocity tests ──────────────────────────────────────────
   // The drawer is a modal <dialog> whose React handlers are unreachable
-  // via dispatchEvent, so these tests use Playwright's mouse API.
-  // Fast swipes use few large steps; slow swipes use small steps with
-  // explicit delays between them.
+  // via dispatchEvent, so these tests drive real input. Slow drags use
+  // Playwright's mouse API with explicit waits between steps. Flicks go
+  // through CDP with declared timestamps: Playwright stamps each event with
+  // wall-clock time, so a flick's px/ms would depend on how fast this machine
+  // completes four CDP round-trips — 30px over 16–29ms dismisses, 30ms does
+  // not, and an idle run already measures 21–27ms (docs/ISSUES.md G2). Chrome
+  // carries Input.dispatchMouseEvent's `timestamp` through to event.timeStamp,
+  // which is what use-swipe's velocity window reads.
+  const cdp = await page.context().newCDPSession(page)
+
+  // Press at (x, y), then one move per [dy, dtMs] entry — dy from the press
+  // point, dtMs since the previous event — and release `liftMs` after the last.
+  const timedDrag = async (x, y, moves, liftMs = 2) => {
+    let ts = Date.now() / 1000
+    let dy = 0
+    const send = (type, buttons) =>
+      cdp.send("Input.dispatchMouseEvent", {
+        type,
+        x,
+        y: y + dy,
+        button: "left",
+        buttons,
+        clickCount: type === "mouseMoved" ? 0 : 1,
+        timestamp: ts,
+      })
+    await send("mousePressed", 1)
+    for (const [nextDy, dtMs] of moves) {
+      dy = nextDy
+      ts += dtMs / 1000
+      await send("mouseMoved", 1)
+    }
+    ts += liftMs / 1000
+    await send("mouseReleased", 0)
+  }
 
   await test("fast short swipe (velocity) dismisses drawer", async () => {
     await page.locator('button:has-text("Open down")').click()
@@ -139,12 +170,9 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     const x = box.x + box.width / 2
     const y = box.y + 10
 
-    // 50px downward in 3 fast steps (~2.5 px/ms, above 1.0 threshold)
-    // but under 25% of drawer height (~58px)
-    await page.mouse.move(x, y)
-    await page.mouse.down()
-    await page.mouse.move(x, y + 50, { steps: 3 })
-    await page.mouse.up()
+    // 50px downward in 20ms (2.5 px/ms, above the 1.0 threshold) but under
+    // 25% of the drawer's height (~58px), so only velocity can dismiss.
+    await timedDrag(x, y, [[17, 6], [33, 6], [50, 6]])
 
     await page.waitForSelector(".drawer", { state: "detached" })
   })
@@ -200,19 +228,10 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     const x = box.x + box.width / 2
     const y = box.y + 10
 
-    // Slow phase: 10px over ~200ms
-    await page.mouse.move(x, y)
-    await page.mouse.down()
-    for (let i = 1; i <= 2; i++) {
-      await page.mouse.move(x, y + i * 5, { steps: 1 })
-      await page.waitForTimeout(100)
-    }
-    // Pause so slow samples fall well outside the 100ms velocity window
-    await page.waitForTimeout(200)
-    // Fast phase: 40px in 4 rapid steps — velocity ~2+ px/ms,
-    // total gesture distance (50px) stays under 25% of drawer height
-    await page.mouse.move(x, y + 50, { steps: 4 })
-    await page.mouse.up()
+    // Slow phase: 10px over 200ms, then a 300ms pause so those samples age
+    // out of the 100ms velocity window. Flick: 30px more, lifted 20ms later
+    // (1.5 px/ms), the gesture's 50px total under 25% of the drawer's height (~58px).
+    await timedDrag(x, y, [[5, 100], [10, 100], [20, 300], [30, 6], [40, 6], [50, 6]])
 
     await page.waitForSelector(".drawer", { state: "detached" })
   })
@@ -265,4 +284,6 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await page.keyboard.press("Escape")
     await page.waitForSelector(".drawer", { state: "detached" })
   })
+
+  await cdp.detach()
 }

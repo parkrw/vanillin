@@ -613,10 +613,7 @@ recording instead of fixing):
 - **G1.** `message-scroller: button click returns to bottom and re-engages
   follow`. Reproduced on a clean base (285/286, then 286/286 on identical
   code). Oldest of the family; worth a dedicated fix.
-- **G2.** `drawer: long slow drag ending in flick` and `drawer: held still
-  before lift`. 14/14 in isolation; time out in **full-suite order only**.
-  Load-dependent — observed pass/fail/fail/pass across four runs on identical
-  code.
+- **G2.** ~~`drawer: long slow drag ending in flick` and `drawer: held still before lift`. 14/14 in isolation; time out in **full-suite order only**.~~ Resolved 2026-08-25: the flick's velocity depended on four Playwright round-trips landing in a 16–29ms window (an idle run measured 21–27ms); the two velocity-dismiss tests now declare their timestamps through CDP `Input.dispatchMouseEvent`. `held still` never failed on its own — the failed flick left the modal open and the next `click()` timed out behind it.
 - **G3.** Two `resizable` tests — logged failing on the base commit during
   task 54 (hover-state timing; a strict `>` where the values are equal).
   Never logged as fixed, though the last three full runs were green.

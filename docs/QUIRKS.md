@@ -17,7 +17,7 @@ Traps that cost someone a debugging session. Rules and commands live in `AGENTS.
 - `resetPage()` pins `colorScheme: "light"`. Keep it pinned: the site seeds its theme from `prefers-color-scheme`, so resetting to `null` makes every suite depend on whether the developer's OS is in dark mode.
 - Assert motion in pixels, never animation objects. To catch a mid-frame, set `--motion-scale` high (25 works) and screenshot — Playwright does capture view-transition pseudos.
 - For motion QA emulate `no-preference`. Don't act on a missing-animation report before checking this.
-- `dispatchEvent` on a modal `<dialog>` fires natively but React's delegated handlers never run. Use real Playwright pointer input.
+- `dispatchEvent` on a modal `<dialog>` fires natively but React's delegated handlers never run. Use real Playwright pointer input. For a flick, declare its timing through CDP `Input.dispatchMouseEvent` `timestamp`s (`timedDrag` in `tests/drawer.test.mjs`): `page.mouse` stamps wall-clock time, so the px/ms `use-swipe` measures tracks machine load, and a 16–29ms pass window flakes on a shared runner.
 - A page must have exactly one `h2` — its title. Several suites click a bare `locator("h2")` as an outside-click target. Site styles use child combinators (`.pg-section > h3`), so page structure matters.
 - Concurrent suites each need their own `VANILLIN_TEST_PORT`; the runner pins one port with `--strictPort`. CPU contention manufactures flakes — see ISSUES G before believing a timing failure, and re-run the file in isolation.
 - **`forced-colors` CSS is correct.** Those failures were input-modality leakage between test files, fixed by `resetPage()` in `tests/run.mjs`. Don't re-fix the CSS.
