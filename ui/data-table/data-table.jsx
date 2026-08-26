@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { cn } from "../../lib/cn.js"
 import { TableRow, TableCell } from "../table/table.jsx"
 import { Popover, PopoverTrigger, PopoverContent } from "../popover/popover.jsx"
@@ -120,6 +120,14 @@ function CheckIcon() {
  */
 export function DataTableFacetedFilter({ column, title, options: optionsProp, ...props }) {
   const [open, setOpen] = useState(false)
+  const commandRef = useRef(null)
+
+  // ui/popover is non-modal and moves no focus, but a filter is opened to be
+  // typed into. PopoverContent's effect has already called showPopover() by
+  // the time this parent effect runs, so the input is focusable here.
+  useEffect(() => {
+    if (open) commandRef.current?.querySelector("input")?.focus()
+  }, [open])
 
   const facets = column.getFacetedUniqueValues()
   const filterValue = column.getFilterValue()
@@ -163,7 +171,7 @@ export function DataTableFacetedFilter({ column, title, options: optionsProp, ..
         )}
       </PopoverTrigger>
       <PopoverContent className="data-table-facet-content" align="start">
-        <Command>
+        <Command ref={commandRef}>
           <CommandInput placeholder={title} />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>

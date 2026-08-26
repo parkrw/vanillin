@@ -521,6 +521,54 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.waitForTimeout(100)
   })
 
+  await test("facet: opening focuses the search input so typing filters at once", async () => {
+    const facetBtn = dt.locator(".data-table-facet-trigger")
+    const before = await page.evaluate(
+      () => document.activeElement?.classList.contains("command-input") ?? false
+    )
+    eq(before, false, "input is not focused before opening")
+
+    await facetBtn.click()
+    await page.waitForTimeout(150)
+    const opened = await page.evaluate(() => {
+      const pop = document.querySelector(".data-table-facet-content:popover-open")
+      return {
+        open: !!pop,
+        inputFocused: !!pop && document.activeElement === pop.querySelector(".command-input"),
+      }
+    })
+    eq(opened.open, true, "popover opened")
+    eq(opened.inputFocused, true, "search input took focus")
+
+    // No click into the input: keystrokes must already land there. The match
+    // paints under ui/command's own registry (ISSUES I1 — closed, it works).
+    await page.keyboard.type("pen")
+    await page.waitForTimeout(150)
+    const typed = await page.evaluate(() => {
+      const pop = document.querySelector(".data-table-facet-content:popover-open")
+      const ranges = CSS.highlights?.get("vanillin-search")
+      return {
+        value: pop.querySelector(".command-input").value,
+        visible: [...pop.querySelectorAll('[role="option"]')]
+          .filter((o) => !o.hidden)
+          .map((o) => o.textContent.trim()),
+        ranges: ranges ? [...ranges].map((r) => r.toString()) : [],
+      }
+    })
+    eq(typed.value, "pen", "keystrokes reached the input")
+    eq(typed.visible.join(","), "pending5,processing4", "list filtered by the query")
+    eq(typed.ranges.join(","), "pen", "one highlight range over the contiguous match")
+
+    await page.keyboard.press("Escape")
+    await page.waitForTimeout(150)
+    const closed = await page.evaluate(() => ({
+      open: !!document.querySelector(".data-table-facet-content:popover-open"),
+      onTrigger: document.activeElement?.classList.contains("data-table-facet-trigger") ?? false,
+    }))
+    eq(closed.open, false, "Escape closed the popover")
+    eq(closed.onTrigger, true, "focus returned to the trigger")
+  })
+
   // ── Multi-sort ─────────────────────────────────────────────────────
 
   await test("shift-click builds two-key sort and secondary orders ties", async () => {
