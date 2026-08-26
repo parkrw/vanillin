@@ -69,34 +69,57 @@
   100% { opacity: 0.4; }
 }
 
-/* ── Ring (halo) ── */
+/* ── Ring (halo) ──
+ * The halo is the dot's own colour and breathes: `color` carries the status
+ * token so currentColor feeds the shadow, and the loop swells the spread and
+ * alpha. Indeterminate loop → fixed 2s literal, same reasoning as pending. */
 
 .status-dot--ring {
+  color: var(--muted-foreground);
   box-shadow: 0 0 0 3px color-mix(in oklab, currentColor 20%, transparent);
+  animation: status-dot-ring-pulse 2s ease-in-out infinite;
 }
 
 .status-dot--ring[data-status="success"] {
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--success) 20%, transparent);
+  color: var(--success);
 }
 
 .status-dot--ring[data-status="warning"] {
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--warning) 20%, transparent);
+  color: var(--warning);
 }
 
 .status-dot--ring[data-status="error"] {
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--destructive) 20%, transparent);
+  color: var(--destructive);
 }
 
 .status-dot--ring[data-status="info"] {
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--info) 20%, transparent);
+  color: var(--info);
 }
 
-.status-dot--ring[data-status="neutral"] {
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--muted-foreground) 20%, transparent);
-}
-
+/* pending already animates opacity; the ring adds its loop alongside rather
+   than replacing it, since the `animation` shorthand would otherwise win. */
 .status-dot--ring[data-status="pending"] {
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--muted-foreground) 20%, transparent);
+  animation:
+    status-dot-pulse 2s ease-in-out infinite alternate,
+    status-dot-ring-pulse 2s ease-in-out infinite;
+}
+
+@keyframes status-dot-ring-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px color-mix(in oklab, currentColor 20%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 5px color-mix(in oklab, currentColor 32%, transparent),
+      0 0 10px 2px color-mix(in oklab, currentColor 45%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-dot--ring,
+  .status-dot--ring[data-status="pending"] {
+    animation: none;
+  }
 }
 
 /* ── Forced-colors: non-colour cues ──

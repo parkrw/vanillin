@@ -132,10 +132,10 @@ export default function HomePage() {
       <section className="pg-home-console">
         <h2>Compose something real</h2>
         <p className="pg-desc">
-          A cloud console assembled entirely from kit components: resizable panes,
-          a filterable data table, a command palette, detail sheets, and toasts.
-          Drag the divider, sort a column, open a server. The glass chrome falls
-          back to solid surfaces under reduced transparency.
+          A cloud console assembled entirely from kit components: two collapsible
+          rails, a breadcrumb bar, live numbers that flash orange on the way up and
+          blue on the way down, a filterable data table, a command palette, detail
+          sheets, and toasts. Drag a divider, fold a rail, sort a column, open a server.
         </p>
         <Suspense
           fallback={<Skeleton style={{ blockSize: "40rem", borderRadius: "var(--radius-lg)" }} />}

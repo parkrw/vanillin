@@ -108,8 +108,11 @@ import "./ui/status-dot/status-dot.css"
 <StatusDot status="pending" ring />`}>
           <div>
             <p className="pg-prose">
-              The <code>ring</code> prop draws a 20% opacity halo around the
-              dot, the "live" look consoles use for running instances.
+              The <code>ring</code> prop draws a halo in the dot's own colour
+              and breathes it on a fixed 2s loop, the "live" look consoles use
+              for running instances. The halo never takes a second hue: a green
+              dot glows green. Under <code>prefers-reduced-motion</code> the
+              halo holds still at 20% opacity.
             </p>
             <div className="pg-row" data-pg="sd-ring">
               <StatusDot status="success" ring />
@@ -232,7 +235,7 @@ Running (label on adjacent text)
       <ApiReference props={[
         { name: "status", type: '"success" | "warning" | "error" | "info" | "neutral" | "pending"', default: '"neutral"', description: "Semantic state, mapped to the corresponding token family" },
         { name: "size", type: '"sm" | "default" | "lg"', default: '"default"', description: "Dot diameter: 6px, 8px, or 10px" },
-        { name: "ring", type: "boolean", default: "false", description: "Draws a 20% opacity halo around the dot" },
+        { name: "ring", type: "boolean", default: "false", description: "Draws a breathing halo in the dot's own colour (static under reduced motion)" },
         { name: "label", type: "string | null", default: "auto", description: "Accessible label. null gives aria-hidden; omit for the auto-derived label" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />

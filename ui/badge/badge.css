@@ -19,6 +19,42 @@
   box-shadow: 0 0 0 3px var(--ring);
 }
 
+/*
+ * Glow — `glow` breathes a halo in the badge's own colour. Each variant sets
+ * --badge-glow to the token that defines it, so the halo never introduces a
+ * second hue. Indeterminate loop → fixed 2s literal, like status-dot's ring.
+ * Focus wins over the glow so the ring stays visible while focused.
+ */
+.badge {
+  --badge-glow: var(--primary);
+}
+
+.badge--glow {
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--badge-glow) 18%, transparent);
+  animation: badge-glow 2s ease-in-out infinite;
+}
+
+.badge--glow:focus-visible {
+  animation: none;
+}
+
+@keyframes badge-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--badge-glow) 18%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px color-mix(in oklab, var(--badge-glow) 32%, transparent),
+      0 0 12px 2px color-mix(in oklab, var(--badge-glow) 40%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge--glow {
+    animation: none;
+  }
+}
+
 .badge svg {
   width: 0.75rem;
   height: 0.75rem;
@@ -67,16 +103,19 @@
 /* Variants */
 
 .badge--secondary {
+  --badge-glow: var(--secondary-foreground);
   background-color: var(--secondary);
   color: var(--secondary-foreground);
 }
 
 .badge--destructive {
+  --badge-glow: var(--destructive);
   background-color: var(--destructive);
   color: var(--destructive-foreground);
 }
 
 .badge--outline {
+  --badge-glow: var(--foreground);
   background-color: transparent;
   color: var(--foreground);
   border-color: var(--border);
@@ -92,24 +131,28 @@
  */
 
 .badge--success {
+  --badge-glow: var(--success);
   background-color: var(--success-background);
   color: var(--success-foreground);
   border-color: var(--success-border);
 }
 
 .badge--warning {
+  --badge-glow: var(--warning);
   background-color: var(--warning-background);
   color: var(--warning-foreground);
   border-color: var(--warning-border);
 }
 
 .badge--info {
+  --badge-glow: var(--info);
   background-color: var(--info-background);
   color: var(--info-foreground);
   border-color: var(--info-border);
 }
 
 .badge--destructive-soft {
+  --badge-glow: var(--destructive);
   background-color: var(--destructive-background);
   /* --destructive-foreground is the text-on-solid-red token (near-white
      in light, near-black in dark) — not suitable for soft backgrounds.

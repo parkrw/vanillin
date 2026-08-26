@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react"
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react"
 import { Avatar, AvatarFallback } from "../../ui/avatar/avatar.jsx"
 import {
   Attachment,
@@ -36,6 +36,7 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
+  CommandShortcut,
 } from "../../ui/command/command.jsx"
 import {
   DataTableColumnHeader,
@@ -73,6 +74,9 @@ import {
   ItemActions,
   ItemGroup,
 } from "../../ui/item/item.jsx"
+import { Kbd, KbdGroup } from "../../ui/kbd/kbd.jsx"
+import { LiveValue } from "../../ui/live-value/live-value.jsx"
+import { ModeToggle } from "../../ui/mode-toggle/mode-toggle.jsx"
 import { Progress } from "../../ui/progress/progress.jsx"
 import {
   ResizablePanelGroup,
@@ -100,7 +104,6 @@ import {
   TableHead,
   TableCell,
 } from "../../ui/table/table.jsx"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../ui/tabs/tabs.jsx"
 import { Toaster, toast } from "../../ui/toast/toast.jsx"
 import {
   TooltipProvider,
@@ -110,11 +113,13 @@ import {
 } from "../../ui/tooltip/tooltip.jsx"
 import { cn } from "../../lib/cn.js"
 import { useDataTable, flexRender } from "../../lib/use-data-table.js"
+import { useTicker } from "../../lib/use-ticker.js"
 import {
   PROJECTS,
   REGIONS,
   NAV_GROUPS,
   findService,
+  findGroup,
   INSTANCES,
   SIZES,
   QUOTAS,
@@ -129,8 +134,10 @@ import {
   UTILIZATION,
   HEALTH,
   EVENTS,
+  INCOMING_EVENTS,
   STATS,
 } from "./console-data.js"
+import { drift, history } from "./console-live.js"
 
 import { SettingsPanel, StatusShowcase, SupportPanel } from "./panels/index.js"
 import "../../ui/avatar/avatar.css"
@@ -149,6 +156,9 @@ import "../../ui/empty/empty.css"
 import "../../ui/hover-card/hover-card.css"
 import "../../ui/input/input.css"
 import "../../ui/item/item.css"
+import "../../ui/kbd/kbd.css"
+import "../../ui/live-value/live-value.css"
+import "../../ui/mode-toggle/mode-toggle.css"
 import "../../ui/progress/progress.css"
 import "../../ui/resizable/resizable.css"
 import "../../ui/scroll-area/scroll-area.css"
@@ -157,10 +167,12 @@ import "../../ui/sheet/sheet.css"
 import "../../ui/spinner/spinner.css"
 import "../../ui/status-dot/status-dot.css"
 import "../../ui/table/table.css"
-import "../../ui/tabs/tabs.css"
 import "../../ui/toast/toast.css"
 import "../../ui/tooltip/tooltip.css"
 import "./console.css"
+
+/* Every live number in the mock beats on this one shared timer. */
+const TICK_MS = 2000
 
 /* ── Inline icons (stroke inherits currentColor) ─────────────────────── */
 
@@ -201,28 +213,18 @@ const BellIcon = () =>
 const EllipsisIcon = () =>
   icon(
     <>
-      <circle cx="5" cy="12" r="1" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
-      <circle cx="19" cy="12" r="1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+      <circle cx="5" cy="12" r="1" />
     </>
   )
-
-const SunIcon = () =>
-  icon(
-    <>
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-    </>
-  )
-
-const MoonIcon = () => icon(<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />)
 
 const DiskIcon = () =>
   icon(
     <>
-      <ellipse cx="12" cy="6" rx="7" ry="3" />
-      <path d="M5 6v12c0 1.66 3.13 3 7 3s7-1.34 7-3V6" />
-      <path d="M5 12c0 1.66 3.13 3 7 3s7-1.34 7-3" />
+      <ellipse cx="12" cy="5" rx="9" ry="3" />
+      <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+      <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
     </>
   )
 
@@ -230,7 +232,7 @@ const UploadIcon = () =>
   icon(
     <>
       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-      <polyline points="7.5 7.5 12 3 16.5 7.5" />
+      <polyline points="17 8 12 3 7 8" />
       <line x1="12" y1="3" x2="12" y2="15" />
     </>
   )
@@ -238,18 +240,17 @@ const UploadIcon = () =>
 const CloseIcon = () =>
   icon(
     <>
-      <line x1="6" y1="6" x2="18" y2="18" />
       <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
     </>
   )
 
 const RefreshIcon = () =>
   icon(
     <>
-      <path d="M21 12a9 9 0 01-9 9 9 9 0 01-8.2-5.3" />
-      <path d="M3 12a9 9 0 019-9 9 9 0 018.2 5.3" />
-      <polyline points="21 3 20.2 8.3 15 7.5" />
-      <polyline points="3 21 3.8 15.7 9 16.5" />
+      <polyline points="23 4 23 10 17 10" />
+      <polyline points="1 20 1 14 7 14" />
+      <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
     </>
   )
 
@@ -262,17 +263,77 @@ const BoxIcon = () =>
     </>
   )
 
+const ChevronDownIcon = () => icon(<polyline points="6 9 12 15 18 9" />, { strokeWidth: "2" })
+const ChevronUpIcon = () => icon(<polyline points="6 15 12 9 18 15" />, { strokeWidth: "2" })
+const ChevronsLeftIcon = () =>
+  icon(
+    <>
+      <polyline points="11 17 6 12 11 7" />
+      <polyline points="18 17 13 12 18 7" />
+    </>,
+    { strokeWidth: "2" }
+  )
+const ChevronsRightIcon = () =>
+  icon(
+    <>
+      <polyline points="13 17 18 12 13 7" />
+      <polyline points="6 17 11 12 6 7" />
+    </>,
+    { strokeWidth: "2" }
+  )
+
+const GridIcon = () =>
+  icon(
+    <>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+    </>
+  )
+
+const LayersIcon = () =>
+  icon(
+    <>
+      <polygon points="12 2 2 7 12 12 22 7 12 2" />
+      <polyline points="2 17 12 22 22 17" />
+      <polyline points="2 12 12 17 22 12" />
+    </>
+  )
+
+const ActivityIcon = () => icon(<path d="M22 12h-4l-3 8-4-16-3 8H2" />)
+
+const CreditCardIcon = () =>
+  icon(
+    <>
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <line x1="2" y1="10" x2="22" y2="10" />
+    </>
+  )
+
+const CpuIcon = () =>
+  icon(
+    <>
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+      <rect x="9" y="9" width="6" height="6" />
+      <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3" />
+    </>
+  )
+
+const ShieldIcon = () => icon(<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />)
+
+const BarChartIcon = () =>
+  icon(
+    <>
+      <line x1="6" y1="20" x2="6" y2="13" />
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="18" y1="20" x2="18" y2="9" />
+    </>
+  )
+
 /* Nav iconography, keyed by nav item id. */
 const NAV_ICONS = {
-  overview: () =>
-    icon(
-      <>
-        <rect x="3" y="3" width="7" height="7" rx="1" />
-        <rect x="14" y="3" width="7" height="7" rx="1" />
-        <rect x="14" y="14" width="7" height="7" rx="1" />
-        <rect x="3" y="14" width="7" height="7" rx="1" />
-      </>
-    ),
+  overview: GridIcon,
   vdc: () =>
     icon(
       <>
@@ -299,15 +360,8 @@ const NAV_ICONS = {
         <path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3" />
       </>
     ),
-  metrics: () =>
-    icon(
-      <>
-        <line x1="6" y1="20" x2="6" y2="13" />
-        <line x1="12" y1="20" x2="12" y2="4" />
-        <line x1="18" y1="20" x2="18" y2="9" />
-      </>
-    ),
-  events: () => icon(<path d="M22 12h-4l-3 8-4-16-3 8H2" />),
+  metrics: BarChartIcon,
+  events: ActivityIcon,
   "service-health": () =>
     icon(
       <>
@@ -315,13 +369,7 @@ const NAV_ICONS = {
         <polyline points="9 11.5 11 13.5 15 9.5" />
       </>
     ),
-  billing: () =>
-    icon(
-      <>
-        <rect x="2" y="5" width="20" height="14" rx="2" />
-        <line x1="2" y1="10" x2="22" y2="10" />
-      </>
-    ),
+  billing: CreditCardIcon,
   contacts: () =>
     icon(
       <>
@@ -363,6 +411,27 @@ const NAV_ICONS = {
         <path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6" />
       </>
     ),
+}
+
+const CATEGORY_ICONS = { Platform: LayersIcon, Operations: ActivityIcon, Account: CreditCardIcon }
+
+const GROUP_ICONS = {
+  Status: GridIcon,
+  "Data centers": NAV_ICONS.vdc,
+  Limits: BarChartIcon,
+  Compute: CpuIcon,
+  Catalog: LayersIcon,
+  Networks: NAV_ICONS.networking,
+  Access: ShieldIcon,
+  Block: NAV_ICONS.storage,
+  Usage: BarChartIcon,
+  Activity: ActivityIcon,
+  Billing: CreditCardIcon,
+  People: NAV_ICONS.contacts,
+  Support: NAV_ICONS.support,
+  Security: ShieldIcon,
+  Data: NAV_ICONS["your-data"],
+  Settings: NAV_ICONS.settings,
 }
 
 /* ── Shared bits ─────────────────────────────────────────────────────── */
@@ -411,6 +480,8 @@ const STATUS_TONE = {
 function StatusBadge({ value }) {
   return <Badge variant={STATUS_TONE[value] ?? "outline"}>{value}</Badge>
 }
+
+const TONE_BADGE = { success: "success", warning: "warning", error: "destructive-soft", info: "info" }
 
 /* A row menu. Non-destructive entries queue a fake task; destructive ones
    report the demo's protection, both naming the row. */
@@ -464,123 +535,169 @@ function fakeTask(title, description) {
   })
 }
 
-/* ── Topbar ──────────────────────────────────────────────────────────── */
+/* ── Topbar (chrome) ─────────────────────────────────────────────────── */
+
+function ContextPill({ label, value, options, onChange, menuLabel }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="ck-pill">
+        <span className="ck-pill-label">{label}</span>
+        {value}
+        <span className="ck-pill-caret" aria-hidden="true">
+          <ChevronDownIcon />
+        </span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="ck-pill-menu">
+        {menuLabel && (
+          <>
+            <DropdownMenuLabel>{menuLabel}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+          </>
+        )}
+        <DropdownMenuRadioGroup value={value} onValueChange={onChange}>
+          {options.map((opt) => (
+            <DropdownMenuRadioItem key={opt} value={opt}>{opt}</DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
 
 function ConsoleTopbar({ project, setProject, region, setRegion, onOpenPalette }) {
-  // Decorative only: the icon flips, the page theme never moves.
+  // Decorative only: the lamp flips, the page theme never moves.
   const [moon, setMoon] = useState(false)
   return (
     <header className="ck-topbar">
       <div className="ck-brand">
         <span className="ck-brand-mark"><KeyIcon /></span>
         <span className="ck-brand-name">Acme Cloud</span>
+        <span className="ck-brand-app">Console</span>
         <Tip label="Console release 1.0.0" side="bottom">
           <Badge variant="secondary">1.0.0</Badge>
         </Tip>
       </div>
-      <Separator orientation="vertical" decorative className="ck-topbar-sep" />
-      <DropdownMenu>
-        <DropdownMenuTrigger as={Button} variant="ghost" size="sm" className="ck-pill">
-          <span className="ck-pill-label">Project</span>
-          {project}
-          <span className="ck-pill-caret" aria-hidden="true">&#9662;</span>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          <DropdownMenuLabel>Switch project</DropdownMenuLabel>
-          <DropdownMenuRadioGroup value={project} onValueChange={setProject}>
-            {PROJECTS.map((p) => (
-              <DropdownMenuRadioItem key={p} value={p}>{p}</DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <DropdownMenu>
-        <DropdownMenuTrigger as={Button} variant="ghost" size="sm" className="ck-pill">
-          <span className="ck-pill-label">Region</span>
-          {region}
-          <span className="ck-pill-caret" aria-hidden="true">&#9662;</span>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          <DropdownMenuRadioGroup value={region} onValueChange={setRegion}>
-            {REGIONS.map((r) => (
-              <DropdownMenuRadioItem key={r} value={r}>{r}</DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <div className="ck-topbar-spacer" />
-      <button type="button" className="ck-search" onClick={onOpenPalette}>
-        <SearchIcon />
-        <span>Search resources...</span>
-      </button>
-      <Tooltip>
-        <TooltipTrigger
-          as={Button}
-          variant="ghost"
-          size="icon"
-          className="ck-theme-toggle"
-          aria-label={moon ? "Switch to light theme" : "Switch to dark theme"}
-          onClick={() => {
-            setMoon((m) => !m)
-            toast("Theme switching is decorative in this demo")
-          }}
-        >
-          {moon ? <MoonIcon /> : <SunIcon />}
-        </TooltipTrigger>
-        <TooltipContent side="bottom">Theme</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger
-          as={Button}
-          variant="ghost"
-          size="icon"
-          className="ck-bell"
-          aria-label="Notifications, 1 unread"
-          onClick={() => toast.info("2 alarms firing", { description: "compute-node-down, storage-capacity-high" })}
-        >
-          <BellIcon />
-          <StatusDot status="error" size="sm" label={null} className="ck-bell-dot" />
-        </TooltipTrigger>
-        <TooltipContent side="bottom">Notifications</TooltipContent>
-      </Tooltip>
-      <DropdownMenu>
-        <DropdownMenuTrigger as={Button} variant="ghost" size="sm" className="ck-user">
-          <Avatar className="ck-user-avatar"><AvatarFallback>PW</AvatarFallback></Avatar>
-          pwilliams
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>ops@acme.cloud</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => fakeTask("Rotate API key", "New key delivered to your inbox")}>
-            Rotate API key
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => toast("Signed out of the demo", { description: "Not really. It is a showcase." })}>
-            Sign out
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <ContextPill label="Project" value={project} options={PROJECTS} onChange={setProject} menuLabel="Switch project" />
+      <ContextPill label="Region" value={region} options={REGIONS} onChange={setRegion} />
+      <div className="ck-topbar-right">
+        <button type="button" className="ck-search" onClick={onOpenPalette}>
+          <SearchIcon />
+          <span>Search resources...</span>
+          <KbdGroup className="ck-search-kbd" aria-hidden="true">
+            <Kbd>&#8984;</Kbd>
+            <Kbd>K</Kbd>
+          </KbdGroup>
+        </button>
+        <Tip label="Theme" side="bottom">
+          <ModeToggle
+            className="ck-topbar-btn ck-theme-toggle"
+            isDark={moon}
+            onIsDarkChange={(dark) => {
+              setMoon(dark)
+              toast("Theme switching is decorative in this demo")
+            }}
+            labels={{ toDark: "Switch to dark theme", toLight: "Switch to light theme" }}
+          />
+        </Tip>
+        <Tooltip>
+          <TooltipTrigger
+            className="ck-topbar-btn ck-bell"
+            aria-label="Notifications, 1 unread"
+            onClick={() => toast.info("2 alarms firing", { description: "compute-node-down, storage-capacity-high" })}
+          >
+            <BellIcon />
+            <span className="ck-topbar-badge" />
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Notifications</TooltipContent>
+        </Tooltip>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="ck-topbar-user">
+            <Avatar className="ck-user-avatar"><AvatarFallback>PW</AvatarFallback></Avatar>
+            <span>pwilliams</span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>ops@acme.cloud</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => fakeTask("Rotate API key", "New key delivered to your inbox")}>
+              Rotate API key
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => toast("Signed out of the demo", { description: "Not really. It is a showcase." })}>
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </header>
   )
 }
 
-/* ── Navigation pane ─────────────────────────────────────────────────── */
+/* ── Primary rail: Overview + categories of services ─────────────────── */
 
 function NavIcon({ id }) {
   const Glyph = NAV_ICONS[id]
   return <span className="ck-nav-icon">{Glyph ? <Glyph /> : null}</span>
 }
 
-function ConsoleNav({ view, onNavigate }) {
+function PriRail({ view, collapsed, onNavigate, onToggleCollapse }) {
+  const activeCat = NAV_GROUPS.findIndex((g) => g.items.some((s) => s.id === view.svc))
+
+  if (collapsed) {
+    return (
+      <nav className="ck-pri ck-rail--collapsed" aria-label="Console services">
+        <div className="ck-rail-head">
+          <Tooltip>
+            <TooltipTrigger
+              className="ck-rail-btn"
+              data-active={view.svc === "overview" || undefined}
+              onClick={() => onNavigate("overview")}
+              aria-label="Overview"
+            >
+              <GridIcon />
+            </TooltipTrigger>
+            <TooltipContent side="right">Overview</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger className="ck-rail-btn" onClick={onToggleCollapse} aria-label="Expand sidebar">
+              <ChevronsRightIcon />
+            </TooltipTrigger>
+            <TooltipContent side="right">Expand sidebar</TooltipContent>
+          </Tooltip>
+        </div>
+        {NAV_GROUPS.map((cat, ci) => {
+          const Icon = CATEGORY_ICONS[cat.label] ?? GridIcon
+          return (
+            <Tooltip key={cat.label}>
+              <TooltipTrigger
+                className="ck-rail-item"
+                data-active={ci === activeCat || undefined}
+                onClick={() => onNavigate(cat.items[0].id)}
+              >
+                <Icon />
+                <span className="ck-rail-label">{cat.label}</span>
+              </TooltipTrigger>
+              <TooltipContent side="right">{cat.label}</TooltipContent>
+            </Tooltip>
+          )
+        })}
+      </nav>
+    )
+  }
+
   return (
-    <ScrollArea className="ck-nav-scroll">
-      <nav className="ck-nav" aria-label="Console services">
+    <ScrollArea className="ck-rail-scroll">
+      <nav className="ck-pri ck-nav" aria-label="Console services">
+        <Tooltip>
+          <TooltipTrigger className="ck-rail-toggle" onClick={onToggleCollapse} aria-label="Collapse sidebar">
+            <ChevronsLeftIcon />
+          </TooltipTrigger>
+          <TooltipContent side="right">Collapse sidebar</TooltipContent>
+        </Tooltip>
         <button
           type="button"
           className="ck-nav-link ck-nav-overview"
           data-active={view.svc === "overview" || undefined}
           onClick={() => onNavigate("overview")}
         >
-          <NavIcon id="overview" />
           Overview
         </button>
         <Separator decorative className="ck-nav-sep" />
@@ -588,8 +705,8 @@ function ConsoleNav({ view, onNavigate }) {
           <Collapsible key={group.label} className="ck-nav-cat" defaultOpen={group.label === "Platform"}>
             <Tooltip>
               <CollapsibleTrigger as={TooltipTrigger} className="ck-nav-cat-trigger">
-                {group.label}
-                <span className="ck-nav-cat-caret" aria-hidden="true">&#9662;</span>
+                <span>{group.label}</span>
+                <span className="ck-nav-cat-caret" aria-hidden="true"><ChevronDownIcon /></span>
               </CollapsibleTrigger>
               <TooltipContent side="right">Toggle {group.label}</TooltipContent>
             </Tooltip>
@@ -616,101 +733,259 @@ function ConsoleNav({ view, onNavigate }) {
   )
 }
 
-/* ── Overview dashboard ──────────────────────────────────────────────── */
+/* ── Secondary rail: groups and pages of the selected service ────────── */
+
+function SecRail({ svc, view, collapsed, onNavigate, onToggleCollapse }) {
+  const toggle = (
+    <Tooltip>
+      <TooltipTrigger
+        className="ck-rail-toggle ck-sec-collapse"
+        onClick={onToggleCollapse}
+        aria-label={collapsed ? "Expand section rail" : "Collapse section rail"}
+      >
+        {collapsed ? <ChevronsRightIcon /> : <ChevronsLeftIcon />}
+      </TooltipTrigger>
+      <TooltipContent side="right">{collapsed ? "Expand" : "Collapse"}</TooltipContent>
+    </Tooltip>
+  )
+
+  if (collapsed) {
+    return (
+      <aside className="ck-sec ck-rail--collapsed" aria-label={`${svc.name} sections`}>
+        {toggle}
+        {svc.groups.map((g) => {
+          const Icon = GROUP_ICONS[g.label] ?? GridIcon
+          return (
+            <Tooltip key={g.label}>
+              <TooltipTrigger
+                className="ck-sec-group"
+                data-active={g.pages.includes(view.page) || undefined}
+                onClick={() => onNavigate(svc.id, g.pages[0])}
+              >
+                <Icon />
+                <span className="ck-sec-group-name">{g.label}</span>
+              </TooltipTrigger>
+              <TooltipContent side="right">{g.label}</TooltipContent>
+            </Tooltip>
+          )
+        })}
+      </aside>
+    )
+  }
+
+  return (
+    <ScrollArea className="ck-rail-scroll">
+      <aside className="ck-sec" aria-label={`${svc.name} sections`}>
+        {toggle}
+        <div className="ck-sec-header">
+          <span className="ck-sec-name">{svc.name}</span>
+          <span className="ck-sec-code">{svc.code}</span>
+        </div>
+        {svc.groups.map((g) => {
+          const Icon = GROUP_ICONS[g.label] ?? GridIcon
+          return (
+            <div key={g.label} className="ck-sec-block">
+              <div className="ck-sec-group" data-active={g.pages.includes(view.page) || undefined}>
+                <Icon />
+                <span className="ck-sec-group-name">{g.label}</span>
+              </div>
+              {g.pages.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className="ck-sec-page"
+                  data-active={p === view.page || undefined}
+                  onClick={() => onNavigate(svc.id, p)}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          )
+        })}
+        {svc.quickLinks && (
+          <>
+            <Separator decorative className="ck-sec-sep" />
+            <div className="ck-sec-quick-label">Quick links</div>
+            {svc.quickLinks.map((q) => (
+              <button
+                key={q.label}
+                type="button"
+                className="ck-sec-quick"
+                onClick={() => onNavigate(q.svc, q.page)}
+              >
+                {q.label}
+              </button>
+            ))}
+          </>
+        )}
+      </aside>
+    </ScrollArea>
+  )
+}
+
+/* ── Overview dashboard: every number on it breathes ─────────────────── */
+
+function Sparkline({ points, width = 72, height = 24, max = 100 }) {
+  const step = width / (points.length - 1)
+  const y = (v) => height - 2 - (v / max) * (height - 4)
+  const coords = points.map((v, i) => `${(i * step).toFixed(1)},${y(v).toFixed(1)}`)
+  const last = points[points.length - 1]
+  return (
+    <svg className="ck-spark" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
+      <polygon className="ck-spark-fill" points={`0,${height} ${coords.join(" ")} ${width},${height}`} />
+      <polyline points={coords.join(" ")} />
+      <circle cx={width} cy={y(last)} r="2" />
+    </svg>
+  )
+}
+
+const SPARK = Object.fromEntries(STATS.map((s, i) => [s.label, drift(`spark:${s.label}`, 40 + i * 8, { spread: 18 })]))
+const RUNNING = drift("stat:running", 38, { spread: 1, min: 37, max: 39 })
+
+function StatCards() {
+  const tick = useTicker(TICK_MS)
+  return (
+    <div className="ck-stats">
+      {STATS.map((s) => (
+        <HoverCard key={s.label} openDelay={200} closeDelay={150}>
+          <HoverCardTrigger as={Card} className="ck-stat">
+            <CardContent className="ck-stat-body">
+              <div className="ck-stat-num">{s.num}</div>
+              <div className="ck-stat-label">{s.label}</div>
+              <div className="ck-stat-sub" data-tone={s.tone}>
+                <Dot tone={s.tone} size="sm" />
+                {s.label === "Instances" ? (
+                  <LiveValue value={RUNNING(tick)} format={(v) => `${v} active`} />
+                ) : (
+                  s.sub
+                )}
+              </div>
+              <div className="ck-stat-spark">
+                <Sparkline points={history(SPARK[s.label], tick)} />
+              </div>
+            </CardContent>
+          </HoverCardTrigger>
+          <HoverCardContent className="ck-stat-hover">
+            <div className="ck-stat-hover-title">{s.label}</div>
+            {s.detail.map((d) => (
+              <div key={d.label} className="ck-stat-hover-row">
+                {d.tone && <Dot tone={d.tone} size="sm" />}
+                <span className="ck-stat-hover-label">{d.label}</span>
+                <span className="ck-stat-hover-val">{d.value}</span>
+              </div>
+            ))}
+          </HoverCardContent>
+        </HoverCard>
+      ))}
+    </div>
+  )
+}
+
+function DashCard({ title, live, className, children }) {
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle className="ck-card-title">
+          {title}
+          {live && <StatusDot status="success" label="Live" size="sm" ring className="ck-card-live" />}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
+  )
+}
+
+const UTIL = Object.fromEntries(
+  UTILIZATION.map((u) => [u.label, drift(`util:${u.label}`, u.pct, { spread: 3, min: 1, max: 99 })])
+)
 
 function UtilizationCard() {
+  const tick = useTicker(TICK_MS)
   return (
-    <Card>
-      <CardHeader><CardTitle className="ck-card-title">Resource utilization</CardTitle></CardHeader>
-      <CardContent className="ck-util">
-        {UTILIZATION.map((u) => (
-          <div key={u.label} className="ck-util-row">
-            <span className="ck-util-label">{u.label}</span>
-            <Progress value={u.pct} className="ck-util-bar" data-tone={u.tone} />
-            <span className="ck-util-val">{u.pct}% · {u.detail}</span>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
+    <DashCard title="Resource utilization" live>
+      <div className="ck-util">
+        {UTILIZATION.map((u) => {
+          const pct = UTIL[u.label](tick)
+          const tone = pct >= 85 ? "error" : pct >= 60 ? "warning" : "success"
+          return (
+            <div key={u.label} className="ck-util-row">
+              <span className="ck-util-label">{u.label}</span>
+              <Progress value={pct} className="ck-util-bar" data-tone={tone} />
+              <span className="ck-util-val">
+                <LiveValue value={pct} format={(v) => `${v}%`} /> · {u.detail}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </DashCard>
   )
 }
 
 function HealthCard() {
   return (
-    <Card>
-      <CardHeader><CardTitle className="ck-card-title">Service health</CardTitle></CardHeader>
-      <CardContent>
-        <ItemGroup>
-          {HEALTH.map((h) => (
-            <Item key={h.name} size="sm" className="ck-health-row">
-              <ItemContent>
-                <ItemTitle>{h.name}</ItemTitle>
-              </ItemContent>
-              <ItemActions>
-                <Dot tone={h.tone} />
-                <span className="ck-health-val" data-tone={h.tone}>{h.value}</span>
-              </ItemActions>
-            </Item>
-          ))}
-        </ItemGroup>
-      </CardContent>
-    </Card>
+    <DashCard title="Service health">
+      <ItemGroup>
+        {HEALTH.map((h) => (
+          <Item key={h.name} size="sm" className="ck-health-row">
+            <Dot tone={h.tone} ring />
+            <ItemContent>
+              <ItemTitle>{h.name}</ItemTitle>
+            </ItemContent>
+            <ItemActions>
+              <Badge variant={TONE_BADGE[h.tone] ?? "outline"} glow={h.tone === "error"}>
+                {h.value}
+              </Badge>
+            </ItemActions>
+          </Item>
+        ))}
+      </ItemGroup>
+    </DashCard>
   )
 }
 
-function EventsCard() {
+/* Every fifth tick the next canned event arrives at the top with a sweep. */
+const INJECT_EVERY = 5
+
+function EventsCard({ max = 7 }) {
+  const tick = useTicker(TICK_MS)
+  const injected = Math.min(INCOMING_EVENTS.length, Math.floor(tick / INJECT_EVERY))
+  const rows = [
+    ...INCOMING_EVENTS.slice(0, injected)
+      .map((e, i) => ({
+        ...e,
+        fresh: i === injected - 1,
+        time: i === injected - 1 ? "just now" : `${(injected - 1 - i) * INJECT_EVERY * (TICK_MS / 1000)} s ago`,
+      }))
+      .reverse(),
+    ...EVENTS,
+  ].slice(0, max)
   return (
-    <Card>
-      <CardHeader><CardTitle className="ck-card-title">Recent events</CardTitle></CardHeader>
-      <CardContent>
-        <ItemGroup>
-          {EVENTS.map((e) => (
-            <Item key={e.text + e.target} size="sm" className="ck-event-row">
-              <Dot tone={e.tone} />
-              <ItemContent>
-                <ItemTitle className="ck-event-text">
-                  <code>{e.text}</code> {e.target}
-                </ItemTitle>
-              </ItemContent>
-              <ItemActions>
-                <span className="ck-event-time">{e.time}</span>
-              </ItemActions>
-            </Item>
-          ))}
-        </ItemGroup>
-      </CardContent>
-    </Card>
+    <DashCard title="Recent events" live>
+      <ItemGroup>
+        {rows.map((e) => (
+          <Item key={e.text + e.target} size="sm" className="ck-event-row" data-fresh={e.fresh || undefined}>
+            <Dot tone={e.tone} size="sm" />
+            <ItemContent>
+              <ItemTitle className="ck-event-text">
+                <code>{e.text}</code> {e.target}
+              </ItemTitle>
+            </ItemContent>
+            <ItemActions>
+              <span className="ck-event-time">{e.time}</span>
+            </ItemActions>
+          </Item>
+        ))}
+      </ItemGroup>
+    </DashCard>
   )
 }
 
 function Dashboard() {
   return (
     <div className="ck-dash">
-      <div className="ck-stats">
-        {STATS.map((s) => (
-          <HoverCard key={s.label} openDelay={200} closeDelay={150}>
-            <HoverCardTrigger as={Card} className="ck-stat">
-              <CardContent className="ck-stat-body">
-                <div className="ck-stat-num">{s.num}</div>
-                <div className="ck-stat-label">{s.label}</div>
-                <div className="ck-stat-sub">
-                  <Dot tone={s.tone} size="sm" /> {s.sub}
-                </div>
-              </CardContent>
-            </HoverCardTrigger>
-            <HoverCardContent className="ck-stat-hover">
-              <div className="ck-stat-hover-title">{s.label}</div>
-              {s.detail.map((d) => (
-                <div key={d.label} className="ck-stat-hover-row">
-                  {d.tone && <Dot tone={d.tone} size="sm" />}
-                  <span className="ck-stat-hover-label">{d.label}</span>
-                  <span className="ck-stat-hover-val">{d.value}</span>
-                </div>
-              ))}
-            </HoverCardContent>
-          </HoverCard>
-        ))}
-      </div>
+      <StatCards />
       <div className="ck-dash-grid">
         <UtilizationCard />
         <HealthCard />
@@ -830,7 +1105,7 @@ function InstancesView({ project, onDetails }) {
         <span className="ck-page-count">{data.length} in {project}</span>
       </div>
       <div className="ck-actions">
-        <Button size="sm" className="ck-accent-btn" onClick={() => fakeTask("Launch instance", "Scheduling on az-east-1a")}>
+        <Button size="sm" onClick={() => fakeTask("Launch instance", "Scheduling on az-east-1a")}>
           Launch instance
         </Button>
         <ButtonGroup>
@@ -1054,7 +1329,23 @@ function UnderConstruction({ name }) {
 /* ── Page routing inside the mock ────────────────────────────────────── */
 
 function PageContent({ svc, page, project, onDetails }) {
-  if (svc === "overview") return <Dashboard />
+  if (svc === "overview") {
+    switch (page) {
+      case "Capacity":
+        return (
+          <CardPage title="Capacity" count="live">
+            <StatCards />
+            <UtilizationCard />
+          </CardPage>
+        )
+      case "Health":
+        return <CardPage title="Service health" count={`${HEALTH.length} groups`}><HealthCard /></CardPage>
+      case "Recent events":
+        return <CardPage title="Recent events" count="live"><EventsCard max={12} /></CardPage>
+      default:
+        return <Dashboard />
+    }
+  }
   switch (page) {
     case "Instances":
       return <InstancesView project={project} onDetails={onDetails} />
@@ -1137,7 +1428,7 @@ function PageContent({ svc, page, project, onDetails }) {
         </CardPage>
       )
     case "Event log":
-      return <CardPage title="Event log" count={`${EVENTS.length} events`}><EventsCard /></CardPage>
+      return <CardPage title="Event log" count={`${EVENTS.length} events`}><EventsCard max={12} /></CardPage>
     case "Services":
       return <CardPage title="Services" count={`${HEALTH.length} groups`}><HealthCard /></CardPage>
     case "Support":
@@ -1217,9 +1508,9 @@ function ConsoleTaskbar() {
       <CollapsibleTrigger className="ck-taskbar-bar">
         <Spinner className="ck-taskbar-spinner" />
         <span className="ck-taskbar-label">Recent tasks</span>
-        <span className="ck-taskbar-stat">Running: <b>{running}</b></span>
-        <span className="ck-taskbar-stat">Failed: <b>0</b></span>
-        <span className="ck-taskbar-caret" aria-hidden="true">&#9652;</span>
+        <span className="ck-taskbar-stat">Running: <b data-tone="run">{running}</b></span>
+        <span className="ck-taskbar-stat">Failed: <b data-tone="ok">0</b></span>
+        <span className="ck-taskbar-caret" aria-hidden="true"><ChevronUpIcon /></span>
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="ck-taskbar-panel">
@@ -1239,8 +1530,10 @@ function ConsoleTaskbar() {
                   <TableCell>{t.task}</TableCell>
                   <TableCell><code className="ck-mono">{t.target}</code></TableCell>
                   <TableCell>
-                    <Dot tone={t.status === "Running" ? "pending" : "success"} ring={t.status === "Running"} />{" "}
-                    {t.status}
+                    <span className="ck-task-status" data-tone={t.status === "Running" ? "run" : "ok"}>
+                      <Dot tone={t.status === "Running" ? "pending" : "success"} ring={t.status === "Running"} />
+                      {t.status}
+                    </span>
                   </TableCell>
                   <TableCell>{t.started}</TableCell>
                   <TableCell>{t.duration || "–"}</TableCell>
@@ -1259,7 +1552,7 @@ function ConsoleTaskbar() {
 function InstanceSheet({ instance, onOpenChange }) {
   return (
     <Sheet open={!!instance} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="ck-glass-panel">
+      <SheetContent side="right" className="ck-sheet">
         {instance && (
           <>
             <SheetHeader>
@@ -1331,30 +1624,29 @@ function ConsolePalette({ open, onOpenChange, onNavigate }) {
       open={open}
       onOpenChange={onOpenChange}
       title="Console search"
-      description="Jump to a service or run an action"
-      className="ck-glass-panel"
+      description="Jump to a page or run an action"
     >
-      <CommandInput placeholder="Search the console..." />
+      <CommandInput placeholder="Where to? Try volumes or invoices..." />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
-        <CommandGroup heading="Go to">
-          <CommandItem value="overview dashboard" onSelect={() => go("overview")}>
-            Overview
-          </CommandItem>
-          {NAV_GROUPS.flatMap((group) =>
-            group.items.flatMap((svc) =>
-              svc.pages.map((page) => (
-                <CommandItem
-                  key={`${svc.id}-${page}`}
-                  value={`${group.label} ${svc.name} ${page}`}
-                  onSelect={() => go(svc.id, page)}
-                >
-                  {svc.name}: {page}
-                </CommandItem>
-              ))
-            )
-          )}
-        </CommandGroup>
+        <CommandEmpty>No pages match.</CommandEmpty>
+        {NAV_GROUPS.map((group) => (
+          <CommandGroup key={group.label} heading={group.label}>
+            {group.items.flatMap((svc) =>
+              svc.groups.flatMap((g) =>
+                g.pages.map((page) => (
+                  <CommandItem
+                    key={`${svc.id}-${page}`}
+                    value={`${group.label} ${svc.name} ${g.label} ${page}`}
+                    onSelect={() => go(svc.id, page)}
+                  >
+                    {page}
+                    <CommandShortcut>{svc.name}</CommandShortcut>
+                  </CommandItem>
+                ))
+              )
+            )}
+          </CommandGroup>
+        ))}
         <CommandSeparator />
         <CommandGroup heading="Actions">
           <CommandItem
@@ -1381,6 +1673,41 @@ function ConsolePalette({ open, onOpenChange, onNavigate }) {
   )
 }
 
+/* ── Breadcrumb bar: where you are in category › service › group › page ─ */
+
+function CrumbBar({ svc, group, page, onNavigate }) {
+  const category = NAV_GROUPS.find((g) => g.label === svc.category)
+  const crumb = (label, go) => (
+    <>
+      <BreadcrumbSeparator />
+      <BreadcrumbItem>
+        <BreadcrumbLink as="button" type="button" onClick={go}>{label}</BreadcrumbLink>
+      </BreadcrumbItem>
+    </>
+  )
+  return (
+    <div className="ck-crumbbar">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink as="button" type="button" onClick={() => onNavigate("overview")}>
+              Acme Cloud
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          {svc.id !== "overview" && crumb(svc.category, () => onNavigate(category.items[0].id))}
+          {crumb(svc.name, () => onNavigate(svc.id))}
+          {svc.groups.length > 1 && group && crumb(group.label, () => onNavigate(svc.id, group.pages[0]))}
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{page}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <Badge variant="success" glow className="ck-live-badge">Live</Badge>
+    </div>
+  )
+}
+
 /* ── Root ────────────────────────────────────────────────────────────── */
 
 export default function ConsoleShowcase() {
@@ -1389,17 +1716,37 @@ export default function ConsoleShowcase() {
   const [region, setRegion] = useState("Dallas")
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [detailInstance, setDetailInstance] = useState(null)
+  const [priCollapsed, setPriCollapsed] = useState(false)
+  const [secCollapsed, setSecCollapsed] = useState(false)
 
-  const navigate = (svcId, page) => {
+  const navigate = useCallback((svcId, page) => {
     const svc = findService(svcId)
     setView({ svc: svcId, page: page ?? svc?.pages[0] ?? "Dashboard" })
-  }
+  }, [])
 
-  const svc = view.svc === "overview" ? null : findService(view.svc)
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault()
+        setPaletteOpen((v) => !v)
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [])
+
+  const svc = findService(view.svc)
+  const group = findGroup(svc, view.page)
+  const rails = { view, onNavigate: navigate }
 
   return (
     <TooltipProvider delayDuration={250}>
-      <div className="ck-console" data-pg="console">
+      <div
+        className="ck-console"
+        data-pg="console"
+        data-pri={priCollapsed ? "collapsed" : "expanded"}
+        data-sec={secCollapsed ? "collapsed" : "expanded"}
+      >
         <ConsoleTopbar
           project={project}
           setProject={setProject}
@@ -1407,72 +1754,47 @@ export default function ConsoleShowcase() {
           setRegion={setRegion}
           onOpenPalette={() => setPaletteOpen(true)}
         />
-        <ResizablePanelGroup direction="horizontal" className="ck-body">
-          <ResizablePanel defaultSize={24} minSize={16} maxSize={36} className="ck-nav-panel">
-            <ConsoleNav view={view} onNavigate={navigate} />
-          </ResizablePanel>
-          <ResizableHandle className="ck-handle" />
-          <ResizablePanel className="ck-main">
-            <div className="ck-scroller">
-              {(() => {
-                const crumbs = (
-                  <Breadcrumb>
-                    <BreadcrumbList>
-                      <BreadcrumbItem>
-                        <BreadcrumbLink as="button" type="button" onClick={() => navigate("overview")}>
-                          Acme Cloud
-                        </BreadcrumbLink>
-                      </BreadcrumbItem>
-                      {svc && (
-                        <>
-                          <BreadcrumbSeparator />
-                          <BreadcrumbItem>{svc.category}</BreadcrumbItem>
-                          <BreadcrumbSeparator />
-                          <BreadcrumbItem>{svc.name}</BreadcrumbItem>
-                        </>
-                      )}
-                      <BreadcrumbSeparator />
-                      <BreadcrumbItem>
-                        <BreadcrumbPage>{view.page}</BreadcrumbPage>
-                      </BreadcrumbItem>
-                    </BreadcrumbList>
-                  </Breadcrumb>
-                )
-                if (svc && svc.pages.length > 1) {
-                  return (
-                    <Tabs
-                      value={view.page}
-                      onValueChange={(page) => setView((v) => ({ ...v, page }))}
-                    >
-                      <div className="ck-toolbar">
-                        {crumbs}
-                        <TabsList>
-                          {svc.pages.map((p) => (
-                            <TabsTrigger key={p} value={p}>{p}</TabsTrigger>
-                          ))}
-                        </TabsList>
-                      </div>
-                      {svc.pages.map((p) => (
-                        <TabsContent key={p} value={p} className="ck-content">
-                          <PageContent svc={view.svc} page={p} project={project} onDetails={setDetailInstance} />
-                        </TabsContent>
-                      ))}
-                    </Tabs>
-                  )
-                }
-                return (
-                  <>
-                    <div className="ck-toolbar">{crumbs}</div>
-                    <div className="ck-content">
-                      <PageContent svc={view.svc} page={view.page} project={project} onDetails={setDetailInstance} />
-                    </div>
-                  </>
-                )
-              })()}
-            </div>
-            <ConsoleTaskbar />
-          </ResizablePanel>
-        </ResizablePanelGroup>
+        <div className="ck-body">
+          {priCollapsed && (
+            <PriRail {...rails} collapsed onToggleCollapse={() => setPriCollapsed(false)} />
+          )}
+          {secCollapsed && (
+            <SecRail {...rails} svc={svc} collapsed onToggleCollapse={() => setSecCollapsed(false)} />
+          )}
+          {/* Keyed so the panel set re-registers when a rail folds into its
+              fixed-width icon strip outside the resizable group. */}
+          <ResizablePanelGroup
+            key={`${priCollapsed}-${secCollapsed}`}
+            direction="horizontal"
+            className="ck-panes"
+          >
+            {!priCollapsed && (
+              <>
+                <ResizablePanel defaultSize={19} minSize={12} maxSize={32} className="ck-pri-panel">
+                  <PriRail {...rails} onToggleCollapse={() => setPriCollapsed(true)} />
+                </ResizablePanel>
+                <ResizableHandle className="ck-handle" />
+              </>
+            )}
+            {!secCollapsed && (
+              <>
+                <ResizablePanel defaultSize={16} minSize={10} maxSize={28} className="ck-sec-panel">
+                  <SecRail {...rails} svc={svc} onToggleCollapse={() => setSecCollapsed(true)} />
+                </ResizablePanel>
+                <ResizableHandle className="ck-handle" />
+              </>
+            )}
+            <ResizablePanel className="ck-main">
+              <CrumbBar svc={svc} group={group} page={view.page} onNavigate={navigate} />
+              <div className="ck-scroller">
+                <div className="ck-content">
+                  <PageContent svc={view.svc} page={view.page} project={project} onDetails={setDetailInstance} />
+                </div>
+              </div>
+              <ConsoleTaskbar />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
         <ConsolePalette open={paletteOpen} onOpenChange={setPaletteOpen} onNavigate={navigate} />
         <InstanceSheet instance={detailInstance} onOpenChange={(open) => !open && setDetailInstance(null)} />
         <Toaster position="bottom-right" richColors />

@@ -88,6 +88,28 @@ import "./ui/badge/badge.css"
       </section>
 
       <section className="pg-section">
+        <h3>Glow</h3>
+        <p>
+          <code>glow</code> breathes a halo in the variant's own colour on a fixed
+          2s loop, for the one badge on a page that means "live". Under{" "}
+          <code>prefers-reduced-motion</code> the halo holds still.
+        </p>
+        <ComponentPreview code={`<Badge variant="success" glow>Live</Badge>
+<Badge variant="warning" glow>Degraded</Badge>
+<Badge variant="info" glow>Syncing</Badge>
+<Badge variant="destructive" glow>Alarm</Badge>
+<Badge glow>Default</Badge>`}>
+          <div className="pg-row" data-pg="badge-glow">
+            <Badge variant="success" glow>Live</Badge>
+            <Badge variant="warning" glow>Degraded</Badge>
+            <Badge variant="info" glow>Syncing</Badge>
+            <Badge variant="destructive" glow>Alarm</Badge>
+            <Badge glow>Default</Badge>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>As link</h3>
         <ComponentPreview code={`<Badge as="a" href="#installation" variant="secondary">
   Installation
@@ -199,6 +221,7 @@ import "./ui/badge/badge.css"
 
       <ApiReference title="Badge" props={[
         { name: "variant", type: '"default" | "secondary" | "destructive" | "outline" | "success" | "warning" | "info" | "destructive-soft"', default: '"default"', description: "Visual variant" },
+        { name: "glow", type: "boolean", default: "false", description: "Breathing halo in the variant's own colour (static under reduced motion)" },
         { name: "as", type: "ElementType", default: '"span"', description: "Render as a different element/component (e.g. as=\"a\" for links)" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />

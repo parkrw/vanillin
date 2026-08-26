@@ -1,0 +1,53 @@
+/*
+ * LiveValue — a number that flashes the direction of its last change.
+ *
+ * Colour rides on `data-trend`; the tick is a finite animation on the inner
+ * text node, so it follows --motion-scale like every other transition and the
+ * component clears the trend on animationend.
+ */
+
+/* Trend colours read with fallbacks, never declared here: a value set on the
+   element itself would beat the ancestor override the API promises. */
+.live-value {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  transition: color var(--motion-medium) var(--motion-ease);
+}
+
+.live-value[data-trend="up"] {
+  color: var(--live-value-up, var(--warning));
+}
+
+.live-value[data-trend="down"] {
+  color: var(--live-value-down, var(--info));
+}
+
+.live-value-text {
+  display: inline-block;
+}
+
+.live-value[data-trend] .live-value-text {
+  animation: live-value-tick calc(var(--motion-medium) * 3) var(--motion-ease);
+}
+
+.live-value[data-trend="down"] .live-value-text {
+  animation-name: live-value-tick-down;
+}
+
+@keyframes live-value-tick {
+  0% { transform: translateY(0); }
+  20% { transform: translateY(-0.12em); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes live-value-tick-down {
+  0% { transform: translateY(0); }
+  20% { transform: translateY(0.12em); }
+  100% { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-value[data-trend] .live-value-text {
+    animation: none;
+  }
+}

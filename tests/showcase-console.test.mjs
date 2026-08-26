@@ -1,11 +1,23 @@
 // The console showcase below the home hero. Everything in it is a mock, so
 // these tests assert the chrome's behaviour, not a data round-trip.
 
-export default async function run({ page, baseUrl, test, eq }) {
+export default async function run({ page, baseUrl, test, eq, near }) {
   await page.goto(`${baseUrl}/#home`)
   await page.waitForSelector(".ck-console")
   const console_ = page.locator(".ck-console")
   const groups = console_.locator(".ck-nav-cat")
+
+  // Computed colour of `var(--token)` resolved inside the console frame.
+  const consoleColour = (token) =>
+    page.evaluate((t) => {
+      const host = document.querySelector(".ck-console")
+      const probe = document.createElement("span")
+      probe.style.color = `var(${t})`
+      host.appendChild(probe)
+      const c = getComputedStyle(probe).color
+      probe.remove()
+      return c
+    }, token)
 
   await test("brand reads Acme Cloud 1.0.0, with no trace of the old name", async () => {
     eq(await console_.locator(".ck-brand-name").textContent(), "Acme Cloud")
@@ -16,11 +28,25 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(text.includes("10.6"), false, "found the old version number")
   })
 
+  await test("the chrome is navy in both schemes while the body follows the scheme", async () => {
+    const paint = () =>
+      page.evaluate(() => ({
+        chrome: getComputedStyle(document.querySelector(".ck-topbar")).backgroundColor,
+        body: getComputedStyle(document.querySelector(".ck-scroller")).backgroundColor,
+      }))
+    const light = await paint()
+    await page.evaluate(() => document.documentElement.classList.add("dark"))
+    const dark = await paint()
+    await page.evaluate(() => document.documentElement.classList.remove("dark"))
+    eq(dark.body !== light.body, true, "precondition: the scheme flip repainted the body")
+    eq(dark.chrome, light.chrome, "the top bar changed colour with the scheme")
+  })
+
   await test("Platform loads open; Operations and Account load collapsed", async () => {
     eq(await groups.count(), 3)
     eq(
       (await console_.locator(".ck-nav-cat-trigger").allTextContents()).join(" | "),
-      "Platform▾ | Operations▾ | Account▾",
+      "Platform | Operations | Account",
     )
     eq(
       (await console_.locator(".ck-nav-cat-trigger").evaluateAll((els) =>
@@ -40,6 +66,86 @@ export default async function run({ page, baseUrl, test, eq }) {
     const icons = platform.locator(".ck-nav-link .ck-nav-icon svg")
     eq(await icons.count(), 5)
     eq(await icons.evaluateAll((els) => els.every((el) => el.getAttribute("aria-hidden") === "true")), true)
+  })
+
+  await test("the secondary rail lists the service's groups and pages under its code", async () => {
+    eq(await console_.locator(".ck-sec-name").textContent(), "Overview")
+    eq(await console_.locator(".ck-sec-code").textContent(), "acme")
+    eq(
+      (await console_.locator(".ck-sec-quick").allTextContents()).join(" | "),
+      "Instances | Networks | Volumes | Tickets",
+    )
+    await console_.locator(".ck-nav-link", { hasText: "Resources" }).click()
+    await page.waitForSelector(".ck-cell-link")
+    eq(await console_.locator(".ck-sec-name").textContent(), "Resources")
+    eq(await console_.locator(".ck-sec-code").textContent(), "compute")
+    eq(
+      (await console_.locator(".ck-sec-group-name").allTextContents()).join(" | "),
+      "Compute | Catalog",
+    )
+    eq(
+      (await console_.locator(".ck-sec-page").allTextContents()).join(" | "),
+      "Instances | Instance sizes | Machine images",
+    )
+    eq(
+      (await console_.locator(".ck-sec-page").evaluateAll((els) => els.map((el) => el.hasAttribute("data-active")))).join(","),
+      "true,false,false",
+    )
+    eq(await console_.locator(".ck-sec-quick").count(), 0, "quick links belong to Overview only")
+  })
+
+  await test("the breadcrumb bar spells out category, service, group and page", async () => {
+    const crumbs = () => console_.locator(".ck-crumbbar .breadcrumb-item").allTextContents()
+    eq((await crumbs()).join(" › "), "Acme Cloud › Platform › Resources › Compute › Instances")
+    await console_.locator('.ck-sec-page:text-is("Machine images")').click()
+    await page.waitForSelector(".attachment")
+    eq((await crumbs()).join(" › "), "Acme Cloud › Platform › Resources › Catalog › Machine images")
+    eq(await console_.locator(".ck-crumbbar .breadcrumb-page").textContent(), "Machine images")
+    eq(await console_.locator(".ck-crumbbar .ck-live-badge.badge--glow").textContent(), "Live")
+    // Ancestor crumbs navigate: the service crumb lands on its first page.
+    await console_.locator(".ck-crumbbar .breadcrumb-link", { hasText: "Resources" }).click()
+    await page.waitForSelector(".ck-cell-link")
+    eq((await crumbs()).join(" › "), "Acme Cloud › Platform › Resources › Compute › Instances")
+    // Overview drops the category and the single-group level.
+    await console_.locator(".ck-crumbbar .breadcrumb-link", { hasText: "Acme Cloud" }).click()
+    await page.waitForSelector(".ck-stats")
+    eq((await crumbs()).join(" › "), "Acme Cloud › Overview › Dashboard")
+  })
+
+  await test("both rails fold into 56px icon strips and unfold again", async () => {
+    eq(await console_.getAttribute("data-pri"), "expanded")
+    eq(await console_.locator(".ck-pri-panel").count(), 1)
+    eq(await console_.locator(".ck-rail--collapsed").count(), 0)
+
+    await console_.locator('[aria-label="Collapse sidebar"]').click()
+    const pri = console_.locator(".ck-pri.ck-rail--collapsed")
+    await pri.waitFor()
+    eq(await console_.getAttribute("data-pri"), "collapsed")
+    eq(await console_.locator(".ck-pri-panel").count(), 0, "the expanded rail left the resizable group")
+    near((await pri.boundingBox()).width, 56, 1, "icon strip width")
+    eq(
+      (await pri.locator(".ck-rail-item .ck-rail-label").allTextContents()).join(" | "),
+      "Platform | Operations | Account",
+    )
+
+    await console_.locator('[aria-label="Collapse section rail"]').click()
+    const sec = console_.locator(".ck-sec.ck-rail--collapsed")
+    await sec.waitFor()
+    eq(await console_.getAttribute("data-sec"), "collapsed")
+    near((await sec.boundingBox()).width, 56, 1, "section strip width")
+    eq(await sec.locator(".ck-sec-header").count(), 0, "the folded rail hides its header")
+    eq((await sec.locator(".ck-sec-group-name").allTextContents()).join(" | "), "Status")
+    // The content column still renders between the two strips.
+    eq(await console_.locator(".ck-crumbbar").count(), 1)
+
+    await console_.locator('[aria-label="Expand section rail"]').click()
+    await console_.locator(".ck-sec-panel").waitFor()
+    await console_.locator('[aria-label="Expand sidebar"]').click()
+    await console_.locator(".ck-pri-panel").waitFor()
+    eq(await console_.getAttribute("data-pri"), "expanded")
+    eq(await console_.getAttribute("data-sec"), "expanded")
+    eq(await console_.locator(".ck-rail--collapsed").count(), 0)
+    eq(await groups.nth(0).locator(".ck-nav-cat-trigger").getAttribute("data-state"), "open")
   })
 
   await test("a stat card previews its breakdown in a hover card", async () => {
@@ -71,6 +177,45 @@ export default async function run({ page, baseUrl, test, eq }) {
     )
   })
 
+  await test("live numbers flash orange on the way up and blue on the way down", async () => {
+    const values = console_.locator(".ck-util-val .live-value")
+    eq(await values.count(), 4)
+    eq(await values.evaluateAll((els) => els.some((el) => el.hasAttribute("data-trend"))), false, "precondition: nothing flashing at tick 0")
+    const up = await consoleColour("--ck-orange")
+    const down = await consoleColour("--ck-blue")
+    // The shared 2s ticker moves the utilisation rows; catch a flash whose
+    // colour has settled on the trend token before the tick animation clears it.
+    const seen = await page.waitForFunction(
+      ([upC, downC]) => {
+        for (const el of document.querySelectorAll(".ck-console .ck-util-val .live-value[data-trend]")) {
+          const want = el.dataset.trend === "up" ? upC : el.dataset.trend === "down" ? downC : null
+          if (want && getComputedStyle(el).color === want) return el.dataset.trend
+        }
+        return false
+      },
+      [up, down],
+      { timeout: 12000 },
+    )
+    eq(["up", "down"].includes(await seen.jsonValue()), true)
+    // Every bar's percentage stayed a number the whole time.
+    eq((await values.allTextContents()).every((t) => /^\d+%$/.test(t)), true)
+  })
+
+  await test("health rows breathe: rings in their own colour, the alarm badge glowing", async () => {
+    const rings = console_.locator(".ck-health-row .status-dot--ring")
+    eq(await rings.count(), 5)
+    eq(
+      (await rings.evaluateAll((els) => els.map((el) => getComputedStyle(el).animationName))).join(","),
+      Array(5).fill("status-dot-ring-pulse").join(","),
+    )
+    const glowing = console_.locator(".ck-health-row .badge--glow")
+    eq(await glowing.count(), 1)
+    eq(await glowing.textContent(), "2 alarms")
+    eq(await glowing.evaluate((el) => getComputedStyle(el).animationName), "badge-glow")
+    // Counter-precondition: healthy rows do not glow.
+    eq(await console_.locator(".ck-health-row .badge").count(), 5)
+  })
+
   await test("clicking a group trigger toggles only that group", async () => {
     const operations = groups.nth(1)
     await operations.locator(".ck-nav-cat-trigger").click()
@@ -87,7 +232,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(await operations.locator(".ck-nav-cat-trigger").getAttribute("data-state"), "closed")
   })
 
-  await test("the theme toggle flips its icon and changes nothing on the document", async () => {
+  await test("the theme toggle flips its lamp and changes nothing on the document", async () => {
     const toggle = console_.locator(".ck-theme-toggle")
     const snapshot = () =>
       page.evaluate(() => {
@@ -100,6 +245,7 @@ export default async function run({ page, baseUrl, test, eq }) {
       })
     const before = await snapshot()
     eq(await toggle.getAttribute("aria-label"), "Switch to dark theme")
+    eq(await toggle.getAttribute("data-state"), "light")
 
     await toggle.click()
     await page.waitForSelector(".toast")
@@ -107,6 +253,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     // Precondition: the click really did something, so the unchanged document
     // below is the toggle staying decorative rather than the click missing.
     eq(await toggle.getAttribute("aria-label"), "Switch to light theme")
+    eq(await toggle.getAttribute("data-state"), "dark")
     eq(
       (await console_.locator(".toast").first().textContent()).includes(
         "Theme switching is decorative in this demo"
@@ -142,7 +289,7 @@ export default async function run({ page, baseUrl, test, eq }) {
   })
 
   await test("machine images page carries the upload row", async () => {
-    await console_.locator('.tabs-trigger:text-is("Machine images")').click()
+    await console_.locator('.ck-sec-page:text-is("Machine images")').click()
     await page.waitForSelector(".attachment")
     const cards = console_.locator(".attachment")
     eq(await cards.count(), 5)
@@ -178,6 +325,7 @@ export default async function run({ page, baseUrl, test, eq }) {
       [".ck-bell", "Notifications"],
       [".ck-brand .badge", "Console release 1.0.0"],
       [".ck-nav-cat-trigger", "Toggle Platform"],
+      ['[aria-label="Collapse sidebar"]', "Collapse sidebar"],
     ]
     for (const [selector, label] of tips) {
       await console_.locator(selector).first().hover()

@@ -89,7 +89,11 @@ const STATIC_COMPONENTS = {
 const INDETERMINATE_LOOPS = {
   spinner: [{ selector: ".spinner", duration: "1s" }],
   skeleton: [{ selector: ".skeleton", duration: "2s" }],
-  "status-dot": [{ selector: ".status-dot--pulse::after", duration: "2s" }],
+  "status-dot": [
+    { selector: '.status-dot[data-status="pending"]', duration: "2s" },
+    { selector: ".status-dot--ring", duration: "2s" },
+  ],
+  badge: [{ selector: ".badge--glow", duration: "2s" }],
   attachment: [{ selector: ".attachment--uploading::before", duration: "2s" }],
   "input-otp": [{ selector: ".input-otp-slot--caret::after", duration: "1s" }],
   toast: [{ selector: ".toast-loading-spinner", duration: "1s" }],

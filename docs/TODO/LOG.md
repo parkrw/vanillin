@@ -782,3 +782,11 @@ Branch `docs/site-sweep-triage`. Triage only: two new scripts, `docs/ISSUES.md` 
 - **Dark mode has zero text-contrast violations across all 79 pages.** The D items were written "light **and** dark unless noted"; for text that framing is wrong. Non-text still fails in both.
 - **The screenshot half found almost nothing** — four opus agents over 88 images returned three defects, all docs-page markup (C7, C8), none in `ui/`. Machine measurement found everything else. Weight the next sweep accordingly.
 - **K1 became task 74 rather than joining 72.** 73 of 79 pages overflow at 380px and nothing overflows at 1280; that is a reflow project across `site/pages/`, and it needs a scope call — whether the docs site targets phones — before anyone details it.
+
+## Task 91 — console-ck-look (2026-08-25)
+
+- **Scoped token overrides re-theme a whole subtree of kit components.** `.ck-console { --background: …; --primary: …; --sidebar: … }` gave tables, badges, cards and the panels the CloudKey palette with zero component CSS changes. Two traps: `--primary-hover` is derived at `:root` and must be re-derived alongside `--primary`, and `light-dark()` resolves where the token is declared, so a `color-scheme: dark` topbar still sees the light values and needs its own neutrals.
+- **A custom property set on the element itself beats the ancestor override its API promises.** `live-value.css` first declared `--live-value-up` on `.live-value`; the console's orange never applied and the docs test passed because it probed a sibling. Read with `var(--x, fallback)`, and test overrides on the element with a forced attribute.
+- **Fixed-width icon strips do not fit percent-sized ResizablePanels.** The folded rail renders outside the group; the group is keyed on the fold state so panels re-register cleanly.
+- **The user's four open questions were answered by defaults after a 60s silence**: breadcrumb-only third bar, ring always pulses + badge glow opt-in, keep Acme Cloud, branch immediately. Recorded in the task file so the user can reverse any of them.
+

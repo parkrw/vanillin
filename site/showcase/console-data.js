@@ -4,44 +4,83 @@
 export const PROJECTS = ["admin", "engineering", "data-science", "marketing"]
 export const REGIONS = ["Dallas", "Salt Lake City", "Chicago"]
 
+// Three levels of navigation: category (primary rail group) → service
+// (primary rail item) → group (secondary rail heading) → page. `code` is the
+// short service tag the secondary rail shows under the service name.
 export const NAV_GROUPS = [
   {
     label: "Platform",
     items: [
-      { id: "overview", name: "Overview", pages: ["Dashboard"] },
-      { id: "vdc", name: "Virtual data centers", pages: ["Data centers", "Quotas"] },
-      { id: "resources", name: "Resources", pages: ["Instances", "Instance sizes", "Machine images"] },
-      { id: "networking", name: "Networking", pages: ["Networks", "Public IPs"] },
-      { id: "storage", name: "Storage", pages: ["Volumes", "Snapshots"] },
+      {
+        id: "overview", name: "Overview", code: "acme",
+        groups: [{ label: "Status", pages: ["Dashboard", "Capacity", "Health", "Recent events"] }],
+        quickLinks: [
+          { label: "Instances", svc: "resources", page: "Instances" },
+          { label: "Networks", svc: "networking", page: "Networks" },
+          { label: "Volumes", svc: "storage", page: "Volumes" },
+          { label: "Tickets", svc: "support", page: "Support" },
+        ],
+      },
+      {
+        id: "vdc", name: "Virtual data centers", code: "vdc",
+        groups: [
+          { label: "Data centers", pages: ["Data centers"] },
+          { label: "Limits", pages: ["Quotas"] },
+        ],
+      },
+      {
+        id: "resources", name: "Resources", code: "compute",
+        groups: [
+          { label: "Compute", pages: ["Instances", "Instance sizes"] },
+          { label: "Catalog", pages: ["Machine images"] },
+        ],
+      },
+      {
+        id: "networking", name: "Networking", code: "network",
+        groups: [
+          { label: "Networks", pages: ["Networks"] },
+          { label: "Access", pages: ["Public IPs"] },
+        ],
+      },
+      {
+        id: "storage", name: "Storage", code: "storage",
+        groups: [{ label: "Block", pages: ["Volumes", "Snapshots"] }],
+      },
     ],
   },
   {
     label: "Operations",
     items: [
-      { id: "metrics", name: "Metrics", pages: ["Utilization"] },
-      { id: "events", name: "Events", pages: ["Event log"] },
-      { id: "service-health", name: "Service health", pages: ["Services"] },
+      { id: "metrics", name: "Metrics", code: "telemetry", groups: [{ label: "Usage", pages: ["Utilization"] }] },
+      { id: "events", name: "Events", code: "activity", groups: [{ label: "Activity", pages: ["Event log"] }] },
+      { id: "service-health", name: "Service health", code: "status", groups: [{ label: "Status", pages: ["Services"] }] },
     ],
   },
   {
     label: "Account",
     items: [
-      { id: "billing", name: "Billing", pages: ["Invoices"] },
-      { id: "contacts", name: "Contacts", pages: ["Contacts"] },
-      { id: "support", name: "Support", pages: ["Support"] },
-      { id: "security", name: "Security", pages: ["Access keys"] },
-      { id: "your-data", name: "Your data", pages: ["Exports"] },
-      { id: "settings", name: "Settings", pages: ["Settings"] },
+      { id: "billing", name: "Billing", code: "account", groups: [{ label: "Billing", pages: ["Invoices"] }] },
+      { id: "contacts", name: "Contacts", code: "account", groups: [{ label: "People", pages: ["Contacts"] }] },
+      { id: "support", name: "Support", code: "account", groups: [{ label: "Support", pages: ["Support"] }] },
+      { id: "security", name: "Security", code: "account", groups: [{ label: "Security", pages: ["Access keys"] }] },
+      { id: "your-data", name: "Your data", code: "account", groups: [{ label: "Data", pages: ["Exports"] }] },
+      { id: "settings", name: "Settings", code: "account", groups: [{ label: "Settings", pages: ["Settings"] }] },
     ],
   },
 ]
 
+/** A service with its category name and its pages flattened across groups. */
 export function findService(id) {
   for (const group of NAV_GROUPS) {
     const svc = group.items.find((s) => s.id === id)
-    if (svc) return { ...svc, category: group.label }
+    if (svc) return { ...svc, category: group.label, pages: svc.groups.flatMap((g) => g.pages) }
   }
   return null
+}
+
+/** The secondary-rail group a page belongs to, or null. */
+export function findGroup(svc, page) {
+  return svc?.groups.find((g) => g.pages.includes(page)) ?? null
 }
 
 export const INSTANCES = [
@@ -139,6 +178,17 @@ export const EVENTS = [
   { text: "image.upload", target: "ubuntu-24.04-acme", time: "1 hr ago", tone: "success" },
   { text: "project.created", target: "dev-team", time: "3 hrs ago", tone: "success" },
   { text: "instance.check.failed", target: "host-apac-02", time: "4 hrs ago", tone: "error" },
+]
+
+// Prepended to the feed one at a time while the dashboard is open, so it
+// reads as a running system rather than a screenshot.
+export const INCOMING_EVENTS = [
+  { text: "snapshot.create", target: "web-prod-01-nightly", tone: "success" },
+  { text: "autoscale.evaluate", target: "web-prod pool", tone: "info" },
+  { text: "volume.extend", target: "scratch-01", tone: "success" },
+  { text: "quota.warning", target: "vCPUs at 82%", tone: "warning" },
+  { text: "instance.reboot", target: "cms-prod-01", tone: "info" },
+  { text: "backup.complete", target: "backup-db-weekly", tone: "success" },
 ]
 
 export const STATS = [

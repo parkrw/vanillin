@@ -12,15 +12,19 @@ import { cn } from "../../lib/cn.js"
  * `destructive-soft` matches the other status variants'
  * visual weight.
  *
+ * `glow` breathes a halo in the variant's own colour on a fixed 2s loop, for
+ * the one badge on a page that means "live". Reduced motion leaves it static.
+ *
  * Note: status-dot uses `error` for the same semantic state because that
  * is the console convention; badge keeps `destructive` for compatibility.
  */
-export function Badge({ variant = "default", as: Comp = "span", className, ...props }) {
+export function Badge({ variant = "default", glow = false, as: Comp = "span", className, ...props }) {
   return (
     <Comp
       className={cn(
         "badge",
         variant !== "default" && `badge--${variant}`,
+        glow && "badge--glow",
         className
       )}
       {...props}

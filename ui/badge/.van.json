@@ -4,7 +4,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "requires": [],
   "files": {
-    "badge.css": "sha256-6gd65/q9RqYVaA0aa7lRQDf0iO8xZyRcBU9/Q3B91Ls=",
-    "badge.jsx": "sha256-SylCv3I75ocOhokdzmROA4o4aoQ3GX6CYIU54fJBSNY="
+    "badge.css": "sha256-eM3gsAxvWp2+t/dj50mudTnxLPi8Dold8JWPCRVX3eQ=",
+    "badge.jsx": "sha256-kZ9mZmyJxPVd8eJaF3cywO6xJaV08HRIzFFolR5W0vU="
   }
 }

@@ -487,6 +487,18 @@
         "cn.js"
       ]
     },
+    "live-value": {
+      "type": "ui",
+      "files": [
+        "live-value.css",
+        "live-value.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js",
+        "use-ticker.js"
+      ]
+    },
     "marker": {
       "type": "ui",
       "files": [
@@ -892,6 +904,7 @@
     "use-roving-focus.js": [],
     "use-safe-triangle.js": [],
     "use-swipe.js": [],
+    "use-ticker.js": [],
     "view-transition.js": []
   }
 }

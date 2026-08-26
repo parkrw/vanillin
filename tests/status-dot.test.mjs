@@ -176,6 +176,61 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
       eq(await animationName(status), "none", `${status} has no animation`)
   })
 
+  await test("status-dot: ring halo breathes on a fixed 2s loop in the dot's own colour", async () => {
+    const rings = page.locator('[data-pg="sd-ring"] .status-dot')
+    eq(await rings.count(), 6)
+    const running = await rings.evaluateAll((els) =>
+      els.map((el) => {
+        const s = getComputedStyle(el)
+        return `${el.dataset.status}:${s.animationName}@${s.animationDuration}`
+      }),
+    )
+    eq(
+      running.join(" | "),
+      [
+        "success:status-dot-ring-pulse@2s",
+        "warning:status-dot-ring-pulse@2s",
+        "error:status-dot-ring-pulse@2s",
+        "info:status-dot-ring-pulse@2s",
+        "neutral:status-dot-ring-pulse@2s",
+        "pending:status-dot-pulse, status-dot-ring-pulse@2s, 2s",
+      ].join(" | "),
+    )
+    // Fixed literal: the loop must not track --motion-scale.
+    await page.evaluate(() => document.documentElement.style.setProperty("--motion-scale", "3"))
+    eq(await rings.first().evaluate((el) => getComputedStyle(el).animationDuration), "2s")
+    await page.evaluate(() => document.documentElement.style.removeProperty("--motion-scale"))
+
+    // Reduced motion parks the halo, and the parked halo is the dot's colour
+    // at 20%: compared through a probe so oklch/color-mix serialisation is
+    // never parsed by hand.
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    const parked = await rings.evaluateAll((els) =>
+      els.map((el) => {
+        const s = getComputedStyle(el)
+        const probe = document.createElement("span")
+        probe.style.backgroundColor = `color-mix(in oklab, ${s.backgroundColor} 20%, transparent)`
+        el.parentElement.appendChild(probe)
+        const want = getComputedStyle(probe).backgroundColor
+        probe.remove()
+        const halo = s.boxShadow.slice(0, s.boxShadow.lastIndexOf(")") + 1)
+        return {
+          status: el.dataset.status,
+          animation: s.animationName,
+          sameHue: halo === want,
+          currentColorIsDot: s.color === s.backgroundColor,
+          shadow: s.boxShadow,
+        }
+      }),
+    )
+    await page.emulateMedia({ reducedMotion: "no-preference" })
+    for (const r of parked) {
+      eq(r.animation, "none", `${r.status}: animation parked under reduced motion`)
+      eq(r.currentColorIsDot, true, `${r.status}: currentColor feeds the halo`)
+      eq(r.sameHue, true, `${r.status}: halo is the dot colour at 20% (${r.shadow})`)
+    }
+  })
+
   await test("status-dot: ring variant adds box-shadow", async () => {
     const ringDot = page.locator('[data-pg="sd-ring"] .status-dot').first()
     const noRingDot = page.locator('[data-pg="sd-statuses"] .status-dot').first()

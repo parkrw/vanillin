@@ -1,14 +1,73 @@
-/* Acme Cloud console showcase. Everything is scoped under .ck-console and
-   styled from kit tokens; the only new values are the Acme Cloud brand gold,
-   declared once here as scoped custom properties. */
+/* Acme Cloud console showcase. The CloudKey console's palette and chrome,
+   scoped to the frame: the token overrides on .ck-console re-theme every kit
+   component inside it, so tables, badges and cards take the console look
+   without their own CSS knowing. Accent language: blue = interactive/active,
+   orange = live/attention. The top bar is chrome-navy in both schemes. */
 
 .ck-console {
-  /* Brand accent. Split into text/solid/soft roles so every use site meets
-     WCAG: text ≥4.5:1 on --background, soft ≥3:1 for boundaries. */
-  --ck-accent: light-dark(oklch(0.62 0.12 75), oklch(0.75 0.12 80));
-  --ck-accent-text: light-dark(oklch(0.5 0.11 75), oklch(0.8 0.12 80));
-  --ck-accent-solid: light-dark(oklch(0.5 0.11 75), oklch(0.78 0.12 80));
-  --ck-accent-solid-fg: light-dark(oklch(0.995 0 0), oklch(0.2 0.04 80));
+  /* Brand accents. */
+  --ck-blue: light-dark(oklch(0.52 0.15 255), oklch(0.72 0.12 255));
+  --ck-blue-hover: light-dark(oklch(0.47 0.15 255), oklch(0.77 0.11 255));
+  --ck-blue-soft: light-dark(oklch(0.52 0.15 255 / 10%), oklch(0.72 0.12 255 / 14%));
+  --ck-orange: light-dark(oklch(0.66 0.19 45), oklch(0.72 0.17 48));
+  --ck-orange-soft: light-dark(oklch(0.66 0.19 45 / 12%), oklch(0.72 0.17 48 / 16%));
+
+  /* Kit token overrides. --primary-hover is re-derived because :root resolves
+     its `from var(--primary)` against the site's primary, not this one. */
+  --primary: var(--ck-blue);
+  --primary-hover: var(--ck-blue-hover);
+  --primary-foreground: light-dark(oklch(0.99 0 0), oklch(0.16 0.02 255));
+  --ring: var(--ck-blue);
+  --warning: light-dark(oklch(0.62 0.17 50), oklch(0.72 0.16 50));
+  --warning-foreground: light-dark(oklch(0.42 0.13 48), oklch(0.85 0.09 55));
+  --warning-background: light-dark(oklch(0.96 0.03 60), oklch(0.26 0.05 50));
+  --warning-border: light-dark(oklch(0.87 0.08 55), oklch(0.42 0.09 50));
+  --info: light-dark(oklch(0.55 0.15 255), oklch(0.7 0.12 255));
+  --info-foreground: light-dark(oklch(0.35 0.11 255), oklch(0.85 0.06 255));
+  --info-background: light-dark(oklch(0.95 0.03 255), oklch(0.25 0.04 255));
+  --info-border: light-dark(oklch(0.82 0.08 255), oklch(0.4 0.08 255));
+  --background: light-dark(oklch(0.958 0.002 250), oklch(0.163 0.006 255));
+  --foreground: light-dark(oklch(0.22 0.008 255), oklch(0.87 0.004 250));
+  --card: light-dark(oklch(1 0 0), oklch(0.204 0.006 255));
+  --card-foreground: var(--foreground);
+  --popover: light-dark(oklch(1 0 0), oklch(0.235 0.008 255));
+  --popover-foreground: var(--foreground);
+  --border: light-dark(oklch(0.895 0.003 250), oklch(0.29 0.007 255));
+  --muted: light-dark(oklch(0.968 0.002 250), oklch(0.232 0.006 255));
+  --muted-foreground: light-dark(oklch(0.51 0.008 255), oklch(0.62 0.008 250));
+  --secondary: light-dark(oklch(0.955 0.003 250), oklch(0.26 0.007 255));
+  --secondary-foreground: light-dark(oklch(0.3 0.01 255), oklch(0.85 0.005 250));
+  --accent: light-dark(oklch(0.955 0.003 250), oklch(0.26 0.007 255));
+  --accent-foreground: light-dark(oklch(0.25 0.01 255), oklch(0.9 0.004 250));
+  --input: light-dark(oklch(0.78 0.005 250), oklch(1 0 0 / 30%));
+  --sidebar: light-dark(oklch(0.928 0.004 250), oklch(0.185 0.008 255));
+  --sidebar-foreground: light-dark(oklch(0.45 0.008 255), oklch(0.63 0.008 250));
+  --sidebar-border: light-dark(oklch(0.862 0.004 250), oklch(1 0 0 / 6%));
+  --sidebar-accent: light-dark(oklch(0 0 0 / 5%), oklch(1 0 0 / 6%));
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 5px;
+  --radius-xl: 8px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", system-ui, Roboto, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, "Cascadia Code", "Fira Code", Menlo, Consolas, monospace;
+
+  /* Chrome (top bar): navy in both schemes, so single values. */
+  --ck-chrome: oklch(0.235 0.028 262);
+  --ck-chrome-border: oklch(1 0 0 / 9%);
+  --ck-chrome-text: oklch(0.72 0.02 255);
+  --ck-chrome-bright: oklch(0.93 0.008 250);
+  --ck-chrome-fill: oklch(1 0 0 / 8%);
+  --ck-chrome-fill-hover: oklch(1 0 0 / 13%);
+  --ck-chrome-placeholder: oklch(1 0 0 / 35%);
+
+  /* Secondary rail sits a step lighter than the primary rail. */
+  --ck-nav2: light-dark(oklch(0.945 0.003 250), oklch(0.198 0.007 255));
+  --ck-row-hover: light-dark(oklch(0.962 0.002 250), oklch(0.242 0.006 255));
+  --ck-row-selected: var(--ck-blue-soft);
+
+  /* Live numbers: orange on the way up, blue on the way down. */
+  --live-value-up: var(--ck-orange);
+  --live-value-down: var(--ck-blue);
 
   position: relative;
   display: flex;
@@ -17,80 +76,277 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background-color: var(--background);
+  color: var(--foreground);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
   /* Named container: ui/card is itself an unnamed inline-size container, so
      an unnamed @container query inside a card would measure the card. */
   container: ck-console / inline-size;
-  font-size: 0.8125rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  letter-spacing: -0.003em;
 }
 
-/* Aurora wash behind the glass topbar. Painted inside the frame so the
-   translucent chrome has something real to blur. */
-.ck-console::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  block-size: 10rem;
-  background:
-    radial-gradient(38rem 9rem at 12% -20%, color-mix(in oklab, var(--ck-accent) 32%, transparent), transparent 70%),
-    radial-gradient(30rem 8rem at 78% -30%, color-mix(in oklab, var(--info) 26%, transparent), transparent 70%);
-  pointer-events: none;
-}
-
-/* ── Topbar (glass) ─────────────────────────────────────────────────── */
+/* ── Top bar (chrome) ───────────────────────────────────────────────── */
 
 .ck-topbar {
   position: relative;
   z-index: 2;
+  color-scheme: dark;
+  /* Kit components inside the chrome read these; navy needs its own neutrals. */
+  --background: var(--ck-chrome);
+  --foreground: var(--ck-chrome-bright);
+  --muted: var(--ck-chrome-fill);
+  --muted-foreground: var(--ck-chrome-text);
+  --accent: var(--ck-chrome-fill-hover);
+  --accent-foreground: var(--ck-chrome-bright);
+  --secondary: var(--ck-chrome-fill);
+  --secondary-foreground: var(--ck-chrome-text);
+  --border: var(--ck-chrome-border);
+  --input: var(--ck-chrome-border);
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
-  background-color: color-mix(in oklab, var(--background) 62%, transparent);
-  -webkit-backdrop-filter: blur(16px) saturate(1.5);
-  backdrop-filter: blur(16px) saturate(1.5);
+  gap: 0.625rem;
+  flex-shrink: 0;
+  block-size: 3.25rem;
+  padding: 0 0.875rem;
+  background-color: var(--ck-chrome);
+  color: var(--ck-chrome-bright);
+  border-bottom: 1px solid var(--ck-chrome-border);
 }
 
 .ck-brand {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding-inline-end: 0.375rem;
+  flex-shrink: 0;
+  padding-inline-end: 0.875rem;
+  margin-inline-end: 0.125rem;
+  border-inline-end: 1px solid var(--ck-chrome-border);
 }
 
 .ck-brand-mark {
   display: flex;
-  color: var(--ck-accent-text);
+  color: var(--ck-orange);
 }
 
 .ck-brand-mark svg {
-  inline-size: 1.125rem;
-  block-size: 1.125rem;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
 }
 
 .ck-brand-name {
   font-size: 0.9375rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  color: var(--ck-chrome-bright);
 }
 
-.ck-topbar-sep {
-  block-size: 1.25rem;
+.ck-brand-app {
+  padding: 2px 7px;
+  border: 1px solid var(--ck-chrome-border);
+  border-radius: 3px;
+  background-color: var(--ck-chrome-fill);
+  color: var(--ck-chrome-text);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ck-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.3125rem;
+  padding: 0.25rem 0.625rem;
+  border: none;
+  border-radius: 3px;
+  background-color: var(--ck-chrome-fill);
+  color: var(--ck-chrome-bright);
+  font: inherit;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-pill:hover {
+  background-color: var(--ck-chrome-fill-hover);
+}
+
+.ck-pill:focus-visible {
+  outline: 2px solid var(--ck-orange);
+  outline-offset: 1px;
 }
 
 .ck-pill-label {
-  font-size: 0.6875rem;
+  margin-inline-end: 0.125rem;
+  color: var(--ck-chrome-text);
+  font-size: 0.71875rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--muted-foreground);
 }
 
 .ck-pill-caret {
-  font-size: 0.5625rem;
-  opacity: 0.5;
+  display: flex;
+  opacity: 0.45;
+}
+
+.ck-pill-caret svg {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+}
+
+.ck-pill-menu {
+  min-inline-size: 10.625rem;
+}
+
+.ck-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-inline-start: auto;
+  min-inline-size: 0;
+}
+
+.ck-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  inline-size: 15.625rem;
+  padding: 0.375rem 0.4375rem 0.375rem 0.625rem;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background-color: var(--ck-chrome-fill);
+  color: var(--ck-chrome-placeholder);
+  font: inherit;
+  font-size: 0.84375rem;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-search:hover {
+  background-color: var(--ck-chrome-fill-hover);
+  border-color: var(--ck-chrome-border);
+}
+
+.ck-search:focus-visible {
+  outline: 2px solid var(--ck-orange);
+  outline-offset: 1px;
+}
+
+.ck-search > svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  flex-shrink: 0;
+  color: var(--ck-chrome-text);
+  opacity: 0.6;
+}
+
+.ck-search > span {
+  flex: 1;
+  text-align: start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ck-search-kbd .kbd {
+  background-color: transparent;
+  border-color: var(--ck-chrome-border);
+  color: var(--ck-chrome-text);
+  box-shadow: none;
+}
+
+.ck-topbar-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: auto;
+  block-size: auto;
+  padding: 0.375rem;
+  border: none;
+  border-radius: 3px;
+  background: none;
+  color: var(--ck-chrome-text);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-topbar-btn:hover {
+  background-color: var(--ck-chrome-fill-hover);
+  color: var(--ck-chrome-bright);
+}
+
+.ck-topbar-btn:focus-visible {
+  outline: 2px solid var(--ck-orange);
+  outline-offset: 1px;
+  box-shadow: none;
+}
+
+.ck-topbar-btn > svg,
+.ck-topbar-btn .mode-toggle-icon {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+
+/* Bell: an orange "unread" pip, ringed in chrome so it sits on the glyph. */
+.ck-topbar-badge {
+  position: absolute;
+  inset-block-start: 3px;
+  inset-inline-end: 3px;
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ck-chrome);
+  background-color: var(--ck-orange);
+}
+
+.ck-topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  margin-inline-start: 0.125rem;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 3px;
+  background: none;
+  color: var(--ck-chrome-bright);
+  font: inherit;
+  font-size: 0.84375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-topbar-user:hover {
+  background-color: var(--ck-chrome-fill-hover);
+}
+
+.ck-topbar-user:focus-visible {
+  outline: 2px solid var(--ck-orange);
+  outline-offset: 1px;
+}
+
+.ck-user-avatar {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  font-size: 0.625rem;
+  background: linear-gradient(135deg, var(--ck-blue), var(--ck-orange));
+}
+
+.ck-user-avatar .avatar-fallback {
+  background-color: transparent;
+  color: oklch(0.99 0 0);
+  font-weight: 700;
 }
 
 /* Tooltip anchor for a control whose own element is already spoken for. */
@@ -99,107 +355,189 @@
   min-inline-size: 0;
 }
 
-.ck-refresh svg {
-  inline-size: 0.9375rem;
-  block-size: 0.9375rem;
-}
-
-.ck-topbar-spacer {
-  flex: 1;
-}
-
-.ck-search {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  inline-size: 14rem;
-  padding: 0.375rem 0.625rem;
-  border: 1px solid var(--input);
-  border-radius: var(--radius-sm);
-  background-color: color-mix(in oklab, var(--muted) 55%, transparent);
-  color: var(--muted-foreground);
-  font-size: 0.8125rem;
-  cursor: pointer;
-  transition: border-color var(--motion-fast) var(--motion-ease);
-}
-
-.ck-search:hover {
-  border-color: var(--ring);
-}
-
-.ck-search svg {
-  inline-size: 0.875rem;
-  block-size: 0.875rem;
-  flex-shrink: 0;
-}
-
-.ck-theme-toggle svg {
-  inline-size: 1.0625rem;
-  block-size: 1.0625rem;
-}
-
-.ck-bell {
-  position: relative;
-}
-
-.ck-bell svg {
-  inline-size: 1.0625rem;
-  block-size: 1.0625rem;
-}
-
-.ck-bell-dot {
-  position: absolute;
-  inset-block-start: 0.3125rem;
-  inset-inline-end: 0.375rem;
-}
-
-.ck-user-avatar {
-  inline-size: 1.375rem;
-  block-size: 1.375rem;
-  font-size: 0.5625rem;
-}
-
-/* ── Body split ─────────────────────────────────────────────────────── */
+/* ── Body: [icon rails] + resizable panes ───────────────────────────── */
 
 .ck-body {
   position: relative;
   z-index: 1;
+  display: flex;
   flex: 1;
   min-block-size: 0;
 }
 
-.ck-nav-panel {
-  background-color: color-mix(in oklab, var(--muted) 45%, var(--background));
-  border-inline-end: 1px solid var(--border);
+.ck-panes {
+  flex: 1;
   min-inline-size: 0;
 }
 
-.ck-nav-scroll {
+.ck-pri-panel,
+.ck-sec-panel {
+  min-inline-size: 0;
+  border-inline-end: 1px solid var(--sidebar-border);
+}
+
+.ck-pri-panel {
+  background-color: var(--sidebar);
+}
+
+.ck-sec-panel {
+  background-color: var(--ck-nav2);
+}
+
+.ck-rail-scroll {
   block-size: 100%;
 }
 
-.ck-nav {
+.ck-pri,
+.ck-sec {
+  position: relative;
   display: flex;
   flex-direction: column;
   padding-block: 0.375rem;
 }
 
-.ck-nav-sep {
-  margin: 0.375rem 0.75rem;
-  inline-size: auto;
+/* A folded rail leaves the resizable group and becomes a fixed icon strip. */
+.ck-rail--collapsed {
+  inline-size: 3.5rem;
+  flex-shrink: 0;
+  padding-block: 0;
+  border-inline-end: 1px solid var(--sidebar-border);
 }
+
+.ck-pri.ck-rail--collapsed {
+  background-color: var(--sidebar);
+}
+
+.ck-sec.ck-rail--collapsed {
+  background-color: var(--ck-nav2);
+}
+
+.ck-rail-toggle {
+  position: absolute;
+  inset-block-start: 0.5rem;
+  inset-inline-end: 0.5rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.375rem;
+  block-size: 1.375rem;
+  border: none;
+  border-radius: 3px;
+  background: none;
+  color: var(--sidebar-foreground);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-rail-toggle:hover {
+  background-color: var(--sidebar-accent);
+  color: var(--foreground);
+}
+
+.ck-rail-toggle svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+}
+
+.ck-rail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  inline-size: 100%;
+  padding: 0.5rem 0.375rem;
+  margin-block-end: 0.125rem;
+  border-bottom: 1px solid var(--sidebar-border);
+}
+
+.ck-rail-btn {
+  display: flex;
+  align-items: center;
+  padding: 0.1875rem;
+  border: none;
+  border-radius: 3px;
+  background: none;
+  color: var(--sidebar-foreground);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-rail-btn:hover {
+  background-color: var(--sidebar-accent);
+  color: var(--foreground);
+}
+
+.ck-rail-btn[data-active] {
+  color: var(--ck-blue);
+}
+
+.ck-rail-btn svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+
+.ck-rail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  inline-size: 100%;
+  padding: 0.5rem 0.125rem;
+  border: none;
+  background: none;
+  color: var(--sidebar-foreground);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-rail-item:hover {
+  background-color: var(--sidebar-accent);
+  color: var(--foreground);
+}
+
+.ck-rail-item[data-active] {
+  color: var(--ck-blue);
+  background-color: var(--ck-blue-soft);
+}
+
+.ck-rail-item svg {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.ck-rail-label {
+  max-inline-size: 3.25rem;
+  font-size: 0.53125rem;
+  font-weight: 600;
+  line-height: 1.15;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Primary rail (expanded): Overview + categories of services ─────── */
 
 .ck-nav-link {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   inline-size: 100%;
-  padding: 0.375rem 0.75rem 0.375rem 1rem;
+  padding: 0.375rem 1rem 0.375rem 1.25rem;
   border: none;
   border-inline-start: 2px solid transparent;
   background: none;
-  color: var(--muted-foreground);
+  color: var(--sidebar-foreground);
   font: inherit;
+  font-size: 0.9375rem;
   text-align: start;
   cursor: pointer;
   white-space: nowrap;
@@ -211,31 +549,32 @@
 }
 
 .ck-nav-link:hover {
-  background-color: var(--accent);
+  background-color: var(--sidebar-accent);
   color: var(--foreground);
 }
 
 .ck-nav-link[data-active] {
-  border-inline-start-color: var(--ck-accent);
-  background-color: color-mix(in oklab, var(--ck-accent) 10%, transparent);
-  color: var(--ck-accent-text);
-  font-weight: 600;
+  border-inline-start-color: var(--ck-blue);
+  background-color: var(--ck-blue-soft);
+  color: var(--ck-blue);
+  font-weight: 500;
 }
 
 .ck-nav-overview {
+  padding: 0.625rem 1rem;
+  font-size: 0.96875rem;
   font-weight: 600;
-  color: var(--foreground);
-  padding-inline-start: 0.75rem;
 }
 
-.ck-nav-overview[data-active] {
-  padding-inline-start: 0.75rem;
+.ck-nav-sep {
+  margin: 0.375rem 0.75rem;
+  inline-size: auto;
 }
 
 .ck-nav-icon {
   display: flex;
   flex-shrink: 0;
-  color: var(--muted-foreground);
+  color: var(--sidebar-foreground);
 }
 
 .ck-nav-icon svg {
@@ -253,32 +592,44 @@
   align-items: center;
   justify-content: space-between;
   inline-size: 100%;
-  padding: 0.5rem 0.75rem 0.25rem;
+  margin-block-start: 0.125rem;
+  padding: 0.5rem 1rem;
   border: none;
   background: none;
   color: var(--muted-foreground);
-  font-size: 0.6875rem;
+  font: inherit;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
 }
 
 .ck-nav-cat-trigger:hover {
+  background-color: var(--sidebar-accent);
   color: var(--foreground);
 }
 
 .ck-nav-cat-caret {
-  font-size: 0.5625rem;
-  opacity: 0.5;
+  display: flex;
+  opacity: 0.45;
   transition: transform var(--motion-fast) var(--motion-ease);
+}
+
+.ck-nav-cat-caret svg {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
 }
 
 .ck-nav-cat-trigger[data-state="closed"] .ck-nav-cat-caret {
   transform: rotate(-90deg);
 }
 
-/* The container query below toggles the nav pane's display, and a CSS
+/* The container query below toggles the rail's display, and a CSS
    animation restarts whenever its element regains display, replaying
    collapsible-down against a stale measured height and clipping the list.
    Open categories therefore render statically; closing still animates. */
@@ -286,11 +637,181 @@
   animation: none;
 }
 
+/* ── Secondary rail: the service's groups and pages ─────────────────── */
+
+.ck-sec-header {
+  padding: 0.875rem 1rem 0.625rem;
+}
+
+.ck-sec-name {
+  display: block;
+  color: var(--foreground);
+  font-size: 1.09375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.ck-sec-code {
+  color: var(--ck-orange);
+  font-size: 0.71875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.ck-sec-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.ck-sec-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  inline-size: 100%;
+  padding: 0.4375rem 0.875rem;
+  border: none;
+  background: none;
+  color: var(--sidebar-foreground);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-sec-group[data-active] {
+  color: var(--ck-blue);
+}
+
+.ck-sec-group svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+  flex-shrink: 0;
+}
+
+.ck-sec-group-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ck-sec-page {
+  display: block;
+  inline-size: 100%;
+  padding: 0.3125rem 0.875rem 0.3125rem 2.375rem;
+  border: none;
+  border-inline-start: 2px solid transparent;
+  background: none;
+  color: var(--sidebar-foreground);
+  font: inherit;
+  font-size: 0.84375rem;
+  text-align: start;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-sec-page:hover {
+  background-color: var(--sidebar-accent);
+  color: var(--foreground);
+}
+
+.ck-sec-page[data-active] {
+  border-inline-start-color: var(--ck-blue);
+  background-color: var(--ck-blue-soft);
+  color: var(--ck-blue);
+  font-weight: 500;
+}
+
+/* Folded: a column of group icons. */
+.ck-sec.ck-rail--collapsed .ck-sec-collapse {
+  position: static;
+  inline-size: 100%;
+  block-size: 2.5625rem;
+  margin-block-end: 0.125rem;
+  border-radius: 0;
+  border-bottom: 1px solid var(--sidebar-border);
+}
+
+.ck-sec.ck-rail--collapsed .ck-sec-group {
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.125rem;
+  padding: 0.625rem 0.25rem;
+  cursor: pointer;
+}
+
+.ck-sec.ck-rail--collapsed .ck-sec-group:hover {
+  background-color: var(--sidebar-accent);
+  color: var(--foreground);
+}
+
+.ck-sec.ck-rail--collapsed .ck-sec-group[data-active] {
+  background-color: var(--ck-blue-soft);
+}
+
+.ck-sec.ck-rail--collapsed .ck-sec-group-name {
+  max-inline-size: 3rem;
+  font-size: 0.53125rem;
+  text-align: center;
+}
+
+.ck-sec-sep {
+  margin: 0.375rem 0.75rem;
+  inline-size: auto;
+}
+
+.ck-sec-quick-label {
+  padding: 0.625rem 1rem 0.25rem;
+  color: var(--muted-foreground);
+  font-size: 0.71875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.ck-sec-quick {
+  display: block;
+  inline-size: 100%;
+  padding: 0.375rem 0.875rem 0.375rem 1rem;
+  border: none;
+  background: none;
+  color: var(--sidebar-foreground);
+  font: inherit;
+  font-size: 0.84375rem;
+  text-align: start;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-sec-quick:hover {
+  background-color: var(--sidebar-accent);
+  color: var(--foreground);
+}
+
+/* Resize handles light up orange while grabbed. */
 .ck-handle {
   z-index: 1;
 }
 
-/* ── Main column ────────────────────────────────────────────────────── */
+.ck-handle[data-separator="hover"]::after,
+.ck-handle[data-separator="active"]::after {
+  background-color: color-mix(in oklab, var(--ck-orange) 60%, transparent);
+}
+
+/* ── Main column: breadcrumb bar, content, task footer ──────────────── */
 
 .ck-main {
   display: flex;
@@ -298,42 +819,62 @@
   min-inline-size: 0;
 }
 
-.ck-scroller {
-  flex: 1;
-  min-block-size: 0;
-  overflow-y: auto;
-  background-color: color-mix(in oklab, var(--muted) 25%, var(--background));
-}
-
-/* Sticky glass toolbar; content genuinely scrolls beneath it. */
-.ck-toolbar {
-  position: sticky;
-  inset-block-start: 0;
-  z-index: 5;
+.ck-crumbbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
-  background-color: color-mix(in oklab, var(--background) 62%, transparent);
-  -webkit-backdrop-filter: blur(14px) saturate(1.4);
-  backdrop-filter: blur(14px) saturate(1.4);
+  gap: 0.75rem;
+  flex-shrink: 0;
+  block-size: 2.375rem;
+  padding: 0 1.125rem;
+  background-color: var(--card);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-/* BreadcrumbLink rendered as a <button> keeps the UA button chrome the
-   anchor variant never has; strip it back to a crumb. */
-.ck-toolbar button.breadcrumb-link {
+.ck-crumbbar .breadcrumb-list {
+  flex-wrap: nowrap;
+  font-size: 0.875rem;
+}
+
+.ck-crumbbar button.breadcrumb-link {
   padding: 0;
   border: none;
   background: none;
+  color: var(--muted-foreground);
   font: inherit;
   cursor: pointer;
 }
 
+.ck-crumbbar button.breadcrumb-link:hover {
+  color: var(--foreground);
+}
+
+/* The current page carries the orange underline the tab strip used to. */
+.ck-crumbbar .breadcrumb-page {
+  display: inline-flex;
+  align-items: center;
+  block-size: 2.375rem;
+  color: var(--foreground);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--ck-orange);
+}
+
+.ck-live-badge {
+  flex-shrink: 0;
+}
+
+.ck-scroller {
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  background-color: var(--background);
+  scrollbar-width: thin;
+}
+
 .ck-content {
-  padding: 1rem;
+  padding: 1.125rem 1.5rem;
 }
 
 .ck-view {
@@ -351,13 +892,14 @@
 
 .ck-page-title {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: -0.015em;
 }
 
 .ck-page-count {
   color: var(--muted-foreground);
+  font-size: 0.84375rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -365,20 +907,16 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .ck-actions-spacer {
   flex: 1;
 }
 
-.ck-accent-btn {
-  background-color: var(--ck-accent-solid);
-  color: var(--ck-accent-solid-fg);
-}
-
-.ck-accent-btn:hover {
-  background-color: color-mix(in oklab, var(--ck-accent-solid) 88%, var(--foreground));
+.ck-refresh svg {
+  inline-size: 0.9375rem;
+  block-size: 0.9375rem;
 }
 
 .ck-filter {
@@ -387,28 +925,48 @@
   font-size: 0.8125rem;
 }
 
+/* ── Resource table card ────────────────────────────────────────────── */
+
 .ck-table-wrap {
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background-color: var(--background);
+  border-radius: var(--radius-lg);
+  background-color: var(--card);
+  overflow: hidden;
 }
 
 .ck-console .ck-table {
-  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
 }
 
-.ck-console .ck-table th,
-.ck-console .ck-table td {
+.ck-console .ck-table .table-header {
+  background-color: var(--muted);
+}
+
+.ck-console .ck-table th {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   white-space: nowrap;
+}
+
+.ck-console .ck-table td {
+  font-size: 0.90625rem;
+  white-space: nowrap;
+}
+
+.ck-console .ck-table .table-row[data-selected="true"] {
+  background-color: var(--ck-row-selected);
 }
 
 .ck-cell-link {
   padding: 0;
   border: none;
   background: none;
+  color: var(--ck-blue);
   font: inherit;
   font-weight: 500;
-  color: var(--ck-accent-text);
   cursor: pointer;
 }
 
@@ -428,8 +986,8 @@
 }
 
 .ck-mono {
-  font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
 }
 
 .ck-table-empty {
@@ -444,6 +1002,7 @@
   justify-content: space-between;
   gap: 0.75rem;
   color: var(--muted-foreground);
+  font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -474,32 +1033,93 @@
   }
 }
 
+/* Hover paints a blue-to-orange stripe down the card's leading edge. The
+   sparkline sits beside the numeral, where a two-digit figure leaves room. */
+.ck-stat {
+  position: relative;
+  overflow: hidden;
+}
+
+.ck-stat::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  inline-size: 3px;
+  opacity: 0;
+  background: linear-gradient(var(--ck-blue), var(--ck-orange));
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.ck-stat:hover::after {
+  opacity: 1;
+}
+
 .ck-stat-body {
   padding: 0.875rem;
 }
 
 .ck-stat-num {
-  font-size: 1.75rem;
+  font-size: 2.125rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  line-height: 1.15;
   font-variant-numeric: tabular-nums;
 }
 
 .ck-stat-label {
-  margin-block-start: 0.125rem;
-  font-size: 0.6875rem;
+  margin-block-start: 0.1875rem;
+  color: var(--muted-foreground);
+  font-size: 0.71875rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--muted-foreground);
 }
 
 .ck-stat-sub {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: 0.3125rem;
   margin-block-start: 0.375rem;
-  color: var(--muted-foreground);
+  color: var(--success);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ck-stat-sub[data-tone="warning"] {
+  color: var(--warning);
+}
+
+.ck-stat-sub[data-tone="error"] {
+  color: var(--destructive);
+}
+
+.ck-stat-spark {
+  position: absolute;
+  inset-inline-end: 0.625rem;
+  inset-block-start: 0.875rem;
+  opacity: 0.9;
+}
+
+.ck-spark {
+  display: block;
+}
+
+.ck-spark polyline {
+  fill: none;
+  stroke: var(--ck-blue);
+  stroke-width: 1.5;
+}
+
+.ck-spark circle {
+  fill: var(--ck-orange);
+}
+
+.ck-spark-fill {
+  fill: var(--ck-blue-soft);
+  stroke: none;
 }
 
 .ck-stat-hover {
@@ -511,11 +1131,11 @@
 }
 
 .ck-stat-hover-title {
+  color: var(--muted-foreground);
   font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--muted-foreground);
 }
 
 .ck-stat-hover-row {
@@ -537,11 +1157,18 @@
 }
 
 .ck-card-title {
-  font-size: 0.6875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted-foreground);
+  font-size: 0.78125rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--muted-foreground);
+}
+
+.ck-card-live {
+  margin-inline-start: auto;
 }
 
 .ck-util {
@@ -557,8 +1184,9 @@
 }
 
 .ck-util-label {
-  inline-size: 9rem;
+  inline-size: 8rem;
   flex-shrink: 0;
+  font-size: 0.875rem;
   font-weight: 500;
 }
 
@@ -574,34 +1202,51 @@
   background-color: var(--success);
 }
 
+.ck-util-bar[data-tone="error"] .progress-indicator {
+  background-color: var(--destructive);
+}
+
 .ck-util-val {
-  inline-size: 8.5rem;
+  inline-size: 10rem;
   flex-shrink: 0;
   text-align: end;
   color: var(--muted-foreground);
+  font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.ck-health-val {
+.ck-util-val .live-value {
   font-weight: 600;
 }
 
-.ck-health-val[data-tone="success"] {
-  color: var(--success-foreground);
-}
-
-.ck-health-val[data-tone="error"] {
-  color: var(--destructive);
+.ck-health-row .badge {
+  font-variant-numeric: tabular-nums;
 }
 
 .ck-event-text code {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .ck-event-time {
   color: var(--muted-foreground);
+  font-size: 0.8125rem;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A freshly arrived event sweeps in on an orange wash. */
+.ck-event-row[data-fresh] {
+  animation: ck-event-in calc(var(--motion-medium) * 5) var(--motion-ease);
+}
+
+@keyframes ck-event-in {
+  0% {
+    background-color: var(--ck-orange-soft);
+  }
+  100% {
+    background-color: transparent;
+  }
 }
 
 .ck-empty {
@@ -629,11 +1274,12 @@
   block-size: 0.875rem;
 }
 
-/* ── Taskbar ────────────────────────────────────────────────────────── */
+/* ── Task footer ────────────────────────────────────────────────────── */
 
 .ck-taskbar {
+  flex-shrink: 0;
   border-block-start: 1px solid var(--border);
-  background-color: var(--background);
+  background-color: var(--card);
 }
 
 .ck-taskbar-bar {
@@ -641,36 +1287,58 @@
   align-items: center;
   gap: 0.875rem;
   inline-size: 100%;
-  padding: 0.375rem 0.875rem;
+  block-size: 1.875rem;
+  padding: 0 0.875rem;
   border: none;
   background: none;
   color: var(--muted-foreground);
   font: inherit;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   cursor: pointer;
+  user-select: none;
 }
 
 .ck-taskbar-bar:hover {
-  background-color: var(--accent);
+  background-color: var(--ck-row-hover);
 }
 
 .ck-taskbar-spinner {
   inline-size: 0.75rem;
   block-size: 0.75rem;
+  color: var(--ck-orange);
 }
 
 .ck-taskbar-label {
-  font-weight: 700;
   color: var(--foreground);
+  font-weight: 700;
 }
 
 .ck-taskbar-stat b {
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
+.ck-taskbar-stat b[data-tone="run"] {
+  color: var(--ck-orange);
+}
+
+.ck-taskbar-stat b[data-tone="ok"] {
+  color: var(--success);
+}
+
+.ck-taskbar-stat b[data-tone="err"] {
+  color: var(--destructive);
+}
+
 .ck-taskbar-caret {
+  display: flex;
   margin-inline-start: auto;
   transition: transform var(--motion-fast) var(--motion-ease);
+}
+
+.ck-taskbar-caret svg {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
 }
 
 .ck-taskbar-bar[data-state="open"] .ck-taskbar-caret {
@@ -678,18 +1346,28 @@
 }
 
 .ck-taskbar-panel {
-  max-block-size: 11rem;
+  max-block-size: 13.75rem;
   overflow: auto;
   border-block-start: 1px solid var(--border);
 }
 
-/* ── Glass overlays (sheet + command palette) ───────────────────────── */
-
-.ck-glass-panel.ck-glass-panel {
-  background-color: color-mix(in oklab, var(--background) 78%, transparent);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
-  backdrop-filter: blur(20px) saturate(1.4);
+.ck-task-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
+
+.ck-task-status[data-tone="run"] {
+  color: var(--ck-orange);
+}
+
+.ck-task-status[data-tone="ok"] {
+  color: var(--success);
+}
+
+/* ── Detail sheet ───────────────────────────────────────────────────── */
 
 .ck-sheet-body {
   display: flex;
@@ -709,44 +1387,39 @@
   inline-size: auto;
 }
 
-/* Reduced transparency: every glass surface goes opaque and the wash
-   disappears. See styles/forced-colors.css for the kit-wide equivalents. */
-@media (prefers-reduced-transparency: reduce) {
-  .ck-console::before {
+/* ── Focus rings on the shell's own controls ────────────────────────── */
+
+.ck-nav-link:focus-visible,
+.ck-nav-cat-trigger:focus-visible,
+.ck-sec-page:focus-visible,
+.ck-sec-quick:focus-visible,
+.ck-rail-item:focus-visible,
+.ck-rail-btn:focus-visible,
+.ck-rail-toggle:focus-visible,
+.ck-sec.ck-rail--collapsed .ck-sec-group:focus-visible,
+.ck-taskbar-bar:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+/* ── Narrow containers: the rails yield to the command palette ──────── */
+
+@container ck-console (max-width: 42rem) {
+  .ck-pri-panel,
+  .ck-sec-panel,
+  .ck-handle,
+  .ck-rail--collapsed {
     display: none;
   }
 
-  .ck-topbar,
-  .ck-toolbar {
-    background-color: var(--background);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-
-  .ck-glass-panel.ck-glass-panel {
-    background-color: var(--background);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-}
-
-/* ── Narrow containers: the nav pane yields to the command palette ──── */
-
-@container ck-console (max-width: 42rem) {
-  .ck-nav-panel,
-  .ck-handle {
+  .ck-brand-app,
+  .ck-topbar-user span {
     display: none;
   }
 
   .ck-search {
     inline-size: auto;
     flex: 1;
-  }
-
-  .ck-search span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .ck-dash-grid {
