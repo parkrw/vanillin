@@ -52,10 +52,20 @@
 /* Indeterminate loop: fixed duration, deliberately not --motion-medium.
  * That token is calc(200ms * var(--motion-scale)) — using it here would
  * strobe at ~2.5Hz and would scale with --motion-scale, which indeterminate
- * loops must not do. Matches the ui/skeleton pulse. */
+ * loops must not do. Matches the ui/skeleton pulse.
+ *
+ * The pulse breathes the way badge--glow does: symmetric 0/50/100 keyframes
+ * on one 2s cycle and a halo in the dot's own colour, rather than the old
+ * deep opacity blink (1 → 0.4, alternate). The gentle dim stays alongside
+ * the halo because forced-colors kills box-shadow, and the animation is
+ * pending's status cue there (see the forced-colors block below). `color`
+ * carries the hue so currentColor feeds the shared ring keyframes. */
 .status-dot[data-status="pending"] {
   background-color: var(--muted-foreground);
-  animation: status-dot-pulse 2s ease-in-out infinite alternate;
+  color: var(--muted-foreground);
+  animation:
+    status-dot-pulse 2s ease-in-out infinite,
+    status-dot-ring-pulse 2s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -65,8 +75,8 @@
 }
 
 @keyframes status-dot-pulse {
-  0% { opacity: 1; }
-  100% { opacity: 0.4; }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
 /* ── Ring (halo) ──
@@ -96,11 +106,11 @@
   color: var(--info);
 }
 
-/* pending already animates opacity; the ring adds its loop alongside rather
-   than replacing it, since the `animation` shorthand would otherwise win. */
+/* pending already runs both loops; restated so the ring modifier's
+   `animation` shorthand doesn't clobber them on specificity ties. */
 .status-dot--ring[data-status="pending"] {
   animation:
-    status-dot-pulse 2s ease-in-out infinite alternate,
+    status-dot-pulse 2s ease-in-out infinite,
     status-dot-ring-pulse 2s ease-in-out infinite;
 }
 
