@@ -238,9 +238,14 @@ export default async function run({ page, baseUrl, test, eq }) {
   await test("high-contrast: focus outline is at least 3px", async () => {
     const btn = page.locator(".btn").first()
     await btn.focus()
-    const width = await btn.evaluate((el) => {
-      return parseFloat(getComputedStyle(el).outlineWidth)
+    const { width, style } = await btn.evaluate((el) => {
+      const cs = getComputedStyle(el)
+      return { width: parseFloat(cs.outlineWidth), style: cs.outlineStyle }
     })
+    // Style asserted alongside width: newer Chrome reports the cascade's
+    // outline-width from getComputedStyle even when outline-style is none,
+    // so a width check alone passes while nothing paints (ISSUES G11).
+    eq(style, "solid", "outline actually paints")
     eq(width >= 3, true, `outline-width is ${width}px (want >= 3)`)
   })
 

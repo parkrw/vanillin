@@ -712,16 +712,21 @@ recording instead of fixing):
   in CI, reproduced 2 runs in 3 under Chromium. The swing is now sampled every
   frame in-page and the peaks come out of the series, which also gets the
   decay assertion off a point sample.
-- **G11.** `forced-colors: high-contrast: focus outline is at least 3px` fails
-  under the Chromium that ships with `playwright-core` (`outline-width is
-  0px`) and passes under CI's Google Chrome. Not a flake and not the dev-server
-  base — it reproduces on both. Worth a look on its own terms: `.btn` opts out
-  of the outline entirely (`ui/button/button.css` sets `outline: none` and
-  draws its ring in `box-shadow`), so `@media (prefers-contrast: more) {
-  :focus-visible { outline-width: 3px } }` cannot reach the most common
-  control, and the test reads a first `.btn` that is the nav search trigger.
-  Left alone here rather than made to pass in one browser: the question is
-  whether high contrast is *delivered* for buttons, which is a design call.
+- **G11.** ~~`forced-colors: high-contrast: focus outline is at least 3px`
+  fails under the Chromium that ships with `playwright-core` (`outline-width
+  is 0px`) and passes under CI's Google Chrome.~~ Resolved 2026-08-26, and the
+  browser split was the tell, not the bug: with `outline-style: none` the
+  computed `outline-width` is 0 per spec (Chromium 141 reports that), while
+  newer Chrome reports the cascade's specified width — so CI was passing on a
+  3px that painted nothing. The real defect: `.btn` (like every family in the
+  forced-colors focus list) sets `outline: none` and draws its ring in
+  `box-shadow`, so `@media (prefers-contrast: more) { :focus-visible {
+  outline-width: 3px } }` never reached a single one of them — "thicker
+  focus" was delivered nowhere. Fixed by mirroring the forced-colors focus
+  repair inside the prefers-contrast block (`3px solid var(--ring)`,
+  `!important` for the same load-order reason), and the test now asserts
+  `outline-style === "solid"` alongside the width so a reported-but-unpainted
+  value can never pass it again.
 - **G12.** `view-transitions: view-transition-name is unique during transition
   and cleared after` — `detail has shared-element name expected
   "shared-element", got "none"`. Once in seven full runs (2026-08-26), 7/7 in
