@@ -68,6 +68,10 @@ export default async function run({ page, baseUrl, test, eq }) {
       ([sel, want]) => getComputedStyle(document.querySelector(sel)).color === want,
       [`[data-pg="lv-controlled"] .live-value`, await tokenColour("--info")],
     )
+    await page.waitForFunction(() => {
+      const el = document.querySelector('[data-pg="lv-controlled"] .live-value-text')
+      return el && getComputedStyle(el).animationName === "live-value-tick-down"
+    })
     eq(
       await controlled.locator(".live-value-text").evaluate((el) => getComputedStyle(el).animationName),
       "live-value-tick-down",
