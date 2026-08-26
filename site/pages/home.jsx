@@ -1,111 +1,211 @@
 import { lazy, Suspense } from "react"
 import { Button } from "../../ui/button/button.jsx"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CardAction } from "../../ui/card/card.jsx"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../ui/card/card.jsx"
 import { Badge } from "../../ui/badge/badge.jsx"
 import { Separator } from "../../ui/separator/separator.jsx"
-import { Input } from "../../ui/input/input.jsx"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../ui/tabs/tabs.jsx"
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../../ui/table/table.jsx"
-import { Checkbox } from "../../ui/checkbox/checkbox.jsx"
 import { Avatar, AvatarFallback } from "../../ui/avatar/avatar.jsx"
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "../../ui/hover-card/hover-card.jsx"
 import { Skeleton } from "../../ui/skeleton/skeleton.jsx"
+import { Slider } from "../../ui/slider/slider.jsx"
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "../../ui/accordion/accordion.jsx"
+import { Bubble, BubbleContent } from "../../ui/bubble/bubble.jsx"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "../../ui/dropdown-menu/dropdown-menu.jsx"
+import { ModeToggle } from "../../ui/mode-toggle/mode-toggle.jsx"
 import { CodeBlock } from "../code-example.jsx"
 import { categories } from "../registry.js"
+import { setSiteDark, useSiteDark } from "../color-scheme.js"
 
 import "../../ui/button/button.css"
 import "../../ui/card/card.css"
 import "../../ui/badge/badge.css"
 import "../../ui/separator/separator.css"
-import "../../ui/input/input.css"
 import "../../ui/tabs/tabs.css"
-import "../../ui/table/table.css"
-import "../../ui/checkbox/checkbox.css"
 import "../../ui/avatar/avatar.css"
 import "../../ui/hover-card/hover-card.css"
 import "../../ui/skeleton/skeleton.css"
+import "../../ui/slider/slider.css"
+import "../../ui/accordion/accordion.css"
+import "../../ui/bubble/bubble.css"
+import "../../ui/dropdown-menu/dropdown-menu.css"
+import "../../ui/mode-toggle/mode-toggle.css"
 import "../code-example.css"
 
 // The console showcase pulls in a large slice of the kit, so it loads as its
-// own chunk instead of riding in the index bundle.
+// own chunk instead of riding in the index bundle. The support panel rides in
+// the same panels chunk the console already uses. Neither renders a
+// <Toaster/> of its own — the console hosts the page's single toaster, and
+// the support panel's toasts queue through it.
 const ConsoleShowcase = lazy(() => import("../showcase/console.jsx"))
+const SupportPanel = lazy(() =>
+  import("../showcase/panels/index.js").then((m) => ({ default: m.SupportPanel }))
+)
 
-function HeroShowcase() {
+/* One live component per category — each card in the Components grid doubles
+   as that component's own miniature showcase. Keyed by category label. */
+function FormsDemo() {
+  return <Slider defaultValue={[40]} aria-label="Volume" style={{ width: "100%", maxWidth: "13rem" }} />
+}
+
+function DataDisplayDemo() {
   return (
-    <div className="pg-hero-showcase" aria-hidden="true">
-      <Tabs defaultValue="tasks">
-        <Card>
-          <CardHeader>
-            <CardTitle>Sprint board</CardTitle>
-            <CardAction>
-              <TabsList>
-                <TabsTrigger value="tasks">Tasks</TabsTrigger>
-                <TabsTrigger value="team">Team</TabsTrigger>
-              </TabsList>
-            </CardAction>
-          </CardHeader>
-          <TabsContent value="tasks">
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead style={{ width: "2rem" }}></TableHead>
-                    <TableHead>Task</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell><Checkbox defaultChecked /></TableCell>
-                    <TableCell>Design tokens</TableCell>
-                    <TableCell><Badge variant="success">Done</Badge></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell><Checkbox /></TableCell>
-                    <TableCell>API routes</TableCell>
-                    <TableCell><Badge variant="warning">Review</Badge></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell><Checkbox /></TableCell>
-                    <TableCell>Unit tests</TableCell>
-                    <TableCell><Badge variant="outline">Todo</Badge></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-          </TabsContent>
-          <TabsContent value="team">
-            <CardContent>
-              <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-                <div className="pg-hero-showcase-row">
-                  <Avatar><AvatarFallback>PW</AvatarFallback></Avatar>
-                  <span style={{ fontSize: "0.875rem" }}>Parker</span>
-                  <Badge variant="info">3 tasks</Badge>
-                </div>
-                <div className="pg-hero-showcase-row">
-                  <Avatar><AvatarFallback>AK</AvatarFallback></Avatar>
-                  <span style={{ fontSize: "0.875rem" }}>Alex</span>
-                  <Badge variant="info">5 tasks</Badge>
-                </div>
-              </div>
-            </CardContent>
-          </TabsContent>
-          <Separator />
-          <CardFooter>
-            <div className="pg-hero-showcase-row">
-              <Input placeholder="Add a task..." className="pg-hero-showcase-input" />
-              <Button size="sm">Add</Button>
-            </div>
-          </CardFooter>
-        </Card>
-      </Tabs>
+    <div className="pg-home-demo-avatars">
+      <Avatar><AvatarFallback>PW</AvatarFallback></Avatar>
+      <Avatar><AvatarFallback>AK</AvatarFallback></Avatar>
+      <Avatar><AvatarFallback>RM</AvatarFallback></Avatar>
+      <Badge variant="secondary">+5</Badge>
     </div>
+  )
+}
+
+function LayoutDemo() {
+  return (
+    <div className="pg-home-demo-skeleton" aria-hidden="true">
+      <Skeleton style={{ inlineSize: "2.25rem", blockSize: "2.25rem", borderRadius: "50%" }} />
+      <div className="pg-home-demo-skeleton-lines">
+        <Skeleton style={{ blockSize: "0.75rem", inlineSize: "100%" }} />
+        <Skeleton style={{ blockSize: "0.75rem", inlineSize: "70%" }} />
+      </div>
+    </div>
+  )
+}
+
+function NavigationDemo() {
+  return (
+    <Tabs defaultValue="overview" className="pg-home-demo-tabs">
+      <TabsList>
+        <TabsTrigger value="overview">Overview</TabsTrigger>
+        <TabsTrigger value="activity">Activity</TabsTrigger>
+      </TabsList>
+      <TabsContent value="overview">
+        <p className="pg-home-demo-tabs-copy">Everything is quiet. Ship something.</p>
+      </TabsContent>
+      <TabsContent value="activity">
+        <p className="pg-home-demo-tabs-copy">3 deploys today, all green.</p>
+      </TabsContent>
+    </Tabs>
+  )
+}
+
+function OverlayDemo() {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger as={Button} variant="outline">Options</DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuLabel>My account</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>Profile</DropdownMenuItem>
+        <DropdownMenuItem>Settings</DropdownMenuItem>
+        <DropdownMenuItem>Log out</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function DisclosureDemo() {
+  return (
+    <Accordion type="single" collapsible defaultValue="one" className="pg-home-demo-accordion">
+      <AccordionItem value="one">
+        <AccordionTrigger>Is it accessible?</AccordionTrigger>
+        <AccordionContent>Keyboard, focus, and ARIA included.</AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="two">
+        <AccordionTrigger>Is it yours?</AccordionTrigger>
+        <AccordionContent>Every line — the files live in your repo.</AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  )
+}
+
+function CommunicationDemo() {
+  return (
+    <div className="pg-home-demo-bubbles">
+      <Bubble variant="muted">
+        <BubbleContent>Did the deploy go out?</BubbleContent>
+      </Bubble>
+      <Bubble align="end">
+        <BubbleContent>Shipped ten minutes ago.</BubbleContent>
+      </Bubble>
+    </div>
+  )
+}
+
+function PlatformDemo() {
+  const dark = useSiteDark()
+  return (
+    <div className="pg-home-demo-mode">
+      <ModeToggle isDark={dark} onIsDarkChange={setSiteDark} />
+      <span className="pg-home-demo-hint">Flips the whole site.</span>
+    </div>
+  )
+}
+
+const CATEGORY_DEMOS = {
+  Forms: { slug: "slider", title: "Slider", Demo: FormsDemo },
+  "Data Display": { slug: "avatar", title: "Avatar", Demo: DataDisplayDemo },
+  Layout: { slug: "skeleton", title: "Skeleton", Demo: LayoutDemo },
+  Navigation: { slug: "tabs", title: "Tabs", Demo: NavigationDemo },
+  Overlay: { slug: "dropdown-menu", title: "Dropdown Menu", Demo: OverlayDemo },
+  Disclosure: { slug: "accordion", title: "Accordion", Demo: DisclosureDemo },
+  Communication: { slug: "bubble", title: "Bubble", Demo: CommunicationDemo },
+  Platform: { slug: "mode-toggle", title: "Mode Toggle", Demo: PlatformDemo },
+}
+
+function CategoryCard({ label, desc, entries }) {
+  const slugs = Object.entries(entries)
+  const demo = CATEGORY_DEMOS[label]
+  return (
+    <Card className="pg-home-cat-card">
+      <CardHeader>
+        <CardTitle>{label}</CardTitle>
+        <CardDescription>{desc}</CardDescription>
+      </CardHeader>
+      <CardContent className="pg-home-cat-demo">
+        {demo ? <demo.Demo /> : null}
+      </CardContent>
+      <CardFooter className="pg-home-cat-foot">
+        {demo && (
+          <a className="pg-home-cat-demo-link" href={`#${demo.slug}`}>
+            {demo.title}
+          </a>
+        )}
+        <HoverCard openDelay={200} closeDelay={150}>
+          <HoverCardTrigger
+            as="a"
+            href={`#${slugs[0][0]}`}
+            className="pg-home-cat-more"
+          >
+            All {slugs.length} components →
+          </HoverCardTrigger>
+          <HoverCardContent className="pg-home-cat-hover">
+            <div className="pg-home-cat-hover-title">
+              {label} · {slugs.length} components
+            </div>
+            <div className="pg-home-cat-tags">
+              {slugs.map(([slug, { title }]) => (
+                <Badge key={slug} variant="secondary" as="a" href={`#${slug}`}>
+                  {title}
+                </Badge>
+              ))}
+            </div>
+          </HoverCardContent>
+        </HoverCard>
+      </CardFooter>
+    </Card>
   )
 }
 
 export default function HomePage() {
   return (
     <div className="pg-home">
+      {/* Hero — centred copy with the console showcase as the opening visual. */}
       <section className="pg-hero">
         <div className="pg-hero-copy">
           <Badge className="pg-hero-badge" style={{ boxShadow: "var(--shadow-md)" }}>Zero dependencies</Badge>
@@ -118,20 +218,11 @@ export default function HomePage() {
             <Button as="a" href="#installation">Get Started</Button>
             <Button variant="outline" as="a" href="#button">Browse Components</Button>
           </div>
-          <CodeBlock
-            code="npm i -D github:parkrw/vanillin"
-            language="bash"
-            className="pg-hero-install"
-          />
         </div>
-        <HeroShowcase />
       </section>
 
-      <Separator />
-
       <section className="pg-home-console">
-        <h2>Compose something real</h2>
-        <p className="pg-desc">
+        <p className="pg-desc pg-home-console-desc">
           A cloud console assembled entirely from kit components: two collapsible
           rails, a breadcrumb bar, live numbers that flash orange on the way up and
           blue on the way down, a filterable data table, a command palette, detail
@@ -190,45 +281,52 @@ export default function HomePage() {
 
       <Separator />
 
+      <section className="pg-home-support">
+        <h2>Built for conversations too</h2>
+        <p className="pg-desc">
+          A support inbox from the same box of parts: message threads with bubbles
+          and attachments, a composer with staged files, and a filterable ticket
+          table — Message, Bubble, Attachment, ScrollArea, and Data Table working
+          one screen.
+        </p>
+        <div className="pg-home-support-frame">
+          <Suspense
+            fallback={<Skeleton style={{ blockSize: "32rem", borderRadius: "var(--radius-lg)" }} />}
+          >
+            <SupportPanel />
+          </Suspense>
+        </div>
+      </section>
+
+      <Separator />
+
+      <section className="pg-home-install">
+        <h2>Install</h2>
+        <p className="pg-desc">
+          One dev dependency for the CLI, then copy in only what you use.
+        </p>
+        <div className="pg-home-install-grid">
+          <div className="pg-home-install-step">
+            <div className="pg-home-install-label">Add the CLI</div>
+            <CodeBlock code="npm i -D github:parkrw/vanillin" language="bash" />
+          </div>
+          <div className="pg-home-install-step">
+            <div className="pg-home-install-label">Copy components</div>
+            <CodeBlock code="van init && van add button dialog" language="bash" />
+          </div>
+        </div>
+      </section>
+
+      <Separator />
+
       <section className="pg-home-components">
         <h2>Components</h2>
         <p className="pg-desc">
-          {Object.values(categories).reduce((n, c) => n + Object.keys(c.entries).length, 0)} components across {categories.length} categories.
+          {Object.values(categories).reduce((n, c) => n + Object.keys(c.entries).length, 0)} components across {categories.length} categories — each card shows one of them live.
         </p>
         <div className="pg-home-cat-grid">
-          {categories.map(({ label, desc, entries }) => (
-            <HoverCard key={label} openDelay={300} closeDelay={150}>
-              <HoverCardTrigger as={Card} className="pg-home-cat-card">
-                <CardHeader>
-                  <CardTitle>{label}</CardTitle>
-                  <CardDescription>{desc}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="pg-home-cat-tags">
-                    {Object.entries(entries).slice(0, 8).map(([slug, { title }]) => (
-                      <Badge key={slug} variant="secondary" as="a" href={`#${slug}`}>
-                        {title}
-                      </Badge>
-                    ))}
-                    {Object.keys(entries).length > 8 && (
-                      <Badge variant="outline">+{Object.keys(entries).length - 8}</Badge>
-                    )}
-                  </div>
-                </CardContent>
-              </HoverCardTrigger>
-              <HoverCardContent className="pg-home-cat-hover">
-                <div className="pg-home-cat-hover-title">
-                  {label} · {Object.keys(entries).length} components
-                </div>
-                <div className="pg-home-cat-tags">
-                  {Object.entries(entries).map(([slug, { title }]) => (
-                    <Badge key={slug} variant="secondary" as="a" href={`#${slug}`}>
-                      {title}
-                    </Badge>
-                  ))}
-                </div>
-              </HoverCardContent>
-            </HoverCard>
+          {categories.map((cat) => (
+            <CategoryCard key={cat.label} {...cat} />
           ))}
         </div>
       </section>

@@ -4,7 +4,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "requires": [],
   "files": {
-    "hover-card.css": "sha256-GgmwllASnQPqj6itRJZ+r9rHQeshy2IKKn9//dNK6As=",
+    "hover-card.css": "sha256-nKqoaEzDAiw962TPXxSr2iu5XZMkDi1YrIGTCBd9B38=",
     "hover-card.jsx": "sha256-BpUCSKjdU3cvbh1XEQj4UJf1Hjz0IDXSCv81BH+MZiY="
   }
 }
