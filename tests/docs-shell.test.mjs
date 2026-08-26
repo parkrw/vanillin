@@ -105,8 +105,9 @@ export default async function run({ page, baseUrl, test, eq }) {
 
   await test("page has exactly one h2", async () => {
     await page.goto(`${baseUrl}/#button`)
-    await page.waitForSelector(".btn")
-    eq(await page.locator(".pg-main > h2").count(), 1)
+    await page.waitForSelector(".pg-main > h2")
+    const h2Count = await page.locator(".pg-main > h2").count()
+    eq(h2Count, 1, `expected 1 h2 in .pg-main, got ${h2Count}`)
   })
 
   await test("rail present on component pages with TOC entries", async () => {
