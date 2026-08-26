@@ -418,6 +418,36 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.waitForTimeout(50)
   })
 
+  // ── Toolbar layout ────────────────────────────────────────────────
+
+  await test("toolbar: both filters share one row with the facet trigger, at its height", async () => {
+    const m = await dt.evaluate((root) => {
+      const rect = (el) => el.getBoundingClientRect()
+      const row = root.querySelector(".data-table-toolbar-filters")
+      const inputs = [...row.querySelectorAll(".data-table-filter")]
+      const trigger = row.querySelector(".data-table-facet-trigger")
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize)
+      const gap = parseFloat(getComputedStyle(row).columnGap)
+      const cap = parseFloat(getComputedStyle(inputs[0]).maxInlineSize)
+      return {
+        rowWidth: rect(row).width,
+        cappedNeed: inputs.length * cap + rect(trigger).width + gap * inputs.length,
+        cap,
+        widths: inputs.map((el) => rect(el).width),
+        tops: [...inputs, trigger].map((el) => Math.round(rect(el).top)),
+        heights: [...inputs, trigger].map((el) => Math.round(rect(el).height)),
+        smButtonHeight: 2 * rem,
+      }
+    })
+    // Precondition: at their 16rem cap the two inputs plus the trigger do not
+    // fit the row, so a single row is only possible because they shrink.
+    eq(m.cappedNeed > m.rowWidth, true, `capped inputs would not fit (${m.cappedNeed} > ${m.rowWidth})`)
+    eq(m.widths.every((w) => w < m.cap), true, `inputs shrank below the cap: ${m.widths}`)
+    eq(new Set(m.tops).size, 1, `one row (tops ${m.tops})`)
+    eq(new Set(m.heights).size, 1, `equal heights (${m.heights})`)
+    eq(m.heights[0], m.smButtonHeight, "controls are 2rem, the sm button height")
+  })
+
   // ── Faceted filter ─────────────────────────────────────────────────
 
   await test("faceted counts reflect other filters, not own selection", async () => {

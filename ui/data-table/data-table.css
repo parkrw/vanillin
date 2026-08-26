@@ -12,6 +12,18 @@
   max-inline-size: 16rem;
 }
 
+/*
+ * A wrap container wraps before it shrinks, so two 16rem inputs and a trigger
+ * broke the 40rem docs column onto two rows. A small basis that grows to the
+ * cap keeps one row. 2rem matches the toolbar's `size="sm"` buttons; the
+ * two-class selector beats `.input`'s height whatever the import order.
+ */
+.data-table-toolbar .data-table-filter {
+  flex: 1 1 10rem;
+  block-size: 2rem;
+  padding-block: var(--space-1);
+}
+
 .data-table-toolbar-actions {
   margin-inline-start: auto;
 }
