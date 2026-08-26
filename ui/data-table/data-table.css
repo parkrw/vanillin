@@ -368,9 +368,22 @@
  * sticky pinned cells position against the inner container while the bars
  * measure the outer one. Specificity beats `.table-container`; ui/table is
  * not modified.
+ *
+ * Its container role moves up to the viewport for a related reason: size
+ * containment on `.table-container` hides the table from the scroll area's
+ * ResizeObserver (`.scroll-area-content` never changes size), so hiding or
+ * resizing columns left the horizontal bar stale until the next scroll. The
+ * viewport is sized by layout, not content, and it is the width
+ * `.table-container` had, so `.table--stack` switches at the same threshold.
  */
 .data-table-scroller .table-container {
   overflow: visible;
+  container-type: normal;
+}
+
+.data-table-scroller .scroll-area-viewport {
+  container-type: inline-size;
+  container-name: vanillin-table;
 }
 
 /* ── Pinned columns ──────────────────────────────────────────────── */

@@ -852,6 +852,57 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(probe.textOverflow, "ellipsis", "dropped characters are marked with an ellipsis")
   })
 
+  await test("scroller: a table that fits its viewport shows no horizontal overflow", async () => {
+    await dtSized.waitFor()
+    const viewport = dtSized.locator(".scroll-area-viewport")
+    const measure = () =>
+      viewport.evaluate((vp) => ({
+        table: vp.querySelector(".table").getBoundingClientRect().width,
+        client: vp.clientWidth,
+        scroll: vp.scrollWidth,
+        flagged: vp.closest(".data-table-scroller").hasAttribute("data-has-overflow-x"),
+      }))
+    const colsBtn = page.locator('[data-pg="dt-sized-columns-btn"]')
+    const toggleStatus = async () => {
+      await colsBtn.click()
+      await page.waitForSelector('.dropdown-menu[role="menu"]:popover-open')
+      await page
+        .locator('.dropdown-menu[role="menu"]:popover-open [role="menuitemcheckbox"]', { hasText: "status" })
+        .click()
+      await page.waitForTimeout(200)
+      if (await page.locator('.dropdown-menu[role="menu"]:popover-open').count()) {
+        await page.keyboard.press("Escape")
+        await page.waitForTimeout(100)
+      }
+    }
+
+    // Counter-precondition: with every column visible the table is wider than
+    // the viewport, and the scroll area says so.
+    const wide = await measure()
+
+    // Hide status: the remaining columns fit the viewport exactly.
+    await toggleStatus()
+    const fits = await measure()
+    // The last header's handle sits inside its cell, so it is reachable and
+    // no longer a source of scrollable overflow past the table.
+    const handle = await dtSized.evaluate((root) => {
+      const th = [...root.querySelectorAll(".table-head")].at(-1)
+      const box = th.getBoundingClientRect()
+      const hit = document.elementFromPoint(box.right - 2, box.top + box.height / 2)
+      return hit === th.querySelector(".data-table-resizer")
+    })
+    await toggleStatus()
+    const restored = await measure()
+
+    eq(wide.table > wide.client, true, `all columns overflow the viewport (${wide.table} > ${wide.client})`)
+    eq(wide.flagged, true, "overflow is flagged while the table is wider")
+    eq(fits.table <= fits.client, true, `precondition: the table fits (${fits.table} <= ${fits.client})`)
+    eq(fits.scroll, fits.client, `nothing left to scroll (${fits.scroll} vs ${fits.client})`)
+    eq(fits.flagged, false, "no horizontal bar for a table that fits — the flag followed the column change")
+    eq(handle, true, "last column's resizer is hit-testable at the header's end edge")
+    eq(restored.flagged, true, "overflow flagged again once status is back")
+  })
+
   // ── Column pinning ────────────────────────────────────────────────
 
   await test("pin left: column stays at inset-inline-start 0 after horizontal scroll", async () => {

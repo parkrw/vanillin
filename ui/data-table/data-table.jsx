@@ -293,6 +293,10 @@ export function useDataTableHighlight(bodyRef, query) {
  * else from here — `position: sticky` and the `--dt-size-*` offsets are
  * unchanged.
  *
+ * The same stylesheet moves ui/table's container role from `.table-container`
+ * to the viewport: size containment there hid the table from the scroll
+ * area's ResizeObserver, so the bar went stale whenever columns changed.
+ *
  * Constrain the width on this element (or its parent) — a scroll area with
  * nothing to scroll renders no bars.
  */

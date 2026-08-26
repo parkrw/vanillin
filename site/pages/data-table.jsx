@@ -1803,7 +1803,11 @@ const { pagination } = table.getState()
           would never overflow, so no overlay bar, and the sticky pinned cells
           would measure a different element than the bar.{" "}
           <code>.data-table-scroller .table-container {`{ overflow: visible }`}</code>{" "}
-          hands scrolling to the viewport, which is then the scrollport for both.{" "}
+          hands scrolling to the viewport, which is then the scrollport for both.
+          The same rule moves the <code>vanillin-table</code> container role from{" "}
+          <code>.table-container</code> to the viewport: size containment there hid
+          the table from the scroll area's ResizeObserver, so the horizontal bar
+          went stale whenever columns were hidden or resized.{" "}
           <code>ui/table</code> is not modified.
         </p>
         <p>
