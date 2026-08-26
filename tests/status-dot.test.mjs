@@ -136,10 +136,16 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     eq(widths[1] < widths[2], true, `default (${widths[1]}) < lg (${widths[2]})`)
   })
 
-  await test("status-dot: pending has pulse animation", async () => {
+  await test("status-dot: pending breathes — gentle dim plus halo, no alternate blink", async () => {
     const pendingDot = page.locator('[data-pg="sd-statuses"] .status-dot[data-status="pending"]')
-    const animName = await pendingDot.evaluate((el) => getComputedStyle(el).animationName)
-    eq(animName, "status-dot-pulse", "pulse animation is active")
+    const { name, direction } = await pendingDot.evaluate((el) => {
+      const cs = getComputedStyle(el)
+      return { name: cs.animationName, direction: cs.animationDirection }
+    })
+    eq(name, "status-dot-pulse, status-dot-ring-pulse", "dim and halo loops are both active")
+    // The smoothness is the direction: symmetric keyframes on one cycle, like
+    // badge-glow, not the old alternate seesaw.
+    eq(direction, "normal, normal", "no alternate blink")
   })
 
   await test("status-dot: pending pulse is fixed, not scaled by --motion-scale", async () => {
@@ -149,7 +155,7 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     const after = await pendingDot.evaluate((el) => getComputedStyle(el).animationDuration)
     await page.evaluate(() => document.documentElement.style.removeProperty("--motion-scale"))
     eq(after, before, "indeterminate loop must not track --motion-scale")
-    eq(before, "2s", "pulse runs at the fixed skeleton-style cadence")
+    eq(before, "2s, 2s", "both loops run at the fixed skeleton-style cadence")
   })
 
   // `animationName: none` is also what a dot that never animates at all

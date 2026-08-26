@@ -178,8 +178,9 @@ Running (label on adjacent text)
 <StatusDot status="pending" ring />`}>
           <div>
             <p className="pg-prose">
-              The <code>pending</code> status pulses with a slow opacity
-              animation behind a <code>prefers-reduced-motion</code> guard.
+              The <code>pending</code> status breathes like the badge glow — a
+              gentle dim plus a halo in its own colour, one symmetric 2s cycle —
+              behind a <code>prefers-reduced-motion</code> guard.
               Because this is an indeterminate loop (no start, no end), it uses a
               fixed <code>2s</code> literal and deliberately <strong>not</strong>{" "}
               a motion token. <code>--motion-medium</code> is{" "}
