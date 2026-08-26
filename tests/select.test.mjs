@@ -254,46 +254,37 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await scrollTrigger.click()
     await waitOpen("sel-scroll-content")
 
+    // Both buttons sit behind the same IntersectionObserver but settle
+    // independently, so waiting on one and sampling the other is a race: CI read
+    // the down button as "hidden" — its mount state — while the up button had
+    // already settled at the top (docs/ISSUES.md G7). Wait for the pair.
+    const scrollStates = (up, down) =>
+      page.waitForFunction(
+        ([u, d]) =>
+          document.querySelector('[data-pg="sel-scroll-up-popper"]')?.dataset.state === u &&
+          document.querySelector('[data-pg="sel-scroll-down-popper"]')?.dataset.state === d,
+        [up, down],
+        { timeout: 5000 },
+      )
+    const stateOf = (which) =>
+      page.locator(`[data-pg="sel-scroll-${which}-popper"]`).getAttribute("data-state")
+
     // At the top: up button hidden, down button visible
-    const content = page.locator('[data-pg="sel-scroll-content"]')
     await page.evaluate(() => {
       document.querySelector('[data-pg="sel-scroll-content"]').scrollTop = 0
     })
-    // Wait for IntersectionObserver to fire
-    await page.waitForFunction(() => {
-      const up = document.querySelector('[data-pg="sel-scroll-up-popper"]')
-      return up && up.dataset.state === "hidden"
-    })
-    eq(
-      await page.locator('[data-pg="sel-scroll-up-popper"]').getAttribute("data-state"),
-      "hidden",
-      "up button hidden at top"
-    )
-    eq(
-      await page.locator('[data-pg="sel-scroll-down-popper"]').getAttribute("data-state"),
-      "visible",
-      "down button visible at top"
-    )
+    await scrollStates("hidden", "visible")
+    eq(await stateOf("up"), "hidden", "up button hidden at top")
+    eq(await stateOf("down"), "visible", "down button visible at top")
 
     // Scroll to the bottom
     await page.evaluate(() => {
       const el = document.querySelector('[data-pg="sel-scroll-content"]')
       el.scrollTop = el.scrollHeight
     })
-    await page.waitForFunction(() => {
-      const down = document.querySelector('[data-pg="sel-scroll-down-popper"]')
-      return down && down.dataset.state === "hidden"
-    })
-    eq(
-      await page.locator('[data-pg="sel-scroll-up-popper"]').getAttribute("data-state"),
-      "visible",
-      "up button visible at bottom"
-    )
-    eq(
-      await page.locator('[data-pg="sel-scroll-down-popper"]').getAttribute("data-state"),
-      "hidden",
-      "down button hidden at bottom"
-    )
+    await scrollStates("visible", "hidden")
+    eq(await stateOf("up"), "visible", "up button visible at bottom")
+    eq(await stateOf("down"), "hidden", "down button hidden at bottom")
 
     await page.keyboard.press("Escape")
     await waitAllClosed()

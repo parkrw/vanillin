@@ -680,6 +680,13 @@ recording instead of fixing):
   timeout was the cascade: the failed assertion skipped the `Escape`, and the
   still-open listbox ate the next test's click (the G2 shape). Recurred in CI
   2026-08-26 (`cbaea1a89223`), which is what made it reproducible.
+  Second round, same file: with the cascade gone, `scroll buttons hide at each
+  scroll extreme` failed in CI on its own (`down button visible at top expected
+  "visible", got "hidden"`). It waited for the *up* button's observer at each
+  extreme and then sampled the *down* one — the two settle independently, so it
+  read the down button's mount state. Both extremes now wait for the pair. Worth
+  taking as the general lesson: waiting on one observer-driven attribute says
+  nothing about its sibling.
 - **G8.** `carousel: loop clones: narrow carousel loops forward seamlessly` —
   failed once in a full run on `fix/data-table-page` (2026-08-26, a second
   vite dev server alive on :5173): after 10 `next` clicks the nearest item
