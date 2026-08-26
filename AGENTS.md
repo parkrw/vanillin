@@ -7,6 +7,7 @@ Orientation for coding agents. Everything here is what you cannot learn from a s
 ```sh
 npm run dev                 # docs site, :5173 — visual QA only
 npm test                    # full suite (needs Google Chrome installed)
+CHROME_PATH=… npm test      # …or point it at any Chromium build
 node tests/run.mjs drawer   # subset: substring match on test filenames
 npm run build               # vite build → site/dist
 npm run contracts           # regenerate .van.json manifests + registry.json
@@ -18,6 +19,7 @@ No linter is configured.
 
 - **`npm test` exits 0 even when tests fail.** The trailing `N/M passed` is the only signal; piping through `tail` discards the `FAIL` lines. Use `npm test > out.txt 2>&1`, then grep `^FAIL`.
 - **Run `npm run contracts` after any `ui/` edit** or conformance fails on stale hashes.
+- **The dev server's `base` is `/` everywhere, CI included** — the Pages prefix applies to `vite build` only. The suite drives the server through root-absolute URLs, so a prefixed base 404s them; see `docs/QUIRKS.md`.
 
 ## Layers
 

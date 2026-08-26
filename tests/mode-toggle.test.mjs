@@ -108,22 +108,48 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     )
     eq(await rotationOf(), 0, "at rest before the click")
 
-    await toggle.click()
-    // First extreme is at 16% of the swing: 16% of 200ms * 20 * 1.4 ≈ 900ms.
-    await page.waitForTimeout(700)
-    const first = await rotationOf()
-    // Then it comes back through upright and past it the other way.
-    await page.waitForTimeout(1600)
-    const second = await rotationOf()
+    // Every frame of the swing, not two fixed offsets into it: sampling at
+    // 700ms and 2300ms put the second reading on the zero crossing between the
+    // extremes and the test called an upright lamp a stalled one (-0.006deg).
+    // The peaks come out of the series, so no assertion depends on where a
+    // frame lands. Clicking inside the evaluate keeps the sampler running
+    // across the click, the same way the view-transition probe above does.
+    const readings = await lamp.evaluate(
+      (node) =>
+        new Promise((resolve) => {
+          const out = []
+          const read = () => {
+            const { transform } = getComputedStyle(node)
+            if (transform === "none") return 0
+            const [a, b] = transform.match(/-?[\d.e-]+/g).map(Number)
+            return (Math.atan2(b, a) * 180) / Math.PI
+          }
+          let started = false
+          const step = () => {
+            const running = node.getAnimations().some((a) => a.playState === "running")
+            started ||= running
+            out.push(read())
+            // The cap is a hang guard, not a duration: at --motion-scale 20 the
+            // swing is ~340 frames.
+            if ((!started || running) && out.length < 2000) requestAnimationFrame(step)
+            else resolve(out)
+          }
+          document.querySelector(".pg-main .mode-toggle").click()
+          requestAnimationFrame(step)
+        }),
+    )
+
+    const trough = Math.min(...readings)
+    const crest = Math.max(...readings.slice(readings.indexOf(trough)))
 
     await page.evaluate(() =>
       document.documentElement.style.removeProperty("--motion-scale")
     )
     await settle()
 
-    eq(first < -1, true, `rocks away from upright first — got ${first}deg`)
-    eq(second > 0, true, `and swings back past upright — got ${second}deg`)
-    eq(Math.abs(second) < Math.abs(first), true, "each rock is smaller — it decays")
+    eq(trough < -1, true, `rocks away from upright first — got ${trough}deg`)
+    eq(crest > 0, true, `and swings back past upright — got ${crest}deg`)
+    eq(Math.abs(crest) < Math.abs(trough), true, "each rock is smaller — it decays")
     near(await rotationOf(), 0, 0.5, "and settles upright")
 
     await toggle.click()

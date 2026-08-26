@@ -101,10 +101,10 @@ export default async function run({ page, baseUrl, repoRoot, test, eq, near }) {
 
   await test("onValueCommit fires on pointerup and keydown", async () => {
     await page.evaluate(async (sliderUrl) => {
-      const reactModule = await import("react")
-      const createElement = reactModule.createElement
-      const domModule = await import("react-dom/client")
-      const createRoot = domModule.createRoot
+      const reactModule = await import("/@id/react")
+      const createElement = reactModule.createElement ?? reactModule.default.createElement
+      const domModule = await import("/@id/react-dom/client")
+      const createRoot = domModule.createRoot ?? domModule.default.createRoot
       const { Slider } = await import(sliderUrl)
       const host = document.createElement("div")
       host.style.width = "200px"

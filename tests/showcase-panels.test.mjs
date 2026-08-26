@@ -13,7 +13,7 @@ export default async function run({ page, baseUrl, test, eq }) {
   }
 
   await page.goto(FIXTURE)
-  await page.locator('[data-pg="panel-support"]').waitFor({ timeout: 10000 })
+  await page.locator('[data-pg="panel-support"]').waitFor()
 
   // ── SupportPanel ──
 
@@ -79,9 +79,9 @@ export default async function run({ page, baseUrl, test, eq }) {
     // Every row keeps its menu in the DOM, so scope to the one that is open.
     const reply = page.locator('[data-pg="ticket-action-reply"]:visible')
     await page.locator('[data-pg="ticket-actions"]').first().click()
-    await reply.waitFor({ timeout: 5000 })
+    await reply.waitFor()
     await reply.click()
-    await page.locator(".toast").first().waitFor({ timeout: 5000 })
+    await page.locator(".toast").first().waitFor()
     eq(await page.locator(".toast-title").first().textContent(), "Replying to AC-4821", "action toast")
     await dismissToasts()
   })
@@ -128,7 +128,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(await page.locator(".toast-title").first().textContent(), "Weekly digest on", "switch toast")
     await dismissToasts()
     await page.reload()
-    await page.locator('[data-pg="panel-settings"]').waitFor({ timeout: 10000 })
+    await page.locator('[data-pg="panel-settings"]').waitFor()
     eq(await page.locator("#ackp-notify-digest").getAttribute("aria-checked"), "false", "not persisted")
   })
 
@@ -177,7 +177,7 @@ export default async function run({ page, baseUrl, test, eq }) {
   await test("reduced motion parks the sweep on a static value", async () => {
     await page.emulateMedia({ reducedMotion: "reduce" })
     await page.reload()
-    await page.locator('[data-pg="panel-status"]').waitFor({ timeout: 10000 })
+    await page.locator('[data-pg="panel-status"]').waitFor()
     const widget = page.locator('[data-pg="status-widget"]').first()
     eq(await widget.evaluate((node) => getComputedStyle(node).animationName), "none", "loop stopped")
     const readout = widget.locator('[data-pg="status-readout"]')
@@ -193,7 +193,7 @@ export default async function run({ page, baseUrl, test, eq }) {
 
   await test("no CloudKey branding survives in the panels", async () => {
     await page.reload()
-    await page.locator('[data-pg="panel-support"]').waitFor({ timeout: 10000 })
+    await page.locator('[data-pg="panel-support"]').waitFor()
     const text = await page.locator("body").textContent()
     eq(/cloudkey/i.test(text), false, "no CloudKey wording")
   })

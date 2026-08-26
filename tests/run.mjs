@@ -14,7 +14,25 @@ const PORT = Number(process.env.VANILLIN_TEST_PORT) || 5199
 const baseUrl = `http://localhost:${PORT}`
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))
 
-const vite = spawn("npx", ["vite", "--port", String(PORT), "--strictPort"], {
+// A dev server already on the port would be picked up by waitForServer below
+// while `--strictPort` quietly kills ours, so the run would test whatever that
+// stranger is serving. Refuse instead of reporting someone else's results.
+try {
+  await fetch(baseUrl)
+  console.error(
+    `something is already serving ${baseUrl} — kill it, or set VANILLIN_TEST_PORT to a free port`,
+  )
+  process.exit(1)
+} catch {}
+
+// Spawned as node + vite's own bin, not through `npx`: `vite.kill()` only
+// reaches the process we spawned, and killing `npx` leaves its vite grandchild
+// holding the port. A leaked server is worse than a crash — the next run's
+// `waitForServer` finds it, passes, and silently tests the *previous* config
+// (that is what "passed an hour later on identical code" means in
+// docs/ISSUES.md G5/G8).
+const viteBin = fileURLToPath(new URL("../node_modules/vite/bin/vite.js", import.meta.url))
+const vite = spawn(process.execPath, [viteBin, "--port", String(PORT), "--strictPort"], {
   cwd: repoRoot,
   stdio: "ignore",
 })
@@ -43,7 +61,11 @@ const near = (actual, expected, tolerance, label = "") => {
 let browser
 try {
   await waitForServer()
-  browser = await chromium.launch({ channel: "chrome" })
+  // Google Chrome by default (no browser download). CHROME_PATH points the
+  // launch at an explicit binary instead, for images that ship only Chromium.
+  browser = await chromium.launch(
+    process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : { channel: "chrome" },
+  )
   const page = await browser.newPage()
   // Optional subset run: `node tests/run.mjs drawer toast` or
   // VANILLIN_TEST_FILTER=drawer,toast. Substring match on the file name.

@@ -221,11 +221,29 @@ export default async function run({ page, baseUrl, test, eq, near }) {
       "content bottom within viewport"
     )
 
-    // Scroll buttons should be visible since item 15 is in the middle
-    const upState = await page.locator('[data-pg="sel-scroll-up"]').getAttribute("data-state")
-    const downState = await page.locator('[data-pg="sel-scroll-down"]').getAttribute("data-state")
-    eq(upState, "visible", "scroll-up visible")
-    eq(downState, "visible", "scroll-down visible")
+    // Scroll buttons should be visible since item 15 is in the middle. Their
+    // state comes from an IntersectionObserver, so it is not on the element the
+    // instant the listbox opens — wait for it the way the next test does. This
+    // sample is docs/ISSUES.md G7: it read "hidden" on a loaded runner, and the
+    // failure skipped the Escape below, so the still-open listbox then ate the
+    // next test's click as a 30s timeout.
+    await page.waitForFunction(
+      () =>
+        document.querySelector('[data-pg="sel-scroll-up"]')?.dataset.state === "visible" &&
+        document.querySelector('[data-pg="sel-scroll-down"]')?.dataset.state === "visible",
+      null,
+      { timeout: 5000 },
+    )
+    eq(
+      await page.locator('[data-pg="sel-scroll-up"]').getAttribute("data-state"),
+      "visible",
+      "scroll-up visible",
+    )
+    eq(
+      await page.locator('[data-pg="sel-scroll-down"]').getAttribute("data-state"),
+      "visible",
+      "scroll-down visible",
+    )
 
     await page.keyboard.press("Escape")
     await waitAllClosed()

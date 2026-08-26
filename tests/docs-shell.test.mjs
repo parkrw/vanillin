@@ -105,9 +105,13 @@ export default async function run({ page, baseUrl, test, eq }) {
 
   await test("page has exactly one h2", async () => {
     await page.goto(`${baseUrl}/#button`)
-    await page.waitForSelector(".pg-main > h2")
-    const h2Count = await page.locator(".pg-main > h2").count()
-    eq(h2Count, 1, `expected 1 h2 in .pg-main, got ${h2Count}`)
+    // Waiting on a bare `.pg-main > h2` would make the count vacuous, and the
+    // earlier `.btn` was worse — the nav and the home page both render buttons,
+    // so it resolved against whatever was already mounted and counted headings
+    // on the wrong route. Wait for *this* page's heading, then assert it is the
+    // only one: a docs page titles itself once.
+    await page.waitForSelector('.pg-main > h2:text-is("Button")')
+    eq(await page.locator(".pg-main > h2").count(), 1)
   })
 
   await test("rail present on component pages with TOC entries", async () => {
