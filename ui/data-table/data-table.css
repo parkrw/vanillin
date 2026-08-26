@@ -5,6 +5,8 @@
 .data-table-toolbar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   padding-block-end: 1rem;
 }
 
@@ -28,14 +30,18 @@
   margin-inline-start: auto;
 }
 
+/* Both rows wrap: the page controls alone are wider than a phone-width
+   column and were forcing a document-wide horizontal scroll. */
 .data-table-pagination {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
   padding-block-start: 1rem;
 }
 
 .data-table-selection-count {
-  flex: 1;
+  flex: 1 1 auto;
   font-size: 0.875rem;
   color: var(--muted-foreground);
 }
@@ -43,7 +49,9 @@
 .data-table-page-controls {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin-inline-start: auto;
 }
 
 .data-table-page-size {

@@ -1426,4 +1426,58 @@ export default async function run({ page, baseUrl, test, eq }) {
     const ascending = amounts.every((a, i) => i === 0 || a >= amounts[i - 1])
     eq(ascending, true, "server returned the sorted page")
   })
+
+  // ── Narrow column ─────────────────────────────────────────────────
+
+  await test("toolbar and pagination wrap inside a narrow column instead of overflowing it", async () => {
+    const measure = () =>
+      dt.evaluate((root) => {
+        const rect = (el) => el.getBoundingClientRect()
+        const controls = root.querySelector(".data-table-page-controls")
+        const parts = [...controls.children]
+        const gap = parseFloat(getComputedStyle(controls).columnGap)
+        const centres = parts.map((el) => rect(el).top + rect(el).height / 2)
+        return {
+          sectionRight: Math.round(rect(root).right),
+          paginationRight: Math.round(rect(root.querySelector(".data-table-pagination")).right),
+          actionsRight: Math.round(rect(root.querySelector(".data-table-toolbar-actions")).right),
+          controlsWidth: rect(controls).width,
+          controlsNeed: parts.reduce((sum, el) => sum + rect(el).width, 0) + gap * (parts.length - 1),
+          rowSpread: Math.max(...centres) - Math.min(...centres),
+        }
+      })
+
+    const original = page.viewportSize()
+    const wide = await measure()
+    await page.setViewportSize({ width: 640, height: original.height })
+    await page.waitForTimeout(200)
+    let narrow
+    try {
+      narrow = await measure()
+    } finally {
+      await page.setViewportSize(original)
+      await page.waitForTimeout(100)
+    }
+
+    // Counter-precondition: at the default width the controls fit one row.
+    eq(wide.controlsNeed <= wide.controlsWidth + 1, true, `controls fit at ${original.width}px`)
+    eq(wide.rowSpread < 4, true, `one row of page controls at the default width (spread ${wide.rowSpread})`)
+    // Precondition: the narrow column cannot hold the controls in one row.
+    eq(
+      narrow.controlsNeed > narrow.controlsWidth,
+      true,
+      `controls need ${narrow.controlsNeed}px, the column gives ${narrow.controlsWidth}px`
+    )
+    eq(narrow.rowSpread > 20, true, `page controls wrapped onto more rows (spread ${narrow.rowSpread})`)
+    eq(
+      narrow.paginationRight <= narrow.sectionRight,
+      true,
+      `pagination stays inside its section (${narrow.paginationRight} vs ${narrow.sectionRight})`
+    )
+    eq(
+      narrow.actionsRight <= narrow.sectionRight,
+      true,
+      `toolbar actions stay inside their section (${narrow.actionsRight} vs ${narrow.sectionRight})`
+    )
+  })
 }
