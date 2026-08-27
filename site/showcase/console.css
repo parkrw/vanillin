@@ -69,6 +69,10 @@
   --live-value-up: var(--ck-orange);
   --live-value-down: var(--ck-blue);
 
+  /* Live halos breathe at the CloudKey console's 2.4s; alarms keep their
+     own 1.1s beat. */
+  --glow-duration: 2.4s;
+
   position: relative;
   display: flex;
   flex-direction: column;

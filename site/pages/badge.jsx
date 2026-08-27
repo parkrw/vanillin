@@ -91,7 +91,9 @@ import "./ui/badge/badge.css"
         <h3>Glow</h3>
         <p>
           <code>glow</code> breathes a halo in the variant's own colour on a fixed
-          2s loop, for the one badge on a page that means "live". Under{" "}
+          2s loop, for the one badge on a page that means "live"; destructive
+          variants run the faster 1.1s alarm beat instead, the ring swelling
+          further and fading as it grows. Under{" "}
           <code>prefers-reduced-motion</code> the halo holds still.{" "}
           <code>--glow-duration</code> and <code>--glow-strength</code> retime
           and dim it — the same two properties <code>StatusDot</code>'s{" "}
@@ -119,7 +121,9 @@ import "./ui/badge/badge.css"
           Two custom properties retime and dim the glow:{" "}
           <code>--glow-duration</code> is one breath (default{" "}
           <code>2s</code>) and <code>--glow-strength</code> multiplies the halo
-          alpha (default <code>1</code>). Set them on any ancestor and every
+          alpha (default <code>1</code>); a destructive badge's alarm beat reads{" "}
+          <code>--glow-alarm-duration</code> (default <code>1.1s</code>) in place
+          of <code>--glow-duration</code>. Set them on any ancestor and every
           badge, status dot and progress bar inside follows, so a whole panel
           shares one pulse.
         </p>
@@ -266,6 +270,7 @@ import "./ui/badge/badge.css"
       <ApiReference title="Custom properties" props={[
         { name: "--glow-duration", type: "<time>", default: "2s", description: "One breath of the glow. Inherited, so setting it on an ancestor retimes every badge, status dot and progress bar inside" },
         { name: "--glow-strength", type: "number", default: "1", description: "Multiplies the halo alpha; 0.5 is half as bright, 0 hides the halo. Inherited the same way" },
+        { name: "--glow-alarm-duration", type: "<time>", default: "1.1s", description: "One beat of a destructive badge's alarm loop, in place of --glow-duration. Inherited the same way" },
       ]} />
     </>
   )

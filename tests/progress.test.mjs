@@ -267,6 +267,32 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     )
   })
 
+
+  // Park the loop exactly at a phase of its cycle through the Web Animations
+  // API (a paused CSS animation plus a negative delay lands a hair off the
+  // frame), so getComputedStyle reads that keyframe's values.
+  const frameAt = (locator, phase) =>
+    locator.first().evaluate((el, phase) => {
+      const anims = el.getAnimations()
+      for (const a of anims) {
+        a.pause()
+        a.currentTime = a.effect.getTiming().duration * phase
+      }
+      const s = getComputedStyle(el)
+      const frame = { shadow: s.boxShadow, opacity: s.opacity }
+      for (const a of anims) a.play()
+      return frame
+    }, phase)
+  // Chrome serialises a shadow as "<colour> x y blur spread": split there.
+  const geometry = (shadow) => shadow.slice(shadow.indexOf(")") + 1)
+  const colour = (shadow) => shadow.slice(0, shadow.indexOf(")") + 1)
+
+  await test("glow shape: a crisp ring that swells, no blur", async () => {
+    const bar = page.locator('[data-pg="progress-glow"] .progress--glow')
+    eq(geometry((await frameAt(bar, 0)).shadow), " 0px 0px 0px 2px", "rest: one crisp 2px ring")
+    eq(geometry((await frameAt(bar, 0.5)).shadow), " 0px 0px 0px 4px", "peak: one crisp 4px ring")
+  })
+
   await test("animated demo settles at 66", async () => {
     await page.waitForFunction(
       () => document.querySelectorAll(".progress")[0]?.getAttribute("aria-valuenow") === "66",

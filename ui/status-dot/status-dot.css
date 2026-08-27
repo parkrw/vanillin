@@ -80,15 +80,22 @@
 }
 
 /* ── Ring (halo) ──
- * The halo is the dot's own colour and breathes: `color` carries the status
- * token so currentColor feeds the shadow, and the loop swells the spread and
- * alpha. Indeterminate loop → fixed 2s literal, same reasoning as pending.
+ * The halo is the dot's own colour — `color` carries the status token so
+ * currentColor feeds the shadow — and it is a crisp ring, not a blur: the loop
+ * swells its spread 3px → 5px and lifts its alpha, the ripple a console's live
+ * dots make. Indeterminate loop → fixed 2s literal, same reasoning as pending.
  *
- * --glow-duration (one breath) and --glow-strength (halo alpha multiplier)
- * are the vocabulary shared with badge--glow and progress--glow. Neither is
- * defaulted here, so an ancestor can retime or dim a whole panel. Both apply
- * to `pending`, which runs the same loops. --glow-strength scales the halo
- * only: pending's opacity dim is its forced-colors cue and stays put. */
+ * `error` runs the alarm beat instead: faster, the ring swells further and
+ * fades as it grows, and the dot itself dims to 0.65 — a sonar ping, still in
+ * the dot's own colour. Parked under reduced motion it shows the shared 20%
+ * rest halo like every other ring.
+ *
+ * --glow-duration (one breath), --glow-alarm-duration (one alarm beat) and
+ * --glow-strength (halo alpha multiplier) are the vocabulary shared with
+ * badge--glow and progress--glow. None is defaulted here, so an ancestor can
+ * retime or dim a whole panel. `pending` runs the breath loops and takes the
+ * same properties. --glow-strength scales the halo only: pending's opacity dim
+ * is its forced-colors cue and stays put. */
 
 .status-dot--ring {
   color: var(--muted-foreground);
@@ -106,6 +113,7 @@
 
 .status-dot--ring[data-status="error"] {
   color: var(--destructive);
+  animation: status-dot-alarm var(--glow-alarm-duration, 1.1s) ease-in-out infinite;
 }
 
 .status-dot--ring[data-status="info"] {
@@ -125,14 +133,24 @@
     box-shadow: 0 0 0 3px color-mix(in oklab, currentColor calc(20% * var(--glow-strength, 1)), transparent);
   }
   50% {
-    box-shadow:
-      0 0 0 5px color-mix(in oklab, currentColor calc(32% * var(--glow-strength, 1)), transparent),
-      0 0 10px 2px color-mix(in oklab, currentColor calc(45% * var(--glow-strength, 1)), transparent);
+    box-shadow: 0 0 0 5px color-mix(in oklab, currentColor calc(30% * var(--glow-strength, 1)), transparent);
+  }
+}
+
+@keyframes status-dot-alarm {
+  0%, 100% {
+    box-shadow: 0 0 0 3px color-mix(in oklab, currentColor calc(30% * var(--glow-strength, 1)), transparent);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in oklab, currentColor calc(12% * var(--glow-strength, 1)), transparent);
+    opacity: 0.65;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .status-dot--ring,
+  .status-dot--ring[data-status="error"],
   .status-dot--ring[data-status="pending"] {
     animation: none;
   }

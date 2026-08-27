@@ -196,8 +196,14 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(await page.locator(".ackp-thread-title .status-dot--ring").count(), 1, "incident title rings")
     const dots = page.locator(".ackp-widget-dot.status-dot--ring")
     eq(await dots.count(), 8, "every widget dot rings")
-    const names = await dots.evaluateAll((els) => els.map((el) => getComputedStyle(el).animationName))
-    eq(names.every((n) => n === "status-dot-ring-pulse"), true, `widget dots breathe: ${names.join(",")}`)
+    const loops = await dots.evaluateAll((els) => els.map((el) => `${el.dataset.status}:${getComputedStyle(el).animationName}`))
+    const expected = (status) => (status === "error" ? "status-dot-alarm" : "status-dot-ring-pulse")
+    eq(
+      loops.every((l) => l === `${l.split(":")[0]}:${expected(l.split(":")[0])}`),
+      true,
+      `widget dots breathe, the error one on the alarm beat: ${loops.join(",")}`,
+    )
+    eq(loops.some((l) => l.startsWith("error:")), true, "precondition: one widget is an error")
   })
 
   await test("reduced motion parks the sweep on a static value", async () => {
