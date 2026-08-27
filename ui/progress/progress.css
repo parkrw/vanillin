@@ -16,7 +16,8 @@
 
 /*
  * Glow — `glow` breathes a halo in the bar's own colour on a fixed 2s loop,
- * the shape badge--glow uses: symmetric 0/50/100 keyframes, no second hue.
+ * the shape badge--glow uses: a crisp ring swelling 2px → 4px on symmetric
+ * 0/50/100 keyframes, no blur, no second hue.
  *
  * The halo is on the track, not the indicator: the track's `overflow: hidden`
  * clips a descendant's box-shadow, so an indicator halo computes correctly in
@@ -39,9 +40,7 @@
     box-shadow: 0 0 0 2px color-mix(in oklab, var(--progress-glow, var(--primary)) calc(18% * var(--glow-strength, 1)), transparent);
   }
   50% {
-    box-shadow:
-      0 0 0 3px color-mix(in oklab, var(--progress-glow, var(--primary)) calc(32% * var(--glow-strength, 1)), transparent),
-      0 0 12px 2px color-mix(in oklab, var(--progress-glow, var(--primary)) calc(40% * var(--glow-strength, 1)), transparent);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--progress-glow, var(--primary)) calc(28% * var(--glow-strength, 1)), transparent);
   }
 }
 

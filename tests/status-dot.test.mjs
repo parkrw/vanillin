@@ -196,7 +196,7 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
       [
         "success:status-dot-ring-pulse@2s",
         "warning:status-dot-ring-pulse@2s",
-        "error:status-dot-ring-pulse@2s",
+        "error:status-dot-alarm@1.1s",
         "info:status-dot-ring-pulse@2s",
         "neutral:status-dot-ring-pulse@2s",
         "pending:status-dot-pulse, status-dot-ring-pulse@2s, 2s",
@@ -315,6 +315,12 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     eq(await duration('[data-pg="sd-ring"] .status-dot--ring'), "2s", "precondition: the default ring row uses the 2s fallback")
     eq(await duration('[data-pg="sd-glow-controls"] .status-dot--ring'), "4s", "ring follows the wrapper")
     eq(
+      await duration('[data-pg="sd-glow-controls"] .status-dot--ring[data-status="error"]'),
+      "2s",
+      "the alarm beat follows --glow-alarm-duration, not --glow-duration",
+    )
+    eq(await duration('[data-pg="sd-ring"] .status-dot--ring[data-status="error"]'), "1.1s", "counter-precondition: the default alarm beat")
+    eq(
       await duration('[data-pg="sd-glow-controls"] .status-dot[data-status="pending"]'),
       "4s, 4s",
       "pending's dim and halo loops both follow the wrapper",
@@ -348,6 +354,61 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
       weak.luma > strong.luma,
       true,
       `a lower --glow-strength is dimmer (default ${strong.luma.toFixed(1)} vs controls ${weak.luma.toFixed(1)})`,
+    )
+  })
+
+
+  // Park the loop exactly at a phase of its cycle through the Web Animations
+  // API (a paused CSS animation plus a negative delay lands a hair off the
+  // frame), so getComputedStyle reads that keyframe's values.
+  const frameAt = (locator, phase) =>
+    locator.first().evaluate((el, phase) => {
+      const anims = el.getAnimations()
+      for (const a of anims) {
+        a.pause()
+        a.currentTime = a.effect.getTiming().duration * phase
+      }
+      const s = getComputedStyle(el)
+      const frame = { shadow: s.boxShadow, opacity: s.opacity }
+      for (const a of anims) a.play()
+      return frame
+    }, phase)
+  // Chrome serialises a shadow as "<colour> x y blur spread": split there.
+  const geometry = (shadow) => shadow.slice(shadow.indexOf(")") + 1)
+  const colour = (shadow) => shadow.slice(0, shadow.indexOf(")") + 1)
+  // A colour expression resolved where the element lives, so its custom
+  // properties mean what they mean there.
+  const mixColour = (locator, mix) =>
+    locator.first().evaluate((el, mix) => {
+      const probe = document.createElement("span")
+      probe.style.backgroundColor = mix
+      el.parentElement.appendChild(probe)
+      const resolved = getComputedStyle(probe).backgroundColor
+      probe.remove()
+      return resolved
+    }, mix)
+
+  await test("ring shape: a crisp ring that swells in the dot's colour; error is the alarm beat", async () => {
+    const live = page.locator('[data-pg="sd-ring"] .status-dot--ring[data-status="success"]')
+    const alarm = page.locator('[data-pg="sd-ring"] .status-dot--ring[data-status="error"]')
+    const rest = await frameAt(live, 0)
+    const peak = await frameAt(live, 0.5)
+    eq(geometry(rest.shadow), " 0px 0px 0px 3px", `rest: one crisp 3px ring (${rest.shadow})`)
+    eq(geometry(peak.shadow), " 0px 0px 0px 5px", `peak: one crisp 5px ring, no blur (${peak.shadow})`)
+    eq(
+      colour(peak.shadow),
+      await mixColour(live, "color-mix(in oklab, var(--success) calc(30% * var(--glow-strength, 1)), transparent)"),
+      "peak: still the dot's own colour",
+    )
+    const alarmRest = await frameAt(alarm, 0)
+    const alarmPeak = await frameAt(alarm, 0.5)
+    eq(geometry(alarmPeak.shadow), " 0px 0px 0px 6px", `alarm peak: the ring swells to 6px (${alarmPeak.shadow})`)
+    eq(alarmPeak.opacity, "0.65", "alarm peak: the dot dims")
+    eq(alarmRest.opacity, "1", "alarm rest: the dot is solid")
+    eq(
+      colour(alarmPeak.shadow),
+      await mixColour(alarm, "color-mix(in oklab, var(--destructive) calc(12% * var(--glow-strength, 1)), transparent)"),
+      "alarm peak: fades in its own red",
     )
   })
 

@@ -24,7 +24,8 @@ export default async function run({ page, baseUrl, test, eq }) {
       (await glows.evaluateAll((els) =>
         els.map((el) => `${getComputedStyle(el).animationName}@${getComputedStyle(el).animationDuration}`),
       )).join(" | "),
-      Array(5).fill("badge-glow@2s").join(" | "),
+      // success, warning, info, destructive, default — the destructive one is the alarm beat.
+      ["badge-glow@2s", "badge-glow@2s", "badge-glow@2s", "badge-alarm@1.1s", "badge-glow@2s"].join(" | "),
     )
     // Counter-precondition: the plain status badges do not animate.
     eq(
@@ -115,6 +116,39 @@ export default async function run({ page, baseUrl, test, eq }) {
       true,
       `a lower --glow-strength is dimmer (default ${strong.luma.toFixed(1)} vs controls ${weak.luma.toFixed(1)})`,
     )
+  })
+
+
+  // Park the loop exactly at a phase of its cycle through the Web Animations
+  // API (a paused CSS animation plus a negative delay lands a hair off the
+  // frame), so getComputedStyle reads that keyframe's values.
+  const frameAt = (locator, phase) =>
+    locator.first().evaluate((el, phase) => {
+      const anims = el.getAnimations()
+      for (const a of anims) {
+        a.pause()
+        a.currentTime = a.effect.getTiming().duration * phase
+      }
+      const s = getComputedStyle(el)
+      const frame = { shadow: s.boxShadow, opacity: s.opacity }
+      for (const a of anims) a.play()
+      return frame
+    }, phase)
+  // Chrome serialises a shadow as "<colour> x y blur spread": split there.
+  const geometry = (shadow) => shadow.slice(shadow.indexOf(")") + 1)
+  const colour = (shadow) => shadow.slice(0, shadow.indexOf(")") + 1)
+
+  await test("glow shape: a crisp ring that swells; destructive badges run the alarm beat", async () => {
+    const live = page.locator('[data-pg="badge-glow"] .badge--success.badge--glow')
+    const alarm = page.locator('[data-pg="badge-glow"] .badge--destructive.badge--glow')
+    eq(geometry((await frameAt(live, 0)).shadow), " 0px 0px 0px 2px", "rest: one crisp 2px ring")
+    eq(geometry((await frameAt(live, 0.5)).shadow), " 0px 0px 0px 4px", "peak: one crisp 4px ring, no blur")
+    const timing = await alarm.first().evaluate((el) => {
+      const s = getComputedStyle(el)
+      return `${s.animationName}@${s.animationDuration}`
+    })
+    eq(timing, "badge-alarm@1.1s", "destructive glow is the alarm beat")
+    eq(geometry((await frameAt(alarm, 0.5)).shadow), " 0px 0px 0px 5px", "alarm peak: the ring swells to 5px")
   })
 
   await test("chip: renders as a secondary badge with the chip modifier", async () => {

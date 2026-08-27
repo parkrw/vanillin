@@ -111,7 +111,9 @@ import "./ui/status-dot/status-dot.css"
               The <code>ring</code> prop draws a halo in the dot's own colour
               and breathes it on a fixed 2s loop, the "live" look consoles use
               for running instances. The halo never takes a second hue: a green
-              dot glows green. Under <code>prefers-reduced-motion</code> the
+              dot glows green. <code>error</code> runs the alarm beat instead: a
+              faster 1.1s loop where the ring swells further and fades while
+              the dot dims. Under <code>prefers-reduced-motion</code> every
               halo holds still at 20% opacity.{" "}
               <code>--glow-duration</code> and <code>--glow-strength</code>{" "}
               retime and dim it — the same two properties{" "}
@@ -179,17 +181,19 @@ Running (label on adjacent text)
 
       <section className="pg-section">
         <h3>Glow speed and brightness</h3>
-        <ComponentPreview code={`<div style={{ "--glow-duration": "4s", "--glow-strength": 0.5 }}>
+        <ComponentPreview code={`<div style={{ "--glow-duration": "4s", "--glow-alarm-duration": "2s", "--glow-strength": 0.5 }}>
   <StatusDot status="success" ring />
   <StatusDot status="error" ring />
   <StatusDot status="pending" />
 </div>`}>
           <div>
             <p className="pg-prose">
-              Two custom properties retime and dim the halo:{" "}
+              Three custom properties retime and dim the halo:{" "}
               <code>--glow-duration</code> is one breath (default{" "}
-              <code>2s</code>) and <code>--glow-strength</code> multiplies the
-              halo alpha (default <code>1</code>). Set them on any ancestor and
+              <code>2s</code>), <code>--glow-alarm-duration</code> is one alarm
+              beat for <code>error</code> (default <code>1.1s</code>) and{" "}
+              <code>--glow-strength</code> multiplies the halo alpha (default{" "}
+              <code>1</code>). Set them on any ancestor and
               every status dot, badge and progress bar inside follows.{" "}
               <code>pending</code> takes both, because it runs the same loops;{" "}
               <code>--glow-strength</code> scales its halo only, leaving the
@@ -198,7 +202,7 @@ Running (label on adjacent text)
             <div
               className="pg-row"
               data-pg="sd-glow-controls"
-              style={{ "--glow-duration": "4s", "--glow-strength": 0.5 }}
+              style={{ "--glow-duration": "4s", "--glow-alarm-duration": "2s", "--glow-strength": 0.5 }}
             >
               <StatusDot status="success" ring />
               <StatusDot status="error" ring />
@@ -280,6 +284,7 @@ Running (label on adjacent text)
       <ApiReference title="Custom properties" props={[
         { name: "--glow-duration", type: "<time>", default: "2s", description: "One breath of the ring and of pending's loops. Inherited, so setting it on an ancestor retimes every status dot, badge and progress bar inside" },
         { name: "--glow-strength", type: "number", default: "1", description: "Multiplies the halo alpha; 0.5 is half as bright, 0 hides the halo. Leaves pending's opacity dim alone, because that is its forced-colors cue" },
+        { name: "--glow-alarm-duration", type: "<time>", default: "1.1s", description: "One beat of the error ring's alarm loop. Inherited like --glow-duration; a destructive badge's glow reads it too" },
       ]} />
     </>
   )

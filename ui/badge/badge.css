@@ -22,13 +22,16 @@
 /*
  * Glow — `glow` breathes a halo in the badge's own colour. Each variant sets
  * --badge-glow to the token that defines it, so the halo never introduces a
- * second hue. Indeterminate loop → fixed 2s literal, like status-dot's ring.
- * Focus wins over the glow so the ring stays visible while focused.
+ * second hue. The halo is a crisp ring that swells 2px → 4px, the shape
+ * status-dot's ring uses. Destructive variants run the alarm beat instead —
+ * faster, swelling further and fading as it grows — so a badge beside an alarm
+ * dot keeps time with it. Indeterminate loops → fixed literals, like
+ * status-dot's. Focus wins over the glow so the focus ring stays visible.
  *
  * Speed and brightness are the vocabulary shared with status-dot and
- * progress: --glow-duration is one breath, --glow-strength scales every halo
- * alpha. Neither gets a default in this block, so setting them on any
- * ancestor retimes or dims a whole panel of components at once.
+ * progress: --glow-duration is one breath, --glow-alarm-duration one alarm
+ * beat, --glow-strength scales every halo alpha. None gets a default in this
+ * block, so setting them on any ancestor retimes or dims a whole panel.
  */
 .badge {
   --badge-glow: var(--primary);
@@ -39,6 +42,12 @@
   animation: badge-glow var(--glow-duration, 2s) ease-in-out infinite;
 }
 
+.badge--glow.badge--destructive,
+.badge--glow.badge--destructive-soft {
+  animation: badge-alarm var(--glow-alarm-duration, 1.1s) ease-in-out infinite;
+}
+
+/* After the alarm rule: the two tie on specificity and focus must win. */
 .badge--glow:focus-visible {
   animation: none;
 }
@@ -48,14 +57,23 @@
     box-shadow: 0 0 0 2px color-mix(in oklab, var(--badge-glow) calc(18% * var(--glow-strength, 1)), transparent);
   }
   50% {
-    box-shadow:
-      0 0 0 3px color-mix(in oklab, var(--badge-glow) calc(32% * var(--glow-strength, 1)), transparent),
-      0 0 12px 2px color-mix(in oklab, var(--badge-glow) calc(40% * var(--glow-strength, 1)), transparent);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--badge-glow) calc(28% * var(--glow-strength, 1)), transparent);
+  }
+}
+
+@keyframes badge-alarm {
+  0%, 100% {
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--badge-glow) calc(30% * var(--glow-strength, 1)), transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in oklab, var(--badge-glow) calc(12% * var(--glow-strength, 1)), transparent);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .badge--glow {
+  .badge--glow,
+  .badge--glow.badge--destructive,
+  .badge--glow.badge--destructive-soft {
     animation: none;
   }
 }

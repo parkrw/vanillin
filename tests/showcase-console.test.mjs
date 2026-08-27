@@ -204,14 +204,23 @@ export default async function run({ page, baseUrl, test, eq, near }) {
   await test("health rows breathe: rings in their own colour, the alarm badge glowing", async () => {
     const rings = console_.locator(".ck-health-row .status-dot--ring")
     eq(await rings.count(), 5)
-    eq(
-      (await rings.evaluateAll((els) => els.map((el) => getComputedStyle(el).animationName))).join(","),
-      Array(5).fill("status-dot-ring-pulse").join(","),
+    // Four live rings breathe at the console's 2.4s; the alarm row's ring runs the 1.1s alarm beat.
+    const loops = await rings.evaluateAll((els) =>
+      els.map((el) => {
+        const s = getComputedStyle(el)
+        return `${el.dataset.status}:${s.animationName}@${s.animationDuration}`
+      }),
     )
+    eq(loops.filter((l) => l.endsWith(":status-dot-ring-pulse@2.4s")).length, 4, `live rings: ${loops.join(" | ")}`)
+    eq(loops.includes("error:status-dot-alarm@1.1s"), true, `alarm ring: ${loops.join(" | ")}`)
     const glowing = console_.locator(".ck-health-row .badge--glow")
     eq(await glowing.count(), 1)
     eq(await glowing.textContent(), "2 alarms")
-    eq(await glowing.evaluate((el) => getComputedStyle(el).animationName), "badge-glow")
+    eq(
+      await glowing.evaluate((el) => `${getComputedStyle(el).animationName}@${getComputedStyle(el).animationDuration}`),
+      "badge-alarm@1.1s",
+      "the alarm badge keeps time with the alarm dot",
+    )
     // Counter-precondition: healthy rows do not glow.
     eq(await console_.locator(".ck-health-row .badge").count(), 5)
   })
