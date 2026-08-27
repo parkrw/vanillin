@@ -92,7 +92,11 @@ import "./ui/badge/badge.css"
         <p>
           <code>glow</code> breathes a halo in the variant's own colour on a fixed
           2s loop, for the one badge on a page that means "live". Under{" "}
-          <code>prefers-reduced-motion</code> the halo holds still.
+          <code>prefers-reduced-motion</code> the halo holds still.{" "}
+          <code>--glow-duration</code> and <code>--glow-strength</code> retime
+          and dim it — the same two properties <code>StatusDot</code>'s{" "}
+          <code>ring</code> and <code>Progress</code>'s <code>glow</code> read,
+          so one ancestor sets the pulse for a whole panel.
         </p>
         <ComponentPreview code={`<Badge variant="success" glow>Live</Badge>
 <Badge variant="warning" glow>Degraded</Badge>
@@ -257,6 +261,11 @@ import "./ui/badge/badge.css"
         { name: "onRemove", type: "() => void", description: "Callback for the dismiss button; omit for a static chip" },
         { name: "removeLabel", type: "string", description: 'Accessible label for the remove button (default: "Remove <label>")' },
         { name: "disabled", type: "boolean", description: "Disable the chip and its remove button" },
+      ]} />
+
+      <ApiReference title="Custom properties" props={[
+        { name: "--glow-duration", type: "<time>", default: "2s", description: "One breath of the glow. Inherited, so setting it on an ancestor retimes every badge, status dot and progress bar inside" },
+        { name: "--glow-strength", type: "number", default: "1", description: "Multiplies the halo alpha; 0.5 is half as bright, 0 hides the halo. Inherited the same way" },
       ]} />
     </>
   )
