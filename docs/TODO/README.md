@@ -1,5 +1,7 @@
 # Cycle: vanillin — components (01–30), config/parity/platform (31–79), docs site + console kit (80–104)
 
+**Planning moved to GitHub issues on 2026-08-27.** Task files 01–124 stay as the record of work already scoped; no new ones get added. New work is filed as an issue — see the [phase 3 epic](https://github.com/parkrw/vanillin/issues/11).
+
 **Resume:** Handoff section below — **batch A (84, 92, 93) passed review 2026-08-27; PRs #8, #9, #10 await the user's merge**, plus this docs branch. Everything through **91** is merged; `main` == `origin/main` at `07961519da8d`; **74 is parked by the user** ("no mobile yet", 2026-08-24). Next, after the merges: `/cycle --adjust` (re-measure the baseline, wire the two post-merge console usages), then `/cycle --spawn 3` → batch B (94, 95, 96).
 
 **History:** per-task detail lives in each task file's `## Handoff` and in `docs/TODO/LOG.md` (the long index history through 90 moved there on 2026-08-27). Milestones: batches 1–6 (76–89) landed 2026-08-06 → 08-17; 90 console-route 08-19; ci gate + F4 cursor fix `9c483ea` 08-24; 91 console-ck-look `d70e7c66` 08-25; G4 removed and G2 fixed 08-25; data-table C11–C16 fixed 08-26.
