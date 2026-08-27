@@ -1,6 +1,6 @@
 # task84: token-guard
 **Goal:** Fail the build when a CSS file reads a custom property that nothing defines, so the generated/hand-written token seam cannot drift silently.  **Branch:** `fix/token-guard`  **Deps:** none
-**Owns:** `scripts/check-tokens.mjs`, `package.json` (one script entry), `styles/globals.css` (`@property` additions only), `tests/run.mjs` (sub-task 5 only)
+**Owns:** `scripts/check-tokens.mjs`, `tests/check-tokens.unit.mjs`, `package.json` (one script entry), `styles/globals.css` (`@property` additions only), `tests/run.mjs` (sub-task 5 only)
 
 ## Read this first: nothing is broken today
 
@@ -44,18 +44,18 @@ Prefer scanning for **any occurrence of the token name in a `.jsx`/`.js` file** 
 - [ ] 1. **`scripts/check-tokens.mjs`.** Collect every `var(--x)` across `styles/*.css` and `ui/*/*.css`; collect every definition (declaration in any block, plus `@property`); collect every token named anywhere in `ui/**/*.jsx` and `lib/**`. Report reads that match none of the three. Static only — no browser, no dev server, so it is fast enough to be a build step.
 - [ ] 2. **Wire it in.** `npm run check:tokens`, and call it from whatever `npm run build` already runs. Exit non-zero on a finding — this is a gate, unlike `sweep-pages.mjs` and `probe-stacking.mjs`, which are instruments that exit 0 on findings. Say so in the file header so nobody "fixes" the inconsistency.
 - [ ] 3. **`@property` for the three font tokens** in `styles/globals.css`, with `syntax: "*"` (a font stack is not a typed grammar) and an `initial-value` matching the current `defaults.css` stack.
-- [ ] 4. **Prove it catches the reported bug.** Temporarily delete `--typeset-size` from `defaults.css`, confirm the checker fails, restore. Never commit the break.
-- [ ] 5. **ISSUES H4 — `tests/run.mjs` fails fast on an imposter dev server.** Today `waitForServer()` only fetches `:PORT`, so an orphaned vite from another worktree answers and the whole suite runs against the wrong tree (seen 2026-08-16; a second server was alive again in G8 on 08-26). Fix: reject when the spawned vite child exits before the server answers (`vite.on("exit", …)` ahead of `waitForServer`), and refuse to start when something already listens on the port. Test: with a throwaway server on the port, `node tests/run.mjs badge` exits non-zero naming the port; with nothing on it, the run is unchanged. files: `tests/run.mjs`
+- [ ] 4. **Prove it catches the reported bug — as a committed test.** Export the checker's core as a function that takes a root directory, and write `tests/check-tokens.unit.mjs` (pure Node, runs first like the other `*.unit.mjs`): a temp fixture tree with one `var(--missing)` read reports exactly that token; the same fixture with the token defined in CSS, then with it named only in a `.jsx`, reports nothing; and the real repo root reports nothing. Never commit a deliberate break of `defaults.css`.
+- [ ] 5. **ISSUES H4, remaining half — `tests/run.mjs` fails fast when its vite child dies.** The busy-port refusal already landed (`tests/run.mjs:18-26`, commit `0a3f51954733`); do not redo it. What is still missing: `waitForServer()` polls for up to 15s even when the spawned vite has already exited, so a vite crash reads as "dev server did not start" 15s late with no exit code. Fix: attach `vite.on("exit", …)` before `waitForServer` and reject immediately with the exit code and signal. Verify: `VANILLIN_TEST_PORT=1 node tests/run.mjs badge` (unprivileged bind fails) exits non-zero within ~2s naming vite's exit code; with a free port the run is unchanged. If you can make that a committed test without spawning Chrome (a seam such as an env var pointing the runner at a stub vite bin is acceptable), do; if not, record the manual check in the Handoff and say why. files: `tests/run.mjs`
 
 ## Verify / done
 
 ```sh
 node scripts/check-tokens.mjs   # exits 0, reports nothing on a clean tree
 npm run build
-node tests/run.mjs              # baseline 758/761 — this task should not move it
+VANILLIN_TEST_PORT=5201 node tests/run.mjs > out.txt 2>&1; grep -c '^PASS' out.txt; grep '^FAIL' out.txt
 ```
 
-Baseline noise floor: 2 slider-cursor failures + an intermittent `navigation-menu` hover flake.
+Baseline: **811/811** on 2026-08-27 (`07961519da8d`, idle machine, exit 0) — no known failures. This task adds one unit suite and should otherwise not move the count; name any `FAIL` line in the report, a bare count cannot be reviewed.
 
 Done when: the checker reports **zero** findings on a clean tree (17 false positives means sub-task 1 is not finished), fails on a deliberately deleted token, and runs as part of the build.
 
