@@ -101,6 +101,7 @@ export const categories = [
       kbd: { title: "Kbd", page: lazy(() => import("./pages/kbd.jsx")) },
       "status-dot": { title: "Status Dot", page: lazy(() => import("./pages/status-dot.jsx")) },
       "live-value": { title: "Live Value", page: lazy(() => import("./pages/live-value.jsx")) },
+      "copy-field": { title: "Copy Field", page: lazy(() => import("./pages/copy-field.jsx")) },
       typography: { title: "Typography", page: lazy(() => import("./pages/typography.jsx")) },
       format: { title: "Format", page: lazy(() => import("./pages/format.jsx")) },
       marker: { title: "Marker", page: lazy(() => import("./pages/marker.jsx")) },
