@@ -65,4 +65,17 @@ Anything visual. This is a static checker; it cannot see contrast, layout or sta
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
+**Branch:** `fix/token-guard`  **PR:** #8 (open)  **Updated:** 2026-08-27
+
+- **Landed:** `npm run build` now fails when a stylesheet reads a custom property nothing defines; `--typeset-font-body|heading|mono` degrade to a literal stack instead of invalidating; `tests/run.mjs` reports a dead vite child at once (0s, `code 1`) instead of after 15s.
+- **Verify:** 812/812 on `VANILLIN_TEST_PORT=5201`, exit 0, no FAIL lines (baseline 811 + the new unit suite). `node scripts/check-tokens.mjs` clean: 90 tokens over 74 stylesheets.
+- **Repo state:** clean, all five sub-tasks committed.
+- **Next:** task 92 (console kit). Nothing owed here.
+
+**Sub-task 5 has no committed test — why.** The seam works and is verified manually, twice: `VANILLIN_TEST_PORT=1 node tests/run.mjs badge` exits 1 in <1s naming `code 1, signal null`, where the pre-fix `tests/run.mjs` took 15s with `dev server did not start`. A committed version needs a new file (`tests/run-vite-exit.unit.mjs`, spawning `node tests/run.mjs` with a stub vite bin on a free port), and a new test file falls outside this task's `Owns` globs. Ask the supervisor for the file, then add it — it is ~30 lines.
+
+**Two findings, not changed here.**
+
+1. **Chrome rejects `@property --typeset-size` and `@property --typeset-flow`.** `initial-value: 1rem` / `1.5rem` is not computationally independent, so the whole registration is dropped — 63 of the 65 rules in `styles/globals.css` take, those two guard nothing. The task's premise that the three rhythm vars are protected holds only for `--typeset-leading`. Measured through `CSSPropertyRule` on a real page. The fix is `16px` / `24px`, but `@property` changes computed-value representation (`docs/QUIRKS.md`), so it needs its own task and a suite run — it is not an `@property` *addition*, which is all this task owns.
+2. **The false-positive count is 19, not 17.** `--live-value-up` and `--live-value-down` are the extras. They are not JS-set; they are consumer-override hooks read as `var(--live-value-up, var(--warning))`. The fallback rule, not the JS rule, is what silences them correctly — a JS-name-only filter catches them by accident, because a `.jsx` comment happens to mention them.
