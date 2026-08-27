@@ -1,0 +1,12 @@
+{
+  "name": "copy-field",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [
+    "button"
+  ],
+  "files": {
+    "copy-field.css": "sha256-78waP9FcURltV/IK+X37pyQlggPB9bFVpoWQ4ZxqPTw=",
+    "copy-field.jsx": "sha256-aBACPuKAgOlIQvs/EkiCyo9fV9Te6R7dbDc7EqB8FQ0="
+  }
+}

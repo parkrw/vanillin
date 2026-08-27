@@ -239,6 +239,19 @@
         "cn.js"
       ]
     },
+    "copy-field": {
+      "type": "ui",
+      "files": [
+        "copy-field.css",
+        "copy-field.jsx"
+      ],
+      "requires": [
+        "button"
+      ],
+      "lib": [
+        "cn.js"
+      ]
+    },
     "data-table": {
       "type": "ui",
       "files": [
