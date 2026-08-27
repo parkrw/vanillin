@@ -285,7 +285,7 @@ the fix needs to keep the container without breaking `:modal`.
 
 ### C10. `ui/dropdown-menu` has no destructive item variant
 
-**Status:** open  **Found:** task 88, 2026-08-17
+**Status:** owned by **task 104** (2026-08-27)  **Found:** task 88, 2026-08-17
 
 `ui/button` and `ui/badge` both carry a `destructive` variant; menu items carry
 none, so a delete entry in a menu has no kit-sanctioned styling. Task 87 wrote
@@ -747,7 +747,7 @@ recording instead of fixing):
 ## H. Test-quality gaps
 
 ### H4. `tests/run.mjs` accepts an imposter dev server — the suite can silently test the wrong tree
-**Status:** open  **Found:** task82 salvage, 2026-08-16
+**Status:** owned by **task 84** sub-task 5 (2026-08-27)  **Found:** task82 salvage, 2026-08-16
 `run.mjs` spawns vite with `--strictPort` but never checks that the child survived; `waitForServer()` just fetches `:5199`, so anything already on the port answers and the whole suite runs against *that* tree. Hit for real: an orphaned vite rooted in `../vanillin-task82` made merged `main` read 755-758/762 with phantom deterministic failures (nav-menu z-index "regression", slider `@fs` 403) that vanished once the orphan was killed. Cheapest fix: fail fast when the spawned vite exits (`vite.on("exit", ...)` before `waitForServer`), or fetch a nonce file vite serves only from the expected root.
 
 ### H1. ~~Assertions that hold for the wrong value~~ — SWEPT (`c7f0664d119e`)
