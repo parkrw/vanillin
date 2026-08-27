@@ -118,6 +118,16 @@
 @property --typeset-size { syntax: "<length>"; inherits: true; initial-value: 1rem; }
 @property --typeset-flow { syntax: "<length>"; inherits: true; initial-value: 1.5rem; }
 
+/* A font stack is not a typed grammar, so `syntax: "*"`. The point is the
+ * `initial-value`: a registered property degrades to it when the token goes
+ * missing, instead of invalidating the declaration that reads it. These three
+ * were the only unguarded typeset tokens (task 84). Values mirror
+ * `--font-sans`/`--font-mono` in defaults.css — literal, because an
+ * `initial-value` may not contain `var()`. */
+@property --typeset-font-body { syntax: "*"; inherits: true; initial-value: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+@property --typeset-font-heading { syntax: "*"; inherits: true; initial-value: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+@property --typeset-font-mono { syntax: "*"; inherits: true; initial-value: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+
 /* ---- Token machinery ----
  *
  * Every token *value* comes from defaults.css. What is left here either
