@@ -37,10 +37,10 @@ Tokens only (`var(--…)`, `color-mix(in oklab, …)`, no hex); monospace via `v
 
 ## Sub-tasks
 
-- [x] 1. **Component.** `ui/copy-field/copy-field.jsx` + `copy-field.css` per the API above. files: `ui/copy-field/**`
-- [x] 2. **Page + registry.** `site/pages/copy-field.jsx` — Default, Usage, Truncation (middle vs end, in a 12rem container), Secret, With label, Callback — and the `site/registry.js` line under Data Display after `"live-value"`. Exactly one `h2`. files: page, `site/registry.js`
-- [x] 3. **Tests** in `tests/copy-field.test.mjs`. Grant clipboard first: `await page.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: baseUrl })`. Then assert outcomes, never call shapes: a click puts the exact `value` on the clipboard (`navigator.clipboard.readText()` in the page); `secret` copies the real value while the visible text is dots, and reveal toggles `data-secret`; the button's accessible name flips to `copiedLabel` and back (`waitForFunction`, never a fixed sleep); the live region is empty before the click and carries `copiedLabel` after; middle truncation in the 12rem container leaves the tail's text equal to the last 8 characters and the head with `scrollWidth > clientWidth`; `truncate="end"` renders one value span; the value has `dir="ltr"`. files: `tests/copy-field.test.mjs`
-- [x] 4. **Manifests.** `npm run contracts`; commit `ui/copy-field/.van.json` and `registry.json` with the component.
+- [ ] 1. **Component.** `ui/copy-field/copy-field.jsx` + `copy-field.css` per the API above. files: `ui/copy-field/**`
+- [ ] 2. **Page + registry.** `site/pages/copy-field.jsx` — Default, Usage, Truncation (middle vs end, in a 12rem container), Secret, With label, Callback — and the `site/registry.js` line under Data Display after `"live-value"`. Exactly one `h2`. files: page, `site/registry.js`
+- [ ] 3. **Tests** in `tests/copy-field.test.mjs`. Grant clipboard first: `await page.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: baseUrl })`. Then assert outcomes, never call shapes: a click puts the exact `value` on the clipboard (`navigator.clipboard.readText()` in the page); `secret` copies the real value while the visible text is dots, and reveal toggles `data-secret`; the button's accessible name flips to `copiedLabel` and back (`waitForFunction`, never a fixed sleep); the live region is empty before the click and carries `copiedLabel` after; middle truncation in the 12rem container leaves the tail's text equal to the last 8 characters and the head with `scrollWidth > clientWidth`; `truncate="end"` renders one value span; the value has `dir="ltr"`. files: `tests/copy-field.test.mjs`
+- [ ] 4. **Manifests.** `npm run contracts`; commit `ui/copy-field/.van.json` and `registry.json` with the component.
 
 ## Verify / done
 
@@ -71,3 +71,4 @@ Swapping `site/showcase/panels/settings-panel.jsx`'s API-key row to `CopyField` 
   - The root carries `data-truncate="middle" | "end" | "none"` beyond the stated anatomy. `"end"` and `false` both render a single `.copy-field-text`, so the CSS has no other way to tell wrapping from ellipsising.
   - `.copy-field`-scoped selectors in the CSS are deliberate, not defensive noise: `.btn--icon`'s `width` and `.copy-field-btn`'s `inline-size` cascade as one property, so at equal specificity the consumer's stylesheet import order would decide the button size.
   - The copy→check swap is an opacity cross-fade, so any opacity read must wait for the transition's target. Sampling right after a `data-state` flip caught an in-between frame and failed once.
+**Status:** NOT STARTED
