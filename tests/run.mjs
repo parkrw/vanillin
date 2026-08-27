@@ -37,6 +37,19 @@ const vite = spawn(process.execPath, [viteBin, "--port", String(PORT), "--strict
   stdio: "ignore",
 })
 
+// A vite that dies on startup — busy port, unbindable port, bad config —
+// otherwise reads as "dev server did not start" a full 15 seconds later, with
+// no exit code to explain it (ISSUES H4). Race the poll against the child so
+// the failure arrives at once and names why.
+const viteDied = new Promise((_resolve, reject) => {
+  vite.on("exit", (code, signal) => {
+    reject(new Error(`vite exited before the dev server was ready — code ${code}, signal ${signal}`))
+  })
+})
+// vite.kill() in the finally below makes this reject after the race has already
+// settled; swallow that rather than crash a completed run.
+viteDied.catch(() => {})
+
 async function waitForServer() {
   const deadline = Date.now() + 15000
   while (Date.now() < deadline) {
@@ -60,7 +73,7 @@ const near = (actual, expected, tolerance, label = "") => {
 
 let browser
 try {
-  await waitForServer()
+  await Promise.race([waitForServer(), viteDied])
   // Google Chrome by default (no browser download). CHROME_PATH points the
   // launch at an explicit binary instead, for images that ship only Chromium.
   browser = await chromium.launch(
