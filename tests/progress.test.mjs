@@ -125,6 +125,84 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     }
   })
 
+  // The track's `overflow: hidden` clips a descendant's box-shadow, so a halo
+  // on the indicator computes correctly and paints nothing. These read pixels
+  // in a 4px strip just above a bar; clip is viewport-relative, and
+  // locator.boundingBox() is avoided because its actionability wait never
+  // settles on an element with an infinite animation.
+  const stripAbove = async (selector) => {
+    const clip = await page.locator(selector).evaluate((el) => {
+      const r = el.getBoundingClientRect()
+      return { x: Math.round(r.left), y: Math.round(r.top) - 5, width: Math.round(r.width), height: 4 }
+    })
+    const shot = await page.screenshot({ clip })
+    return page.evaluate(async (b64) => {
+      const img = new Image()
+      img.src = `data:image/png;base64,${b64}`
+      await img.decode()
+      const canvas = document.createElement("canvas")
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext("2d")
+      ctx.drawImage(img, 0, 0)
+      const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      let r = 0, g = 0, b = 0
+      for (let i = 0; i < data.length; i += 4) {
+        r += data[i]
+        g += data[i + 1]
+        b += data[i + 2]
+      }
+      const n = data.length / 4
+      return [r / n, g / n, b / n]
+    }, shot.toString("base64"))
+  }
+  const colourDistance = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
+
+  const GLOW_BAR = '[data-pg="progress-glow"] .progress--glow'
+  const PLAIN_BAR = '[data-pg="progress-glow"] .progress:not(.progress--glow)'
+
+  await test("glow: breathes on a fixed 2s loop and the halo paints", async () => {
+    await page.locator('[data-pg="progress-glow"]').evaluate((el) => el.scrollIntoView({ block: "center" }))
+    const glow = await page.locator(GLOW_BAR).evaluate((el) => {
+      const cs = getComputedStyle(el)
+      return { name: cs.animationName, duration: cs.animationDuration, shadow: cs.boxShadow }
+    })
+    eq(glow.name, "progress-glow", "glow keyframes running")
+    eq(glow.duration, "2s", "fixed literal duration")
+    eq(glow.shadow !== "none", true, "halo declared")
+    eq(
+      await page.locator(PLAIN_BAR).evaluate((el) => getComputedStyle(el).boxShadow),
+      "none",
+      "counter-precondition: a bar without `glow` has no halo",
+    )
+    // Peak over a series: the halo breathes, so one sample can land at its
+    // dimmest. Measured range on this fixture is 18–32 RGB units.
+    const baseline = await stripAbove(PLAIN_BAR)
+    let peak = 0
+    for (let i = 0; i < 6; i++) {
+      peak = Math.max(peak, colourDistance(await stripAbove(GLOW_BAR), baseline))
+    }
+    eq(peak > 8, true, `halo paints above the bar (peak distance ${peak.toFixed(1)})`)
+  })
+
+  await test("glow: reduced motion keeps a static halo", async () => {
+    eq(
+      await page.locator(GLOW_BAR).evaluate((el) => getComputedStyle(el).animationName),
+      "progress-glow",
+      "precondition: the glow animates at no-preference",
+    )
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    const still = await page.locator(GLOW_BAR).evaluate((el) => {
+      const cs = getComputedStyle(el)
+      return { name: cs.animationName, shadow: cs.boxShadow }
+    })
+    const painted = colourDistance(await stripAbove(GLOW_BAR), await stripAbove(PLAIN_BAR))
+    await page.emulateMedia({ reducedMotion: "no-preference" })
+    eq(still.name, "none", "animation removed")
+    eq(still.shadow !== "none", true, "halo still declared")
+    eq(painted > 8, true, `static halo still paints (distance ${painted.toFixed(1)})`)
+  })
+
   await test("animated demo settles at 66", async () => {
     await page.waitForFunction(
       () => document.querySelectorAll(".progress")[0]?.getAttribute("aria-valuenow") === "66",

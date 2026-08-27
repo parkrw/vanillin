@@ -81,6 +81,28 @@ import "./ui/progress/progress.css"
       </section>
 
       <section className="pg-section">
+        <h3>Glow</h3>
+        <p>
+          Pass <code>glow</code> for the one bar on a page that means
+          &quot;live&quot;. A halo in the bar&apos;s own colour breathes on a
+          fixed 2 s loop, the same way <code>Badge</code>&apos;s{" "}
+          <code>glow</code> and <code>StatusDot</code>&apos;s <code>ring</code>{" "}
+          do. Set <code>--progress-glow</code> to recolour the halo when the
+          indicator itself is themed. Reduced motion leaves a static halo.
+        </p>
+        <ComponentPreview code={`<Progress value={64} glow aria-label="Live throughput" />
+<Progress value={64} aria-label="Plain" />`}>
+          <div
+            data-pg="progress-glow"
+            style={{ width: "60%", display: "flex", flexDirection: "column", gap: "3rem" }}
+          >
+            <Progress value={64} glow aria-label="Live throughput" />
+            <Progress value={64} aria-label="Plain" />
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Complete</h3>
         <p>
           When <code>value</code> reaches <code>max</code> the bar fills
@@ -177,6 +199,7 @@ import "./ui/progress/progress.css"
       <ApiReference props={[
         { name: "value", type: "number | null", description: "Current progress value. Omit or pass null for indeterminate." },
         { name: "max", type: "number", default: "100", description: "Maximum value" },
+        { name: "glow", type: "boolean", default: "false", description: "Breathing halo in the bar's own colour (static under reduced motion)" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />
     </>
