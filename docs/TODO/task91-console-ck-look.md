@@ -35,7 +35,7 @@ Decisions taken without the user (asked 2026-08-25, no answer in 60s, recommende
 
 ## Handoff
 
-**Status:** COMPLETE, uncommitted  **Branch:** `feat/console-ck-look`  **PR:** none  **Updated:** 2026-08-25
+**Status:** COMPLETE, merged `d70e7c66` (2026-08-25)  **Branch:** `feat/console-ck-look` (deleted)  **PR:** none  **Updated:** 2026-08-27
 
 - **Landed:** everything in the sub-tasks above, uncommitted and staged on the branch for the user's commit.
 - **Verify:** `npm run build` clean; `npm run contracts` fresh; full `npm test` **803/804**, the one failure being this task's own `live-value: --live-value-up/down recolour from an ancestor`, which read `color` mid-transition (interpolated oklab). Probe fixed to switch the transition off; `node tests/run.mjs live-value` then 6/6. Not re-run as a full suite after that one-test fix. The previously known failures (slider-cursor pair, navigation-menu hover flake) did not appear in this run.

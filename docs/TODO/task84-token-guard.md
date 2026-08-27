@@ -1,6 +1,6 @@
 # task84: token-guard
 **Goal:** Fail the build when a CSS file reads a custom property that nothing defines, so the generated/hand-written token seam cannot drift silently.  **Branch:** `fix/token-guard`  **Deps:** none
-**Owns:** `scripts/check-tokens.mjs`, `package.json` (one script entry), `styles/globals.css` (`@property` additions only)
+**Owns:** `scripts/check-tokens.mjs`, `package.json` (one script entry), `styles/globals.css` (`@property` additions only), `tests/run.mjs` (sub-task 5 only)
 
 ## Read this first: nothing is broken today
 
@@ -45,6 +45,7 @@ Prefer scanning for **any occurrence of the token name in a `.jsx`/`.js` file** 
 - [ ] 2. **Wire it in.** `npm run check:tokens`, and call it from whatever `npm run build` already runs. Exit non-zero on a finding — this is a gate, unlike `sweep-pages.mjs` and `probe-stacking.mjs`, which are instruments that exit 0 on findings. Say so in the file header so nobody "fixes" the inconsistency.
 - [ ] 3. **`@property` for the three font tokens** in `styles/globals.css`, with `syntax: "*"` (a font stack is not a typed grammar) and an `initial-value` matching the current `defaults.css` stack.
 - [ ] 4. **Prove it catches the reported bug.** Temporarily delete `--typeset-size` from `defaults.css`, confirm the checker fails, restore. Never commit the break.
+- [ ] 5. **ISSUES H4 — `tests/run.mjs` fails fast on an imposter dev server.** Today `waitForServer()` only fetches `:PORT`, so an orphaned vite from another worktree answers and the whole suite runs against the wrong tree (seen 2026-08-16; a second server was alive again in G8 on 08-26). Fix: reject when the spawned vite child exits before the server answers (`vite.on("exit", …)` ahead of `waitForServer`), and refuse to start when something already listens on the port. Test: with a throwaway server on the port, `node tests/run.mjs badge` exits non-zero naming the port; with nothing on it, the run is unchanged. files: `tests/run.mjs`
 
 ## Verify / done
 
