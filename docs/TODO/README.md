@@ -1,23 +1,24 @@
-# Cycle: vanillin — component build-out (01–30), then config/parity/platform (31–79)
+# Cycle: vanillin — components (01–30), config/parity/platform (31–79), docs site + console kit (80–104)
 
-**Resume:** Handoff section below (batch plan). **91 console-ck-look is built on `feat/console-ck-look` (2026-08-25, user request outside the batch plan; staged, awaiting the user's commit and merge); it took the number the batch plan reserved for glow-pulse, so renumber A's glow-pulse slot when seeding.** Everything through 90 plus the ci gate is merged; **74 is parked by the user ("no mobile yet", 2026-08-24)**. Next: `/cycle --adjust`, then spawn batches A–E (84 + console kit 91–102).
+**Resume:** Handoff section below (batch plan). Everything through **91** is merged; `main` == `origin/main` at `ea97756f`; **74 is parked by the user** ("no mobile yet", 2026-08-24). Next: `/cycle --spawn 3` → batch A (84, 92, 93).
 
-**History:** batch 5 merged 2026-08-17 — **85** ✓ (`docs/shell-width-gap`: gutter 40→80px at laptop widths, cap 68→72rem, one `--pg-gutter` knob task 74 must keep) and **86** ✓ (`docs/usage-order`, PR #7: Default leads, Usage on the Code tab sits second, on every page; 7 documented raw-coordinate/nav-menu exceptions; `scripts/sweep-section-order.mjs` is the rerunnable guard). **Suite baseline correction from 86: 759/762, not 760/762** — the third failure is the known `navigation-menu` hover flake, confirmed against unmodified sources; post-merge suite is recorded in each task file's Handoff. **87 merged 2026-08-17** (`feat/home-console-showcase` — CloudKey console mock below the hero, kit-only, glass chrome; the design reference turned out to be the "CloudKey Console" claude.ai/design project, built in a separate session, dep on 85 waived by the user). **2026-08-17 second review of 87:** rebrand Acme Cloud 1.0.0, grouped sidebar per the user screenshot, Support/Settings panels, decorative theme toggle, tooltips, richer row actions, progress-ring showcase — seeded as **88 + 89** (Owns disjoint, spawn together; supervisor wires 89's panels into 88's slots after both merge). **Batch 6 merged + integrated 2026-08-17:** 88 ✓ and 89 ✓ merged into local main, then `feat/console-integrate` wired 89's `SupportPanel`/`SettingsPanel` into 88's page cases, mounted `StatusShowcase` on the Utilization page, and deleted the placeholder `PanelSlot`. **Suite baseline is now 784/787** (same 3 known failures; drawer timeouts seen once in a full run were load flakes, 15/15 in isolation). Worktrees `../vanillin-task{88-console-rebrand,89-console-panels}` and their merged branches are safe to remove; remote branches `feat/console-rebrand-nav`/`feat/console-panels` deletable by the user after push. After both merge, the head wires 89's panels into 88's `SupportPanelSlot`/`SettingsPanelSlot` and places `StatusShowcase` (~20 lines in `site/showcase/console.jsx`). `main` sits 3 ahead of origin (user pushes); PR #7 closable; remote branches `docs/shell-width-gap`/`docs/usage-order` deletable by the user. **Next: 90 (console route, ~S), then 84 (token guard), 74 (mobile), console kit.** 82 COMPLETE 2026-08-16 (suite 760/762); worktree `../vanillin-task82`, branches `docs/completeness`/`docs/emdash-sweep`, and the "task82 interrupted-worker pages" stash are all safe to remove. **Batch 4 landed after an interrupted run (2026-08-16).** The 82 worker (Opus 5, `--effort max` from since-fixed skill text) fanned out 12 subagents and was killed mid-flight on 2026-08-13; a salvage session sorted the wreckage. Merged into `main`: **83 complete** (`fix/overlay-stacking` — nav-menu viewport z-index + regression test + probe covers all ten overlays) and **82 partial** (`docs/completeness` — `defaultTab` API, full page audit in the task file, use-form/form-fields/home/data-table + ~30 small pages to standard). Merged suite **759/761**, build clean; the 2 failures are the pre-existing slider-cursor pair. **82's remaining work:** 20 pages whose half-written rewrites were reverted (stashed as "task82 interrupted-worker pages" for reference — treat as unreviewed), plus the em-dash sweep (334 left, do last). **81 merged 2026-08-16** (`docs/layout-measure`, finish commit `66533a1`); post-merge suite **760/762** — only the slider-cursor pair. Worktrees `../vanillin-task{81,83}` are safe to remove; `../vanillin-task82` stays. **Next: 82's remaining 20 pages, then 84, 74 (now unblocked), console kit.** Run `/cycle --adjust` to reconcile. Note for future fan-outs: caps now live in `~/.claude/CLAUDE.md` — max 4 agents total, never `--effort max`, workers at session model or one tier lower.
+**History:** per-task detail lives in each task file's `## Handoff` and in `docs/TODO/LOG.md` (the long index history through 90 moved there on 2026-08-27). Milestones: batches 1–6 (76–89) landed 2026-08-06 → 08-17; 90 console-route 08-19; ci gate + F4 cursor fix `9c483ea` 08-24; 91 console-ck-look `d70e7c66` 08-25; G4 removed and G2 fixed 08-25; data-table C11–C16 fixed 08-26.
 
-## Handoff — through 90 + ci gate merged; next: 84 + console kit as spawn batches A–E
+## Handoff — through 91 merged; next: spawn batches A–E (84 + console kit 92–104)
 
-**Status:** COMPLETE (through 90)  **Branch:** `main`  **PR:** none  **Updated:** 2026-08-24
+**Status:** COMPLETE (through 91)  **Branch:** `main`  **PR:** none  **Updated:** 2026-08-27
 
-- **Landed since the last checkpoint, unreconciled in this index:** 90 merged; three topnav/column style commits (`e4a4008`…`2e2e89d`); a squash-merged home-hovercards branch (`86f2fe9` — badge hover-cards, console showcase data, +3 test files); the ci gate + **F4 stale-cursor-test fix** (`9c483ea` — so expect the 2 slider-cursor failures gone from the noise floor). `/cycle --adjust` reconciles History and the 90 row's stale "awaiting merge".
-- **Repo state:** clean; `main` holds everything. All stale worktrees and branches removed 2026-08-24, including `feat/component-hovercards`, scrapped by the user with no commits. `main` is 1 ahead of origin with this handoff commit (user pushes). User-deletable remotes: `docs/shell-width-gap`, `docs/usage-order`, `feat/console-panels`, `feat/console-rebrand-nav`; PR #7 closable. Both `On main:` stashes are old and unrelated.
-- **Next:** `/cycle --adjust` — reconcile the above, seed the console-kit backlog as tasks **91–102** (one file each, ests from the backlog list), then run the schedule below. **74 (mobile) is parked by the user, 2026-08-24: "no mobile yet." Do not schedule it.**
-- **Spawn schedule** (user wants max concurrency, 2026-08-24; cap 3 workers/batch + head = 4 agents; every batch's `Owns` disjoint):
-  - **A:** 84 token-guard + 91 glow-pulse + 92 copy-field
-  - **B:** 93 log-viewer + 94 key-value + 95 quota-meter
-  - **C:** 96 code-block + 97 stat-tile + 98 json-tree
-  - **D:** 99 filter-bar + 100 timeline + 101 connection-status
-  - **E:** 102 region-picker — solo, plain `/cycle 102`, no spawn
-- **Gotchas:** each console worker owns `ui/<slug>/**` + `site/pages/<slug>.jsx` + `tests/<slug>.test.mjs` + `ui/<slug>/.van.json`, and adds its own `site/registry.js` entry so its page routes — the head resolves the trivial registry conflict at merge and wires any `#console` showcase mounts itself post-merge (88/89 precedent; showcase files are shared, workers stay out). Workers get `VANILLIN_TEST_PORT` 5201/5202/5203 (`tests/run.mjs` pins `:5199 --strictPort`). Re-measure the suite baseline before seeding — 785/788 was recorded at 90, before the hovercards and ci-gate merges, and a bare count is not evidence: name the failing tests. **91 glow-pulse keeps every token component-local** (`ui/glow-pulse/*.css`), never `styles/globals.css` — that file is 84's `Owns` in the same batch. 101 connection-status and 95 quota-meter may compose 91's glow — both are scheduled after A merges.
+- **Repo state:** clean; `main` == `origin/main` (`ea97756f`); no worktrees. `stash@{0}` (`fix/console-ck-look-tests` WIP) is superseded by `d70e7c66` and droppable; `stash@{1,2}` are old and unrelated. User-deletable remotes: `docs/shell-width-gap`, `docs/usage-order`, `feat/console-panels`, `feat/console-rebrand-nav`. `docs/TODO/reports/` is untracked scratch; the stale `task88.done`/`task89.done` were removed 2026-08-27 so the next monitor cannot fire on them.
+- **Suite baseline:** 810/810 on 2026-08-27 (`ea97756f`, idle machine, `node tests/run.mjs`, exit 0) — no failing tests; the slider-cursor pair and the nav-menu hover flake are gone (F4 fix, G4 removal). Re-measure before every spawn and name the failing tests — a bare count is not evidence.
+- **74 mobile-views is parked** (user, 2026-08-24). Do not schedule it.
+- **Spawn schedule** (cap 3 workers + head = 4 agents; every batch's `Owns` pairwise disjoint; each batch branches from post-merge `main`):
+  - **A:** 84 token-guard (+ H4 harness guard) + 92 glow-pulse + 93 copy-field
+  - **B:** 94 log-viewer + 95 key-value + 96 quota-meter
+  - **C:** 97 code-block + 98 stat-tile + 99 json-tree
+  - **D:** 100 filter-bar + 101 timeline + 102 connection-status
+  - **E:** 103 region-picker + 104 menu-destructive-item (two workers)
+- **Console-worker `Owns` (default for 93–103):** `ui/<slug>/**` (incl. `.van.json`), `site/pages/<slug>.jsx`, `tests/<slug>.test.mjs`, one `site/registry.js` line, and the regenerated `registry.json`. The head resolves the `site/registry.js` line conflict at merge and re-runs `npm run contracts` — CI gates on manifest/registry freshness with `git diff --exit-code`. `site/showcase/**` and `site/site.css` are shared and outside every worker's scope: the head wires `#console` mounts post-merge (88/89 precedent); page styles go in the component's CSS. `VANILLIN_TEST_PORT` 5201/5202/5203 per worker (`tests/run.mjs` pins `:5199 --strictPort`).
+- **Gotchas:** 92 glow-pulse lives in the components themselves (91 precedent: `ui/badge`, `ui/status-dot`), never `styles/globals.css` — that file is 84's in the same batch. 96 quota-meter and 102 connection-status compose the badge/status-dot glow, so both sit after A merges. 94 log-viewer reuses `ui/message-scroller` and 100 filter-bar reuses `use-data-table` read-only — neither may edit them.
 
 Two notes for reading anything below: the docs site directory is **`site/`** (renamed 2026-07-27), so older prose here saying `playground/` means `site/`. And `docs/HANDOFF.md` is gone — its durable content is in `AGENTS.md`, `docs/QUIRKS.md` and `docs/DECISIONS.md`; live state belongs in each task file's `## Handoff`.
 
@@ -193,14 +194,27 @@ Started refresh (78). Task 30 is the site chrome overhaul that enables them.
 | 81  | docs-layout-measure      | ~M  | [x]    | merged 2026-08-16 — column centred/68rem + 62ch measure, rhythm contract, topnav 3.6:1; post-merge suite 760/762 [^81] |
 | 82  | docs-completeness        | ~L  | [x]    | complete 2026-08-16 — all pages to standard, em-dash sweep at 0, sheet.jsx finished last; suite 760/762 [^82] |
 | 83  | overlay-stacking         | ~S  | [x]    | merged 2026-08-16 — nav-menu viewport z-index + regression test; probe covers all ten overlays [^83] |
-| 84  | token-guard              | ~S  | [ ]    | preventive — nothing broken today; build gate on undefined tokens [^84] |
+| 84  | token-guard              | ~S  | [ ]    | preventive — nothing broken today; build gate on undefined tokens [^84]; **+ ISSUES H4** (`tests/run.mjs` fails fast when its vite child dies or another server holds the port); batch A |
 | 85  | shell-width-gap          | ~S  | [x]    | complete 2026-08-16 on `docs/shell-width-gap` — gutter 40→80px, cap 68→72rem, one `--pg-gutter` token; suite 761/763 |
 | 86  | usage-section-order      | ~M  | [x]    | complete 2026-08-17 — Default→Usage on every page, 7 documented exceptions, PR #7; suite 759/762 [^86] |
 | 87  | home-console-showcase    | ~L  | [x]    | merged 2026-08-17 from `feat/home-console-showcase` — CloudKey console mock below hero, kit-only, glass; suite 760/762 on branch |
 | 88  | console-rebrand-nav      | ~L  | [x]    | complete 2026-08-17 on `feat/console-rebrand-nav` (9 commits, pushed, no PR by user choice); suite 768/771 known-failures-only; Acme Cloud 1.0.0, grouped sidebar (collapsed), decorative theme toggle, tooltips, row actions, attachments; panel slots at `console.jsx` for 89; filed ISSUES C10 (no destructive menu-item variant) + `notes/tooltip-composition.md` |
 | 89  | console-panels           | ~L  | [x]    | complete 2026-08-17 on `feat/console-panels` (5 commits, pushed, no PR by user choice); suite 775/778 known-failures-only; SupportPanel/SettingsPanel/StatusShowcase from `site/showcase/panels/index.js`, `ackp-` prefix, container-query sized; head integrates after 88 merges |
 | 90  | console-route            | ~S  | [x]    | complete 2026-08-19 on `feat/console-route` (one commit); Platform open by default, `#console` route full-bleed via `pg-main--console`, home link; suite 785/788 |
-| 91  | console-ck-look          | ~L  | [x]    | built 2026-08-25 on `feat/console-ck-look` (staged, user commits); CloudKey palette + navy chrome scoped on `.ck-console`, two folding rails, breadcrumb bar, live drift; new `ui/live-value` + `lib/use-ticker`; `status-dot` ring pulses in its own colour, `badge` gains `glow`; see task file Handoff for the suite count |
+| 91  | console-ck-look          | ~L  | [x]    | merged `d70e7c66` 2026-08-25; CloudKey palette + navy chrome scoped on `.ck-console`, two folding rails, breadcrumb bar, live drift; new `ui/live-value` + `lib/use-ticker`; `status-dot` ring pulses, `badge` gains `glow`; suite 803/804 at build, 810/810 on 08-26 |
+| 92  | glow-pulse               | ~S  | [ ]    | remainder after 91: progress-bar glow, speed + brightness controls on badge/status-dot/progress; owns `ui/{progress,badge,status-dot}/**` + their pages + tests; batch A |
+| 93  | copy-field               | ~S  | [ ]    | resource IDs, ARNs, connection strings; batch A |
+| 94  | log-viewer               | ~L  | [ ]    | follow-tail via `ui/message-scroller` (read-only dep), ANSI colour, highlight via 55's Custom Highlight API; batch B |
+| 95  | key-value                | ~S  | [ ]    | resource detail pane, `<dl>` semantics; batch B |
+| 96  | quota-meter              | ~S  | [ ]    | usage bar, threshold colours from 32's status tokens; composes 91's glow; batch B |
+| 97  | code-block               | ~M  | [ ]    | copy, line numbers, diff; highlight via 55's Custom Highlight API; batch C |
+| 98  | stat-tile                | ~M  | [ ]    | metric + delta + inline SVG sparkline; batch C |
+| 99  | json-tree                | ~M  | [ ]    | `<details>`-based, zero JS; batch C |
+| 100 | filter-bar               | ~L  | [ ]    | query builder over `use-data-table` filters (read-only dep); batch D |
+| 101 | timeline                 | ~M  | [ ]    | audit log / event history; batch D |
+| 102 | connection-status        | ~S  | [ ]    | live SSE/WebSocket indicator; composes 91's glow; batch D |
+| 103 | region-picker            | ~S  | [ ]    | grouped `ui/select` with latency hints; batch E |
+| 104 | menu-destructive-item    | ~S  | [ ]    | ISSUES C10: `variant="destructive"` on `DropdownMenuItem` → `data-variant`, two rules in `dropdown-menu.css`; context-menu + menubar inherit; owns `ui/dropdown-menu/**` + page + test; batch E |
 
 [^33]: `@property`, `light-dark()`, relative-color brand derivation, density
     scaffold.
@@ -587,23 +601,7 @@ progressive enhancement, never a hard requirement.
 
 ## Backlog — console kit
 
-Components a cloud console needs that upstream has no answer for. **Scheduled
-after 30** (see the order above): they need post-39 CSS and settled docs
-conventions, and writing them earlier means writing them twice. Detail
-just-in-time. Rough order of usefulness:
-
-- `glow-pulse` - glow, speed-ctrl, brightness, multi-color, badge/progress-bar/status-dot/etc. **Partly landed by 91** (2026-08-25): `status-dot` rings pulse and `badge` has `glow`, both fixed 2s in the component's own colour. Left: progress-bar glow, speed and brightness controls.
-- `copy-field` — resource IDs, ARNs, connection strings (~S)
-- `key-value` — resource detail pane, definition-list semantics (~S)
-- `stat-tile` — metric + delta + inline SVG sparkline (~M)
-- `log-viewer` — follow-tail (reuse `message-scroller`), ANSI colour, 55 highlight (~L)
-- `code-block` — copy, line numbers, diff; highlight via Custom Highlight API (~M)
-- `quota-meter` — usage bar with threshold colours from the 32 status tokens (~S)
-- `json-tree` — `<details>`-based, zero JS (~M)
-- `filter-bar` — query builder over `use-data-table` filters (~L)
-- `timeline` — audit log / event history (~M)
-- `connection-status` — live SSE/WebSocket indicator (~S)
-- `region-picker` — grouped select with latency hints (~S)
+Promoted to rows 92–104 on 2026-08-27. Nothing is left here; new ideas go straight to a row.
 
 ## Refs
 
@@ -611,26 +609,16 @@ just-in-time. Rough order of usefulness:
 - **Sweep tools:** `node scripts/sweep-pages.mjs` (all 79 pages, light + dark) and `node scripts/contrast-nontext.mjs` (non-text contrast). Measuring instruments — they exit non-zero on harness errors, not on findings.
 - **Per-task decisions, deviations and gotchas: `docs/TODO/LOG.md`.** Append
   there when a task lands — not to this file. This index stays scannable.
-- Planning is **just-in-time**: the rows above are durable, task files are
-  written when a task is picked up. Task files now exist for every task except
-  22–29 (landed before the convention).
-  Specified and ready to dispatch: 65/66/67. 68, 69 and 70 have rows and
-  footnotes but no task files yet. **66 must cover `framework`, `rsc` and
-  `paths`** — task 38 added all three as top-level config keys, so the generated
-  schema has three more branches than its row assumed.
+- Planning is **just-in-time**: the rows above are durable, task files are written when a task is picked up. Task files exist for every task except 22–29 (landed before the convention) and the unstarted 92–104 (written at spawn time).
 - **New CSS convention from 39:** an element never matches an `@container` query
   against a container it declares itself — the query resolves against the
   *ancestor* container. Layout flips therefore go on descendants
   (`flex-wrap`/`gap` unconditional on the root, children's `flex-basis` queried).
   Name every container `vanillin-<slug>`. Thresholds are literal `rem` —
   container conditions cannot read custom properties.
-- Test: `node tests/run.mjs` — boots its own vite on :5199, drives local Chrome;
-  one `tests/<slug>.test.mjs` per interactive component. (Dev server on :5173
-  only needed for manual/screenshot QA.)
-- Build: `npm run build`. No lint configured.
-- Conventions + gotchas: `docs/HANDOFF.md` (block classes, tokens-only CSS,
-  `cn()`, `as` prop, `useControllableState` + `data-state`, `usePresence`, demo
-  page + `site/registry.js` entry per component).
+- Test: `node tests/run.mjs` (`npm test`) — boots its own vite on :5199 (`--strictPort`), drives local Chrome; one `tests/<slug>.test.mjs` per interactive component; `node tests/run.mjs <slug>` runs one file; `VANILLIN_TEST_PORT=52xx` for a concurrent worktree. (Dev server on :5173 only needed for manual/screenshot QA.)
+- Build: `npm run build`. No lint configured. CI (`.github/workflows/deploy.yml`): `npm run contracts && git diff --exit-code`, then `npm test`, then `npm run build` — run `npm run contracts` before committing a new component or its manifest is stale in CI.
+- Conventions + gotchas: `AGENTS.md`, `docs/QUIRKS.md`, `docs/DECISIONS.md` (block classes, tokens-only CSS, `cn()`, `as` prop, `useControllableState` + `data-state`, `usePresence`, demo page + `site/registry.js` entry per component).
 - Load-bearing files: `styles/globals.css` (tokens), `lib/` primitives,
   `ui/toggle/` (stateful pattern), `ui/tabs/` (roving tabindex), `ui/accordion/`
   (disclosure/presence), `site/registry.js`.
@@ -639,6 +627,8 @@ just-in-time. Rough order of usefulness:
   work because of it.
 
 ## Adjustments log
+
+- **2026-08-27 — `--adjust` reconcile after 91 and the post-91 fixes.** 91 ticked merged (`d70e7c66`, one squashed commit of the staged branch); the six data-table fixes (C11–C16), G4's removed hover-delay assertion and G2's CDP-timestamped drawer flicks all landed on `main` without touching the index. 810/810 on 2026-08-27 (`ea97756f`, idle machine, `node tests/run.mjs`, exit 0) — no failing tests; the slider-cursor pair and the nav-menu hover flake are gone (F4 fix, G4 removal). **Console kit promoted from the backlog to rows 92–104**, one number up from the 2026-08-24 schedule because 91 took the glow-pulse slot; batch letters and pairings kept. 92 shrinks to `~S` — 91 shipped the badge and status-dot halves, so what is left is progress-bar glow plus speed/brightness controls, and its `Owns` moves from a `ui/glow-pulse/` that never existed into the three components themselves. **Two ISSUES items triaged in:** H4 (the harness accepts an imposter dev server — it produced phantom failures once and G8 shows a second vite alive again on 08-26) folds into 84 as sub-task 5, because both are `~S` guards and five spawn batches of concurrent worktrees are exactly H4's failure surface; C10 (no destructive menu item) becomes 104 and rides with 103 so batch E is no longer a solo. The old History paragraph moved to `LOG.md` verbatim; History here is now a milestone line. Refs lost the `docs/HANDOFF.md` pointer and the 65/66/67 dispatch note (both stale since early August) and gained the CI gate and `VANILLIN_TEST_PORT`. 74 stays parked.
 
 - **2026-08-19 — 90 complete on `feat/console-route`, one commit instead of one per sub-task.** The four sub-tasks interleave in `site/site.css` (route block + home CTA rule) and `tests/showcase-console.test.mjs` (amended collapse test + new route test), so any intermediate commit would have carried a red test; the task is ~S and the single commit is atomic at the task level. Registered `console` in `docsGroups` Docs entries (the cli pattern), so it appears in the topnav Docs menu, the sidebar Docs group and ⌘K without new plumbing; `App` branches on `isConsole` next to `isHome`. Suite 785/788 (baseline +1 new test, same 3 known failures).
 
