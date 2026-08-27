@@ -2,6 +2,10 @@ import { cn } from "../../lib/cn.js"
 
 /**
  * Determinate when `value` is a number, indeterminate when null/undefined.
+ *
+ * The indeterminate sweep lives in the stylesheet, so no inline transform is
+ * written in that state — an inline one outranks the keyframes and parks the
+ * indicator off the track.
  */
 export function Progress({ value, max = 100, className, ...props }) {
   const isDeterminate = typeof value === "number"
@@ -23,7 +27,7 @@ export function Progress({ value, max = 100, className, ...props }) {
       <div
         className="progress-indicator"
         data-state={state}
-        style={{ transform: `translateX(-${100 - percent}%)` }}
+        style={isDeterminate ? { transform: `translateX(-${100 - percent}%)` } : undefined}
       />
     </div>
   )

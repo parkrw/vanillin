@@ -14,6 +14,35 @@
   transition: transform var(--motion-fast) var(--motion-ease);
 }
 
+/*
+ * Indeterminate — there is no value to fill, so a 40%-wide indicator sweeps
+ * the track instead. translateX only: animating `width` relayouts every
+ * frame. Fixed 1.5s literal, deliberately not var(--motion-*), because an
+ * indeterminate loop must not track --motion-scale. `progress.jsx` writes no
+ * inline transform in this state — an inline one outranks these keyframes.
+ */
+.progress[data-state="indeterminate"] .progress-indicator {
+  width: 40%;
+  animation: progress-indeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+/* Static, still visible: 75% of a 40%-wide bar is 30% along the track. */
+@media (prefers-reduced-motion: reduce) {
+  .progress[data-state="indeterminate"] .progress-indicator {
+    animation: none;
+    transform: translateX(75%);
+  }
+}
+
 /* forced-color-adjust: none — the fill-vs-track colour distinction
  * communicates progress level.  Without it both become Canvas and
  * the bar is invisible.  The non-colour cue is the indicator's width
