@@ -73,7 +73,7 @@ import "./ui/progress/progress.css"
         </p>
         <ComponentPreview code={`<Progress />
 <Progress value={null} />`}>
-          <div style={{ width: "60%", display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div data-pg="progress-indeterminate" style={{ width: "60%", display: "flex", flexDirection: "column", gap: "1rem" }}>
             <Progress />
             <Progress value={null} />
           </div>
@@ -98,6 +98,38 @@ import "./ui/progress/progress.css"
           >
             <Progress value={64} glow aria-label="Live throughput" />
             <Progress value={64} aria-label="Plain" />
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Glow speed and brightness</h3>
+        <p>
+          Two custom properties retime and dim the halo:{" "}
+          <code>--glow-duration</code> is one breath (default <code>2s</code>)
+          and <code>--glow-strength</code> multiplies the halo alpha (default{" "}
+          <code>1</code>). Set them on any ancestor and every progress bar,
+          badge and status dot inside follows. The indeterminate sweep keeps its
+          own timing — it is a loading loop, not a &quot;live&quot; halo.
+        </p>
+        <ComponentPreview code={`<div style={{ "--glow-duration": "4s", "--glow-strength": 0.5 }}>
+  <Progress value={64} glow aria-label="Slow live throughput" />
+  <Progress aria-label="Indeterminate, unretimed" />
+</div>`}>
+          <div
+            data-pg="progress-glow-controls"
+            style={{
+              width: "60%",
+              display: "flex",
+              flexDirection: "column",
+              gap: "3rem",
+              "--glow-duration": "4s",
+              "--glow-strength": 0.5,
+            }}
+          >
+            <Progress value={64} glow aria-label="Slow live throughput" />
+            <Progress value={64} aria-label="Plain, slow row" />
+            <Progress aria-label="Indeterminate, unretimed" />
           </div>
         </ComponentPreview>
       </section>

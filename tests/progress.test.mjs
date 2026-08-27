@@ -33,7 +33,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
   // this state had. Overlap with the track is what "paints" means here.
   const sweep = (frames) =>
     page
-      .locator('.progress[data-state="indeterminate"] .progress-indicator')
+      .locator('[data-pg="progress-indeterminate"] .progress[data-state="indeterminate"] .progress-indicator')
       .first()
       .evaluate(
         (ind, n) =>
@@ -57,7 +57,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
 
   const indeterminateStyles = () =>
     page
-      .locator('.progress[data-state="indeterminate"] .progress-indicator')
+      .locator('[data-pg="progress-indeterminate"] .progress[data-state="indeterminate"] .progress-indicator')
       .evaluateAll((els) =>
         els.map((el) => {
           const cs = getComputedStyle(el)
@@ -201,6 +201,70 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(still.name, "none", "animation removed")
     eq(still.shadow !== "none", true, "halo still declared")
     eq(painted > 8, true, `static halo still paints (distance ${painted.toFixed(1)})`)
+  })
+
+
+  // Halo alpha read without parsing oklab by hand (docs/QUIRKS.md): a probe
+  // span inside the row resolves the same mix through inheritance, and canvas
+  // composites it over white, so a dimmer halo lands closer to white.
+  const haloLuma = (rowSelector, mix) =>
+    page.evaluate(([sel, expr]) => {
+      const row = document.querySelector(sel)
+      const probe = document.createElement("span")
+      probe.style.backgroundColor = expr
+      row.appendChild(probe)
+      const colour = getComputedStyle(probe).backgroundColor
+      probe.remove()
+      const canvas = document.createElement("canvas")
+      canvas.width = 4
+      canvas.height = 4
+      const ctx = canvas.getContext("2d")
+      ctx.fillStyle = "#fff"
+      ctx.fillRect(0, 0, 4, 4)
+      ctx.fillStyle = colour
+      ctx.fillRect(0, 0, 4, 4)
+      const [r, g, b] = ctx.getImageData(1, 1, 1, 1).data
+      return { colour, luma: 0.2126 * r + 0.7152 * g + 0.0722 * b }
+    }, [rowSelector, mix])
+
+  await test("glow controls: --glow-duration and --glow-strength come from an ancestor", async () => {
+    const glowBar = (row) => page.locator(`[data-pg="${row}"] .progress--glow`)
+    eq(
+      await glowBar("progress-glow").evaluate((el) => getComputedStyle(el).animationDuration),
+      "2s",
+      "precondition: the default row breathes on the 2s fallback",
+    )
+    eq(
+      await glowBar("progress-glow-controls").evaluate((el) => getComputedStyle(el).animationDuration),
+      "4s",
+      "the wrapper's --glow-duration is inherited",
+    )
+    eq(
+      await page
+        .locator('[data-pg="progress-glow-controls"] .progress[data-state="indeterminate"] .progress-indicator')
+        .evaluate((el) => getComputedStyle(el).animationDuration),
+      "1.5s",
+      "the indeterminate sweep keeps its own literal — it is a loading loop, not a halo",
+    )
+
+    // The halo at rest: with the loop stopped the box-shadow is the 0%/100%
+    // keyframe, so the two rows differ by strength alone.
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    const dimmed = await glowBar("progress-glow-controls").evaluate((el) => getComputedStyle(el).boxShadow)
+    const full = await glowBar("progress-glow").evaluate((el) => getComputedStyle(el).boxShadow)
+    await page.emulateMedia({ reducedMotion: "no-preference" })
+    eq(full !== "none", true, "precondition: the default row still declares a halo at rest")
+    eq(dimmed !== full, true, `the halo changes with --glow-strength (${full} vs ${dimmed})`)
+
+    const mix = "color-mix(in oklab, var(--primary) calc(18% * var(--glow-strength, 1)), transparent)"
+    const strong = await haloLuma('[data-pg="progress-glow"]', mix)
+    const weak = await haloLuma('[data-pg="progress-glow-controls"]', mix)
+    eq(strong.colour !== "rgba(0, 0, 0, 0)", true, `precondition: the mix resolves (${strong.colour})`)
+    eq(
+      weak.luma > strong.luma,
+      true,
+      `a lower --glow-strength is dimmer (default ${strong.luma.toFixed(1)} vs controls ${weak.luma.toFixed(1)})`,
+    )
   })
 
   await test("animated demo settles at 66", async () => {

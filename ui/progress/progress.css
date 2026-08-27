@@ -22,20 +22,26 @@
  * clips a descendant's box-shadow, so an indicator halo computes correctly in
  * getComputedStyle and paints zero pixels (measured). --progress-glow
  * recolours it for a themed indicator.
+ *
+ * --glow-duration (one breath) and --glow-strength (halo alpha multiplier)
+ * are the vocabulary shared with badge--glow and status-dot--ring; neither is
+ * defaulted here, so an ancestor can retime or dim a whole panel. The
+ * indeterminate sweep below keeps its own literal — it is a loading loop, not
+ * a "live" halo.
  */
 .progress--glow {
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--progress-glow, var(--primary)) 18%, transparent);
-  animation: progress-glow 2s ease-in-out infinite;
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--progress-glow, var(--primary)) calc(18% * var(--glow-strength, 1)), transparent);
+  animation: progress-glow var(--glow-duration, 2s) ease-in-out infinite;
 }
 
 @keyframes progress-glow {
   0%, 100% {
-    box-shadow: 0 0 0 2px color-mix(in oklab, var(--progress-glow, var(--primary)) 18%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--progress-glow, var(--primary)) calc(18% * var(--glow-strength, 1)), transparent);
   }
   50% {
     box-shadow:
-      0 0 0 3px color-mix(in oklab, var(--progress-glow, var(--primary)) 32%, transparent),
-      0 0 12px 2px color-mix(in oklab, var(--progress-glow, var(--primary)) 40%, transparent);
+      0 0 0 3px color-mix(in oklab, var(--progress-glow, var(--primary)) calc(32% * var(--glow-strength, 1)), transparent),
+      0 0 12px 2px color-mix(in oklab, var(--progress-glow, var(--primary)) calc(40% * var(--glow-strength, 1)), transparent);
   }
 }
 

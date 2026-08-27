@@ -64,8 +64,8 @@
   background-color: var(--muted-foreground);
   color: var(--muted-foreground);
   animation:
-    status-dot-pulse 2s ease-in-out infinite,
-    status-dot-ring-pulse 2s ease-in-out infinite;
+    status-dot-pulse var(--glow-duration, 2s) ease-in-out infinite,
+    status-dot-ring-pulse var(--glow-duration, 2s) ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -82,12 +82,18 @@
 /* ── Ring (halo) ──
  * The halo is the dot's own colour and breathes: `color` carries the status
  * token so currentColor feeds the shadow, and the loop swells the spread and
- * alpha. Indeterminate loop → fixed 2s literal, same reasoning as pending. */
+ * alpha. Indeterminate loop → fixed 2s literal, same reasoning as pending.
+ *
+ * --glow-duration (one breath) and --glow-strength (halo alpha multiplier)
+ * are the vocabulary shared with badge--glow and progress--glow. Neither is
+ * defaulted here, so an ancestor can retime or dim a whole panel. Both apply
+ * to `pending`, which runs the same loops. --glow-strength scales the halo
+ * only: pending's opacity dim is its forced-colors cue and stays put. */
 
 .status-dot--ring {
   color: var(--muted-foreground);
-  box-shadow: 0 0 0 3px color-mix(in oklab, currentColor 20%, transparent);
-  animation: status-dot-ring-pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 0 3px color-mix(in oklab, currentColor calc(20% * var(--glow-strength, 1)), transparent);
+  animation: status-dot-ring-pulse var(--glow-duration, 2s) ease-in-out infinite;
 }
 
 .status-dot--ring[data-status="success"] {
@@ -110,18 +116,18 @@
    `animation` shorthand doesn't clobber them on specificity ties. */
 .status-dot--ring[data-status="pending"] {
   animation:
-    status-dot-pulse 2s ease-in-out infinite,
-    status-dot-ring-pulse 2s ease-in-out infinite;
+    status-dot-pulse var(--glow-duration, 2s) ease-in-out infinite,
+    status-dot-ring-pulse var(--glow-duration, 2s) ease-in-out infinite;
 }
 
 @keyframes status-dot-ring-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 3px color-mix(in oklab, currentColor 20%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, currentColor calc(20% * var(--glow-strength, 1)), transparent);
   }
   50% {
     box-shadow:
-      0 0 0 5px color-mix(in oklab, currentColor 32%, transparent),
-      0 0 10px 2px color-mix(in oklab, currentColor 45%, transparent);
+      0 0 0 5px color-mix(in oklab, currentColor calc(32% * var(--glow-strength, 1)), transparent),
+      0 0 10px 2px color-mix(in oklab, currentColor calc(45% * var(--glow-strength, 1)), transparent);
   }
 }
 

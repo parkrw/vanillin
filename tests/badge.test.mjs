@@ -59,6 +59,64 @@ export default async function run({ page, baseUrl, test, eq }) {
     }
   })
 
+  // Halo alpha read without parsing oklab by hand (docs/QUIRKS.md): a probe
+  // span inside the row resolves the same mix through inheritance, and canvas
+  // composites it over white, so a dimmer halo lands closer to white.
+  const haloLuma = (rowSelector, mix) =>
+    page.evaluate(([sel, expr]) => {
+      const row = document.querySelector(sel)
+      const probe = document.createElement("span")
+      probe.style.backgroundColor = expr
+      row.appendChild(probe)
+      const colour = getComputedStyle(probe).backgroundColor
+      probe.remove()
+      const canvas = document.createElement("canvas")
+      canvas.width = 4
+      canvas.height = 4
+      const ctx = canvas.getContext("2d")
+      ctx.fillStyle = "#fff"
+      ctx.fillRect(0, 0, 4, 4)
+      ctx.fillStyle = colour
+      ctx.fillRect(0, 0, 4, 4)
+      const [r, g, b] = ctx.getImageData(1, 1, 1, 1).data
+      return { colour, luma: 0.2126 * r + 0.7152 * g + 0.0722 * b }
+    }, [rowSelector, mix])
+
+  await test("glow controls: --glow-duration on an ancestor retimes the loop", async () => {
+    const duration = (row) =>
+      page.locator(`[data-pg="${row}"] .badge--glow`).first().evaluate((el) => getComputedStyle(el).animationDuration)
+    eq(await duration("badge-glow"), "2s", "precondition: the default row breathes on the 2s fallback")
+    eq(await duration("badge-glow-controls"), "4s", "the wrapper's --glow-duration is inherited")
+    const all = await page
+      .locator('[data-pg="badge-glow-controls"] .badge--glow')
+      .evaluateAll((els) => els.map((el) => getComputedStyle(el).animationDuration))
+    eq(all.length, 3, "all three badges in the row")
+    eq(all.every((d) => d === "4s"), true, `every badge follows the wrapper (got ${JSON.stringify(all)})`)
+  })
+
+  await test("glow controls: --glow-strength on an ancestor dims the halo", async () => {
+    const shadow = (row) =>
+      page.locator(`[data-pg="${row}"] .badge--glow`).first().evaluate((el) => getComputedStyle(el).boxShadow)
+    // Read the halo at rest: with the loop stopped the box-shadow is the
+    // 0%/100% keyframe, so the two rows differ by strength alone.
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    const dimmed = await shadow("badge-glow-controls")
+    const full = await shadow("badge-glow")
+    await page.emulateMedia({ reducedMotion: "no-preference" })
+    eq(full !== "none", true, "precondition: the default row still declares a halo at rest")
+    eq(dimmed !== full, true, `the halo changes with --glow-strength (${full} vs ${dimmed})`)
+
+    const mix = "color-mix(in oklab, var(--success) calc(18% * var(--glow-strength, 1)), transparent)"
+    const strong = await haloLuma('[data-pg="badge-glow"]', mix)
+    const weak = await haloLuma('[data-pg="badge-glow-controls"]', mix)
+    eq(strong.colour !== "rgba(0, 0, 0, 0)", true, `precondition: the mix resolves (${strong.colour})`)
+    eq(
+      weak.luma > strong.luma,
+      true,
+      `a lower --glow-strength is dimmer (default ${strong.luma.toFixed(1)} vs controls ${weak.luma.toFixed(1)})`,
+    )
+  })
+
   await test("chip: renders as a secondary badge with the chip modifier", async () => {
     const cls = await chips.locator(".badge--chip").first().getAttribute("class")
     eq(cls.includes("badge"), true, `has badge base: ${cls}`)
@@ -123,4 +181,5 @@ export default async function run({ page, baseUrl, test, eq }) {
       .getAttribute("class")
     eq(cls.includes("badge--chip"), true, `combobox chip is a Chip: ${cls}`)
   })
+
 }

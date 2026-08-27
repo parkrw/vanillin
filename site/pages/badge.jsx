@@ -110,6 +110,33 @@ import "./ui/badge/badge.css"
       </section>
 
       <section className="pg-section">
+        <h3>Glow speed and brightness</h3>
+        <p>
+          Two custom properties retime and dim the glow:{" "}
+          <code>--glow-duration</code> is one breath (default{" "}
+          <code>2s</code>) and <code>--glow-strength</code> multiplies the halo
+          alpha (default <code>1</code>). Set them on any ancestor and every
+          badge, status dot and progress bar inside follows, so a whole panel
+          shares one pulse.
+        </p>
+        <ComponentPreview code={`<div style={{ "--glow-duration": "4s", "--glow-strength": 0.5 }}>
+  <Badge variant="success" glow>Live</Badge>
+  <Badge variant="warning" glow>Degraded</Badge>
+  <Badge glow>Default</Badge>
+</div>`}>
+          <div
+            className="pg-row"
+            data-pg="badge-glow-controls"
+            style={{ "--glow-duration": "4s", "--glow-strength": 0.5 }}
+          >
+            <Badge variant="success" glow>Live</Badge>
+            <Badge variant="warning" glow>Degraded</Badge>
+            <Badge glow>Default</Badge>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>As link</h3>
         <ComponentPreview code={`<Badge as="a" href="#installation" variant="secondary">
   Installation

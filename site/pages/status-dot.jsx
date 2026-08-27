@@ -173,6 +173,37 @@ Running (label on adjacent text)
       </section>
 
       <section className="pg-section">
+        <h3>Glow speed and brightness</h3>
+        <ComponentPreview code={`<div style={{ "--glow-duration": "4s", "--glow-strength": 0.5 }}>
+  <StatusDot status="success" ring />
+  <StatusDot status="error" ring />
+  <StatusDot status="pending" />
+</div>`}>
+          <div>
+            <p className="pg-prose">
+              Two custom properties retime and dim the halo:{" "}
+              <code>--glow-duration</code> is one breath (default{" "}
+              <code>2s</code>) and <code>--glow-strength</code> multiplies the
+              halo alpha (default <code>1</code>). Set them on any ancestor and
+              every status dot, badge and progress bar inside follows.{" "}
+              <code>pending</code> takes both, because it runs the same loops;{" "}
+              <code>--glow-strength</code> scales its halo only, leaving the
+              opacity dim that carries the cue in forced-colors mode.
+            </p>
+            <div
+              className="pg-row"
+              data-pg="sd-glow-controls"
+              style={{ "--glow-duration": "4s", "--glow-strength": 0.5 }}
+            >
+              <StatusDot status="success" ring />
+              <StatusDot status="error" ring />
+              <StatusDot status="pending" />
+            </div>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Pending animation</h3>
         <ComponentPreview code={`<StatusDot status="pending" />
 <StatusDot status="pending" ring />`}>
