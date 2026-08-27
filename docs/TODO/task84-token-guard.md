@@ -41,11 +41,11 @@ Prefer scanning for **any occurrence of the token name in a `.jsx`/`.js` file** 
 
 ## Sub-tasks
 
-- [ ] 1. **`scripts/check-tokens.mjs`.** Collect every `var(--x)` across `styles/*.css` and `ui/*/*.css`; collect every definition (declaration in any block, plus `@property`); collect every token named anywhere in `ui/**/*.jsx` and `lib/**`. Report reads that match none of the three. Static only — no browser, no dev server, so it is fast enough to be a build step.
-- [ ] 2. **Wire it in.** `npm run check:tokens`, and call it from whatever `npm run build` already runs. Exit non-zero on a finding — this is a gate, unlike `sweep-pages.mjs` and `probe-stacking.mjs`, which are instruments that exit 0 on findings. Say so in the file header so nobody "fixes" the inconsistency.
-- [ ] 3. **`@property` for the three font tokens** in `styles/globals.css`, with `syntax: "*"` (a font stack is not a typed grammar) and an `initial-value` matching the current `defaults.css` stack.
-- [ ] 4. **Prove it catches the reported bug — as a committed test.** Export the checker's core as a function that takes a root directory, and write `tests/check-tokens.unit.mjs` (pure Node, runs first like the other `*.unit.mjs`): a temp fixture tree with one `var(--missing)` read reports exactly that token; the same fixture with the token defined in CSS, then with it named only in a `.jsx`, reports nothing; and the real repo root reports nothing. Never commit a deliberate break of `defaults.css`.
-- [ ] 5. **ISSUES H4, remaining half — `tests/run.mjs` fails fast when its vite child dies.** The busy-port refusal already landed (`tests/run.mjs:18-26`, commit `0a3f51954733`); do not redo it. What is still missing: `waitForServer()` polls for up to 15s even when the spawned vite has already exited, so a vite crash reads as "dev server did not start" 15s late with no exit code. Fix: attach `vite.on("exit", …)` before `waitForServer` and reject immediately with the exit code and signal. Verify: `VANILLIN_TEST_PORT=1 node tests/run.mjs badge` (unprivileged bind fails) exits non-zero within ~2s naming vite's exit code; with a free port the run is unchanged. If you can make that a committed test without spawning Chrome (a seam such as an env var pointing the runner at a stub vite bin is acceptable), do; if not, record the manual check in the Handoff and say why. files: `tests/run.mjs`
+- [x] 1. **`scripts/check-tokens.mjs`.** Collect every `var(--x)` across `styles/*.css` and `ui/*/*.css`; collect every definition (declaration in any block, plus `@property`); collect every token named anywhere in `ui/**/*.jsx` and `lib/**`. Report reads that match none of the three. Static only — no browser, no dev server, so it is fast enough to be a build step.
+- [x] 2. **Wire it in.** `npm run check:tokens`, and call it from whatever `npm run build` already runs. Exit non-zero on a finding — this is a gate, unlike `sweep-pages.mjs` and `probe-stacking.mjs`, which are instruments that exit 0 on findings. Say so in the file header so nobody "fixes" the inconsistency.
+- [x] 3. **`@property` for the three font tokens** in `styles/globals.css`, with `syntax: "*"` (a font stack is not a typed grammar) and an `initial-value` matching the current `defaults.css` stack.
+- [x] 4. **Prove it catches the reported bug — as a committed test.** Export the checker's core as a function that takes a root directory, and write `tests/check-tokens.unit.mjs` (pure Node, runs first like the other `*.unit.mjs`): a temp fixture tree with one `var(--missing)` read reports exactly that token; the same fixture with the token defined in CSS, then with it named only in a `.jsx`, reports nothing; and the real repo root reports nothing. Never commit a deliberate break of `defaults.css`.
+- [x] 5. **ISSUES H4, remaining half — `tests/run.mjs` fails fast when its vite child dies.** The busy-port refusal already landed (`tests/run.mjs:18-26`, commit `0a3f51954733`); do not redo it. What is still missing: `waitForServer()` polls for up to 15s even when the spawned vite has already exited, so a vite crash reads as "dev server did not start" 15s late with no exit code. Fix: attach `vite.on("exit", …)` before `waitForServer` and reject immediately with the exit code and signal. Verify: `VANILLIN_TEST_PORT=1 node tests/run.mjs badge` (unprivileged bind fails) exits non-zero within ~2s naming vite's exit code; with a free port the run is unchanged. If you can make that a committed test without spawning Chrome (a seam such as an env var pointing the runner at a stub vite bin is acceptable), do; if not, record the manual check in the Handoff and say why. files: `tests/run.mjs`
 
 ## Verify / done
 
@@ -65,4 +65,17 @@ Anything visual. This is a static checker; it cannot see contrast, layout or sta
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
+**Branch:** `fix/token-guard`  **PR:** #8 (open)  **Updated:** 2026-08-27
+
+- **Landed:** `npm run build` now fails when a stylesheet reads a custom property nothing defines; `--typeset-font-body|heading|mono` degrade to a literal stack instead of invalidating; `tests/run.mjs` reports a dead vite child at once (0s, `code 1`) instead of after 15s.
+- **Verify:** 812/812 on `VANILLIN_TEST_PORT=5201`, exit 0, no FAIL lines (baseline 811 + the new unit suite). `node scripts/check-tokens.mjs` clean: 90 tokens over 74 stylesheets.
+- **Repo state:** clean, all five sub-tasks committed.
+- **Next:** task 92 (console kit). Nothing owed here.
+
+**Sub-task 5 has no committed test — why.** The seam works and is verified manually, twice: `VANILLIN_TEST_PORT=1 node tests/run.mjs badge` exits 1 in <1s naming `code 1, signal null`, where the pre-fix `tests/run.mjs` took 15s with `dev server did not start`. A committed version needs a new file (`tests/run-vite-exit.unit.mjs`, spawning `node tests/run.mjs` with a stub vite bin on a free port), and a new test file falls outside this task's `Owns` globs. Ask the supervisor for the file, then add it — it is ~30 lines.
+
+**Two findings, not changed here.**
+
+1. **Chrome rejects `@property --typeset-size` and `@property --typeset-flow`.** `initial-value: 1rem` / `1.5rem` is not computationally independent, so the whole registration is dropped — 63 of the 65 rules in `styles/globals.css` take, those two guard nothing. The task's premise that the three rhythm vars are protected holds only for `--typeset-leading`. Measured through `CSSPropertyRule` on a real page. The fix is `16px` / `24px`, but `@property` changes computed-value representation (`docs/QUIRKS.md`), so it needs its own task and a suite run — it is not an `@property` *addition*, which is all this task owns.
+2. **The false-positive count is 19, not 17.** `--live-value-up` and `--live-value-down` are the extras. They are not JS-set; they are consumer-override hooks read as `var(--live-value-up, var(--warning))`. The fallback rule, not the JS rule, is what silences them correctly — a JS-name-only filter catches them by accident, because a `.jsx` comment happens to mention them.
