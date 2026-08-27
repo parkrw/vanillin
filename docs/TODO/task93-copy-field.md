@@ -61,4 +61,13 @@ Swapping `site/showcase/panels/settings-panel.jsx`'s API-key row to `CopyField` 
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** COMPLETE  **Branch:** `feat/copy-field`  **PR:** #9 (open)  **Updated:** 2026-08-27
+
+- **Landed:** `#copy-field` renders all six demos; a click puts the full `value` on the clipboard even when the field paints dots or an ellipsis; middle truncation holds the last 8 characters at 12rem; the reveal toggle flips `data-secret`; the button's name and the polite live region carry `copiedLabel` for 2000ms.
+- **Verified:** `npm run contracts && git diff --exit-code` clean; full suite **821/821, zero FAIL** (`VANILLIN_TEST_PORT=5203`, 811 baseline + 10 new); `npm run build` green.
+- **Repo state:** clean, 4 commits, pushed.
+- **Next:** nothing owed on 93. The head merges batch A (84, 92, 93) and re-runs `npm run contracts` — the `site/registry.js` line is the only expected conflict.
+- **Gotchas:**
+  - The root carries `data-truncate="middle" | "end" | "none"` beyond the stated anatomy. `"end"` and `false` both render a single `.copy-field-text`, so the CSS has no other way to tell wrapping from ellipsising.
+  - `.copy-field`-scoped selectors in the CSS are deliberate, not defensive noise: `.btn--icon`'s `width` and `.copy-field-btn`'s `inline-size` cascade as one property, so at equal specificity the consumer's stylesheet import order would decide the button size.
+  - The copy→check swap is an opacity cross-fade, so any opacity read must wait for the transition's target. Sampling right after a `data-state` flip caught an in-between frame and failed once.
