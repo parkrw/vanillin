@@ -603,6 +603,80 @@ container queries, View Transitions, Custom Highlight API, Speculation Rules,
 `field-sizing`). Each task's first step is a live support check — degrade to
 progressive enhancement, never a hard requirement.
 
+## Phase 3 — foundations & v1 compat (110–124)
+
+**Tracked as GitHub epic [#11](https://github.com/parkrw/vanillin/issues/11)**, one sub-issue per task:
+110→#12, 111→#13, 112→#14, 113→#15, 114→#16, 115→#17, 116→#18, 117→#19, 118→#20,
+119→#21, 120→#22, 121→#23, 122→#24, 123→#25, 124→#26. The task files are the source
+of truth for sub-task detail; the issues track state.
+
+Seeded 2026-08-27 from a four-track foundations audit (lib/ primitives, CSS/token
+foundation, CLI/versioning machinery, component + cross-browser surface). Every
+finding is recorded with file:line in its task file — line numbers were verified
+against `8e812ff` on 2026-08-27 but drift, so re-verify before editing.
+**Numbered from 110**, clear of the console kit's 92–104.
+
+The audit's headline: the sidecar/three-hash contract system is genuinely good,
+but it has never executed end-to-end — zero git tags exist, `van update`'s merge
+base is unreachable from any real install, and `lib/`/`styles/` have no update
+path at all. **117–120 + 124 are the road to a collectable "v1.0, backwards
+compatible from here on"**; 110–116 are the silently-wrong-data and silent-a11y
+fixes consumers would hit first; 121–123 are generator and platform-floor integrity.
+
+| #   | Slug                   | Est | Status | Notes                                                                    |
+| --- | ---------------------- | --- | ------ | ------------------------------------------------------------------------ |
+| 110 | compat-labels          | ~S  | [ ]    | peerDeps React≥19, cut the v0.1.0 tag (README's documented pin fails today), browser-floor + cascade-stance README sections, engines |
+| 111 | form-engine-bugs       | ~M  | [ ]    | `deepEqual` equates all Dates/Sets/Maps (isDirty never fires), watch/Controller leaks, async-validation race, isValid init |
+| 112 | data-table-integrity   | ~M  | [ ]    | selection keyed by array index (wrong rows after reorder) → `getRowId`; O(n²) `indexOf` filter path; pageIndex clamp writeback |
+| 113 | keyboard-a11y          | ~M  | [ ]    | roving focus dies on dynamic lists (group unreachable); focus trap leaks via `<body>`; both WCAG 2.1.1, both invisible to the suite |
+| 114 | toast-announce         | ~M  | [ ]    | live region born with its content (toasts likely silent to AT), errors polite not alert, no queue cap, per-toast 50ms polling |
+| 115 | overlay-dev-warnings   | ~S  | [ ]    | titleless dialog/popover ships a dangling `aria-labelledby` (suppresses fallback naming); zero console.warn in the kit today |
+| 116 | bug-batch-3            | ~M  | [ ]    | iOS scroll lock (body overflow:hidden doesn't lock touch), controllable-state repeat/stale-fn, sidebar Math.random hydration + write-only cookie, URL.canParse / DurationFormat guards |
+| 117 | substrate-sidecars     | ~L  | [ ]    | `lib/.van.json` + `styles/.van.json` so both join add/diff/update; lib copies get `"use client"` injection; typeset.css finally ships. The keystone task |
+| 118 | update-hardening       | ~M  | [ ]    | deps: 117. ENOENT crash on upstream rename/split, `removed` file state, deprecation channel, `.orig` backup before conflict markers, per-file clean recording, first success-path merge test |
+| 119 | format-versioning      | ~S  | [ ]    | deps: 117. `schemaVersion` on sidecar/registry/config, ship `van.schema.json` at init ($schema dangles today), VERSION constant drift test |
+| 120 | base-retrieval         | ~M  | [ ]    | deps: 118, 110. Merge base via hash-verified HTTPS fetch — `git show` inside the installed kit can never work (no .git in any npm/npx install) |
+| 121 | theme-generator-fixes  | ~M  | [ ]    | override selectors derived from CSS rule *order* (a cosmetic reorder retargets every consumer theme) → derive from slug; buildDefaults reads values from a file that no longer holds them |
+| 122 | webkit-ci              | ~M  | [ ]    | second engine in CI — every platform claim is currently a Chrome claim; the triage table is the deliverable, follow-up bugs get W-items in ISSUES |
+| 123 | css-fallback-integrity | ~M  | [ ]    | `@property` initial-values are pre-contrast-fix shadcn numbers (fallbacks reinstate fixed WCAG failures); light-dark() floor decision; measure scoped `.dark`; `overlay` (Chromium-only) decision |
+| 124 | v1-compat-policy       | ~M  | [ ]    | deps: 117–120, 110. COMPAT.md rulings over the ~800-symbol de-facto API, CHANGELOG + CI clause, byte-frozen consumer fixture + compat.unit.mjs. Cutting v1.0 comes after this |
+
+**Spawn shape** (cap 3 workers + head, `Owns` disjoint per batch):
+
+- **F:** 110 + 111 + 112
+- **G:** 113 + 114 + 115
+- **H:** 116 + 121 + 122
+- **I (serial, not a spawn):** 117 → 118 → 119 + 120 → 124 — the CLI chain shares
+  `bin/van.mjs` and `scripts/manifest.mjs`, so it runs as consecutive solo tasks.
+- **123** was seeded behind 84 because both own `styles/globals.css` `@property`
+  blocks; 84's guard landed on `main` in `b732b99` (PR #8), so 123 is unblocked
+  once 84's row is ticked — confirm before starting rather than trusting this line.
+
+These batches are **independent of the console-kit schedule (A–E)** and do not
+change it; nothing in 110–124 shares an `Owns` glob with 92–104 except the 123/84
+overlap above.
+
+**Three seeding calls, recorded so they are not re-litigated:** (1) the CLI
+machinery tasks (117–120) are a serial chain, not a spawn batch — they share
+`bin/van.mjs` and `scripts/manifest.mjs`, and `Owns`-disjointness is by file;
+(2) small unrelated foundation bugs went into one bug-batch (116) per the 68/72
+precedent rather than four `~S` tasks; (3) the audit's perf findings that change
+object-identity guarantees (data-table allocations, the formState proxy) were
+deferred to the list below rather than seeded — they need benchmarks and a design
+note, and bundling them with correctness fixes is how regressions ship.
+
+**Deferred to backlog, deliberately not tasks** (real, measured, post-v1): the
+data-table allocation work (per-cell `columns.find`, fresh `tableApi` identity,
+eager collapsed-group trees, faceted re-filters), floating-layer upgrades (react
+to `side`/`align` prop changes, transform-tracking, main-axis clamp),
+`useSafeTriangle` rAF coalescing, message-scroller per-frame `querySelectorAll`,
+`usePresence` first-transitionend unmount, swipe `lostpointercapture`,
+dismissable-layer stack ordering + `popover="auto"` double-dismiss, `use-form`
+formState-proxy identity + fan-out, the seven unshipped-or-untested `lib/`
+primitives (wire in, test, or unship), a generated `.d.ts` surface from the
+ApiReference tables (the largest adoption lever — its own cycle), per-toast
+store subscriptions, and axe coverage beyond one file.
+
 ## Backlog — console kit
 
 Promoted to rows 92–104 on 2026-08-27. Nothing is left here; new ideas go straight to a row.
