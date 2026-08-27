@@ -37,7 +37,7 @@ Progress: a `glow` prop (boolean, default `false`) adds `progress--glow` to the 
 - [x] 2. **Progress glow.** `glow` → `progress--glow`; halo keyframes on the indicator; `--progress-glow` colour hook; reduced-motion static halo. — test: on `[data-pg="progress-glow"]` the indicator's `animationName` is the glow keyframe at `2s` and `boxShadow !== "none"`; a non-glow bar has `boxShadow === "none"`. files: `ui/progress/progress.jsx`, `ui/progress/progress.css`, `site/pages/progress.jsx`, `tests/progress.test.mjs`
 - [x] 3. **Speed and brightness on all three.** `--glow-duration` and `--glow-strength` wired into badge glow, status-dot ring **and** pending, and progress glow. — test: each page gets a `data-pg="<slug>-glow-controls"` row whose **wrapper** sets `style={{ "--glow-duration": "4s", "--glow-strength": 0.5 }}` (proves inheritance); assert `animationDuration === "4s"` on the children, and that the halo alpha at rest is lower than the default row's — read through a probe element the way `tests/live-value.test.mjs` does (`docs/QUIRKS.md`: never parse oklch by hand). Default rows keep asserting `2s`. files: three `.css`, three pages, three tests
 - [x] 4. **Docs.** Each page gains a "Glow speed and brightness" example and lists both properties in its reference; the progress page's Indeterminate prose describes what it now shows; badge `glow` and status-dot `ring` prose point at the shared properties. Every page keeps exactly one `h2`. files: the three pages
-- [ ] 5. **Manifests.** `npm run contracts`; commit the regenerated `.van.json` files with the component change.
+- [x] 5. **Manifests.** `npm run contracts`; commit the regenerated `.van.json` files with the component change.
 
 ## Verify / done
 
