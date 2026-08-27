@@ -1,15 +1,16 @@
 # Cycle: vanillin — components (01–30), config/parity/platform (31–79), docs site + console kit (80–104)
 
-**Resume:** Handoff section below (batch plan). Everything through **91** is merged; `main` == `origin/main` at `ea97756f`; **74 is parked by the user** ("no mobile yet", 2026-08-24). Next: `/cycle --spawn 3` → batch A (84, 92, 93).
+**Resume:** Handoff section below — **batch A (84, 92, 93) is in flight since 2026-08-27** in tmux window `cycle-a`. Everything through **91** is merged; `main` == `origin/main` at `07961519da8d`; **74 is parked by the user** ("no mobile yet", 2026-08-24). Next: when the three reports land, `/cycle --adjust` to reconcile, then `/cycle --spawn 3` → batch B (94, 95, 96).
 
 **History:** per-task detail lives in each task file's `## Handoff` and in `docs/TODO/LOG.md` (the long index history through 90 moved there on 2026-08-27). Milestones: batches 1–6 (76–89) landed 2026-08-06 → 08-17; 90 console-route 08-19; ci gate + F4 cursor fix `9c483ea` 08-24; 91 console-ck-look `d70e7c66` 08-25; G4 removed and G2 fixed 08-25; data-table C11–C16 fixed 08-26.
 
-## Handoff — through 91 merged; next: spawn batches A–E (84 + console kit 92–104)
+## Handoff — batch A in flight (84, 92, 93); then batches B–E (console kit 94–104)
 
-**Status:** COMPLETE (through 91)  **Branch:** `main`  **PR:** none  **Updated:** 2026-08-27
+**Status:** IN PROGRESS (batch A spawned)  **Branch:** `docs/cycle-spawn-a-2026-08-27`  **PR:** none  **Updated:** 2026-08-27
 
-- **Repo state:** clean; `main` == `origin/main` (`ea97756f`); no worktrees. `stash@{0}` (`fix/console-ck-look-tests` WIP) is superseded by `d70e7c66` and droppable; `stash@{1,2}` are old and unrelated. User-deletable remotes: `docs/shell-width-gap`, `docs/usage-order`, `feat/console-panels`, `feat/console-rebrand-nav`. `docs/TODO/reports/` is untracked scratch; the stale `task88.done`/`task89.done` were removed 2026-08-27 so the next monitor cannot fire on them.
-- **Suite baseline:** 810/810 on 2026-08-27 (`ea97756f`, idle machine, `node tests/run.mjs`, exit 0) — no failing tests; the slider-cursor pair and the nav-menu hover flake are gone (F4 fix, G4 removal). Re-measure before every spawn and name the failing tests — a bare count is not evidence.
+- **In flight (spawned 2026-08-27):** tmux window `cycle-a` (`@52`), one pane each, layout even-horizontal. 84 token-guard — `fix/token-guard`, `../vanillin-task84-token-guard`, pane `%146`, port 5201. 92 glow-pulse — `feat/glow-pulse`, `../vanillin-task92-glow-pulse`, pane `%147`, port 5202. 93 copy-field — `feat/copy-field`, `../vanillin-task93-copy-field`, pane `%148`, port 5203. All three branch from `bf986f8f9d7e` on the docs branch, so each carries the task files; the user merges each into `main` (the docs commit comes along once). Workers report to `docs/TODO/reports/task{84,92,93}.md` and touch the matching `.done`; the head reviews each (delegated diff read, `Owns` assertion, verify re-run in the worktree) before ticking. **Run `/cycle --adjust` to reconcile after the batch lands.** If the head died mid-batch: read the reports, check each worktree (`git log`, task file `## Handoff`, pushed?), tick what passed, `git worktree remove` the passed ones (approval-gated), then spawn batch B.
+- **Repo state:** `main` == `origin/main` (`07961519da8d`); three batch-A worktrees listed above. `stash@{0}` (`fix/console-ck-look-tests` WIP) is superseded by `d70e7c66` and droppable; `stash@{1,2}` are old and unrelated. User-deletable remotes: `docs/shell-width-gap`, `docs/usage-order`, `feat/console-panels`, `feat/console-rebrand-nav`. `docs/TODO/reports/` is untracked scratch; the stale `task88.done`/`task89.done` were removed 2026-08-27 so the next monitor cannot fire on them.
+- **Suite baseline:** 811/811 on 2026-08-27 (`07961519da8d`, idle machine, `node tests/run.mjs`, exit 0) — no failing tests; the slider-cursor pair and the nav-menu hover flake are gone (F4 fix, G4 removal). Re-measure before every spawn and name the failing tests — a bare count is not evidence.
 - **74 mobile-views is parked** (user, 2026-08-24). Do not schedule it.
 - **Spawn schedule** (cap 3 workers + head = 4 agents; every batch's `Owns` pairwise disjoint; each batch branches from post-merge `main`):
   - **A:** 84 token-guard (+ H4 harness guard) + 92 glow-pulse + 93 copy-field
