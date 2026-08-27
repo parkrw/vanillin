@@ -139,7 +139,7 @@ function ticketColumns() {
         const status = row.getValue("status")
         return (
           <span className="ackp-cell-status">
-            <StatusDot status={TICKET_TONE[status]} label={null} />
+            <StatusDot status={TICKET_TONE[status]} label={null} ring={status === "Escalated"} />
             {status}
           </span>
         )
@@ -322,7 +322,7 @@ export function SupportPanel() {
           <Card className="ackp-thread-card">
             <CardHeader className="ackp-thread-head">
               <CardTitle className="ackp-thread-title">
-                <StatusDot status="warning" label={null} /> AC-4821 Load balancer returns intermittent 502
+                <StatusDot status="warning" label={null} ring /> AC-4821 Load balancer returns intermittent 502
               </CardTitle>
               <span className="ackp-thread-meta">Account Owner, Platform team</span>
             </CardHeader>

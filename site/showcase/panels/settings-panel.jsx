@@ -1,4 +1,3 @@
-import { useState } from "react"
 import { Avatar, AvatarFallback } from "../../../ui/avatar/avatar.jsx"
 import { Badge } from "../../../ui/badge/badge.jsx"
 import { Button } from "../../../ui/button/button.jsx"
@@ -10,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../ui/card/card.jsx"
+import { CopyField } from "../../../ui/copy-field/copy-field.jsx"
 import {
   Field,
   FieldDescription,
@@ -36,12 +36,13 @@ import {
   TooltipTrigger,
 } from "../../../ui/tooltip/tooltip.jsx"
 import { DENSITIES, LANGUAGES, REGIONS } from "./panels-data.js"
-import { CopyIcon, EyeIcon, EyeOffIcon, RefreshIcon } from "./panels-icons.jsx"
+import { RefreshIcon } from "./panels-icons.jsx"
 
 import "../../../ui/avatar/avatar.css"
 import "../../../ui/badge/badge.css"
 import "../../../ui/button/button.css"
 import "../../../ui/card/card.css"
+import "../../../ui/copy-field/copy-field.css"
 import "../../../ui/field/field.css"
 import "../../../ui/input/input.css"
 import "../../../ui/select/select.css"
@@ -55,7 +56,6 @@ import "./panels.css"
 
 // Obviously not a credential: fixed placeholder digits, never a real key shape.
 const FAKE_KEY = "ak_demo_0000000000000000000000"
-const MASKED_KEY = "ak_demo_••••••••••••••••••••••"
 
 function IconButton({ label, onClick, children, ...props }) {
   return (
@@ -97,12 +97,8 @@ function PreferenceRow({ id, title, description, defaultChecked }) {
 }
 
 export function SettingsPanel() {
-  const [revealed, setRevealed] = useState(false)
-
-  const copyKey = () => {
-    navigator.clipboard?.writeText(FAKE_KEY).catch(() => {})
+  const onCopyKey = () =>
     toast.success("API key copied", { description: "It is a placeholder, not a credential." })
-  }
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -197,7 +193,7 @@ export function SettingsPanel() {
               </FieldGroup>
             </CardContent>
             <CardFooter className="ackp-org-foot">
-              <StatusDot status="success" label={null} />
+              <StatusDot status="success" label={null} ring />
               <span>All services operational</span>
             </CardFooter>
           </Card>
@@ -215,25 +211,16 @@ export function SettingsPanel() {
                   <span className="ackp-key-name">Production</span>
                   <span className="ackp-key-age">Created 14 days ago</span>
                 </div>
-                <code className="ackp-key-value" data-pg="settings-key-value">
-                  {revealed ? FAKE_KEY : MASKED_KEY}
-                </code>
+                <CopyField
+                  className="ackp-key-field"
+                  data-pg="settings-key-value"
+                  value={FAKE_KEY}
+                  secret
+                  copyLabel="Copy API key"
+                  copiedLabel="API key copied"
+                  onCopy={onCopyKey}
+                />
                 <div className="ackp-key-actions">
-                  <IconButton
-                    label={revealed ? "Hide API key" : "Reveal API key"}
-                    data-pg="settings-key-reveal"
-                    onClick={() => {
-                      setRevealed((value) => !value)
-                      toast(revealed ? "API key hidden" : "API key revealed", {
-                        description: "Placeholder value, safe to show.",
-                      })
-                    }}
-                  >
-                    {revealed ? <EyeOffIcon /> : <EyeIcon />}
-                  </IconButton>
-                  <IconButton label="Copy API key" onClick={copyKey}>
-                    <CopyIcon />
-                  </IconButton>
                   <IconButton
                     label="Rotate API key"
                     onClick={() =>

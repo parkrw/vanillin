@@ -12,6 +12,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.waitForFunction(() => document.querySelectorAll(".toast").length === 0)
   }
 
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: baseUrl })
   await page.goto(FIXTURE)
   await page.locator('[data-pg="panel-support"]').waitFor()
 
@@ -75,6 +76,13 @@ export default async function run({ page, baseUrl, test, eq }) {
     )
   })
 
+  await test("only the escalated ticket's dot rings", async () => {
+    const rows = page.locator('[data-pg="ticket-row"]')
+    eq(await rows.filter({ hasText: "Escalated" }).locator(".status-dot--ring").count(), 1, "escalated rings")
+    eq(await rows.filter({ hasText: "Resolved" }).locator(".status-dot--ring").count(), 0, "resolved sits still")
+    eq(await rows.locator(".status-dot--ring").count(), 1, "one ring on the page")
+  })
+
   await test("a row action toasts", async () => {
     // Every row keeps its menu in the DOM, so scope to the one that is open.
     const reply = page.locator('[data-pg="ticket-action-reply"]:visible')
@@ -108,15 +116,24 @@ export default async function run({ page, baseUrl, test, eq }) {
     )
   })
 
-  await test("the API key is masked until revealed and is obviously fake", async () => {
-    const value = page.locator('[data-pg="settings-key-value"]')
-    const masked = await value.textContent()
-    eq(masked.includes("•"), true, "masked by default")
-    await page.locator('[data-pg="settings-key-reveal"]').click()
-    const revealed = await value.textContent()
-    eq(revealed, "ak_demo_0000000000000000000000", "revealed placeholder")
-    await page.locator('[data-pg="settings-key-reveal"]').click()
-    eq(await value.textContent(), masked, "hidden again")
+  await test("the API key is a secret CopyField: masked, revealable, copies the real value", async () => {
+    const field = page.locator('[data-pg="settings-key-value"]')
+    const value = field.locator(".copy-field-value")
+    const reveal = field.locator(".copy-field-reveal")
+    eq(await field.getAttribute("data-secret"), "masked", "masked by default")
+    eq(/^•+$/.test(await value.textContent()), true, "paints only dots")
+    await reveal.click()
+    eq(await value.textContent(), "ak_demo_0000000000000000000000", "revealed placeholder")
+    await reveal.click()
+    eq(await field.getAttribute("data-secret"), "masked", "hidden again")
+    await field.locator(".copy-field-btn").click()
+    eq(
+      await page.evaluate(() => navigator.clipboard.readText()),
+      "ak_demo_0000000000000000000000",
+      "the clipboard gets the real key while the field paints dots"
+    )
+    await page.locator(".toast").first().waitFor()
+    eq(await page.locator(".toast-title").first().textContent(), "API key copied", "onCopy toast")
     await dismissToasts()
   })
 
@@ -174,12 +191,24 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(await meter.getAttribute("aria-valuetext"), later, "aria mirrors the readout")
   })
 
+  await test("live dots breathe: org status, the open incident, every widget", async () => {
+    eq(await page.locator(".ackp-org-foot .status-dot--ring").count(), 1, "org status rings")
+    eq(await page.locator(".ackp-thread-title .status-dot--ring").count(), 1, "incident title rings")
+    const dots = page.locator(".ackp-widget-dot.status-dot--ring")
+    eq(await dots.count(), 8, "every widget dot rings")
+    const names = await dots.evaluateAll((els) => els.map((el) => getComputedStyle(el).animationName))
+    eq(names.every((n) => n === "status-dot-ring-pulse"), true, `widget dots breathe: ${names.join(",")}`)
+  })
+
   await test("reduced motion parks the sweep on a static value", async () => {
     await page.emulateMedia({ reducedMotion: "reduce" })
     await page.reload()
     await page.locator('[data-pg="panel-status"]').waitFor()
     const widget = page.locator('[data-pg="status-widget"]').first()
     eq(await widget.evaluate((node) => getComputedStyle(node).animationName), "none", "loop stopped")
+    const dot = widget.locator(".status-dot--ring")
+    eq(await dot.evaluate((node) => getComputedStyle(node).animationName), "none", "ring loop stopped")
+    eq(await dot.evaluate((node) => getComputedStyle(node).boxShadow !== "none"), true, "static halo stays")
     const readout = widget.locator('[data-pg="status-readout"]')
     await page.waitForFunction(
       () => document.querySelector('[data-pg="status-readout"]').textContent !== "0%"

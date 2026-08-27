@@ -73,7 +73,7 @@ function Widget({ widget, index }) {
         )}
       </div>
       <div className="ackp-widget-meta">
-        <StatusDot status={widget.tone} label={null} className="ackp-widget-dot" />
+        <StatusDot status={widget.tone} label={null} ring className="ackp-widget-dot" />
         <div className="ackp-widget-text">
           <span className="ackp-widget-label">{widget.label}</span>
           <span className="ackp-widget-detail">{widget.detail}</span>
