@@ -94,6 +94,13 @@ const INDETERMINATE_LOOPS = {
     { selector: ".status-dot--ring", duration: "2s" },
   ],
   badge: [{ selector: ".badge--glow", duration: "2s" }],
+  // The sweep is the indeterminate loop; the glow is a "live" halo. Both are
+  // infinite, so both must stay off --motion-scale. --glow-duration retimes
+  // the halo only — the sweep's 1.5s is not a consumer knob.
+  progress: [
+    { selector: '.progress[data-state="indeterminate"] .progress-indicator', duration: "1.5s" },
+    { selector: ".progress--glow", duration: "2s" },
+  ],
   attachment: [{ selector: ".attachment--uploading::before", duration: "2s" }],
   "input-otp": [{ selector: ".input-otp-slot--caret::after", duration: "1s" }],
   toast: [{ selector: ".toast-loading-spinner", duration: "1s" }],

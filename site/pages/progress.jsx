@@ -71,11 +71,75 @@ import "./ui/progress/progress.css"
           <code>aria-valuenow</code>, signalling that progress cannot be
           determined.
         </p>
+        <p>
+          The bar shows that state: the indicator narrows to 40% of the track
+          and sweeps across it on a fixed 1.5 s loop. The duration is a literal
+          rather than a motion token, because a loop with no start and no end
+          should not speed up or slow down with{" "}
+          <code>--motion-scale</code>; <code>--glow-duration</code> does not
+          retime it either. Only <code>transform</code> animates, so no frame
+          triggers layout. Under <code>prefers-reduced-motion</code> the sweep
+          stops and the indicator rests 30% along the track, still visible.
+        </p>
         <ComponentPreview code={`<Progress />
 <Progress value={null} />`}>
-          <div style={{ width: "60%", display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div data-pg="progress-indeterminate" style={{ width: "60%", display: "flex", flexDirection: "column", gap: "1rem" }}>
             <Progress />
             <Progress value={null} />
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Glow</h3>
+        <p>
+          Pass <code>glow</code> for the one bar on a page that means
+          &quot;live&quot;. A halo in the bar&apos;s own colour breathes on a
+          fixed 2 s loop, the same way <code>Badge</code>&apos;s{" "}
+          <code>glow</code> and <code>StatusDot</code>&apos;s <code>ring</code>{" "}
+          do. Set <code>--progress-glow</code> to recolour the halo when the
+          indicator itself is themed. Reduced motion leaves a static halo.
+        </p>
+        <ComponentPreview code={`<Progress value={64} glow aria-label="Live throughput" />
+<Progress value={64} aria-label="Plain" />`}>
+          <div
+            data-pg="progress-glow"
+            style={{ width: "60%", display: "flex", flexDirection: "column", gap: "3rem" }}
+          >
+            <Progress value={64} glow aria-label="Live throughput" />
+            <Progress value={64} aria-label="Plain" />
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Glow speed and brightness</h3>
+        <p>
+          Two custom properties retime and dim the halo:{" "}
+          <code>--glow-duration</code> is one breath (default <code>2s</code>)
+          and <code>--glow-strength</code> multiplies the halo alpha (default{" "}
+          <code>1</code>). Set them on any ancestor and every progress bar,
+          badge and status dot inside follows. The indeterminate sweep keeps its
+          own timing — it is a loading loop, not a &quot;live&quot; halo.
+        </p>
+        <ComponentPreview code={`<div style={{ "--glow-duration": "4s", "--glow-strength": 0.5 }}>
+  <Progress value={64} glow aria-label="Slow live throughput" />
+  <Progress aria-label="Indeterminate, unretimed" />
+</div>`}>
+          <div
+            data-pg="progress-glow-controls"
+            style={{
+              width: "60%",
+              display: "flex",
+              flexDirection: "column",
+              gap: "3rem",
+              "--glow-duration": "4s",
+              "--glow-strength": 0.5,
+            }}
+          >
+            <Progress value={64} glow aria-label="Slow live throughput" />
+            <Progress value={64} aria-label="Plain, slow row" />
+            <Progress aria-label="Indeterminate, unretimed" />
           </div>
         </ComponentPreview>
       </section>
@@ -177,7 +241,14 @@ import "./ui/progress/progress.css"
       <ApiReference props={[
         { name: "value", type: "number | null", description: "Current progress value. Omit or pass null for indeterminate." },
         { name: "max", type: "number", default: "100", description: "Maximum value" },
+        { name: "glow", type: "boolean", default: "false", description: "Breathing halo in the bar's own colour (static under reduced motion)" },
         { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
+
+      <ApiReference title="Custom properties" props={[
+        { name: "--glow-duration", type: "<time>", default: "2s", description: "One breath of the glow. Inherited, so setting it on an ancestor retimes every badge, status dot and progress bar inside. Does not affect the indeterminate sweep" },
+        { name: "--glow-strength", type: "number", default: "1", description: "Multiplies the halo alpha; 0.5 is half as bright, 0 hides the halo. Inherited the same way" },
+        { name: "--progress-glow", type: "<color>", default: "var(--primary)", description: "Halo colour, for when the indicator itself is themed" },
       ]} />
     </>
   )

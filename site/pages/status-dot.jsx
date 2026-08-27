@@ -112,7 +112,12 @@ import "./ui/status-dot/status-dot.css"
               and breathes it on a fixed 2s loop, the "live" look consoles use
               for running instances. The halo never takes a second hue: a green
               dot glows green. Under <code>prefers-reduced-motion</code> the
-              halo holds still at 20% opacity.
+              halo holds still at 20% opacity.{" "}
+              <code>--glow-duration</code> and <code>--glow-strength</code>{" "}
+              retime and dim it — the same two properties{" "}
+              <code>Badge</code>'s <code>glow</code> and{" "}
+              <code>Progress</code>'s <code>glow</code> read, so one ancestor
+              sets the pulse for a whole panel.
             </p>
             <div className="pg-row" data-pg="sd-ring">
               <StatusDot status="success" ring />
@@ -167,6 +172,37 @@ Running (label on adjacent text)
             </p>
             <div className="pg-row" data-pg="sd-custom-label">
               <StatusDot status="error" label="Build failed" />
+            </div>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Glow speed and brightness</h3>
+        <ComponentPreview code={`<div style={{ "--glow-duration": "4s", "--glow-strength": 0.5 }}>
+  <StatusDot status="success" ring />
+  <StatusDot status="error" ring />
+  <StatusDot status="pending" />
+</div>`}>
+          <div>
+            <p className="pg-prose">
+              Two custom properties retime and dim the halo:{" "}
+              <code>--glow-duration</code> is one breath (default{" "}
+              <code>2s</code>) and <code>--glow-strength</code> multiplies the
+              halo alpha (default <code>1</code>). Set them on any ancestor and
+              every status dot, badge and progress bar inside follows.{" "}
+              <code>pending</code> takes both, because it runs the same loops;{" "}
+              <code>--glow-strength</code> scales its halo only, leaving the
+              opacity dim that carries the cue in forced-colors mode.
+            </p>
+            <div
+              className="pg-row"
+              data-pg="sd-glow-controls"
+              style={{ "--glow-duration": "4s", "--glow-strength": 0.5 }}
+            >
+              <StatusDot status="success" ring />
+              <StatusDot status="error" ring />
+              <StatusDot status="pending" />
             </div>
           </div>
         </ComponentPreview>
@@ -239,6 +275,11 @@ Running (label on adjacent text)
         { name: "ring", type: "boolean", default: "false", description: "Draws a breathing halo in the dot's own colour (static under reduced motion)" },
         { name: "label", type: "string | null", default: "auto", description: "Accessible label. null gives aria-hidden; omit for the auto-derived label" },
         { name: "className", type: "string", description: "Additional CSS classes" },
+      ]} />
+
+      <ApiReference title="Custom properties" props={[
+        { name: "--glow-duration", type: "<time>", default: "2s", description: "One breath of the ring and of pending's loops. Inherited, so setting it on an ancestor retimes every status dot, badge and progress bar inside" },
+        { name: "--glow-strength", type: "number", default: "1", description: "Multiplies the halo alpha; 0.5 is half as bright, 0 hides the halo. Leaves pending's opacity dim alone, because that is its forced-colors cue" },
       ]} />
     </>
   )

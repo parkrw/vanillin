@@ -14,6 +14,72 @@
   transition: transform var(--motion-fast) var(--motion-ease);
 }
 
+/*
+ * Glow — `glow` breathes a halo in the bar's own colour on a fixed 2s loop,
+ * the shape badge--glow uses: symmetric 0/50/100 keyframes, no second hue.
+ *
+ * The halo is on the track, not the indicator: the track's `overflow: hidden`
+ * clips a descendant's box-shadow, so an indicator halo computes correctly in
+ * getComputedStyle and paints zero pixels (measured). --progress-glow
+ * recolours it for a themed indicator.
+ *
+ * --glow-duration (one breath) and --glow-strength (halo alpha multiplier)
+ * are the vocabulary shared with badge--glow and status-dot--ring; neither is
+ * defaulted here, so an ancestor can retime or dim a whole panel. The
+ * indeterminate sweep below keeps its own literal — it is a loading loop, not
+ * a "live" halo.
+ */
+.progress--glow {
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--progress-glow, var(--primary)) calc(18% * var(--glow-strength, 1)), transparent);
+  animation: progress-glow var(--glow-duration, 2s) ease-in-out infinite;
+}
+
+@keyframes progress-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--progress-glow, var(--primary)) calc(18% * var(--glow-strength, 1)), transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px color-mix(in oklab, var(--progress-glow, var(--primary)) calc(32% * var(--glow-strength, 1)), transparent),
+      0 0 12px 2px color-mix(in oklab, var(--progress-glow, var(--primary)) calc(40% * var(--glow-strength, 1)), transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress--glow {
+    animation: none;
+  }
+}
+
+/*
+ * Indeterminate — there is no value to fill, so a 40%-wide indicator sweeps
+ * the track instead. translateX only: animating `width` relayouts every
+ * frame. Fixed 1.5s literal, deliberately not var(--motion-*), because an
+ * indeterminate loop must not track --motion-scale. `progress.jsx` writes no
+ * inline transform in this state — an inline one outranks these keyframes.
+ */
+.progress[data-state="indeterminate"] .progress-indicator {
+  width: 40%;
+  animation: progress-indeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+/* Static, still visible: 75% of a 40%-wide bar is 30% along the track. */
+@media (prefers-reduced-motion: reduce) {
+  .progress[data-state="indeterminate"] .progress-indicator {
+    animation: none;
+    transform: translateX(75%);
+  }
+}
+
 /* forced-color-adjust: none — the fill-vs-track colour distinction
  * communicates progress level.  Without it both become Canvas and
  * the bar is invisible.  The non-colour cue is the indicator's width

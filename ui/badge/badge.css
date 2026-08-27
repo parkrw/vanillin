@@ -24,14 +24,19 @@
  * --badge-glow to the token that defines it, so the halo never introduces a
  * second hue. Indeterminate loop → fixed 2s literal, like status-dot's ring.
  * Focus wins over the glow so the ring stays visible while focused.
+ *
+ * Speed and brightness are the vocabulary shared with status-dot and
+ * progress: --glow-duration is one breath, --glow-strength scales every halo
+ * alpha. Neither gets a default in this block, so setting them on any
+ * ancestor retimes or dims a whole panel of components at once.
  */
 .badge {
   --badge-glow: var(--primary);
 }
 
 .badge--glow {
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--badge-glow) 18%, transparent);
-  animation: badge-glow 2s ease-in-out infinite;
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--badge-glow) calc(18% * var(--glow-strength, 1)), transparent);
+  animation: badge-glow var(--glow-duration, 2s) ease-in-out infinite;
 }
 
 .badge--glow:focus-visible {
@@ -40,12 +45,12 @@
 
 @keyframes badge-glow {
   0%, 100% {
-    box-shadow: 0 0 0 2px color-mix(in oklab, var(--badge-glow) 18%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--badge-glow) calc(18% * var(--glow-strength, 1)), transparent);
   }
   50% {
     box-shadow:
-      0 0 0 3px color-mix(in oklab, var(--badge-glow) 32%, transparent),
-      0 0 12px 2px color-mix(in oklab, var(--badge-glow) 40%, transparent);
+      0 0 0 3px color-mix(in oklab, var(--badge-glow) calc(32% * var(--glow-strength, 1)), transparent),
+      0 0 12px 2px color-mix(in oklab, var(--badge-glow) calc(40% * var(--glow-strength, 1)), transparent);
   }
 }
 

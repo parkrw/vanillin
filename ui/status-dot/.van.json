@@ -4,7 +4,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "requires": [],
   "files": {
-    "status-dot.css": "sha256-7WEfJ2P/iQgborT0cpNpcEVV9G+uc5fS/CSSxwLE/3s=",
+    "status-dot.css": "sha256-pFYikXZ3jjdm9z5EQytgae/LrcYgSlERE00hpE7J7Vc=",
     "status-dot.jsx": "sha256-5nib27e0HBLLmc0/CBhlWmQiJYFSWYZvjghhoHF9UC0="
   }
 }

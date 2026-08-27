@@ -33,11 +33,11 @@ Progress: a `glow` prop (boolean, default `false`) adds `progress--glow` to the 
 
 ## Sub-tasks
 
-- [ ] 1. **Indeterminate paints.** `[data-state="indeterminate"] .progress-indicator` gets a width and the sweep; `progress.jsx` drops the inline transform for indeterminate; reduced motion shows a static partial bar. `progress` joins `INDETERMINATE_LOOPS`. — test: on `#progress` both indeterminate demos' indicators have `getBoundingClientRect().width > 0` and `animationName === "progress-indeterminate"` with a fixed `animationDuration`; under `page.emulateMedia({ reducedMotion: "reduce" })` `animationName === "none"` and the width is still `> 0`. Counter-precondition: the determinate demos have `animationName === "none"`. files: `ui/progress/progress.css`, `ui/progress/progress.jsx`, `tests/progress.test.mjs`, `tests/conformance.unit.mjs`
-- [ ] 2. **Progress glow.** `glow` → `progress--glow`; halo keyframes on the indicator; `--progress-glow` colour hook; reduced-motion static halo. — test: on `[data-pg="progress-glow"]` the indicator's `animationName` is the glow keyframe at `2s` and `boxShadow !== "none"`; a non-glow bar has `boxShadow === "none"`. files: `ui/progress/progress.jsx`, `ui/progress/progress.css`, `site/pages/progress.jsx`, `tests/progress.test.mjs`
-- [ ] 3. **Speed and brightness on all three.** `--glow-duration` and `--glow-strength` wired into badge glow, status-dot ring **and** pending, and progress glow. — test: each page gets a `data-pg="<slug>-glow-controls"` row whose **wrapper** sets `style={{ "--glow-duration": "4s", "--glow-strength": 0.5 }}` (proves inheritance); assert `animationDuration === "4s"` on the children, and that the halo alpha at rest is lower than the default row's — read through a probe element the way `tests/live-value.test.mjs` does (`docs/QUIRKS.md`: never parse oklch by hand). Default rows keep asserting `2s`. files: three `.css`, three pages, three tests
-- [ ] 4. **Docs.** Each page gains a "Glow speed and brightness" example and lists both properties in its reference; the progress page's Indeterminate prose describes what it now shows; badge `glow` and status-dot `ring` prose point at the shared properties. Every page keeps exactly one `h2`. files: the three pages
-- [ ] 5. **Manifests.** `npm run contracts`; commit the regenerated `.van.json` files with the component change.
+- [x] 1. **Indeterminate paints.** `[data-state="indeterminate"] .progress-indicator` gets a width and the sweep; `progress.jsx` drops the inline transform for indeterminate; reduced motion shows a static partial bar. `progress` joins `INDETERMINATE_LOOPS`. — test: on `#progress` both indeterminate demos' indicators have `getBoundingClientRect().width > 0` and `animationName === "progress-indeterminate"` with a fixed `animationDuration`; under `page.emulateMedia({ reducedMotion: "reduce" })` `animationName === "none"` and the width is still `> 0`. Counter-precondition: the determinate demos have `animationName === "none"`. files: `ui/progress/progress.css`, `ui/progress/progress.jsx`, `tests/progress.test.mjs`, `tests/conformance.unit.mjs`
+- [x] 2. **Progress glow.** `glow` → `progress--glow`; halo keyframes on the indicator; `--progress-glow` colour hook; reduced-motion static halo. — test: on `[data-pg="progress-glow"]` the indicator's `animationName` is the glow keyframe at `2s` and `boxShadow !== "none"`; a non-glow bar has `boxShadow === "none"`. files: `ui/progress/progress.jsx`, `ui/progress/progress.css`, `site/pages/progress.jsx`, `tests/progress.test.mjs`
+- [x] 3. **Speed and brightness on all three.** `--glow-duration` and `--glow-strength` wired into badge glow, status-dot ring **and** pending, and progress glow. — test: each page gets a `data-pg="<slug>-glow-controls"` row whose **wrapper** sets `style={{ "--glow-duration": "4s", "--glow-strength": 0.5 }}` (proves inheritance); assert `animationDuration === "4s"` on the children, and that the halo alpha at rest is lower than the default row's — read through a probe element the way `tests/live-value.test.mjs` does (`docs/QUIRKS.md`: never parse oklch by hand). Default rows keep asserting `2s`. files: three `.css`, three pages, three tests
+- [x] 4. **Docs.** Each page gains a "Glow speed and brightness" example and lists both properties in its reference; the progress page's Indeterminate prose describes what it now shows; badge `glow` and status-dot `ring` prose point at the shared properties. Every page keeps exactly one `h2`. files: the three pages
+- [x] 5. **Manifests.** `npm run contracts`; commit the regenerated `.van.json` files with the component change.
 
 ## Verify / done
 
@@ -58,4 +58,14 @@ Done when: indeterminate visibly sweeps and holds still under reduced motion, `<
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
+**Branch:** `feat/glow-pulse`  **PR:** #10 (open)  **Updated:** 2026-08-27
+
+- **Landed:** indeterminate progress sweeps a 40%-wide indicator (1.5s literal) and rests 30% along the track under reduced motion; `<Progress glow>` breathes like `badge--glow`; `--glow-duration` and `--glow-strength` on any ancestor retime and dim badge glow, status-dot ring **and** pending, and progress glow.
+- **Repo state:** clean, five commits pushed, 821/821 (baseline 811 + 10 new tests), `npm run build` green.
+- **Next:** task 93 — 84 and 92 are both in batch A, so check `docs/TODO/README.md` for what is still `[ ]`.
+- **Gotchas:**
+  - The halo is on `.progress--glow` (the track root), **not** `.progress-indicator` as the design said: the track's `overflow: hidden` clips a descendant's box-shadow, so an indicator halo computes fine and paints 0 px (measured 0 vs 768). Approved in-session. Any future "move the halo inward" needs the clip solved first.
+  - `locator.boundingBox()` never resolves on an element carrying an infinite animation — its actionability wait needs stability. Use `evaluate(el => el.getBoundingClientRect())`; `page.screenshot({ clip })` takes viewport coordinates, so scroll first and do not add `window.scrollY`. Candidate `docs/QUIRKS.md` entry (not written — outside this task's ownership).
+  - `getBoundingClientRect().width` ignores `translateX`, so the width test the task specified would have passed over the original bug. The tests assert overlap with the track and peak pixel deviation instead.
+  - The console wiring in `site/showcase/**` is still task-92-adjacent but out of scope, as stated.
