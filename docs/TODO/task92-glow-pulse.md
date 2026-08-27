@@ -58,4 +58,14 @@ Done when: indeterminate visibly sweeps and holds still under reduced motion, `<
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
+**Branch:** `feat/glow-pulse`  **PR:** #10 (open)  **Updated:** 2026-08-27
+
+- **Landed:** indeterminate progress sweeps a 40%-wide indicator (1.5s literal) and rests 30% along the track under reduced motion; `<Progress glow>` breathes like `badge--glow`; `--glow-duration` and `--glow-strength` on any ancestor retime and dim badge glow, status-dot ring **and** pending, and progress glow.
+- **Repo state:** clean, five commits pushed, 821/821 (baseline 811 + 10 new tests), `npm run build` green.
+- **Next:** task 93 — 84 and 92 are both in batch A, so check `docs/TODO/README.md` for what is still `[ ]`.
+- **Gotchas:**
+  - The halo is on `.progress--glow` (the track root), **not** `.progress-indicator` as the design said: the track's `overflow: hidden` clips a descendant's box-shadow, so an indicator halo computes fine and paints 0 px (measured 0 vs 768). Approved in-session. Any future "move the halo inward" needs the clip solved first.
+  - `locator.boundingBox()` never resolves on an element carrying an infinite animation — its actionability wait needs stability. Use `evaluate(el => el.getBoundingClientRect())`; `page.screenshot({ clip })` takes viewport coordinates, so scroll first and do not add `window.scrollY`. Candidate `docs/QUIRKS.md` entry (not written — outside this task's ownership).
+  - `getBoundingClientRect().width` ignores `translateX`, so the width test the task specified would have passed over the original bug. The tests assert overlap with the track and peak pixel deviation instead.
+  - The console wiring in `site/showcase/**` is still task-92-adjacent but out of scope, as stated.
