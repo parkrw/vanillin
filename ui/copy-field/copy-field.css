@@ -1,0 +1,145 @@
+/*
+ * CopyField — a read-only identifier with a one-click copy.
+ *
+ * @import: the copy and reveal controls are ui/button, so a consumer who
+ * copies this folder gets the button styles with it.
+ *
+ * Two things are worth knowing before editing:
+ *
+ * - The copy → check swap is a cross-fade, so both icons share one grid cell
+ *   and only opacity moves. The button therefore has to be a grid, which
+ *   overrides .btn's inline-flex — hence the .copy-field-scoped selectors
+ *   below. They also outrank .btn--icon's width whatever order the two
+ *   stylesheets land in, which is the consumer's choice, not ours.
+ * - Middle truncation is layout, not string surgery: the head flexes and
+ *   ellipsises, the tail never shrinks, so the last 8 characters stay on
+ *   screen at any width.
+ */
+
+@import "../button/button.css";
+
+.copy-field {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.copy-field-label {
+  grid-column: 1 / -1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: var(--foreground);
+}
+
+.copy-field-value {
+  display: flex;
+  align-items: center;
+  min-inline-size: 0;
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--muted);
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+
+/* Head shrinks and ellipsises; tail is the distinguishing part and never does. */
+.copy-field-head {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy-field-tail {
+  flex: 0 0 auto;
+  white-space: pre;
+}
+
+.copy-field-text {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy-field[data-truncate="none"] .copy-field-value {
+  align-items: flex-start;
+}
+
+.copy-field[data-truncate="none"] .copy-field-text {
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.copy-field .copy-field-btn,
+.copy-field .copy-field-reveal {
+  display: grid;
+  place-items: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  padding: 0;
+  color: var(--muted-foreground);
+}
+
+.copy-field .copy-field-btn:hover,
+.copy-field .copy-field-reveal:hover {
+  color: var(--accent-foreground);
+}
+
+.copy-field .copy-field-btn svg,
+.copy-field .copy-field-reveal svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+}
+
+/* Both icons in one cell so the cross-fade costs no layout. */
+.copy-field .copy-field-btn .copy-field-icon {
+  grid-area: 1 / 1;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.copy-field .copy-field-btn .copy-field-icon--check {
+  opacity: 0;
+}
+
+.copy-field[data-state="copied"] .copy-field-icon--copy {
+  opacity: 0;
+}
+
+.copy-field[data-state="copied"] .copy-field-icon--check {
+  opacity: 1;
+  color: var(--success);
+}
+
+/* Visually hidden; the announcement is the whole point of the element. */
+.copy-field-live {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The ghost buttons paint no background, so forced-colors leaves them with no
+   edge at all. The mask dots are deliberately absent: they must take the
+   system foreground, not an author colour. */
+@media (forced-colors: active) {
+  .copy-field .copy-field-btn,
+  .copy-field .copy-field-reveal {
+    border: 1px solid CanvasText;
+  }
+}
