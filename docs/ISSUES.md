@@ -333,6 +333,10 @@ Not fixed here: the page's remaining overflow at 640px (`scrollWidth` 753 before
 
 ---
 
+### C17. Chrome drops `@property --typeset-size` and `--typeset-flow` — their `rem` initial values are not computationally independent
+**Status:** open, found by task 84 (2026-08-27), outside its scope  **Where:** `styles/globals.css:118-119`
+`initial-value: 1rem` / `1.5rem` break the `@property` rule that an initial value must be computationally independent (no `em`/`rem`/`%`), so Chrome discards the whole registration at parse time. Measured on a real page: 65 rules declared, 63 land as `CSSPropertyRule`, and `getComputedStyle` returns `""` for both tokens on an element nothing sets them on. Effect: the two rhythm tokens have **no** fallback guard — the protection task 84's spec credited them with; only `--typeset-leading` (`initial-value: 1.75`) is guarded. Fix: `initial-value: 16px` and `24px` (or `syntax: "*"` and drop the typing). Either changes computed-value representation, so it wants a full-suite run — see `docs/QUIRKS.md` line 1. Task 84's own three font-token registrations were verified accepted.
+
 ## D. Contrast and visual defects
 
 All of these are "not enough contrast", light **and** dark unless noted.
@@ -746,8 +750,8 @@ recording instead of fixing):
 
 ## H. Test-quality gaps
 
-### H4. `tests/run.mjs` accepts an imposter dev server — the suite can silently test the wrong tree
-**Status:** owned by **task 84** sub-task 5 (2026-08-27)  **Found:** task82 salvage, 2026-08-16
+### H4. ~~`tests/run.mjs` accepts an imposter dev server — the suite can silently test the wrong tree~~ — FIXED (`fe9a7befe5f0`, task 84, PR #8)
+**Status:** fixed 2026-08-27 — the busy-port refusal landed in `0a3f51954733`; `fe9a7befe5f0` races `waitForServer` against the vite child's `exit`, so a dead vite fails in ~1s naming its code and signal instead of 15s later as "did not start"  **Found:** task82 salvage, 2026-08-16
 `run.mjs` spawns vite with `--strictPort` but never checks that the child survived; `waitForServer()` just fetches `:5199`, so anything already on the port answers and the whole suite runs against *that* tree. Hit for real: an orphaned vite rooted in `../vanillin-task82` made merged `main` read 755-758/762 with phantom deterministic failures (nav-menu z-index "regression", slider `@fs` 403) that vanished once the orphan was killed. Cheapest fix: fail fast when the spawned vite exits (`vite.on("exit", ...)` before `waitForServer`), or fetch a nonce file vite serves only from the expected root.
 
 ### H1. ~~Assertions that hold for the wrong value~~ — SWEPT (`c7f0664d119e`)
@@ -910,6 +914,8 @@ spending time on it — it may be a dev-server artefact rather than a page bug.
   `main` now that task 38 is merged. A bare `git clone` + `node
   <clone>/bin/van.mjs` was verified locally, which is what `npx github:`
   reduces to.
+
+- `site/api-reference.jsx` has no column vocabulary for CSS custom properties: task 92 added a second `<ApiReference title="Custom properties">` to the badge, progress and status-dot pages for `--glow-duration`/`--glow-strength`, and the header still reads "Prop". A `columns` prop or a title-aware header fixes all three at once; do it when the next page needs one (2026-08-27).
 
 ---
 
