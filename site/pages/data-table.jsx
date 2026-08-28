@@ -1304,6 +1304,7 @@ export default function DataTablePage() {
 })`}>
           <DefaultDemo />
         </ComponentPreview>
+        <p>Hoist <code>columns</code> out of the component or wrap it in <code>useMemo</code>: the filter, group and sort passes key off its identity, so an array rebuilt each render re-runs all three on every keystroke.</p>
       </section>
 
       <section className="pg-section">
@@ -1862,6 +1863,7 @@ const { pagination } = table.getState()
       <ApiReference props={[
         { name: "useDataTable: data", type: "T[]", description: "Row data array" },
         { name: "useDataTable: columns", type: "ColumnDef[]", description: "Column definitions with accessorKey, header, and cell" },
+        { name: "useDataTable: getRowId", type: "(item, index) => string", default: "index", description: "Row id used as the selection key; return a stable field so selection survives a reorder or refetch" },
         { name: "useDataTable: initialPageSize", type: "number", default: "10", description: "Rows per page" },
         { name: "useDataTable: maxMultiSortColCount", type: "number", default: "3", description: "Max simultaneous sort keys; exceeding drops the oldest" },
         { name: "useDataTable: initialGrouping", type: "string[]", description: "Column ids to group by on mount (depth capped at 2)" },
