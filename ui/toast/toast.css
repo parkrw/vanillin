@@ -21,6 +21,20 @@
   position: relative;
 }
 
+/* The two announcement regions. They are mounted with the Toaster and stay
+   empty until a toast fires, so they must never affect layout or paint. */
+.toaster-live {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* Position variants — physical properties (no logical equivalent for
    fixed insets used for viewport anchoring). */
 .toaster--bottom-right {
