@@ -1,4 +1,4 @@
-export default async function run({ page, baseUrl, test, eq }) {
+export default async function run({ page, baseUrl, repoRoot, test, eq }) {
   // Park pointer at 0,0 — position carries over from previous test files.
   await page.mouse.move(0, 0)
   await page.goto(`${baseUrl}/#data-table`)
@@ -1479,5 +1479,215 @@ export default async function run({ page, baseUrl, test, eq }) {
       true,
       `toolbar actions stay inside their section (${narrow.actionsRight} vs ${narrow.sectionRight})`
     )
+  })
+
+  // ── Engine harness ─────────────────────────────────────────────────
+  //
+  // These three cover row identity, the filter index and the page clamp —
+  // engine state the rendered demos can't reach. The page's own tables are
+  // fixtures for every test above, so the harness mounts useDataTable into
+  // a throwaway root and tears it down again.
+
+  const hookUrl = `/@fs/${repoRoot.replace(/^\//, "")}lib/use-data-table.js`
+
+  const mount = async (config) => {
+    await page.evaluate(
+      async ({ url, cfg }) => {
+        const reactMod = await import("/@id/react")
+        const React = reactMod.default ?? reactMod
+        const domMod = await import("/@id/react-dom/client")
+        const createRoot = domMod.createRoot ?? domMod.default.createRoot
+        const { useDataTable } = await import(url)
+
+        window.__dtIndexOfCalls = 0
+        const data = cfg.data.slice()
+        if (cfg.countIndexOf) {
+          // Own property on the instance: the engine's old scan called
+          // `data.indexOf(item)` once per surviving row.
+          data.indexOf = function (...args) {
+            window.__dtIndexOfCalls++
+            return Array.prototype.indexOf.apply(this, args)
+          }
+        }
+        // Built once per mount so their identity stays stable across renders.
+        const columns = cfg.columns
+        const getRowId = cfg.rowIdKey
+          ? (item) => String(item[cfg.rowIdKey])
+          : undefined
+
+        const host = document.createElement("div")
+        document.body.appendChild(host)
+        const probe = {}
+        function Harness() {
+          const [rows, setRows] = React.useState(data)
+          probe.setData = setRows
+          probe.table = useDataTable({
+            data: rows,
+            columns,
+            ...cfg.options,
+            ...(getRowId ? { getRowId } : {}),
+          })
+          return null
+        }
+        const root = createRoot(host)
+        root.render(React.createElement(Harness))
+        probe.teardown = () => {
+          root.unmount()
+          host.remove()
+        }
+        window.__dt = probe
+        await new Promise((r) => setTimeout(r, 50))
+      },
+      { url: hookUrl, cfg: config }
+    )
+  }
+
+  const read = () =>
+    page.evaluate(() => {
+      const k = (item) => item.id ?? item.name
+      const t = window.__dt.table
+      return {
+        rowKeys: t.getRowModel().rows.map((r) => k(r.original)),
+        rowIds: t.getRowModel().rows.map((r) => r.id),
+        selected: t
+          .getFilteredSelectedRowModel()
+          .rows.map((r) => k(r.original)),
+        pageIndex: t.getState().pagination.pageIndex,
+        pageCount: t.getPageCount(),
+        canPrev: t.getCanPreviousPage(),
+        indexOfCalls: window.__dtIndexOfCalls,
+      }
+    })
+
+  const act = async (name, arg) => {
+    await page.evaluate(
+      ({ name, arg }) => {
+        const t = window.__dt.table
+        if (name === "select") {
+          const k = (item) => item.id ?? item.name
+          for (const row of t.getRowModel().rows) {
+            if (arg.includes(k(row.original))) row.toggleSelected(true)
+          }
+        } else if (name === "setData") {
+          window.__dt.setData(arg)
+        } else {
+          t[name](arg)
+        }
+      },
+      { name, arg }
+    )
+    await page.waitForTimeout(50)
+  }
+
+  const unmount = () => page.evaluate(() => window.__dt.teardown())
+
+  await test("getRowId keys selection to the record, the index default to the slot", async () => {
+    const rows = [
+      { id: "a", name: "Ann" },
+      { id: "b", name: "Bo" },
+      { id: "c", name: "Cy" },
+      { id: "d", name: "Di" },
+    ]
+    const columns = [{ accessorKey: "name", header: "Name" }]
+    const reversed = [...rows].reverse().map((r) => ({ ...r }))
+
+    // Precondition: with getRowId, selection follows the records through a
+    // refetch that returns fresh objects in a new order.
+    await mount({ data: rows, columns, rowIdKey: "id" })
+    await act("select", ["a", "b"])
+    eq((await read()).selected.sort().join(","), "a,b", "a and b selected")
+    await act("setData", reversed)
+    const keyed = await read()
+    eq(keyed.rowKeys.join(","), "d,c,b,a", "data reordered")
+    eq(keyed.selected.sort().join(","), "a,b", "same records still selected")
+    eq(keyed.rowIds.join(","), "d,c,b,a", "row ids come from getRowId")
+    await unmount()
+
+    // Counter-precondition: the index default keys the slot, so the same
+    // reorder moves the selection onto different records.
+    await mount({ data: rows, columns })
+    await act("select", ["a", "b"])
+    eq((await read()).selected.sort().join(","), "a,b", "a and b selected")
+    await act("setData", reversed)
+    const indexed = await read()
+    eq(indexed.rowKeys.join(","), "d,c,b,a", "data reordered")
+    eq(
+      indexed.selected.sort().join(","),
+      "c,d",
+      "index default keeps positions 0 and 1, now holding d and c"
+    )
+    eq(indexed.rowIds.join(","), "0,1,2,3", "row ids are positions")
+    await unmount()
+  })
+
+  await test("filtering resolves original indices without scanning data", async () => {
+    const rows = [
+      { id: "i0", tag: "drop" },
+      { id: "i1", tag: "keep" },
+      { id: "i2", tag: "drop" },
+      { id: "i3", tag: "drop" },
+      { id: "i4", tag: "keep" },
+      { id: "i5", tag: "drop" },
+    ]
+    await mount({
+      data: rows,
+      columns: [
+        { accessorKey: "id", header: "Id" },
+        { accessorKey: "tag", header: "Tag" },
+      ],
+      countIndexOf: true,
+    })
+
+    const before = await read()
+    eq(before.rowKeys.length, 6, "all six rows before filtering")
+
+    await act("setGlobalFilter", "keep")
+    const after = await read()
+
+    // Counter-precondition: the ids still name each row's position in the
+    // unfiltered data, so the index map didn't just number the survivors.
+    eq(after.rowKeys.join(","), "i1,i4", "only the keep rows survive")
+    eq(after.rowIds.join(","), "1,4", "ids are positions in the source data")
+
+    // Precondition: no per-row linear scan, before or after the filter.
+    eq(after.indexOfCalls, 0, "data.indexOf never called")
+    await unmount()
+  })
+
+  await test("a filter that shrinks the page count clamps pageIndex in state", async () => {
+    const rows = [
+      ...Array.from({ length: 15 }, (_, i) => ({
+        id: `a-${String(i).padStart(2, "0")}`,
+      })),
+      ...Array.from({ length: 35 }, (_, i) => ({
+        id: `b-${String(i).padStart(2, "0")}`,
+      })),
+    ]
+    await mount({
+      data: rows,
+      columns: [{ accessorKey: "id", header: "Id" }],
+      options: { initialPageSize: 10 },
+    })
+
+    await act("setPageIndex", 4)
+    const last = await read()
+    eq(last.pageCount, 5, "50 rows over 10 per page")
+    eq(last.pageIndex, 4, "on the last page")
+
+    // 15 matches → 2 pages, so page 4 no longer exists.
+    await act("setGlobalFilter", "a-")
+    const clamped = await read()
+    eq(clamped.pageCount, 2, "filter leaves two pages")
+    eq(clamped.pageIndex, 1, "state clamped to the last surviving page")
+    eq(clamped.rowKeys[0], "a-10", "page 1 rendered")
+    eq(clamped.canPrev, true, "previous is available")
+
+    // Counter-precondition: one click has to move the view. With a stale
+    // index in state the first clicks only walk 4→3→2 and render page 1.
+    await act("previousPage")
+    const back = await read()
+    eq(back.pageIndex, 0, "one click reaches page 0")
+    eq(back.rowKeys[0], "a-00", "the rendered page moved")
+    await unmount()
   })
 }
