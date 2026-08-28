@@ -93,7 +93,12 @@ const [open, setOpen] = useState(false)
                 <CalendarIcon />
                 {formatDate(single) ?? "Pick a date"}
               </PopoverTrigger>
-              <PopoverContent className="date-picker-popover" align="start" data-pg="dp-single-content">
+              <PopoverContent
+                className="date-picker-popover"
+                align="start"
+                data-pg="dp-single-content"
+                aria-label="Pick a date"
+              >
                 <Calendar
                   mode="single"
                   selected={single}
@@ -162,6 +167,7 @@ const [date, setDate] = useState()
               <PopoverContent
                 className="date-picker-popover date-picker-popover--wide"
                 align="start"
+                aria-label="Pick a date range"
                 data-pg="dp-range-content"
               >
                 <Calendar
@@ -210,7 +216,12 @@ const [date, setDate] = useState()
                 <CalendarIcon />
                 {formatDate(dob) ?? "Pick your date of birth"}
               </PopoverTrigger>
-              <PopoverContent className="date-picker-popover" align="start" data-pg="dp-dob-content">
+              <PopoverContent
+                className="date-picker-popover"
+                align="start"
+                data-pg="dp-dob-content"
+                aria-label="Pick your date of birth"
+              >
                 <Calendar
                   mode="single"
                   selected={dob}
