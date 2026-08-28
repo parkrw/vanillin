@@ -337,6 +337,30 @@ Not fixed here: the page's remaining overflow at 640px (`scrollWidth` 753 before
 **Status:** open, found by task 84 (2026-08-27), outside its scope  **Where:** `styles/globals.css:118-119`
 `initial-value: 1rem` / `1.5rem` break the `@property` rule that an initial value must be computationally independent (no `em`/`rem`/`%`), so Chrome discards the whole registration at parse time. Measured on a real page: 65 rules declared, 63 land as `CSSPropertyRule`, and `getComputedStyle` returns `""` for both tokens on an element nothing sets them on. Effect: the two rhythm tokens have **no** fallback guard — the protection task 84's spec credited them with; only `--typeset-leading` (`initial-value: 1.75`) is guarded. Fix: `initial-value: 16px` and `24px` (or `syntax: "*"` and drop the typing). Either changes computed-value representation, so it wants a full-suite run — see `docs/QUIRKS.md` line 1. Task 84's own three font-token registrations were verified accepted.
 
+### C18. `use-form` `reset()` sets `isValid = true` unconditionally
+**Status:** open, found by task 111 (2026-08-27), deliberately left  **Where:** `lib/use-form.js:625` on `fix/form-engine-bugs` (`5ae45be6f763`)
+Task 111 made the form start `isValid: false`, so an empty required form that the user resets now flips from invalid to valid without any rule running — a `<Button disabled={!isValid}>` enables after Reset on a form that cannot submit. Flipping the line to `false` strands the same button after a legitimate reset to valid defaults. Needs a decision: should `reset` re-validate against the new defaults, and should a form with no rules start `true`?
+
+### C19. `watch(callback)` keeps one callback per form
+**Status:** open, narrowed by task 111 (2026-08-27)  **Where:** `lib/use-form.js:720-773`
+The subscription moved out of the render body into one effect, which is what stops the per-render listener leak. The callback is a fresh closure every render, so identity cannot dedupe it, and the fix keeps a single slot: a second `watch(cb)` call on the same form replaces the first. react-hook-form allows several subscribers. Nothing in the repo registers two; the use-form docs page states the limit. A multi-subscriber design needs a stable token per call site, not a `Set` of closures.
+
+### C20. Two concurrent `force` resolver runs can still race
+**Status:** open, found in review of task 111 (2026-08-27)  **Where:** `lib/use-form.js:336-340`
+`_applyResolver({ force: true })` skips the sequence-token staleness check that task 111 added for typing, so two unawaited `trigger()` (or submit) calls can land the slower answer over the faster one. Narrow — it needs two direct user-initiated runs in flight at once — and the per-field and non-force paths are ordered.
+
+### C21. Watched-name pruning drops names for a memoised child that skips a render
+**Status:** open, found by task 111 (2026-08-27), unreachable today  **Where:** `lib/use-form.js:711-726`
+The watched set is rebuilt on every render and swapped in after commit, which is what prunes names a conditional watcher stops asking for. A `React.memo` child that calls `watch(name)` and does not re-render while its parent does loses its names from the set. Unreachable today only because `FormProvider` hands children a fresh `methods` object each render (C22), which forces every consumer to re-render anyway.
+
+### C22. `use-form` cost and policy items recorded in #13, deferred
+**Status:** recorded, not scheduled  **Where:** `lib/use-form.js` on `fix/form-engine-bugs` (`5ae45be6f763`), re-measure before acting
+- `formState` proxy is rebuilt per render over an object mutated in place (`:794`), so `errors` keeps its identity across changes and `useMemo` / `React.memo` never see a new value. Fixing it means changing the mutation model.
+- `Controller` fans out an unconditional `bump` on every state notification (`:841`). Cost, not correctness.
+- `FormProvider` builds a fresh `methods` object each render (`:904`), so every context consumer re-renders. Cost, not correctness.
+- `_`-prefixed internals sit on the public `control` object, and task 111 exported `createFormControl` (`:221`) to unit-test the pure functions. Both are the task 124 internals-policy call.
+- `_validateAll`'s per-field runs take no token (`:473-486`); `_formGen++` invalidates concurrent field-level runs and the loop only yields on an async `validate`, so guarding it costs more than it saves.
+
 ## D. Contrast and visual defects
 
 All of these are "not enough contrast", light **and** dark unless noted.

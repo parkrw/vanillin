@@ -239,6 +239,11 @@ function WatchDemo() {
   return (
     <section className="pg-section" data-pg="uf-watch">
       <h3>Watch / setValue / reset</h3>
+      <p className="pg-desc">
+        <code>watch(name)</code> re-renders the caller on change. The callback
+        form <code>watch(callback)</code> takes one callback per form: a second
+        call replaces the first.
+      </p>
       <ComponentPreview code={`const { register, watch, setValue, reset, getValues } = useForm({
   defaultValues: { first: "Jane", last: "Doe" },
 })
