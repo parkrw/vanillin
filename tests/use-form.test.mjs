@@ -1,4 +1,4 @@
-export default async function run({ page, baseUrl, test, eq }) {
+export default async function run({ page, baseUrl, repoRoot, test, eq }) {
   await page.mouse.move(0, 0)
   await page.goto(`${baseUrl}/#use-form`)
   await page.waitForSelector('[data-pg="uf-isolation"]')
@@ -411,6 +411,12 @@ export default async function run({ page, baseUrl, test, eq }) {
 
   // ── Validation modes ──────────────────────────────────────────────
 
+  await test("an empty required form starts invalid", async () => {
+    // Nothing has touched this form yet, so this is its initial isValid.
+    const value = await page.locator('[data-pg="uf-modes-valid"]').textContent()
+    eq(value, "false", "isValid before any interaction")
+  })
+
   await test("onBlur mode validates on blur", async () => {
     const input = page.locator('[data-pg="uf-modes-field"]')
     await input.focus()
@@ -418,6 +424,171 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.waitForTimeout(50)
     const err = await page.locator('[data-pg="uf-modes-err"]').textContent()
     eq(err, "Required", "onBlur mode validates on blur")
+  })
+
+  await test("isValid turns true once the required field passes", async () => {
+    const input = page.locator('[data-pg="uf-modes-field"]')
+    await input.fill("filled")
+    await input.blur()
+    await page.waitForTimeout(50)
+    const value = await page.locator('[data-pg="uf-modes-valid"]').textContent()
+    eq(value, "true", "isValid after the rule passes")
+  })
+
+  /*
+   * Subscription bookkeeping — watch(), Controller and the watched-name set.
+   * None of it is visible through the docs page, so these mount their own
+   * probe component against lib/use-form.js and read control's internals
+   * directly. The probe goes in last: it appends its own root to the body.
+   */
+
+  const formUrl = `/@fs/${repoRoot.replace(/^\//, "")}lib/use-form.js`
+
+  await page.evaluate(async (url) => {
+    const reactModule = await import("/@id/react")
+    const React = reactModule.default ?? reactModule
+    const h = React.createElement
+    const useState = React.useState
+    const domModule = await import("/@id/react-dom/client")
+    const createRoot = domModule.createRoot ?? domModule.default.createRoot
+    const { useForm, Controller } = await import(url)
+
+    const probe = { renders: 0, watchCalls: 0, lastWatch: null }
+    window.__uf = probe
+
+    function Probe() {
+      const { control, watch } = useForm({
+        defaultValues: { a: "", b: "", c: "" },
+      })
+      const [tick, setTick] = useState(0)
+      const [watchB, setWatchB] = useState(true)
+      const [showController, setShowController] = useState(true)
+
+      probe.renders++
+      probe.control = control
+      probe.rerender = () => setTick((n) => n + 1)
+      probe.setWatchB = setWatchB
+      probe.setShowController = setShowController
+
+      watch((values, info) => {
+        probe.watchCalls++
+        probe.lastWatch = { a: values.a, name: info.name }
+      })
+      if (watchB) watch("b")
+
+      return h(
+        "div",
+        { "data-pg": "uf-probe", "data-tick": String(tick) },
+        showController
+          ? h(Controller, {
+              name: "c",
+              control,
+              rules: { required: "req" },
+              render: ({ field }) =>
+                h("input", {
+                  "data-pg": "uf-probe-c",
+                  value: field.value ?? "",
+                  onChange: field.onChange,
+                }),
+            })
+          : null
+      )
+    }
+
+    const host = document.createElement("div")
+    document.body.appendChild(host)
+    createRoot(host).render(h(Probe))
+    await new Promise((r) => setTimeout(r, 60))
+  }, formUrl)
+
+  await test("watch(callback) subscribes once, not once per render", async () => {
+    const result = await page.evaluate(async () => {
+      const before = window.__uf.control._valueListeners.size
+      for (let i = 0; i < 5; i++) {
+        window.__uf.rerender()
+        await new Promise((r) => setTimeout(r, 10))
+      }
+      const after = window.__uf.control._valueListeners.size
+      const calls = window.__uf.watchCalls
+      window.__uf.control.setValue("a", "typed")
+      await new Promise((r) => setTimeout(r, 30))
+      return {
+        before,
+        after,
+        fired: window.__uf.watchCalls - calls,
+        value: window.__uf.lastWatch?.a,
+        name: window.__uf.lastWatch?.name,
+      }
+    })
+    eq(result.after, result.before, "listener count unchanged across 5 renders")
+    eq(result.fired, 1, "the callback runs once per change, not once per render")
+    eq(result.value, "typed", "the callback receives the new values")
+    eq(result.name, "a", "the callback receives the changed field name")
+  })
+
+  await test("Controller keeps its subscription across renders", async () => {
+    const churn = await page.evaluate(async () => {
+      const before = [...window.__uf.control._valueListeners]
+      for (let i = 0; i < 3; i++) {
+        window.__uf.rerender()
+        await new Promise((r) => setTimeout(r, 10))
+      }
+      const after = [...window.__uf.control._valueListeners]
+      return {
+        before: before.length,
+        after: after.length,
+        kept: before.filter((fn) => after.includes(fn)).length,
+      }
+    })
+    eq(churn.kept, churn.before, "an inline rules object does not resubscribe")
+    eq(churn.after, churn.before, "listener count unchanged")
+  })
+
+  await test("a field that stops being watched stops re-rendering", async () => {
+    const watched = await page.evaluate(async () => {
+      const start = window.__uf.renders
+      window.__uf.control.setValue("b", "1")
+      await new Promise((r) => setTimeout(r, 40))
+      return window.__uf.renders - start
+    })
+    eq(watched > 0, true, "a watched field re-renders")
+
+    const unwatched = await page.evaluate(async () => {
+      window.__uf.setWatchB(false)
+      await new Promise((r) => setTimeout(r, 40))
+      const start = window.__uf.renders
+      window.__uf.control.setValue("b", "2")
+      await new Promise((r) => setTimeout(r, 40))
+      return window.__uf.renders - start
+    })
+    eq(unwatched, 0, "a field no longer watched does not re-render")
+  })
+
+  await test("Controller drops its field on unmount", async () => {
+    const mounted = await page.evaluate(async () => {
+      const registered = !!window.__uf.control._fields.c
+      await window.__uf.control.trigger()
+      return {
+        registered,
+        error: window.__uf.control._formState.errors.c?.message ?? null,
+      }
+    })
+    eq(mounted.registered, true, "Controller registered its field")
+    eq(mounted.error, "req", "the mounted field is validated")
+
+    const unmounted = await page.evaluate(async () => {
+      window.__uf.setShowController(false)
+      await new Promise((r) => setTimeout(r, 40))
+      const registered = !!window.__uf.control._fields.c
+      window.__uf.control.clearErrors()
+      await window.__uf.control.trigger()
+      return {
+        registered,
+        error: window.__uf.control._formState.errors.c?.message ?? null,
+      }
+    })
+    eq(unmounted.registered, false, "the field is gone")
+    eq(unmounted.error, null, "the removed field is no longer validated")
   })
 
 }

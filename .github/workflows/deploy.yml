@@ -57,3 +57,30 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # Release drift: package.json said 0.1.0 for months while `git tag -l` was
+  # empty, so every sidecar's `source: github:parkrw/vanillin@v0.1.0` pointed at
+  # a ref that did not resolve. Runs on main, not on PRs — the tag is cut after
+  # the bump lands, so a PR has nothing to check yet.
+  release:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: package.json version has a matching tag on this history
+        run: |
+          version=$(node -p "require('./package.json').version")
+          tag="v$version"
+          if ! git rev-parse -q --verify "refs/tags/$tag^{commit}" >/dev/null; then
+            echo "::error::package.json is $version but tag $tag does not exist. Cut it on this commit: git tag $tag && git push origin $tag"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$tag^{commit}" HEAD; then
+            echo "::error::tag $tag points at $(git rev-parse --short "$tag^{commit}"), which is not in this history. Move it or bump package.json."
+            exit 1
+          fi
+          echo "$tag -> $(git rev-parse --short "$tag^{commit}")"
