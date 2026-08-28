@@ -178,7 +178,11 @@ export function DataTableFacetedFilter({ column, title, options: optionsProp, ..
           </>
         )}
       </PopoverTrigger>
-      <PopoverContent className="data-table-facet-content" align="start">
+      <PopoverContent
+        className="data-table-facet-content"
+        align="start"
+        aria-label={`Filter by ${title}`}
+      >
         <Command ref={commandRef}>
           <CommandInput placeholder={title} value={query} onValueChange={setQuery} />
           <CommandList>

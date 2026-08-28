@@ -85,7 +85,12 @@ const [date, setDate] = useState(null)
                 <PopoverTrigger as={Button} variant="outline" size="icon" data-pg="dp-typed-trigger">
                   <CalendarIcon />
                 </PopoverTrigger>
-                <PopoverContent className="date-picker-popover" align="start" data-pg="dp-typed-content">
+                <PopoverContent
+                  className="date-picker-popover"
+                  align="start"
+                  data-pg="dp-typed-content"
+                  aria-label="Choose a date"
+                >
                   <Calendar
                     mode="single"
                     selected={typedDate}
@@ -139,7 +144,7 @@ const [date, setDate] = useState(null)
                 <PopoverTrigger as={Button} variant="outline" size="icon" data-pg="dp-dt-cal-trigger">
                   <CalendarIcon />
                 </PopoverTrigger>
-                <PopoverContent className="date-picker-popover" align="start">
+                <PopoverContent className="date-picker-popover" align="start" aria-label="Choose a date">
                   <Calendar
                     mode="single"
                     selected={dtDate}
