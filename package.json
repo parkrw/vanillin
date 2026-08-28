@@ -17,6 +17,15 @@
     "theme:defaults": "node scripts/build-theme.mjs --defaults",
     "schema": "node scripts/gen-schema.mjs"
   },
+  "engines": { "node": ">=18.17" },
+  "peerDependencies": {
+    "react": ">=19",
+    "react-dom": ">=19"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": true },
+    "react-dom": { "optional": true }
+  },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.4.1",
     "axe-core": "^4.12.1",
