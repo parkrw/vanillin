@@ -11,7 +11,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     locator.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)))
 
   /** Wait until a condition is met (polling, not fixed sleep). */
-  const waitFor = async (fn, timeout = 5000) => {
+  const waitFor = async (fn, label = "", timeout = 5000) => {
     const deadline = Date.now() + timeout
     while (Date.now() < deadline) {
       try {
@@ -20,7 +20,7 @@ export default async function run({ page, baseUrl, test, eq }) {
       } catch {}
       await page.waitForTimeout(50)
     }
-    throw new Error("waitFor timed out")
+    throw new Error(label ? `waitFor timed out: ${label}` : "waitFor timed out")
   }
 
   /**
@@ -379,13 +379,17 @@ export default async function run({ page, baseUrl, test, eq }) {
     await waitFor(async () => !(await region.textContent()).includes("Retry 6"))
     eq((await region.textContent()).includes("Retry 6"), false, "collapsed toasts stay unannounced")
 
-    const front = firstToast()
-    const box = await front.boundingBox()
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-    await waitFor(async () => (await page.locator(".toast[data-limited]").count()) === 0)
+    await firstToast().hover()
+    await waitFor(
+      async () => (await page.locator(".toast[data-limited]").count()) === 0,
+      "hover expands the stack"
+    )
     // Counter-precondition: visible and silent is the regression. Every toast
     // the expansion puts on screen has to reach the region.
-    await waitFor(async () => (await region.textContent()).includes("Retry 6"))
+    await waitFor(
+      async () => (await region.textContent()).includes("Retry 6"),
+      "revealed toast reaches the live region"
+    )
     eq((await region.textContent()).includes("Retry 6"), true, "revealed toasts are announced")
     await page.mouse.move(0, 0)
     await clearAll()
