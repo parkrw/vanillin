@@ -115,8 +115,12 @@
 
 /* ---- @property: typeset tokens ---- */
 
-@property --typeset-size { syntax: "<length>"; inherits: true; initial-value: 1rem; }
-@property --typeset-flow { syntax: "<length>"; inherits: true; initial-value: 1.5rem; }
+/* px, not rem: an `initial-value` must be computationally independent, so a
+ * `rem` one makes the whole @property rule invalid and the browser drops it —
+ * leaving the token with no type guard and no fallback at all, which is the
+ * silent state these two were in until task123 measured the accepted rules. */
+@property --typeset-size { syntax: "<length>"; inherits: true; initial-value: 16px; }
+@property --typeset-flow { syntax: "<length>"; inherits: true; initial-value: 24px; }
 
 /* A font stack is not a typed grammar, so `syntax: "*"`. The point is the
  * `initial-value`: a registered property degrades to it when the token goes
