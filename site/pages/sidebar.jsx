@@ -150,9 +150,9 @@ function DemoSidebar({ variant = "sidebar", collapsible = "offcanvas", side = "l
           <SidebarGroupLabel>Loading...</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem><SidebarMenuSkeleton showIcon /></SidebarMenuItem>
-              <SidebarMenuItem><SidebarMenuSkeleton showIcon /></SidebarMenuItem>
-              <SidebarMenuItem><SidebarMenuSkeleton /></SidebarMenuItem>
+              <SidebarMenuItem><SidebarMenuSkeleton index={0} showIcon /></SidebarMenuItem>
+              <SidebarMenuItem><SidebarMenuSkeleton index={1} showIcon /></SidebarMenuItem>
+              <SidebarMenuItem><SidebarMenuSkeleton index={2} /></SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -560,17 +560,17 @@ import "./ui/sidebar/sidebar.css"
       <section className="pg-section">
         <h3>Skeleton loading</h3>
         <p>
-          <code>SidebarMenuSkeleton</code> renders a pulsing placeholder while menu content is loading. Pass <code>showIcon</code> to include an icon-sized skeleton.
+          <code>SidebarMenuSkeleton</code> renders a pulsing placeholder while menu content is loading. Pass <code>showIcon</code> to include an icon-sized skeleton. Pass the row&apos;s <code>index</code> so the placeholder widths vary: the width is hashed from it, which keeps the server and client renders identical.
         </p>
         <ComponentPreview code={`<SidebarMenu>
   <SidebarMenuItem>
-    <SidebarMenuSkeleton showIcon />
+    <SidebarMenuSkeleton index={0} showIcon />
   </SidebarMenuItem>
   <SidebarMenuItem>
-    <SidebarMenuSkeleton showIcon />
+    <SidebarMenuSkeleton index={1} showIcon />
   </SidebarMenuItem>
   <SidebarMenuItem>
-    <SidebarMenuSkeleton />
+    <SidebarMenuSkeleton index={2} />
   </SidebarMenuItem>
 </SidebarMenu>`}>
           <div style={miniFrame("12rem")}>
@@ -581,9 +581,9 @@ import "./ui/sidebar/sidebar.css"
                     <SidebarGroupLabel>Loading...</SidebarGroupLabel>
                     <SidebarGroupContent>
                       <SidebarMenu>
-                        <SidebarMenuItem><SidebarMenuSkeleton showIcon /></SidebarMenuItem>
-                        <SidebarMenuItem><SidebarMenuSkeleton showIcon /></SidebarMenuItem>
-                        <SidebarMenuItem><SidebarMenuSkeleton /></SidebarMenuItem>
+                        <SidebarMenuItem><SidebarMenuSkeleton index={0} showIcon /></SidebarMenuItem>
+                        <SidebarMenuItem><SidebarMenuSkeleton index={1} showIcon /></SidebarMenuItem>
+                        <SidebarMenuItem><SidebarMenuSkeleton index={2} /></SidebarMenuItem>
                       </SidebarMenu>
                     </SidebarGroupContent>
                   </SidebarGroup>
@@ -668,6 +668,31 @@ import "./ui/sidebar/sidebar.css"
         </ComponentPreview>
       </section>
 
+      <section className="pg-section">
+        <h3>Remembering the open state</h3>
+        <p>
+          <code>SidebarProvider</code> writes the open state to a cookie on every change, but it never reads it back. Your server does that, and passes the result as <code>defaultOpen</code> — so the first server render already shows the remembered state. Reading the cookie in the browser instead would make the client&apos;s first render disagree with the server&apos;s, which is a hydration error.
+        </p>
+        <ComponentPreview defaultTab="code" code={`import { cookies } from "next/headers"
+import { SIDEBAR_COOKIE_NAME } from "./ui/sidebar/sidebar"
+
+export default async function Layout({ children }) {
+  const store = await cookies()
+  const defaultOpen = store.get(SIDEBAR_COOKIE_NAME)?.value !== "false"
+
+  return (
+    <SidebarProvider defaultOpen={defaultOpen}>
+      <AppSidebar />
+      <SidebarInset>{children}</SidebarInset>
+    </SidebarProvider>
+  )
+}`}>
+          <p style={{ fontSize: "0.8125rem", color: "var(--muted-foreground)" }}>
+            Server-side example — nothing to render here.
+          </p>
+        </ComponentPreview>
+      </section>
+
       <ApiReference title="Sidebar" props={[
         { name: "variant", type: '"sidebar" | "floating" | "inset"', default: '"sidebar"', description: "Visual style of the sidebar" },
         { name: "collapsible", type: '"offcanvas" | "icon" | "none"', default: '"offcanvas"', description: "Collapse behavior: fully hidden, icon-only strip, or always visible" },
@@ -675,9 +700,14 @@ import "./ui/sidebar/sidebar.css"
       ]} />
 
       <ApiReference title="SidebarProvider" props={[
-        { name: "defaultOpen", type: "boolean", default: "true", description: "Initial open state (uncontrolled)" },
+        { name: "defaultOpen", type: "boolean", default: "true", description: "Initial open state (uncontrolled) — read the sidebar_state cookie on the server and pass it here" },
         { name: "open", type: "boolean", description: "Controlled open state" },
         { name: "onOpenChange", type: "(open: boolean) => void", description: "Called when open state changes" },
+      ]} />
+
+      <ApiReference title="SidebarMenuSkeleton" props={[
+        { name: "index", type: "number", default: "0", description: "Row position — the placeholder width is hashed from it, so server and client agree" },
+        { name: "showIcon", type: "boolean", default: "false", description: "Include an icon-sized skeleton" },
       ]} />
 
       <ApiReference title="SidebarMenuButton" props={[

@@ -30,8 +30,11 @@ import {
 // Constants (match upstream)
 // ---------------------------------------------------------------------------
 
-const SIDEBAR_COOKIE_NAME = "sidebar_state"
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
+// Exported so a consumer's server can read the cookie this provider writes —
+// see the comment on the write in SidebarProvider for why the read belongs
+// there and not here.
+export const SIDEBAR_COOKIE_NAME = "sidebar_state"
+export const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
@@ -86,7 +89,14 @@ export function SidebarProvider({
     defaultValue: defaultOpen,
     onChange: (v) => {
       onOpenChange?.(v)
-      // Persist to cookie
+      // Written here, read on the consumer's server: it pulls
+      // SIDEBAR_COOKIE_NAME off the request and passes the value as
+      // `defaultOpen`, so the first server paint already shows the remembered
+      // state. Reading it here instead — even in lazy initial state — would
+      // make the client's first render disagree with a server pass that only
+      // knew `defaultOpen`, which is the hydration mismatch this component
+      // fixes in SidebarMenuSkeleton. Both constants are exported for that
+      // read, and site/pages/sidebar.jsx shows it.
       document.cookie = `${SIDEBAR_COOKIE_NAME}=${v}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
     },
   })
@@ -444,8 +454,21 @@ export function SidebarMenuBadge({ className, ...props }) {
   )
 }
 
-export function SidebarMenuSkeleton({ showIcon = false, className, ...props }) {
-  const width = useMemo(() => `${Math.floor(Math.random() * 40) + 50}%`, [])
+// 41 widths spanning 50-90%. Hashed from the row index rather than randomised:
+// a `Math.random()` width computed during render differs between the server
+// and the client, so every loading sidebar threw a hydration mismatch in the
+// App Router projects the CLI targets. Multiply-and-xor rather than
+// `index % 41`, so consecutive rows scatter instead of stepping up a ramp.
+function skeletonWidth(index) {
+  const mixed = Math.imul(index + 1, 2654435761) >>> 0
+  // `>>> 0` again after the xor: `^` yields a *signed* int32, and a negative
+  // remainder would put the width below the 50% floor.
+  const hash = (mixed ^ (mixed >>> 15)) >>> 0
+  return 50 + (hash % 41)
+}
+
+export function SidebarMenuSkeleton({ index = 0, showIcon = false, className, ...props }) {
+  const width = useMemo(() => `${skeletonWidth(index)}%`, [index])
   return (
     <div
       data-sidebar="menu-skeleton"
