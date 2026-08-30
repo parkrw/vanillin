@@ -3,6 +3,12 @@
 
 export default async function run({ page, baseUrl, test, eq, near }) {
   await page.goto(`${baseUrl}/#home`)
+  // The console's search hint claims the chord matches the vanillin site's, so
+  // take the expected chord from the site chrome's own kbd rather than
+  // repeating its platform test here — ⌘K on a Mac, Ctrl+K elsewhere. Read
+  // once: the chrome is not on every route the suite visits.
+  const siteChord = (await page.locator(".pg-search-kbd").first().textContent()).trim()
+  const searchHint = () => `Search behaves as it does on the vanillin site — press ${siteChord} anywhere`
   await page.waitForSelector(".ck-console")
   const console_ = page.locator(".ck-console")
   const cats = console_.locator(".ck-nav-cat")
@@ -51,9 +57,20 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     const search = console_.locator(".ck-search")
     eq(await search.count(), 1)
     eq(
-      await search.evaluate((el) => el.parentElement.classList.contains("ck-topbar")),
+      await search.evaluate((el) => {
+        const tip = el.parentElement
+        return tip.classList.contains("ck-tip") && tip.parentElement.classList.contains("ck-topbar")
+      }),
       true,
-      "the search is a direct child of the top bar, not of the right-hand group",
+      "the search sits in its tooltip trigger, directly under the top bar",
+    )
+    eq(await console_.locator(".ck-topbar-right .ck-search").count(), 0, "not in the right-hand group")
+    // The tooltip's own aria-describedby sits on its trigger span, which takes
+    // no focus, so the button carries a description of its own.
+    eq(
+      await search.evaluate((el) => document.getElementById(el.getAttribute("aria-describedby"))?.textContent),
+      searchHint(),
+      "the search button is described for assistive tech on focus, not only on hover",
     )
     const pills = console_.locator(".ck-topbar-right .ck-pill")
     eq(await pills.count(), 2)
@@ -82,17 +99,52 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     ])
     eq(searchBox.x + searchBox.width <= rightBox.x, true, `search (${searchBox.x}) left of the controls (${rightBox.x})`)
     eq(searchBox.x + searchBox.width <= pillBox.x, true, `search (${searchBox.x}) left of the first pill (${pillBox.x})`)
-    eq(await search.locator(".kbd").allTextContents().then((k) => k.join("")), "⌘K")
-    // It still opens the palette.
+    // No ⌘K keycap: site/app.jsx owns that chord, so advertising it here would
+    // point at the site palette rather than this one (#50). A tooltip and a
+    // toast say where the shortcut lives instead.
+    eq(await search.locator(".kbd").count(), 0, "the search advertises no shortcut it does not own")
+    // It still opens the palette, and says the chord belongs to the site.
     await search.click()
     const palette = page.locator("dialog.command-dialog[open]")
     await palette.waitFor()
+    eq(
+      (await console_.locator(".toast").first().textContent()).includes(searchHint()),
+      true,
+      "clicking search explains where the shortcut lives",
+    )
+    // Clicking again replaces the hint rather than stacking a second copy.
+    await page.keyboard.press("Escape")
+    await page.waitForFunction(() => !document.querySelector("dialog.command-dialog[open]"))
+    await search.click()
+    await palette.waitFor()
+    eq(
+      await console_.locator(".toast").filter({ hasText: "vanillin site" }).count(),
+      1,
+      "a repeated click replaces the hint instead of stacking one",
+    )
     eq(
       (await palette.locator(".command-group-heading").allTextContents()).slice(0, 2).join(" | "),
       "Overview | Virtual Data Centers",
     )
     await page.keyboard.press("Escape")
     await page.waitForFunction(() => !document.querySelector("dialog.command-dialog[open]"))
+
+    // ⌘K belongs to the site palette alone. The console mounts inside #home as
+    // well as on #console, so a second binding here opened two dialogs stacked
+    // and one Escape left the other over the page (#50).
+    await page.keyboard.press("ControlOrMeta+k")
+    await page.locator("dialog.command-dialog[open]").waitFor()
+    eq(await page.locator("dialog.command-dialog[open]").count(), 1, "one palette, not two")
+    // Which one matters as much as how many: restoring the console's handler
+    // and dropping the site's would also open exactly one dialog.
+    eq(
+      await page.locator("dialog.command-dialog[open]").getAttribute("data-pg"),
+      "cmd-palette",
+      "the chord opens the site's palette, not the console's",
+    )
+    await page.keyboard.press("Escape")
+    await page.waitForFunction(() => !document.querySelector("dialog.command-dialog[open]"))
+    eq(await page.locator("dialog.command-dialog[open]").count(), 0, "one Escape closes it")
   })
 
   await test("the chrome is navy in both schemes while the body follows the scheme", async () => {
@@ -648,6 +700,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
   await test("every icon-only control has a tooltip, and tooltips are orange", async () => {
     const tips = [
       [".ck-theme-toggle", "Change the theme in the vanillin navbar at the top of the page"],
+      [".ck-search", searchHint()],
       [".ck-bell", "Notifications"],
       ['[aria-label="Collapse sidebar"]', "Collapse sidebar"],
       ['[aria-label="Collapse section rail"]', "Collapse"],

@@ -339,13 +339,6 @@
   white-space: nowrap;
 }
 
-.ck-search-kbd .kbd {
-  background-color: transparent;
-  border-color: var(--ck-chrome-border);
-  color: var(--ck-chrome-text);
-  box-shadow: none;
-}
-
 .ck-topbar-btn {
   position: relative;
   display: flex;

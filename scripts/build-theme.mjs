@@ -7,7 +7,12 @@
  *  - `--defaults`: van.defaults.json -> styles/defaults.css, the kit's own
  *    token values. globals.css @imports that file, so this is the one
  *    authoritative :root of token values -- there is no hand-written copy to
- *    drift from.
+ *    drift from. Because this build IS that source, it cannot fall back to it:
+ *    a colour token given in only one mode is an error here, not a fill. The
+ *    fill would read globals.css, which has held no colour values since task
+ *    60, and emit a silent mode-invariant light-dark(X, X). A consumer's
+ *    van.config.json keeps the one-mode convenience -- it has real defaults to
+ *    read from.
  *  - default: van.config.json -> styles/van.css, a consumer's overrides.
  *    Import it after globals.css:
  *
@@ -55,10 +60,77 @@ function readTokenSources(root, sources) {
 // ---------------------------------------------------------------------------
 
 /**
- * Scan ui/ to build a slug -> CSS block-class map.
- * The block class is the first class selector in the component's CSS file.
+ * Components whose block class is not their directory slug. Mirrors the
+ * conformance suite's BLOCK_CLASS_ALLOWLIST (tests/conformance.unit.mjs):
+ * every entry names the class a `components.<slug>` override must target and
+ * why the slug is not enough on its own.
  */
-export function discoverComponents(root, ui = "ui") {
+const BLOCK_CLASS_OVERRIDES = {
+  "alert-dialog": {
+    blockClass: "alert-dialog",
+    reason: "re-exports dialog; the element carries `dialog alert-dialog`, so alert-dialog.css defines no block class of its own",
+  },
+  breadcrumb: {
+    blockClass: "breadcrumb",
+    reason: "the JSX renders .breadcrumb; the CSS styles only its .breadcrumb-* subparts",
+  },
+  button: { blockClass: "btn", reason: "block class is .btn (upstream convention)" },
+  "button-group": { blockClass: "btn-group", reason: "block class is .btn-group, matching button's .btn prefix" },
+  collapsible: {
+    blockClass: "collapsible",
+    reason: "the JSX renders .collapsible; the CSS styles .collapsible-content",
+  },
+  combobox: {
+    blockClass: "combobox-input-group",
+    reason: "composite; the input group is the visible root, not a bare .combobox",
+  },
+  "context-menu": {
+    blockClass: "context-menu",
+    reason: "re-exports dropdown-menu; the element carries both classes and context-menu.css defines no block class",
+  },
+  "date-picker": {
+    blockClass: "date-picker-trigger",
+    reason: "CSS-only composition of popover + calendar; the trigger is its only root",
+  },
+  "form-fields": {
+    blockClass: "form-field",
+    reason: "composite wrappers; the singular .form-field is the block class",
+  },
+  resizable: { blockClass: "resizable-group", reason: "composite; the group is the outermost styled part" },
+  select: { blockClass: "select-trigger", reason: "composite; the trigger is the visible root (there is no bare .select)" },
+}
+
+function stripComments(css) {
+  return css.replace(/\/\*[\s\S]*?\*\//g, "")
+}
+
+/** Does `css` define `.name` as a block class? Same test conformance applies. */
+function definesBlockClass(css, name) {
+  return new RegExp(`\\.${name.replace(/-/g, "\\-")}(?=[\\s{:,\\[])`).test(css)
+}
+
+/**
+ * Resolve one component's block class, in precedence order:
+ *
+ *   1. BLOCK_CLASS_OVERRIDES  — an explicit, reviewed exception.
+ *   2. the dir slug           — what conformance already enforces.
+ *   3. the first class in the file — a warned fallback only.
+ *
+ * Rule order inside a component's CSS is cosmetic, so deriving the selector
+ * from it means a reordering nobody would flag silently re-points every
+ * consumer override: their van.css still compiles and styles nothing.
+ */
+function resolveBlockClass(slug, css) {
+  const stripped = stripComments(css)
+  const firstClass = stripped.match(/^\s*\.([\w-]+)\s*[{,]/m)?.[1] ?? null
+  const override = BLOCK_CLASS_OVERRIDES[slug]
+  if (override) return { blockClass: override.blockClass, source: "allowlist", firstClass }
+  if (definesBlockClass(stripped, slug)) return { blockClass: slug, source: "slug", firstClass }
+  return { blockClass: firstClass || slug, source: "fallback", firstClass }
+}
+
+/** Scan ui/ to a slug -> { blockClass, source, firstClass } map. */
+function scanComponents(root, ui = "ui") {
   const uiDir = resolve(root, ui)
   const map = new Map()
   let dirs
@@ -71,10 +143,19 @@ export function discoverComponents(root, ui = "ui") {
     if (!d.isDirectory()) continue
     const cssPath = resolve(uiDir, d.name, `${d.name}.css`)
     if (!existsSync(cssPath)) continue
-    const css = readFileSync(cssPath, "utf-8")
-    const m = css.match(/^\.([\w-]+)\s*[{,]/m)
-    if (m) map.set(d.name, m[1])
+    map.set(d.name, resolveBlockClass(d.name, readFileSync(cssPath, "utf-8")))
   }
+  return map
+}
+
+/**
+ * Scan ui/ to build a slug -> CSS block-class map.
+ * The block class is the dir slug, or the reviewed exception in
+ * BLOCK_CLASS_OVERRIDES; see resolveBlockClass for the fallback.
+ */
+export function discoverComponents(root, ui = "ui") {
+  const map = new Map()
+  for (const [slug, info] of scanComponents(root, ui)) map.set(slug, info.blockClass)
   return map
 }
 
@@ -370,10 +451,16 @@ function deriveBrand(brand) {
  * @param {string} opts.globals - Path to globals.css, relative to root. Its
  *   @property declarations are the known-token list validation runs against,
  *   and its directory is where the default tokenSources are looked for.
+ * @param {boolean} opts.requireBothModes - Refuse a colour token given in only
+ *   one mode instead of filling the other from tokenSources. The defaults
+ *   build sets it; see the file header for why.
  * @returns {string} The complete CSS file content.
  * @throws {Error} If validation fails.
  */
-export function generate(config, { root, tokenSources, source, uiDir = "ui", globals = "styles/globals.css" } = {}) {
+export function generate(
+  config,
+  { root, tokenSources, source, uiDir = "ui", globals = "styles/globals.css", requireBothModes = false } = {},
+) {
   root = root || resolve(__dirname, "..")
 
   // Default token sources sit beside globals.css, wherever the consumer put it.
@@ -385,7 +472,7 @@ export function generate(config, { root, tokenSources, source, uiDir = "ui", glo
   // Context for validation
   const globalsCss = readFileSync(resolve(root, globals), "utf-8")
   const colorTokens = parseColorTokens(globalsCss)
-  const componentMap = discoverComponents(root, uiDir)
+  const componentMap = scanComponents(root, uiDir)
   const knownComponents = new Set(componentMap.keys())
   const tokenDefaults = extractTokenDefaults(readTokenSources(root, tokenSources))
 
@@ -456,7 +543,8 @@ export function generate(config, { root, tokenSources, source, uiDir = "ui", glo
 
     // Light/dark overrides -- literal wins over derivation.
     // For each overridden token, we need both mode values to emit light-dark().
-    // If only one mode is specified, the other comes from globals.css defaults.
+    // If only one mode is specified, the other comes from tokenSources --
+    // unless requireBothModes refuses the guess outright.
     const lightOverrides = cfg.theme.light || {}
     const darkOverrides = cfg.theme.dark || {}
     const allOverriddenTokens = new Set([
@@ -464,16 +552,22 @@ export function generate(config, { root, tokenSources, source, uiDir = "ui", glo
       ...Object.keys(darkOverrides),
     ])
 
+    const oneMode = []
     for (const token of [...allOverriddenTokens].sort()) {
       const hasLight = token in lightOverrides
       const hasDark = token in darkOverrides
+
+      if (requireBothModes && !(hasLight && hasDark)) {
+        oneMode.push(`theme.${hasLight ? "dark" : "light"}.${token}`)
+        continue
+      }
 
       let lightVal, darkVal
       if (hasLight && hasDark) {
         lightVal = lightOverrides[token]
         darkVal = darkOverrides[token]
       } else {
-        // Fill the missing mode from globals.css defaults
+        // Fill the missing mode from the token stylesheets
         const defaults = tokenDefaults[token]
         if (hasLight) {
           lightVal = lightOverrides[token]
@@ -484,6 +578,15 @@ export function generate(config, { root, tokenSources, source, uiDir = "ui", glo
         }
       }
       rootProps.set(`--${token}`, `light-dark(${lightVal}, ${darkVal})`)
+    }
+
+    if (oneMode.length > 0) {
+      throw new Error(
+        `${source || "This config"} must give every colour token both modes; missing:\n` +
+          oneMode.map((k) => `  - ${k}`).join("\n") +
+          `\nThe missing mode would otherwise be read from the token stylesheets, which this build generates ` +
+          `-- so the value comes back empty and the token collapses to a mode-invariant light-dark(X, X).`,
+      )
     }
   }
 
@@ -517,7 +620,15 @@ export function generate(config, { root, tokenSources, source, uiDir = "ui", glo
   if (cfg.components) {
     for (const slug of Object.keys(cfg.components).sort()) {
       const comp = cfg.components[slug]
-      const blockClass = componentMap.get(slug) || slug
+      const info = componentMap.get(slug)
+      const blockClass = info?.blockClass || slug
+      if (info?.source === "fallback") {
+        console.warn(
+          `warning: ${uiDir}/${slug}/${slug}.css defines no .${slug} block class, so overrides for ` +
+            `"${slug}" target .${blockClass} — the first class in the file, which moves when its rules are ` +
+            `reordered. Add a .${slug} block class, or add "${slug}" to BLOCK_CLASS_OVERRIDES with a reason.`,
+        )
+      }
       const compLines = []
 
       // Base token overrides
@@ -587,8 +698,11 @@ export function buildDefaults({ root } = {}) {
   const css = generate(config, {
     root,
     // Not DEFAULTS_OUTPUT: reading the previous build would make this one
-    // depend on what happened to be on disk.
+    // depend on what happened to be on disk. globals.css alone holds no colour
+    // values any more (task 60 moved them into the generated defaults.css), so
+    // nothing here can fill a missing mode -- hence requireBothModes.
     tokenSources: ["styles/globals.css"],
+    requireBothModes: true,
     source: DEFAULTS_CONFIG,
   })
   const outPath = resolve(root, DEFAULTS_OUTPUT)
