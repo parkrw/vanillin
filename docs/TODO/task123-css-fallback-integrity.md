@@ -13,11 +13,11 @@ Line numbers measured 2026-08-27; re-verify.
 
 ## Sub-tasks
 
-- [ ] 1. Align the 61 initial-values; regenerate defaults (`npm run theme:defaults` must be diff-clean afterwards — the values move in `globals.css`, not the generated file); the agreement unit test.
-- [ ] 2. The `light-dark()` floor decision + its artifact (README/DECISIONS + marker rule, or generator fallback emission).
-- [ ] 3. The scoped-`.dark` measurement test + whichever documentation/re-aim it dictates.
-- [ ] 4. The `overlay` decision recorded in DECISIONS; QUIRKS entry; follow-up task seeded if "fix".
-- [ ] 5. Re-run `scripts/contrast-nontext.mjs` — the initial-value alignment must not change any *measured* ratio (values now match shipped, so nothing rendered moves; the probe proves it).
+- [x] 1. Align the 61 initial-values; regenerate defaults (`npm run theme:defaults` must be diff-clean afterwards — the values move in `globals.css`, not the generated file); the agreement unit test.
+- [x] 2. The `light-dark()` floor decision + its artifact (README/DECISIONS + marker rule, or generator fallback emission).
+- [x] 3. The scoped-`.dark` measurement test + whichever documentation/re-aim it dictates.
+- [x] 4. The `overlay` decision recorded in DECISIONS; QUIRKS entry; follow-up task seeded if "fix".
+- [x] 5. Re-run `scripts/contrast-nontext.mjs` — the initial-value alignment must not change any *measured* ratio (values now match shipped, so nothing rendered moves; the probe proves it).
 
 ## Verify / done
 
@@ -36,4 +36,25 @@ Cascade layers / class prefixing (policy, task124), the `prefers-contrast` token
 
 ## Handoff
 
-**Status:** NOT STARTED
+**Status:** DONE — branch `fix/css-fallbacks`, uncommitted.
+
+### Sub-task 3's measured answer
+
+**Scoped `.dark` is broken, as suspected.** A `<div class="dark">` gets `color-scheme: dark` on the subtree, so form controls darken, but `--card` on a child computes to `oklch(1 0 0)` — the light arm — and the child renders white. Registered custom properties resolve at `:root` against the root's light `color-scheme` and inherit *already resolved*, so `light-dark()` never re-resolves down-tree. Root-only dark is now the documented, decided model (DECISIONS "Browser floor"), pinned by two tests: one asserting the subtree stays light, one asserting root `.dark` goes dark.
+
+The three `.dark X` descendant rules were **not** re-aimed: `ui/button/button.css:70`, `ui/input-group/input-group.css:195`, `ui/native-select/native-select.css:42` are outside this task's `Owns` list and outside the batch's `styles/`-only grant. Filed as #57. Recipe for whoever takes it: use `:where(html).dark X`. Both `:root.dark X` (0,3,0) and `html.dark X` (0,2,1) outrank the sibling `.btn--outline:hover` (0,2,0) and would silently kill hover in dark mode; `:where()` contributes zero specificity and keeps the existing (0,2,0) tie, which source order already resolves in hover's favour.
+
+### Two defects found that the findings did not predict
+
+1. **`--typeset-size` and `--typeset-flow` were never registered at all.** Their `initial-value` was `1rem`/`1.5rem`, and a non-computationally-independent `initial-value` makes the browser drop the entire `@property` rule. Measured by listing accepted `CSSPropertyRule`s: 63 accepted against 65 declared. Both tokens had no type guard and no fallback — the exact hole task 84 exists to close, sitting inside task 84's own file. Fixed to `16px`/`24px`; a test now diffs declared against accepted on every run.
+2. **`@property … syntax: "*"` provides no fallback whatsoever.** Task 84's three `--typeset-font-*` registrations are decorative. Measured against a `cursive` control: with the token invalidated, a `p` using it renders `cursive` (inherited), not the mono stack. A `<color>` token in the same test lands on its `initial-value` correctly. The misleading comment in `globals.css` has been corrected and the behaviour pinned; the repair (a `var()` fallback at each of 11 consumption sites, 5 of them in `ui/`) is **not** done — out of ownership, filed as #56.
+
+### Also worth knowing
+
+The repo's pre-existing fallback tests passed vacuously. `setProperty(name, "not-a-color")` on a registered property is rejected at *parse* time, so no fallback ever occurred; the test then read the shipped value, which happened to equal the `initial-value`. Reaching a real `initial-value` needs `var(--undefined-token)` **on the root element** — on a child, `inherits: true` yields the inherited value instead. Those tests are repaired, and a control value distinct from both is now used so a coincidence cannot read as a pass.
+
+Finding 2's browser figure was wrong and is corrected in the decision: `light-dark()` shipped in **Firefox 120**, not 129, so ESR 115 is the hard-fail case. The "≤127" figure belongs to `@property` token *interpolation*, a separate and much softer limit — README.md's support table already had both right.
+
+Note also that `scripts/contrast-nontext.mjs` **exits 0 even when it reports FAIL lines**, so the `contrast-nontext && check-tokens` chain in the Verify block does not gate on contrast. Read its output, do not trust its exit code.
+
+`scripts/contrast-nontext.mjs` reports **5 pre-existing FAILs** (progress track, slider rail, and three others) on `main` as well as here — byte-identical output before and after this task's changes. Not caused by this work and not in its scope.
