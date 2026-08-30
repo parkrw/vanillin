@@ -3,9 +3,13 @@
  *
  * status → colour via data-status; size via modifier; ring via modifier.
  * `error` maps to --destructive-* tokens (see badge doc comment for why).
+ *
+ * --status-dot-glow carries the status colour for the halo, the way
+ * --badge-glow does for badges, so the halo never introduces a second hue.
  */
 
 .status-dot {
+  --status-dot-glow: var(--muted-foreground);
   display: inline-block;
   flex-shrink: 0;
   width: 0.5rem;      /* 8px — default */
@@ -30,18 +34,22 @@
 /* ── Status colours ── */
 
 .status-dot[data-status="success"] {
+  --status-dot-glow: var(--success);
   background-color: var(--success);
 }
 
 .status-dot[data-status="warning"] {
+  --status-dot-glow: var(--warning);
   background-color: var(--warning);
 }
 
 .status-dot[data-status="error"] {
+  --status-dot-glow: var(--destructive);
   background-color: var(--destructive);
 }
 
 .status-dot[data-status="info"] {
+  --status-dot-glow: var(--info);
   background-color: var(--info);
 }
 
@@ -58,11 +66,9 @@
  * on one 2s cycle and a halo in the dot's own colour, rather than the old
  * deep opacity blink (1 → 0.4, alternate). The gentle dim stays alongside
  * the halo because forced-colors kills box-shadow, and the animation is
- * pending's status cue there (see the forced-colors block below). `color`
- * carries the hue so currentColor feeds the shared ring keyframes. */
+ * pending's status cue there (see the forced-colors block below). */
 .status-dot[data-status="pending"] {
   background-color: var(--muted-foreground);
-  color: var(--muted-foreground);
   animation:
     status-dot-pulse var(--glow-duration, 2s) ease-in-out infinite,
     status-dot-ring-pulse var(--glow-duration, 2s) ease-in-out infinite;
@@ -80,14 +86,19 @@
 }
 
 /* ── Ring (halo) ──
- * The halo is the dot's own colour — `color` carries the status token so
- * currentColor feeds the shadow — and it is a crisp ring, not a blur: the loop
- * swells its spread 3px → 5px and lifts its alpha, the ripple a console's live
- * dots make. Indeterminate loop → fixed 2s literal, same reasoning as pending.
+ * A soft halo in the dot's own colour that swells and brightens on a fixed 2s
+ * loop — the ripple a console's live dots make. Soft rather than crisp: a
+ * zero-blur ring on an 8px dot reads as stepping while it grows. Indeterminate
+ * loop → fixed 2s literal, same reasoning as pending.
  *
- * `error` runs the alarm beat instead: faster, the ring swells further and
+ * The colour is --status-dot-glow, never currentColor. Chrome interpolates a
+ * box-shadow whose colour is color-mix(… currentColor …) discretely, so the
+ * whole shadow — spread included — snapped from the rest frame to the peak
+ * frame at the midpoint instead of growing (docs/QUIRKS.md).
+ *
+ * `error` runs the alarm beat instead: faster, the halo swells further and
  * fades as it grows, and the dot itself dims to 0.65 — a sonar ping, still in
- * the dot's own colour. Parked under reduced motion it shows the shared 20%
+ * the dot's own colour. Parked under reduced motion it shows the shared 25%
  * rest halo like every other ring.
  *
  * --glow-duration (one breath), --glow-alarm-duration (one alarm beat) and
@@ -98,26 +109,12 @@
  * is its forced-colors cue and stays put. */
 
 .status-dot--ring {
-  color: var(--muted-foreground);
-  box-shadow: 0 0 0 3px color-mix(in oklab, currentColor calc(20% * var(--glow-strength, 1)), transparent);
+  box-shadow: 0 0 3px 2px color-mix(in oklab, var(--status-dot-glow) calc(25% * var(--glow-strength, 1)), transparent);
   animation: status-dot-ring-pulse var(--glow-duration, 2s) ease-in-out infinite;
 }
 
-.status-dot--ring[data-status="success"] {
-  color: var(--success);
-}
-
-.status-dot--ring[data-status="warning"] {
-  color: var(--warning);
-}
-
 .status-dot--ring[data-status="error"] {
-  color: var(--destructive);
   animation: status-dot-alarm var(--glow-alarm-duration, 1.1s) ease-in-out infinite;
-}
-
-.status-dot--ring[data-status="info"] {
-  color: var(--info);
 }
 
 /* pending already runs both loops; restated so the ring modifier's
@@ -130,20 +127,20 @@
 
 @keyframes status-dot-ring-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 3px color-mix(in oklab, currentColor calc(20% * var(--glow-strength, 1)), transparent);
+    box-shadow: 0 0 3px 2px color-mix(in oklab, var(--status-dot-glow) calc(25% * var(--glow-strength, 1)), transparent);
   }
   50% {
-    box-shadow: 0 0 0 5px color-mix(in oklab, currentColor calc(30% * var(--glow-strength, 1)), transparent);
+    box-shadow: 0 0 7px 4px color-mix(in oklab, var(--status-dot-glow) calc(40% * var(--glow-strength, 1)), transparent);
   }
 }
 
 @keyframes status-dot-alarm {
   0%, 100% {
-    box-shadow: 0 0 0 3px color-mix(in oklab, currentColor calc(30% * var(--glow-strength, 1)), transparent);
+    box-shadow: 0 0 2px 2px color-mix(in oklab, var(--status-dot-glow) calc(35% * var(--glow-strength, 1)), transparent);
     opacity: 1;
   }
   50% {
-    box-shadow: 0 0 0 6px color-mix(in oklab, currentColor calc(12% * var(--glow-strength, 1)), transparent);
+    box-shadow: 0 0 8px 6px color-mix(in oklab, var(--status-dot-glow) calc(12% * var(--glow-strength, 1)), transparent);
     opacity: 0.65;
   }
 }

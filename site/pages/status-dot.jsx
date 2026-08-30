@@ -108,13 +108,15 @@ import "./ui/status-dot/status-dot.css"
 <StatusDot status="pending" ring />`}>
           <div>
             <p className="pg-prose">
-              The <code>ring</code> prop draws a halo in the dot's own colour
-              and breathes it on a fixed 2s loop, the "live" look consoles use
-              for running instances. The halo never takes a second hue: a green
-              dot glows green. <code>error</code> runs the alarm beat instead: a
-              faster 1.1s loop where the ring swells further and fades while
-              the dot dims. Under <code>prefers-reduced-motion</code> every
-              halo holds still at 20% opacity.{" "}
+              The <code>ring</code> prop draws a soft halo in the dot's own
+              colour and breathes it on a fixed 2s loop — it swells and
+              brightens, then settles — the "live" look consoles use for
+              running instances. The halo never takes a second hue: a green
+              dot glows green, through <code>--status-dot-glow</code>.{" "}
+              <code>error</code> runs the alarm beat instead: a faster 1.1s
+              loop where the halo swells further and fades while the dot dims.
+              Under <code>prefers-reduced-motion</code> every halo holds still
+              at 25% opacity.{" "}
               <code>--glow-duration</code> and <code>--glow-strength</code>{" "}
               retime and dim it — the same two properties{" "}
               <code>Badge</code>'s <code>glow</code> and{" "}
@@ -285,6 +287,7 @@ Running (label on adjacent text)
         { name: "--glow-duration", type: "<time>", default: "2s", description: "One breath of the ring and of pending's loops. Inherited, so setting it on an ancestor retimes every status dot, badge and progress bar inside" },
         { name: "--glow-strength", type: "number", default: "1", description: "Multiplies the halo alpha; 0.5 is half as bright, 0 hides the halo. Leaves pending's opacity dim alone, because that is its forced-colors cue" },
         { name: "--glow-alarm-duration", type: "<time>", default: "1.1s", description: "One beat of the error ring's alarm loop. Inherited like --glow-duration; a destructive badge's glow reads it too" },
+        { name: "--status-dot-glow", type: "<color>", default: "the status token", description: "The halo colour. Each status sets it to its own token; set it on a dot to recolour the ring without touching the dot" },
       ]} />
     </>
   )

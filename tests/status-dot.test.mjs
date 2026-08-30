@@ -208,14 +208,14 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     await page.evaluate(() => document.documentElement.style.removeProperty("--motion-scale"))
 
     // Reduced motion parks the halo, and the parked halo is the dot's colour
-    // at 20%: compared through a probe so oklch/color-mix serialisation is
+    // at 25%: compared through a probe so oklch/color-mix serialisation is
     // never parsed by hand.
     await page.emulateMedia({ reducedMotion: "reduce" })
     const parked = await rings.evaluateAll((els) =>
       els.map((el) => {
         const s = getComputedStyle(el)
         const probe = document.createElement("span")
-        probe.style.backgroundColor = `color-mix(in oklab, ${s.backgroundColor} 20%, transparent)`
+        probe.style.backgroundColor = `color-mix(in oklab, ${s.backgroundColor} 25%, transparent)`
         el.parentElement.appendChild(probe)
         const want = getComputedStyle(probe).backgroundColor
         probe.remove()
@@ -224,7 +224,6 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
           status: el.dataset.status,
           animation: s.animationName,
           sameHue: halo === want,
-          currentColorIsDot: s.color === s.backgroundColor,
           shadow: s.boxShadow,
         }
       }),
@@ -232,8 +231,7 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     await page.emulateMedia({ reducedMotion: "no-preference" })
     for (const r of parked) {
       eq(r.animation, "none", `${r.status}: animation parked under reduced motion`)
-      eq(r.currentColorIsDot, true, `${r.status}: currentColor feeds the halo`)
-      eq(r.sameHue, true, `${r.status}: halo is the dot colour at 20% (${r.shadow})`)
+      eq(r.sameHue, true, `${r.status}: halo is the dot colour at 25% (${r.shadow})`)
     }
   })
 
@@ -346,7 +344,7 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     eq(full !== "none", true, "precondition: the default row still declares a halo at rest")
     eq(dimmed !== full, true, `the halo changes with --glow-strength (${full} vs ${dimmed})`)
 
-    const mix = "color-mix(in oklab, var(--success) calc(20% * var(--glow-strength, 1)), transparent)"
+    const mix = "color-mix(in oklab, var(--success) calc(25% * var(--glow-strength, 1)), transparent)"
     const strong = await haloLuma('[data-pg="sd-ring"]', mix)
     const weak = await haloLuma('[data-pg="sd-glow-controls"]', mix)
     eq(strong.colour !== "rgba(0, 0, 0, 0)", true, `precondition: the mix resolves (${strong.colour})`)
@@ -388,21 +386,21 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
       return resolved
     }, mix)
 
-  await test("ring shape: a crisp ring that swells in the dot's colour; error is the alarm beat", async () => {
+  await test("ring shape: a soft halo that swells in the dot's colour; error is the alarm beat", async () => {
     const live = page.locator('[data-pg="sd-ring"] .status-dot--ring[data-status="success"]')
     const alarm = page.locator('[data-pg="sd-ring"] .status-dot--ring[data-status="error"]')
     const rest = await frameAt(live, 0)
     const peak = await frameAt(live, 0.5)
-    eq(geometry(rest.shadow), " 0px 0px 0px 3px", `rest: one crisp 3px ring (${rest.shadow})`)
-    eq(geometry(peak.shadow), " 0px 0px 0px 5px", `peak: one crisp 5px ring, no blur (${peak.shadow})`)
+    eq(geometry(rest.shadow), " 0px 0px 3px 2px", `rest: a 2px halo blurred 3px (${rest.shadow})`)
+    eq(geometry(peak.shadow), " 0px 0px 7px 4px", `peak: a 4px halo blurred 7px (${peak.shadow})`)
     eq(
       colour(peak.shadow),
-      await mixColour(live, "color-mix(in oklab, var(--success) calc(30% * var(--glow-strength, 1)), transparent)"),
+      await mixColour(live, "color-mix(in oklab, var(--success) calc(40% * var(--glow-strength, 1)), transparent)"),
       "peak: still the dot's own colour",
     )
     const alarmRest = await frameAt(alarm, 0)
     const alarmPeak = await frameAt(alarm, 0.5)
-    eq(geometry(alarmPeak.shadow), " 0px 0px 0px 6px", `alarm peak: the ring swells to 6px (${alarmPeak.shadow})`)
+    eq(geometry(alarmPeak.shadow), " 0px 0px 8px 6px", `alarm peak: the halo swells to 6px (${alarmPeak.shadow})`)
     eq(alarmPeak.opacity, "0.65", "alarm peak: the dot dims")
     eq(alarmRest.opacity, "1", "alarm rest: the dot is solid")
     eq(
@@ -410,6 +408,34 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
       await mixColour(alarm, "color-mix(in oklab, var(--destructive) calc(12% * var(--glow-strength, 1)), transparent)"),
       "alarm peak: fades in its own red",
     )
+  })
+
+  // Chrome interpolates a box-shadow coloured with color-mix(… currentColor …)
+  // discretely: the whole shadow snaps from the rest frame to the peak frame at
+  // the midpoint (docs/QUIRKS.md). A quarter of the way in, the halo must sit
+  // strictly between the two frames — geometry and alpha alike.
+  const spread = (shadow) => parseFloat(geometry(shadow).trim().split(" ")[3])
+  const alpha = (shadow) => parseFloat(colour(shadow).match(/\/ ([\d.]+)\)$/)?.[1] ?? "NaN")
+
+  await test("ring motion: the halo grows through the cycle instead of snapping at its midpoint", async () => {
+    for (const status of ["success", "error", "pending"]) {
+      const dot = page.locator(`[data-pg="sd-ring"] .status-dot--ring[data-status="${status}"]`)
+      const [rest, quarter, peak] = await Promise.all([0, 0.25, 0.5].map((phase) => frameAt(dot, phase)))
+      const spreads = [rest, quarter, peak].map((f) => spread(f.shadow))
+      const alphas = [rest, quarter, peak].map((f) => alpha(f.shadow))
+      eq(spreads[0] !== spreads[2], true, `${status}: precondition — the loop moves the spread (${spreads})`)
+      eq(
+        spreads[1] > Math.min(spreads[0], spreads[2]) && spreads[1] < Math.max(spreads[0], spreads[2]),
+        true,
+        `${status}: spread at ¼ is between rest and peak (${spreads.join(" → ")})`,
+      )
+      eq(Number.isNaN(alphas[1]), false, `${status}: precondition — the halo colour carries an alpha (${quarter.shadow})`)
+      eq(
+        alphas[1] > Math.min(alphas[0], alphas[2]) && alphas[1] < Math.max(alphas[0], alphas[2]),
+        true,
+        `${status}: alpha at ¼ is between rest and peak (${alphas.join(" → ")})`,
+      )
+    }
   })
 
   // Reset to light mode for subsequent test files
