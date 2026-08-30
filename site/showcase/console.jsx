@@ -82,7 +82,6 @@ import {
   ItemActions,
   ItemGroup,
 } from "../../ui/item/item.jsx"
-import { Kbd, KbdGroup } from "../../ui/kbd/kbd.jsx"
 import { Label } from "../../ui/label/label.jsx"
 import { LiveValue } from "../../ui/live-value/live-value.jsx"
 import { Marker, MarkerIcon, MarkerContent } from "../../ui/marker/marker.jsx"
@@ -606,6 +605,13 @@ function Tip({ label, side = "top", className, children }) {
 
 /* The console's own toggle only rocks its lamp; the site's navbar owns the scheme. */
 const THEME_HINT = "Change the theme in the vanillin navbar at the top of the page"
+/* The site owns the palette chord (site/app.jsx), so this search behaves like
+   the vanillin site's own: same chord, same palette. The label follows the
+   platform the same way site/app.jsx does — ⌘ on a Mac, Ctrl+ elsewhere. */
+const searchHint = () =>
+  `Search behaves as it does on the vanillin site — press ${
+    /mac/i.test(navigator.userAgent) ? "⌘" : "Ctrl+"
+  }K anywhere`
 
 const TONE_LABEL = {
   success: "Healthy",
@@ -730,6 +736,12 @@ function ContextPill({ label, value, options, onChange, menuLabel }) {
 }
 
 function ConsoleTopbar({ project, setProject, region, setRegion, orderCount, onOrder, onOpenPalette }) {
+  const hint = searchHint()
+  /* addToast never collapses ids — a repeated id would leave several toasts
+     sharing one, and dismiss filters on equality, so it would then clear them
+     all. Keep the last id and dismiss it instead, so repeated clicks show one
+     hint rather than a stack. */
+  const lastHint = useRef(null)
   // Decorative only: the lamp flips, the page theme never moves.
   const [moon, setMoon] = useState(false)
   return (
@@ -739,14 +751,25 @@ function ConsoleTopbar({ project, setProject, region, setRegion, orderCount, onO
         <span className="ck-brand-name">Acme Cloud</span>
         <span className="ck-brand-app">Console</span>
       </div>
-      <button type="button" className="ck-search" onClick={onOpenPalette}>
-        <SearchIcon />
-        <span>Search resources...</span>
-        <KbdGroup className="ck-search-kbd" aria-hidden="true">
-          <Kbd>&#8984;</Kbd>
-          <Kbd>K</Kbd>
-        </KbdGroup>
-      </button>
+      <Tip label={hint} side="bottom">
+        <button
+          type="button"
+          className="ck-search"
+          aria-describedby="ck-search-hint"
+          onClick={() => {
+            onOpenPalette()
+            if (lastHint.current) toast.dismiss(lastHint.current)
+            lastHint.current = toast(hint)
+          }}
+        >
+          <SearchIcon />
+          <span>Search resources...</span>
+        </button>
+      </Tip>
+      {/* Tooltip carries the hint for pointer users, but ui/tooltip puts
+          aria-describedby on its trigger span, which is not focusable — so a
+          keyboard user tabbing to the button would hear nothing without this. */}
+      <span id="ck-search-hint" className="ck-sr-only">{hint}</span>
       <div className="ck-topbar-right">
         <ContextPill label="Project" value={project} options={PROJECTS} onChange={setProject} menuLabel="Switch project" />
         <ContextPill label="Region" value={region} options={REGIONS} onChange={setRegion} />
@@ -3415,16 +3438,11 @@ export default function ConsoleShowcase() {
     setView({ svc: svcId, page: page ?? svc?.pages[0] ?? "Dashboard" })
   }, [])
 
-  useEffect(() => {
-    const onKey = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault()
-        setPaletteOpen((v) => !v)
-      }
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [])
+  /* No ⌘K handler here on purpose. site/app.jsx binds the chord on `document`
+     for the site palette, and the console mounts inside #home as well as on
+     #console, so a second binding opened both palettes stacked (#50). The
+     site palette owns the chord; the console's own palette opens from the
+     search button. */
 
   useEffect(() => {
     if (!dragging) return
