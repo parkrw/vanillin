@@ -183,6 +183,40 @@ test("modes: the kit's own defaults build passes the both-modes rule", () => {
 })
 
 // ---------------------------------------------------------------------------
+// Determinism
+// ---------------------------------------------------------------------------
+
+const DETERMINISM_CONFIG = {
+  theme: {
+    light: { surface: "oklch(0.99 0 0)", brand: "oklch(0.4 0.1 20)" },
+    dark: { brand: "oklch(0.9 0.1 20)", surface: "oklch(0.2 0 0)" },
+    typeset: { presets: { tight: { leading: 1.2 }, airy: { leading: 2 } } },
+  },
+  components: {
+    widget: { tokens: { "padding-inline": "1rem", "gap": "2rem" }, variants: { solid: { "padding-inline": "0" } } },
+  },
+}
+
+test("determinism: the same config generates byte-identical CSS twice", () => {
+  const root = fixtureRoot({ widget: ".widget {\n  color: blue;\n}\n" })
+  const opts = { root, tokenSources: [] }
+  assert.equal(generate(DETERMINISM_CONFIG, opts), generate(DETERMINISM_CONFIG, opts))
+})
+
+test("determinism: key order in the config does not change the output", () => {
+  const root = fixtureRoot({ widget: ".widget {\n  color: blue;\n}\n" })
+  const opts = { root, tokenSources: [] }
+  const reversed = JSON.parse(JSON.stringify(DETERMINISM_CONFIG), (_, v) =>
+    v && typeof v === "object" && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).reverse()) : v,
+  )
+  assert.equal(generate(DETERMINISM_CONFIG, opts), generate(reversed, opts))
+})
+
+test("determinism: the defaults build is stable across two runs", () => {
+  assert.equal(buildDefaults({ root: ROOT }), buildDefaults({ root: ROOT }))
+})
+
+// ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
 
