@@ -126,9 +126,28 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(await style(cats.first(), "fontWeight"), "800")
     eq(await style(cats.first(), "textTransform"), "uppercase")
     eq(await style(console_.locator(".ck-sec-quick-label"), "fontWeight"), "800")
-    // The longest label fits the rail at its opening width.
+    // A label too long for the rail ellipsizes rather than spilling out of it.
+    // Whether a given string fits a given width is a font-metric question and
+    // differs between platforms, so assert the mechanism, not the measurement.
     const text = cats.first().locator(".ck-nav-text")
-    eq(await text.evaluate((el) => el.scrollWidth <= el.clientWidth), true, "Virtual Data Centers is truncated at 210px")
+    eq(
+      await text.evaluate((el) => {
+        const s = getComputedStyle(el)
+        return `${s.whiteSpace}|${s.overflow}|${s.textOverflow}`
+      }),
+      "nowrap|hidden|ellipsis",
+      "the longest label ellipsizes instead of spilling",
+    )
+    // Counter-preconditions. The ellipsis only means anything at a rail wide
+    // enough to show a label, and both of these are box widths rather than
+    // glyph widths, so they hold on any font stack. `--pri-w` comes from
+    // PRI_W.initial, so the rail's width is a set number, not a measured one.
+    const box = await text.evaluate((el) => ({
+      text: el.getBoundingClientRect().width,
+      rail: el.closest(".ck-pri").getBoundingClientRect().width,
+    }))
+    eq(box.rail, 210, `the rail opens at PRI_W.initial (${box.rail})`)
+    eq(box.text / box.rail > 0.6, true, `the label gets most of the rail (${box.text} of ${box.rail})`)
   })
 
   await test("the secondary rail lists the category's services with their own icons; a service's pages are the tabs", async () => {
