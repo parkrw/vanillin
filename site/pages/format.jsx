@@ -207,20 +207,30 @@ import "./ui/format/format.css"
       <section className="pg-section">
         <h3>SSR and Hydration</h3>
         <p>
-          <code>RelativeTime</code> computes its initial render from the{" "}
-          <code>date</code> prop alone (no <code>Date.now()</code>), so
-          server and client produce the same string. Live ticking starts
-          after mount, avoiding hydration mismatches.
+          <code>RelativeTime</code> reads the clock unless you give it a basis, and the server&apos;s reading is never the browser&apos;s — so the markup says &ldquo;2 minutes ago&rdquo; and hydration says &ldquo;3 minutes ago&rdquo;. Take one timestamp on the server and pass it as <code>now</code> to every instance. Live ticking switches to the real clock after mount, which is past hydration.
+        </p>
+        <ComponentPreview defaultTab="code" code={`const now = Date.now() // once, on the server
+
+<RelativeTime date={post.createdAt} now={now} />
+<RelativeTime date={post.updatedAt} now={now} />`}>
+          <p style={{ fontSize: "0.8125rem", color: "var(--muted-foreground)" }}>
+            Server-side example — nothing to render here.
+          </p>
+        </ComponentPreview>
+        <p>
+          <code>Duration</code> has the same problem for a different reason: <code>Intl.DurationFormat</code> exists on Node 22 but not in every browser, so the two would word the same value differently. It composes <code>Intl.NumberFormat</code> and <code>Intl.ListFormat</code> instead, which every runtime has. Pass <code>engine=&quot;auto&quot;</code> to use <code>Intl.DurationFormat</code> where available, once you know the output is not hydrated.
         </p>
       </section>
 
       <ApiReference props={[
         { name: "RelativeTime: date", type: "number | Date", description: "Timestamp to format relative to now" },
         { name: "RelativeTime: live", type: "boolean", default: "false", description: "Auto-update on a shared interval" },
+        { name: "RelativeTime: now", type: "number | Date", description: "Basis for the comparison — pass one server timestamp so hydration matches" },
         { name: "Bytes: value", type: "number", description: "Byte count to format" },
         { name: "Bytes: base", type: '"iec" | "si"', default: '"iec"', description: "Binary (1024, KiB) or decimal (1000, kB) units" },
         { name: "Duration: value", type: "number", description: "Duration in milliseconds" },
         { name: "Duration: style", type: '"narrow" | "short" | "long"', default: '"narrow"', description: "Label width: 1m vs 1 min vs 1 minute" },
+        { name: "Duration: engine", type: '"portable" | "auto"', default: '"portable"', description: 'Composition path; "auto" uses Intl.DurationFormat where present' },
         { name: "Cost: value", type: "number", description: "Amount to format" },
         { name: "Cost: currency", type: "string", default: '"USD"', description: "ISO 4217 currency code" },
       ]} />
