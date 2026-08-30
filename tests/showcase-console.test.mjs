@@ -112,6 +112,16 @@ export default async function run({ page, baseUrl, test, eq, near }) {
       true,
       "clicking search explains where the shortcut lives",
     )
+    // Clicking again replaces the hint rather than stacking a second copy.
+    await page.keyboard.press("Escape")
+    await page.waitForFunction(() => !document.querySelector("dialog.command-dialog[open]"))
+    await search.click()
+    await palette.waitFor()
+    eq(
+      await console_.locator(".toast").filter({ hasText: "vanillin site" }).count(),
+      1,
+      "a repeated click replaces the hint instead of stacking one",
+    )
     eq(
       (await palette.locator(".command-group-heading").allTextContents()).slice(0, 2).join(" | "),
       "Overview | Virtual Data Centers",

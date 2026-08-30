@@ -737,6 +737,11 @@ function ContextPill({ label, value, options, onChange, menuLabel }) {
 
 function ConsoleTopbar({ project, setProject, region, setRegion, orderCount, onOrder, onOpenPalette }) {
   const hint = searchHint()
+  /* addToast never collapses ids — a repeated id would leave several toasts
+     sharing one, and dismiss filters on equality, so it would then clear them
+     all. Keep the last id and dismiss it instead, so repeated clicks show one
+     hint rather than a stack. */
+  const lastHint = useRef(null)
   // Decorative only: the lamp flips, the page theme never moves.
   const [moon, setMoon] = useState(false)
   return (
@@ -753,7 +758,8 @@ function ConsoleTopbar({ project, setProject, region, setRegion, orderCount, onO
           aria-describedby="ck-search-hint"
           onClick={() => {
             onOpenPalette()
-            toast(hint)
+            if (lastHint.current) toast.dismiss(lastHint.current)
+            lastHint.current = toast(hint)
           }}
         >
           <SearchIcon />
