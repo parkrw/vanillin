@@ -93,6 +93,16 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     )
     await page.keyboard.press("Escape")
     await page.waitForFunction(() => !document.querySelector("dialog.command-dialog[open]"))
+
+    // ⌘K belongs to the site palette alone. The console mounts inside #home as
+    // well as on #console, so a second binding here opened two dialogs stacked
+    // and one Escape left the other over the page (#50).
+    await page.keyboard.press("ControlOrMeta+k")
+    await page.locator("dialog.command-dialog[open]").waitFor()
+    eq(await page.locator("dialog.command-dialog[open]").count(), 1, "one palette, not two")
+    await page.keyboard.press("Escape")
+    await page.waitForFunction(() => !document.querySelector("dialog.command-dialog[open]"))
+    eq(await page.locator("dialog.command-dialog[open]").count(), 0, "one Escape closes it")
   })
 
   await test("the chrome is navy in both schemes while the body follows the scheme", async () => {

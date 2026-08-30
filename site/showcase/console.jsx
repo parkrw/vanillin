@@ -3415,16 +3415,11 @@ export default function ConsoleShowcase() {
     setView({ svc: svcId, page: page ?? svc?.pages[0] ?? "Dashboard" })
   }, [])
 
-  useEffect(() => {
-    const onKey = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault()
-        setPaletteOpen((v) => !v)
-      }
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [])
+  /* No ⌘K handler here on purpose. site/app.jsx binds the chord on `document`
+     for the site palette, and the console mounts inside #home as well as on
+     #console, so a second binding opened both palettes stacked (#50). The
+     site palette owns the chord; the console's own palette opens from the
+     search button. */
 
   useEffect(() => {
     if (!dragging) return
