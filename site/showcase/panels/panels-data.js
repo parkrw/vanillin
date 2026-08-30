@@ -53,7 +53,7 @@ export const TICKETS = [
   { id: "AC-4802", subject: "Object storage container listing is slow", requester: "Data Engineer", team: "Storage", status: "Pending", priority: "Low", updated: "5 hr ago" },
   { id: "AC-4794", subject: "Add second availability zone to the cluster", requester: "Platform Lead", team: "Compute", status: "Resolved", priority: "Normal", updated: "Yesterday" },
   { id: "AC-4788", subject: "Billing export missing the last cycle", requester: "Finance Contact", team: "Billing", status: "Resolved", priority: "Low", updated: "Yesterday" },
-  { id: "AC-4781", subject: "Instance rescue mode fails on g1 flavors", requester: "ML Engineer", team: "Compute", status: "Escalated", priority: "High", updated: "2 days ago" },
+  { id: "AC-4781", subject: "Virtual machine rescue mode fails on g1 flavors", requester: "ML Engineer", team: "Compute", status: "Escalated", priority: "High", updated: "2 days ago" },
   { id: "AC-4776", subject: "Enable audit log streaming", requester: "Security Reviewer", team: "Identity", status: "Open", priority: "Normal", updated: "2 days ago" },
   { id: "AC-4770", subject: "Region maintenance window confirmation", requester: "Account Owner", team: "Platform", status: "Resolved", priority: "Low", updated: "3 days ago" },
 ]
@@ -104,7 +104,7 @@ export const REGIONS = [
  * a grid so the eye can compare them. `kind` picks ring or bar.
  */
 export const STATUS_WIDGETS = [
-  { id: "cpu", kind: "ring", label: "Compute utilisation", detail: "48 instances", tone: "success", duration: 3 },
+  { id: "cpu", kind: "ring", label: "Compute utilisation", detail: "48 virtual machines", tone: "success", duration: 3 },
   { id: "replication", kind: "ring", label: "Volume replication", detail: "dal to slc", tone: "info", duration: 9 },
   { id: "index", kind: "ring", label: "Object index rebuild", detail: "swift-prod", tone: "warning", duration: 20 },
   { id: "drain", kind: "ring", label: "Member drain", detail: "lb-dal-02", tone: "error", duration: 5 },

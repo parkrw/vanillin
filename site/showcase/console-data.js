@@ -4,83 +4,110 @@
 export const PROJECTS = ["admin", "engineering", "data-science", "marketing"]
 export const REGIONS = ["Dallas", "Salt Lake City", "Chicago"]
 
-// Three levels of navigation: category (primary rail group) → service
-// (primary rail item) → group (secondary rail heading) → page. `code` is the
-// short service tag the secondary rail shows under the service name.
-export const NAV_GROUPS = [
+// The three sites a vDC can live in. `code` is the folded rail's label;
+// descriptions are the order form's copy: what the site is and who needs it.
+export const ORDER_SITES = [
   {
-    label: "Platform",
-    items: [
-      {
-        id: "overview", name: "Overview", code: "acme",
-        groups: [{ label: "Status", pages: ["Dashboard", "Capacity", "Health", "Recent events"] }],
-        quickLinks: [
-          { label: "Instances", svc: "resources", page: "Instances" },
-          { label: "Networks", svc: "networking", page: "Networks" },
-          { label: "Volumes", svc: "storage", page: "Volumes" },
-          { label: "Tickets", svc: "support", page: "Support" },
-        ],
-      },
-      {
-        id: "vdc", name: "Virtual data centers", code: "vdc",
-        groups: [
-          { label: "Data centers", pages: ["Data centers"] },
-          { label: "Limits", pages: ["Quotas"] },
-        ],
-      },
-      {
-        id: "resources", name: "Resources", code: "compute",
-        groups: [
-          { label: "Compute", pages: ["Instances", "Instance sizes"] },
-          { label: "Catalog", pages: ["Machine images"] },
-        ],
-      },
-      {
-        id: "networking", name: "Networking", code: "network",
-        groups: [
-          { label: "Networks", pages: ["Networks"] },
-          { label: "Access", pages: ["Public IPs"] },
-        ],
-      },
-      {
-        id: "storage", name: "Storage", code: "storage",
-        groups: [{ label: "Block", pages: ["Volumes", "Snapshots"] }],
-      },
-    ],
+    id: "dfw", code: "DFW", name: "DFW Cage 6", city: "Plano, TX",
+    description: "Our largest footprint, with the widest size catalogue and the shortest queue for new capacity; pick it unless latency or law says otherwise.",
   },
   {
-    label: "Operations",
-    items: [
-      { id: "metrics", name: "Metrics", code: "telemetry", groups: [{ label: "Usage", pages: ["Utilization"] }] },
-      { id: "events", name: "Events", code: "activity", groups: [{ label: "Activity", pages: ["Event log"] }] },
-      { id: "service-health", name: "Service health", code: "status", groups: [{ label: "Status", pages: ["Services"] }] },
-    ],
+    id: "chi", code: "CHI", name: "Chicago Cage 6", city: "Chicago, IL",
+    description: "Central-US site on the Midwest carrier hotels, for teams whose users and offices sit between the coasts.",
   },
   {
-    label: "Account",
-    items: [
-      { id: "billing", name: "Billing", code: "account", groups: [{ label: "Billing", pages: ["Invoices"] }] },
-      { id: "contacts", name: "Contacts", code: "account", groups: [{ label: "People", pages: ["Contacts"] }] },
-      { id: "support", name: "Support", code: "account", groups: [{ label: "Support", pages: ["Support"] }] },
-      { id: "security", name: "Security", code: "account", groups: [{ label: "Security", pages: ["Access keys"] }] },
-      { id: "your-data", name: "Your data", code: "account", groups: [{ label: "Data", pages: ["Exports"] }] },
-      { id: "settings", name: "Settings", code: "account", groups: [{ label: "Settings", pages: ["Settings"] }] },
-    ],
+    id: "slc", code: "SLC", name: "SLC Cage 6", city: "Salt Lake City, UT",
+    description: "Mountain-West site in a low-risk seismic and weather zone, the usual choice for a disaster-recovery target.",
   },
 ]
 
-/** A service with its category name and its pages flattened across groups. */
-export function findService(id) {
-  for (const group of NAV_GROUPS) {
-    const svc = group.items.find((s) => s.id === id)
-    if (svc) return { ...svc, category: group.label, pages: svc.groups.flatMap((g) => g.pages) }
-  }
-  return null
+// Provisioned vDCs. Pools are [used, size]: GHz, GB, GB.
+export const VDCS = [
+  { name: "prod-core", site: "dfw", project: "engineering", cpu: [92, 140], ram: [412, 512], storage: [2650, 4000], vms: 9, protection: "hot", drSite: "slc", status: "Active" },
+  { name: "prod-edge", site: "dfw", project: "engineering", cpu: [38, 60], ram: [96, 192], storage: [640, 1500], vms: 4, protection: "warm", drSite: "chi", status: "Active" },
+  { name: "staging", site: "dfw", project: "engineering", cpu: [11, 40], ram: [44, 128], storage: [380, 1000], vms: 2, protection: "none", status: "Active" },
+  { name: "analytics", site: "chi", project: "data-science", cpu: [118, 160], ram: [700, 768], storage: [6200, 8000], vms: 3, protection: "none", status: "Active" },
+  { name: "web-marketing", site: "chi", project: "marketing", cpu: [6, 20], ram: [14, 64], storage: [120, 500], vms: 1, protection: "none", status: "Active" },
+  { name: "prod-core-dr", site: "slc", project: "engineering", cpu: [0, 140], ram: [0, 512], storage: [3450, 5200], vms: 9, protection: "replica", drSite: "dfw", status: "Standby" },
+  { name: "ml-platform", site: "slc", project: "data-science", cpu: [156, 180], ram: [590, 640], storage: [4100, 6000], vms: 2, protection: "none", status: "Active" },
+]
+
+// One secondary-rail entry per site, folding to its vDCs.
+const SITE_ITEMS = ORDER_SITES.map((s) => ({
+  id: `site-${s.id}`,
+  name: s.name,
+  short: s.code,
+  site: s.id,
+  collapsible: true,
+  pages: VDCS.filter((v) => v.site === s.id).map((v) => v.name),
+}))
+
+export const ORDER_PAGE = "New virtual Data Center"
+
+// Two levels of navigation plus tabs: category (primary rail row) → service
+// (secondary rail row) → page (a tab in the main column). Overview sits above
+// the categories, as the CloudKey console draws it; the category and service
+// names follow the CloudKey Core prototype. A site folds to its vDCs and its
+// vDCs are that site's tabs.
+export const OVERVIEW = {
+  id: "overview", label: "Overview",
+  items: [{ id: "overview", name: "Status", pages: ["Dashboard", "Capacity", "Health", "Recent Events"] }],
+  quickLinks: [
+    { label: "Virtual Machines", svc: "resources", page: "Virtual Machines" },
+    { label: "Networks", svc: "networking", page: "Networks" },
+    { label: "Volumes", svc: "storage", page: "Volumes" },
+    { label: "Tickets", svc: "support", page: "Tickets" },
+  ],
 }
 
-/** The secondary-rail group a page belongs to, or null. */
-export function findGroup(svc, page) {
-  return svc?.groups.find((g) => g.pages.includes(page)) ?? null
+export const NAV_GROUPS = [
+  {
+    id: "vdcs", label: "Virtual Data Centers",
+    items: [
+      { id: "vdc", name: "Data Centers", pages: ["Data Centers", "Quotas"] },
+      ...SITE_ITEMS,
+      { id: "resources", name: "Virtual Machines", pages: ["Virtual Machines", "Virtual Machine Sizes", "Templates & Images"] },
+      { id: "networking", name: "Networking", pages: ["Networks", "Public IPs"] },
+      { id: "storage", name: "Storage", pages: ["Volumes", "Snapshots"] },
+      { id: "order", name: "Order", pages: [ORDER_PAGE] },
+    ],
+  },
+  {
+    id: "operations", label: "Operations",
+    items: [
+      { id: "metrics", name: "Metrics", pages: ["Utilization"] },
+      { id: "events", name: "Events", pages: ["Event Log"] },
+      { id: "service-health", name: "Service Health", pages: ["Services"] },
+    ],
+  },
+  {
+    id: "account", label: "Account",
+    items: [
+      { id: "billing", name: "Billing", pages: ["Invoices"] },
+      { id: "contacts", name: "Contacts", pages: ["Contacts"] },
+      { id: "security", name: "Security", pages: ["Access Keys"] },
+      { id: "your-data", name: "Your Data", pages: ["Exports"] },
+      { id: "settings", name: "Settings", pages: ["Settings"] },
+    ],
+  },
+  {
+    id: "support-center", label: "Support Center",
+    items: [{ id: "support", name: "Support", pages: ["Tickets", "Knowledge base", "FAQ", "Docs"] }],
+  },
+]
+
+export const CATEGORIES = [OVERVIEW, ...NAV_GROUPS]
+
+/** The category (Overview included) a service belongs to, or null. */
+export function findCategory(svcId) {
+  return CATEGORIES.find((c) => c.items.some((s) => s.id === svcId)) ?? null
+}
+
+/** A service with its category attached, or null. */
+export function findService(svcId) {
+  const category = findCategory(svcId)
+  const svc = category?.items.find((s) => s.id === svcId)
+  return svc ? { ...svc, category } : null
 }
 
 export const INSTANCES = [
@@ -110,7 +137,7 @@ export const SIZES = [
 ]
 
 export const QUOTAS = [
-  { resource: "Instances", limit: 40, used: 14 },
+  { resource: "Virtual machines", limit: 40, used: 14 },
   { resource: "vCPUs", limit: 80, used: 68 },
   { resource: "Memory (GB)", limit: 128, used: 92 },
   { resource: "Public IPs", limit: 20, used: 6 },
@@ -148,13 +175,16 @@ export const VOLUMES = [
   { name: "scratch-01", size: "100 GB", status: "In-use", type: "standard-hdd", attached: "ml-train-02" },
 ]
 
+// `progress` is where a running task stood when the page loaded; the taskbar
+// advances it on the shared ticker.
 export const TASKS = [
-  { task: "Upload machine image", target: "ubuntu-24.04-acme", status: "Running", started: "18 min ago", duration: "" },
-  { task: "Launch instance", target: "api-prod-03", status: "Running", started: "22 min ago", duration: "" },
-  { task: "Create snapshot", target: "snap-ml-checkpoint", status: "Running", started: "25 min ago", duration: "" },
-  { task: "Start instance", target: "web-prod-03", status: "Succeeded", started: "2 min ago", duration: "12s" },
-  { task: "Attach volume", target: "data-vol-07", status: "Succeeded", started: "15 min ago", duration: "3s" },
-  { task: "Delete instance", target: "test-throwaway-01", status: "Succeeded", started: "4 hrs ago", duration: "8s" },
+  { id: "t1", task: "Upload machine image", target: "ubuntu-24.04-acme", status: "Running", started: "18 min ago", duration: "", progress: 62 },
+  { id: "t2", task: "Launch virtual machine", target: "api-prod-03", status: "Running", started: "22 min ago", duration: "", progress: 31 },
+  { id: "t3", task: "Create snapshot", target: "snap-ml-checkpoint", status: "Running", started: "25 min ago", duration: "", progress: 86 },
+  { id: "t4", task: "Start virtual machine", target: "web-prod-03", status: "Succeeded", started: "2 min ago", duration: "12s" },
+  { id: "t5", task: "Attach volume", target: "data-vol-07", status: "Succeeded", started: "15 min ago", duration: "3s" },
+  { id: "t6", task: "Extend volume", target: "scratch-01", status: "Failed", started: "41 min ago", duration: "1m 04s", error: "Volume is attached; detach it first" },
+  { id: "t7", task: "Delete virtual machine", target: "test-throwaway-01", status: "Succeeded", started: "4 hrs ago", duration: "8s" },
 ]
 
 export const UTILIZATION = [
@@ -173,11 +203,11 @@ export const HEALTH = [
 ]
 
 export const EVENTS = [
-  { text: "instance.power_on", target: "web-prod-03", time: "2 min ago", tone: "success" },
+  { text: "vm.power_on", target: "web-prod-03", time: "2 min ago", tone: "success" },
   { text: "volume.attach", target: "data-vol-07", time: "15 min ago", tone: "success" },
   { text: "image.upload", target: "ubuntu-24.04-acme", time: "1 hr ago", tone: "success" },
   { text: "project.created", target: "dev-team", time: "3 hrs ago", tone: "success" },
-  { text: "instance.check.failed", target: "host-apac-02", time: "4 hrs ago", tone: "error" },
+  { text: "vm.check.failed", target: "host-apac-02", time: "4 hrs ago", tone: "error" },
 ]
 
 // Prepended to the feed one at a time while the dashboard is open, so it
@@ -187,13 +217,13 @@ export const INCOMING_EVENTS = [
   { text: "autoscale.evaluate", target: "web-prod pool", tone: "info" },
   { text: "volume.extend", target: "scratch-01", tone: "success" },
   { text: "quota.warning", target: "vCPUs at 82%", tone: "warning" },
-  { text: "instance.reboot", target: "cms-prod-01", tone: "info" },
+  { text: "vm.reboot", target: "cms-prod-01", tone: "info" },
   { text: "backup.complete", target: "backup-db-weekly", tone: "success" },
 ]
 
 export const STATS = [
   {
-    num: "47", label: "Instances", sub: "38 active", tone: "success",
+    num: "47", label: "Virtual Machines", sub: "38 active", tone: "success",
     detail: [
       { label: "Active", value: "38", tone: "success" },
       { label: "Shutoff", value: "7" },
@@ -227,9 +257,9 @@ export const STATS = [
   {
     num: "10", label: "Projects", sub: "10 enabled", tone: "success",
     detail: [
-      { label: "engineering", value: "10 instances" },
-      { label: "data-science", value: "3 instances" },
-      { label: "marketing", value: "1 instance" },
+      { label: "engineering", value: "10 virtual machines" },
+      { label: "data-science", value: "3 virtual machines" },
+      { label: "marketing", value: "1 virtual machine" },
       { label: "7 more", value: "idle" },
     ],
   },
@@ -271,3 +301,154 @@ export const UPLOADED_IMAGES = [
   { name: "coreos-40-edge.img", size: "780 MB", state: "processing" },
   { name: "legacy-appliance.img", size: "512 MB", state: "error" },
 ]
+
+// ── Access keys (Security) ─────────────────────────────────────────────
+// Fingerprints and key ids are fiction. The ck_demo_ prefix is deliberate:
+// an sk_live_ prefix matches Stripe's pattern, so GitHub push protection
+// rejects it and every consumer copying the kit inherits the same block.
+
+export const SSH_KEYS = [
+  { name: "ops-laptop", type: "ssh-ed25519", fingerprint: "SHA256:uJ3kQ9v8Xb1yTq6wLm2ZpR4sN7cH0dF5gA8eK1iB3oM", added: "14 Mar 2026", lastUsed: "2 hrs ago" },
+  { name: "ci-runner", type: "ssh-ed25519", fingerprint: "SHA256:Q2wE4rT6yU8iO0pA1sD3fG5hJ7kL9zX2cV4bN6mQ8wE", added: "02 Jan 2026", lastUsed: "12 min ago" },
+  { name: "bastion-2025", type: "ssh-rsa 4096", fingerprint: "SHA256:zX9cV7bN5mQ3wE1rT0yU2iO4pA6sD8fG1hJ3kL5zX7cV", added: "18 Aug 2025", lastUsed: "3 days ago" },
+]
+
+export const API_KEYS = [
+  { name: "terraform", id: "ck_demo_ak_7Hq2mN9xR4tV1wY6zB3cD8fG", secret: "ck_demo_sk_Kp8Lm3Nq6Rs9Tv2Wx5Yz1Ab4Cd7Ef0Gh3Jk6Mn9Pq2", scopes: "compute, network, storage", created: "21 Feb 2026", lastUsed: "8 min ago" },
+  { name: "billing-export", id: "ck_demo_ak_2Bc5Df8Gh1Jk4Mn7Pq0Rs3Tv", secret: "ck_demo_sk_Vw6Xy9Za2Bc5De8Fg1Hi4Jk7Lm0No3Pq6Rs9Tu2Vw5", scopes: "billing:read", created: "05 Nov 2025", lastUsed: "Yesterday" },
+]
+
+// ── Ordering a virtual data center ──────────────────────────────────────
+// Rates are per month. Descriptions are the console's own copy: what the
+// option is and who needs it, one sentence each. Sites are ORDER_SITES above.
+
+export const BILLING_TERMS = [
+  {
+    id: "monthly", name: "Monthly",
+    description: "Pay for what ran last month and cancel any time; the right term while a workload is still taking shape.",
+  },
+  {
+    id: "annual", name: "Annual",
+    description: "Commit to twelve months and receive one invoice a year, which keeps the rate fixed and procurement quiet.",
+  },
+]
+
+export const ORDER_RATES = {
+  drStorageGb: 0.05,
+  replicationLicence: 15,
+  backupGb: 0.02,
+}
+
+export const POOLS = [
+  {
+    id: "cpu", name: "CPU pool", unit: "GHz", rate: 2, min: 4, max: 200, step: 2, tick: 50,
+    description: "Clock cycles shared by every virtual machine in the vDC; size it for the busiest hour, not the average.",
+  },
+  {
+    id: "ram", name: "RAM pool", unit: "GB", rate: 7.5, min: 8, max: 1024, step: 8, tick: 256,
+    description: "Memory the vDC can hand to its virtual machines; databases and caches fill this before they touch the CPU pool.",
+  },
+  {
+    id: "ips", name: "Public IPs", unit: "", rate: 5, min: 0, max: 32, step: 1, tick: 8,
+    description: "Routable addresses for anything the internet must reach directly; most vDCs need one per load balancer or bastion.",
+  },
+]
+
+// Preset pool pairs; a slider move that matches none of them reads as Custom.
+export const COMPUTE_PRESETS = [
+  { id: "s", name: "S", cpu: 8, ram: 32, description: "A handful of small services, or a build farm that sleeps at night." },
+  { id: "m", name: "M", cpu: 20, ram: 64, description: "The default: a web tier, an API and a modest database." },
+  { id: "l", name: "L", cpu: 60, ram: 192, description: "Production with headroom for a busy quarter." },
+  { id: "xl", name: "XL", cpu: 120, ram: 512, description: "Analytics and in-memory workloads that fill RAM before CPU." },
+]
+
+export const UPLINKS = [
+  { id: "10", name: "10 Mbps", rate: 30, description: "Included with every vDC; enough for management traffic and a quiet site." },
+  { id: "100", name: "100 Mbps", rate: 90, description: "Public web tiers and nightly transfers that must finish before morning." },
+  { id: "1000", name: "1 Gbps", rate: 250, description: "Media, replication to your own sites, or anything measured in terabytes." },
+]
+
+export const NETWORK_ADDONS = [
+  { id: "firewall", name: "Edge firewall", rate: 0, included: true, description: "Stateful rules at the vDC edge; always on and never billed." },
+  { id: "vpn", name: "VPN gateway", rate: 25, description: "Site-to-site IPsec into the vDC, for offices and a second cloud." },
+  { id: "lb", name: "Load balancer", rate: 40, description: "Layer 4 and 7 balancing across your machines, with health checks." },
+  { id: "ddos", name: "DDoS shield", rate: 60, description: "Volumetric scrubbing upstream of the uplink, for anything on the public internet." },
+]
+
+export const STORAGE_TIERS = [
+  { id: "t1", name: "Tier 1", rate: 0.05, media: "HDD", iops: "500", latency: "10 ms", description: "Capacity disks for backups, archives and logs you read rarely." },
+  { id: "t2", name: "Tier 2", rate: 0.08, media: "Hybrid", iops: "3,000", latency: "4 ms", description: "General-purpose storage for boot volumes and application data with steady, modest I/O." },
+  { id: "t3", name: "Tier 3", rate: 0.12, media: "SSD", iops: "16,000", latency: "1 ms", description: "SSD-backed storage for databases and queues that notice latency." },
+  { id: "t4", name: "Tier 4", rate: 0.2, media: "NVMe", iops: "80,000", latency: "0.2 ms", description: "NVMe storage for the few volumes where every millisecond is billable." },
+]
+
+export const PROTECTION_TIERS = [
+  {
+    id: "none", name: "None", share: 0, rpo: "—", rto: "Rebuild",
+    description: "No second site; right for dev, test and anything you can rebuild from an image faster than you can fail over.",
+  },
+  {
+    id: "warm", name: "Warm standby", share: 0.25, rpo: "15 min", rto: "1 hr",
+    description: "A quarter of your CPU and RAM reserved at a second site, ready to scale up inside an hour when the primary fails.",
+  },
+  {
+    id: "hot", name: "Hot standby", share: 1, rpo: "5 min", rto: "15 min",
+    description: "Your full compute footprint reserved at the second site, so failover is a DNS change rather than a capacity request.",
+  },
+]
+
+export const BACKUP_RETENTION = [
+  { id: "7", name: "7 days", factor: 1 },
+  { id: "14", name: "14 days", factor: 1.5 },
+  { id: "30", name: "30 days", factor: 2.2 },
+]
+
+// The BCDR step explains itself before it asks anything.
+export const BCDR_COPY = [
+  {
+    id: "replica", title: "Replica site",
+    body: "A second vDC in another site receives a continuous copy of your storage. When the primary site fails, the replica powers on and takes the traffic.",
+  },
+  {
+    id: "objectives", title: "RPO and RTO",
+    body: "Recovery point objective is how much data you can afford to lose, measured as time since the last replicated write. Recovery time objective is how long the failover itself may take. Tighter numbers cost more capacity at the replica.",
+  },
+  {
+    id: "backups", title: "Backups",
+    body: "Replication copies mistakes as faithfully as data, so nightly backups keep point-in-time copies you can restore a single volume from, for as long as the retention you pick.",
+  },
+]
+
+export const ORDER_COPY = {
+  included: "Every vDC includes the edge firewall, hypervisor high availability, live migration and the management plane.",
+  drSite: "Where the replica lives; choose a site far enough away that one storm cannot reach both.",
+  drStorage: "How much of your storage the replica holds; set it above 100% to keep room for journals and point-in-time copies.",
+  licences: "One licence per protected virtual machine covers the replication agent and its recovery runbook.",
+  backups: "Nightly snapshots of every volume in the vDC, priced per GB of provisioned storage and scaled by how long they are kept.",
+  vms: "Virtual machines draw from the pools you sized; add them here so the replica sizing and licence count are right on day one.",
+  headroom: "Keeps a tenth of both pools unallocated so a burst never waits on a resize; not billed.",
+  dueToday: "Usage bills at month end; nothing is charged until the first vDC is running.",
+}
+
+// Per-vDC placement settings for its virtual machines, and per-VM options.
+export const VM_GROUP_DEFAULTS = { antiAffinity: false, network: NETWORKS[0].name }
+export const VM_DEFAULTS = { publicIp: false, backup: true, bootTier: "t2", startOnCreate: true }
+
+// The form's starting point for each new vDC.
+export const ORDER_DEFAULTS = {
+  site: "dfw",
+  billing: "monthly",
+  cpu: 20,
+  ram: 64,
+  headroom: false,
+  ips: 2,
+  uplink: "10",
+  addons: [],
+  storage: { t1: 500, t2: 250, t3: 0, t4: 0 },
+  protection: "none",
+  drSite: "slc",
+  drStoragePct: 130,
+  backups: false,
+  retention: "7",
+  vmGroup: VM_GROUP_DEFAULTS,
+}
