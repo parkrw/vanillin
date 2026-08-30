@@ -7,7 +7,12 @@
  *  - `--defaults`: van.defaults.json -> styles/defaults.css, the kit's own
  *    token values. globals.css @imports that file, so this is the one
  *    authoritative :root of token values -- there is no hand-written copy to
- *    drift from.
+ *    drift from. Because this build IS that source, it cannot fall back to it:
+ *    a colour token given in only one mode is an error here, not a fill. The
+ *    fill would read globals.css, which has held no colour values since task
+ *    60, and emit a silent mode-invariant light-dark(X, X). A consumer's
+ *    van.config.json keeps the one-mode convenience -- it has real defaults to
+ *    read from.
  *  - default: van.config.json -> styles/van.css, a consumer's overrides.
  *    Import it after globals.css:
  *
@@ -446,10 +451,16 @@ function deriveBrand(brand) {
  * @param {string} opts.globals - Path to globals.css, relative to root. Its
  *   @property declarations are the known-token list validation runs against,
  *   and its directory is where the default tokenSources are looked for.
+ * @param {boolean} opts.requireBothModes - Refuse a colour token given in only
+ *   one mode instead of filling the other from tokenSources. The defaults
+ *   build sets it; see the file header for why.
  * @returns {string} The complete CSS file content.
  * @throws {Error} If validation fails.
  */
-export function generate(config, { root, tokenSources, source, uiDir = "ui", globals = "styles/globals.css" } = {}) {
+export function generate(
+  config,
+  { root, tokenSources, source, uiDir = "ui", globals = "styles/globals.css", requireBothModes = false } = {},
+) {
   root = root || resolve(__dirname, "..")
 
   // Default token sources sit beside globals.css, wherever the consumer put it.
@@ -532,7 +543,8 @@ export function generate(config, { root, tokenSources, source, uiDir = "ui", glo
 
     // Light/dark overrides -- literal wins over derivation.
     // For each overridden token, we need both mode values to emit light-dark().
-    // If only one mode is specified, the other comes from globals.css defaults.
+    // If only one mode is specified, the other comes from tokenSources --
+    // unless requireBothModes refuses the guess outright.
     const lightOverrides = cfg.theme.light || {}
     const darkOverrides = cfg.theme.dark || {}
     const allOverriddenTokens = new Set([
@@ -540,16 +552,22 @@ export function generate(config, { root, tokenSources, source, uiDir = "ui", glo
       ...Object.keys(darkOverrides),
     ])
 
+    const oneMode = []
     for (const token of [...allOverriddenTokens].sort()) {
       const hasLight = token in lightOverrides
       const hasDark = token in darkOverrides
+
+      if (requireBothModes && !(hasLight && hasDark)) {
+        oneMode.push(`theme.${hasLight ? "dark" : "light"}.${token}`)
+        continue
+      }
 
       let lightVal, darkVal
       if (hasLight && hasDark) {
         lightVal = lightOverrides[token]
         darkVal = darkOverrides[token]
       } else {
-        // Fill the missing mode from globals.css defaults
+        // Fill the missing mode from the token stylesheets
         const defaults = tokenDefaults[token]
         if (hasLight) {
           lightVal = lightOverrides[token]
@@ -560,6 +578,15 @@ export function generate(config, { root, tokenSources, source, uiDir = "ui", glo
         }
       }
       rootProps.set(`--${token}`, `light-dark(${lightVal}, ${darkVal})`)
+    }
+
+    if (oneMode.length > 0) {
+      throw new Error(
+        `${source || "This config"} must give every colour token both modes; missing:\n` +
+          oneMode.map((k) => `  - ${k}`).join("\n") +
+          `\nThe missing mode would otherwise be read from the token stylesheets, which this build generates ` +
+          `-- so the value comes back empty and the token collapses to a mode-invariant light-dark(X, X).`,
+      )
     }
   }
 
@@ -671,8 +698,11 @@ export function buildDefaults({ root } = {}) {
   const css = generate(config, {
     root,
     // Not DEFAULTS_OUTPUT: reading the previous build would make this one
-    // depend on what happened to be on disk.
+    // depend on what happened to be on disk. globals.css alone holds no colour
+    // values any more (task 60 moved them into the generated defaults.css), so
+    // nothing here can fill a missing mode -- hence requireBothModes.
     tokenSources: ["styles/globals.css"],
+    requireBothModes: true,
     source: DEFAULTS_CONFIG,
   })
   const outPath = resolve(root, DEFAULTS_OUTPUT)

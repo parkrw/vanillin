@@ -8,7 +8,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { resolve, dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { generate, discoverComponents } from "../scripts/build-theme.mjs"
+import { generate, buildDefaults, discoverComponents } from "../scripts/build-theme.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, "..")
@@ -124,6 +124,62 @@ test("block class: a resolved component warns about nothing", () => {
   const root = fixtureRoot({ widget: ".widget {\n  color: blue;\n}\n" })
   const warnings = captureWarnings(() => generate(OVERRIDE_CONFIG, { root, tokenSources: [] }))
   assert.deepEqual(warnings, [])
+})
+
+// ---------------------------------------------------------------------------
+// One-mode colour tokens
+// ---------------------------------------------------------------------------
+
+const ONE_MODE_CONFIG = { theme: { light: { brand: "oklch(0.4 0.1 20)" } } }
+
+test("modes: without requireBothModes the missing mode comes from the token sources", () => {
+  const root = fixtureRoot()
+  const css = generate(ONE_MODE_CONFIG, { root, tokenSources: ["styles/globals.css"] })
+  assert.match(css, /--brand: light-dark\(oklch\(0\.4 0\.1 20\), oklch\(0\.8 0 0\)\);/)
+})
+
+test("modes: with no source for the other mode the value silently collapses", () => {
+  // The bug this flag exists for: no defaults to read, so both modes get the
+  // one given value and the token stops responding to the colour scheme.
+  const root = fixtureRoot({}, '@property --brand { syntax: "<color>"; inherits: true; }\n')
+  const css = generate(ONE_MODE_CONFIG, { root, tokenSources: [] })
+  assert.match(css, /--brand: light-dark\(oklch\(0\.4 0\.1 20\), oklch\(0\.4 0\.1 20\)\);/)
+})
+
+test("modes: requireBothModes turns that silent collapse into an error", () => {
+  const root = fixtureRoot({}, '@property --brand { syntax: "<color>"; inherits: true; }\n')
+  assert.throws(
+    () => generate(ONE_MODE_CONFIG, { root, tokenSources: [], requireBothModes: true, source: "van.defaults.json" }),
+    (err) => {
+      assert.match(err.message, /van\.defaults\.json/)
+      assert.match(err.message, /theme\.dark\.brand/)
+      return true
+    },
+  )
+})
+
+test("modes: requireBothModes reports every missing mode at once", () => {
+  const root = fixtureRoot()
+  const config = { theme: { light: { brand: "oklch(0.4 0.1 20)" }, dark: { surface: "oklch(0.2 0 0)" } } }
+  assert.throws(
+    () => generate(config, { root, tokenSources: ["styles/globals.css"], requireBothModes: true }),
+    (err) => {
+      assert.match(err.message, /theme\.dark\.brand/)
+      assert.match(err.message, /theme\.light\.surface/)
+      return true
+    },
+  )
+})
+
+test("modes: requireBothModes accepts a token given in both modes", () => {
+  const root = fixtureRoot()
+  const config = { theme: { light: { brand: "oklch(0.4 0.1 20)" }, dark: { brand: "oklch(0.9 0.1 20)" } } }
+  const css = generate(config, { root, tokenSources: [], requireBothModes: true })
+  assert.match(css, /--brand: light-dark\(oklch\(0\.4 0\.1 20\), oklch\(0\.9 0\.1 20\)\);/)
+})
+
+test("modes: the kit's own defaults build passes the both-modes rule", () => {
+  assert.match(buildDefaults({ root: ROOT }), /^:root \{$/m)
 })
 
 // ---------------------------------------------------------------------------
