@@ -39,6 +39,25 @@
 @import "./defaults.css";
 @import "./forced-colors.css";
 
+/* ---- Browser floor marker ----
+ *
+ * light-dark() is a hard requirement here, not a progressive enhancement:
+ * every colour token in defaults.css is a bare light-dark() with no preceding
+ * plain declaration, so an engine without it gets *no* colours rather than
+ * degraded ones. Firefox <120 (ESR 115 included) and Safari <17.5 are below
+ * the floor; see the support table in README.md. The floor is accepted
+ * deliberately — see docs/DECISIONS.md.
+ *
+ * Nothing below repairs that. It only makes the failure identifiable instead
+ * of baffling: read --vanillin-unsupported off :root in devtools and get a
+ * name back rather than a kit that renders as unstyled text.
+ */
+@supports not (color: light-dark(#000, #fff)) {
+  :root {
+    --vanillin-unsupported: "light-dark";
+  }
+}
+
 /* ---- @property: colour tokens ---- */
 
 @property --background { syntax: "<color>"; inherits: true; initial-value: oklch(1 0 0); }
@@ -122,11 +141,16 @@
 @property --typeset-size { syntax: "<length>"; inherits: true; initial-value: 16px; }
 @property --typeset-flow { syntax: "<length>"; inherits: true; initial-value: 24px; }
 
-/* A font stack is not a typed grammar, so `syntax: "*"`. The point is the
- * `initial-value`: a registered property degrades to it when the token goes
- * missing, instead of invalidating the declaration that reads it. These three
- * were the only unguarded typeset tokens (task 84). Values mirror
- * `--font-sans`/`--font-mono` in defaults.css — literal, because an
+/* A font stack is not a typed grammar, so `syntax: "*"` — and a `*`
+ * registration does NOT deliver the fallback its initial-value implies.
+ * Measured (task123): when one of these tokens goes missing, it reads back
+ * empty and every `font-family: var(…)` reading it goes
+ * invalid-at-computed-value-time, so the *inherited* font wins and the
+ * initial-value below is never reached. A typed registration such as
+ * `<color>` does fall back, which is what makes this easy to miss.
+ * `tests/tokens.test.mjs` pins the behaviour and docs/QUIRKS.md tracks the
+ * repair (a var() fallback at each of the 11 consumption sites). Values
+ * mirror `--font-sans`/`--font-mono` in defaults.css — literal, because an
  * `initial-value` may not contain `var()`. */
 @property --typeset-font-body { syntax: "*"; inherits: true; initial-value: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
 @property --typeset-font-heading { syntax: "*"; inherits: true; initial-value: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
