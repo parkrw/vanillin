@@ -55,10 +55,77 @@ function readTokenSources(root, sources) {
 // ---------------------------------------------------------------------------
 
 /**
- * Scan ui/ to build a slug -> CSS block-class map.
- * The block class is the first class selector in the component's CSS file.
+ * Components whose block class is not their directory slug. Mirrors the
+ * conformance suite's BLOCK_CLASS_ALLOWLIST (tests/conformance.unit.mjs):
+ * every entry names the class a `components.<slug>` override must target and
+ * why the slug is not enough on its own.
  */
-export function discoverComponents(root, ui = "ui") {
+const BLOCK_CLASS_OVERRIDES = {
+  "alert-dialog": {
+    blockClass: "alert-dialog",
+    reason: "re-exports dialog; the element carries `dialog alert-dialog`, so alert-dialog.css defines no block class of its own",
+  },
+  breadcrumb: {
+    blockClass: "breadcrumb",
+    reason: "the JSX renders .breadcrumb; the CSS styles only its .breadcrumb-* subparts",
+  },
+  button: { blockClass: "btn", reason: "block class is .btn (upstream convention)" },
+  "button-group": { blockClass: "btn-group", reason: "block class is .btn-group, matching button's .btn prefix" },
+  collapsible: {
+    blockClass: "collapsible",
+    reason: "the JSX renders .collapsible; the CSS styles .collapsible-content",
+  },
+  combobox: {
+    blockClass: "combobox-input-group",
+    reason: "composite; the input group is the visible root, not a bare .combobox",
+  },
+  "context-menu": {
+    blockClass: "context-menu",
+    reason: "re-exports dropdown-menu; the element carries both classes and context-menu.css defines no block class",
+  },
+  "date-picker": {
+    blockClass: "date-picker-trigger",
+    reason: "CSS-only composition of popover + calendar; the trigger is its only root",
+  },
+  "form-fields": {
+    blockClass: "form-field",
+    reason: "composite wrappers; the singular .form-field is the block class",
+  },
+  resizable: { blockClass: "resizable-group", reason: "composite; the group is the outermost styled part" },
+  select: { blockClass: "select-trigger", reason: "composite; the trigger is the visible root (there is no bare .select)" },
+}
+
+function stripComments(css) {
+  return css.replace(/\/\*[\s\S]*?\*\//g, "")
+}
+
+/** Does `css` define `.name` as a block class? Same test conformance applies. */
+function definesBlockClass(css, name) {
+  return new RegExp(`\\.${name.replace(/-/g, "\\-")}(?=[\\s{:,\\[])`).test(css)
+}
+
+/**
+ * Resolve one component's block class, in precedence order:
+ *
+ *   1. BLOCK_CLASS_OVERRIDES  — an explicit, reviewed exception.
+ *   2. the dir slug           — what conformance already enforces.
+ *   3. the first class in the file — a warned fallback only.
+ *
+ * Rule order inside a component's CSS is cosmetic, so deriving the selector
+ * from it means a reordering nobody would flag silently re-points every
+ * consumer override: their van.css still compiles and styles nothing.
+ */
+function resolveBlockClass(slug, css) {
+  const stripped = stripComments(css)
+  const firstClass = stripped.match(/^\s*\.([\w-]+)\s*[{,]/m)?.[1] ?? null
+  const override = BLOCK_CLASS_OVERRIDES[slug]
+  if (override) return { blockClass: override.blockClass, source: "allowlist", firstClass }
+  if (definesBlockClass(stripped, slug)) return { blockClass: slug, source: "slug", firstClass }
+  return { blockClass: firstClass || slug, source: "fallback", firstClass }
+}
+
+/** Scan ui/ to a slug -> { blockClass, source, firstClass } map. */
+function scanComponents(root, ui = "ui") {
   const uiDir = resolve(root, ui)
   const map = new Map()
   let dirs
@@ -71,10 +138,19 @@ export function discoverComponents(root, ui = "ui") {
     if (!d.isDirectory()) continue
     const cssPath = resolve(uiDir, d.name, `${d.name}.css`)
     if (!existsSync(cssPath)) continue
-    const css = readFileSync(cssPath, "utf-8")
-    const m = css.match(/^\.([\w-]+)\s*[{,]/m)
-    if (m) map.set(d.name, m[1])
+    map.set(d.name, resolveBlockClass(d.name, readFileSync(cssPath, "utf-8")))
   }
+  return map
+}
+
+/**
+ * Scan ui/ to build a slug -> CSS block-class map.
+ * The block class is the dir slug, or the reviewed exception in
+ * BLOCK_CLASS_OVERRIDES; see resolveBlockClass for the fallback.
+ */
+export function discoverComponents(root, ui = "ui") {
+  const map = new Map()
+  for (const [slug, info] of scanComponents(root, ui)) map.set(slug, info.blockClass)
   return map
 }
 
@@ -385,7 +461,7 @@ export function generate(config, { root, tokenSources, source, uiDir = "ui", glo
   // Context for validation
   const globalsCss = readFileSync(resolve(root, globals), "utf-8")
   const colorTokens = parseColorTokens(globalsCss)
-  const componentMap = discoverComponents(root, uiDir)
+  const componentMap = scanComponents(root, uiDir)
   const knownComponents = new Set(componentMap.keys())
   const tokenDefaults = extractTokenDefaults(readTokenSources(root, tokenSources))
 
@@ -517,7 +593,15 @@ export function generate(config, { root, tokenSources, source, uiDir = "ui", glo
   if (cfg.components) {
     for (const slug of Object.keys(cfg.components).sort()) {
       const comp = cfg.components[slug]
-      const blockClass = componentMap.get(slug) || slug
+      const info = componentMap.get(slug)
+      const blockClass = info?.blockClass || slug
+      if (info?.source === "fallback") {
+        console.warn(
+          `warning: ${uiDir}/${slug}/${slug}.css defines no .${slug} block class, so overrides for ` +
+            `"${slug}" target .${blockClass} — the first class in the file, which moves when its rules are ` +
+            `reordered. Add a .${slug} block class, or add "${slug}" to BLOCK_CLASS_OVERRIDES with a reason.`,
+        )
+      }
       const compLines = []
 
       // Base token overrides
