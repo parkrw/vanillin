@@ -24,8 +24,9 @@ const STATUS_LABELS = {
  * `pending` pulses behind a `prefers-reduced-motion` guard. As an
  * indeterminate loop it does not use `--motion-scale`.
  *
- * `ring` draws a halo in the dot's own colour that breathes on a fixed 2s
- * loop, the "live / running" look. Reduced motion leaves a static halo.
+ * `ring` draws a soft halo in the dot's own colour (`--status-dot-glow`)
+ * that swells on a fixed 2s loop, the "live / running" look. Reduced motion
+ * leaves a static halo.
  *
  * Note: uses `error` (the console convention) for the same semantic
  * state that Badge calls `destructive`. The `error`
