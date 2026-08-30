@@ -125,6 +125,13 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await page.keyboard.press("ControlOrMeta+k")
     await page.locator("dialog.command-dialog[open]").waitFor()
     eq(await page.locator("dialog.command-dialog[open]").count(), 1, "one palette, not two")
+    // Which one matters as much as how many: restoring the console's handler
+    // and dropping the site's would also open exactly one dialog.
+    eq(
+      await page.locator("dialog.command-dialog[open]").getAttribute("data-pg"),
+      "cmd-palette",
+      "the chord opens the site's palette, not the console's",
+    )
     await page.keyboard.press("Escape")
     await page.waitForFunction(() => !document.querySelector("dialog.command-dialog[open]"))
     eq(await page.locator("dialog.command-dialog[open]").count(), 0, "one Escape closes it")
