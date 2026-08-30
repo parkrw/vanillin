@@ -3,6 +3,12 @@
 
 export default async function run({ page, baseUrl, test, eq, near }) {
   await page.goto(`${baseUrl}/#home`)
+  // The console's search hint claims the chord matches the vanillin site's, so
+  // take the expected chord from the site chrome's own kbd rather than
+  // repeating its platform test here — ⌘K on a Mac, Ctrl+K elsewhere. Read
+  // once: the chrome is not on every route the suite visits.
+  const siteChord = (await page.locator(".pg-search-kbd").first().textContent()).trim()
+  const searchHint = () => `Search behaves as it does on the vanillin site — press ${siteChord} anywhere`
   await page.waitForSelector(".ck-console")
   const console_ = page.locator(".ck-console")
   const cats = console_.locator(".ck-nav-cat")
@@ -59,6 +65,13 @@ export default async function run({ page, baseUrl, test, eq, near }) {
       "the search sits in its tooltip trigger, directly under the top bar",
     )
     eq(await console_.locator(".ck-topbar-right .ck-search").count(), 0, "not in the right-hand group")
+    // The tooltip's own aria-describedby sits on its trigger span, which takes
+    // no focus, so the button carries a description of its own.
+    eq(
+      await search.evaluate((el) => document.getElementById(el.getAttribute("aria-describedby"))?.textContent),
+      searchHint(),
+      "the search button is described for assistive tech on focus, not only on hover",
+    )
     const pills = console_.locator(".ck-topbar-right .ck-pill")
     eq(await pills.count(), 2)
     eq(await console_.locator(".ck-pill").count(), 2, "pills render only inside the right-hand group")
@@ -95,9 +108,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     const palette = page.locator("dialog.command-dialog[open]")
     await palette.waitFor()
     eq(
-      (await console_.locator(".toast").first().textContent()).includes(
-        "Search behaves as it does on the vanillin site",
-      ),
+      (await console_.locator(".toast").first().textContent()).includes(searchHint()),
       true,
       "clicking search explains where the shortcut lives",
     )
@@ -672,7 +683,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
   await test("every icon-only control has a tooltip, and tooltips are orange", async () => {
     const tips = [
       [".ck-theme-toggle", "Change the theme in the vanillin navbar at the top of the page"],
-      [".ck-search", "Search behaves as it does on the vanillin site — press ⌘K anywhere"],
+      [".ck-search", searchHint()],
       [".ck-bell", "Notifications"],
       ['[aria-label="Collapse sidebar"]', "Collapse sidebar"],
       ['[aria-label="Collapse section rail"]', "Collapse"],

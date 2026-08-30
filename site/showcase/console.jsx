@@ -605,9 +605,13 @@ function Tip({ label, side = "top", className, children }) {
 
 /* The console's own toggle only rocks its lamp; the site's navbar owns the scheme. */
 const THEME_HINT = "Change the theme in the vanillin navbar at the top of the page"
-/* The site owns ⌘K (site/app.jsx), so this search behaves like the vanillin
-   site's own: same chord, same palette. */
-const SEARCH_HINT = "Search behaves as it does on the vanillin site — press ⌘K anywhere"
+/* The site owns the palette chord (site/app.jsx), so this search behaves like
+   the vanillin site's own: same chord, same palette. The label follows the
+   platform the same way site/app.jsx does — ⌘ on a Mac, Ctrl+ elsewhere. */
+const searchHint = () =>
+  `Search behaves as it does on the vanillin site — press ${
+    /mac/i.test(navigator.userAgent) ? "⌘" : "Ctrl+"
+  }K anywhere`
 
 const TONE_LABEL = {
   success: "Healthy",
@@ -732,6 +736,7 @@ function ContextPill({ label, value, options, onChange, menuLabel }) {
 }
 
 function ConsoleTopbar({ project, setProject, region, setRegion, orderCount, onOrder, onOpenPalette }) {
+  const hint = searchHint()
   // Decorative only: the lamp flips, the page theme never moves.
   const [moon, setMoon] = useState(false)
   return (
@@ -741,19 +746,24 @@ function ConsoleTopbar({ project, setProject, region, setRegion, orderCount, onO
         <span className="ck-brand-name">Acme Cloud</span>
         <span className="ck-brand-app">Console</span>
       </div>
-      <Tip label={SEARCH_HINT} side="bottom">
+      <Tip label={hint} side="bottom">
         <button
           type="button"
           className="ck-search"
+          aria-describedby="ck-search-hint"
           onClick={() => {
             onOpenPalette()
-            toast(SEARCH_HINT)
+            toast(hint)
           }}
         >
           <SearchIcon />
           <span>Search resources...</span>
         </button>
       </Tip>
+      {/* Tooltip carries the hint for pointer users, but ui/tooltip puts
+          aria-describedby on its trigger span, which is not focusable — so a
+          keyboard user tabbing to the button would hear nothing without this. */}
+      <span id="ck-search-hint" className="ck-sr-only">{hint}</span>
       <div className="ck-topbar-right">
         <ContextPill label="Project" value={project} options={PROJECTS} onChange={setProject} menuLabel="Switch project" />
         <ContextPill label="Region" value={region} options={REGIONS} onChange={setRegion} />
