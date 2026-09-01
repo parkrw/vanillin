@@ -212,14 +212,19 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq((await tabs()).join(" | "), "Dashboard | Capacity | Health | Recent Events")
 
     await go("Virtual Data Centers")
-    await console_.locator(".ck-page-title", { hasText: "Data Centers" }).waitFor()
+    await page.waitForSelector(".ck-cell-link")
     eq(await console_.locator(".ck-nav-cat[data-active] .ck-nav-text").textContent(), "Virtual Data Centers")
     eq(
       (await secNames()).join(" | "),
-      "Data Centers | DFW Cage 6 | Chicago Cage 6 | SLC Cage 6 | Virtual Machines | Networking | Storage | Order",
+      "DFW Cage 6 | Chicago Cage 6 | SLC Cage 6 | Compute | Networking | Storage | Quotas | Order",
+      "no row carries the category's own name",
     )
-    eq(await activeFlags(".ck-sec-group"), "true,false,false,false,false,false,false,false", "the first service is selected")
-    eq((await tabs()).join(" | "), "Data Centers | Quotas")
+    eq(
+      await activeFlags(".ck-sec-group"),
+      "false,false,false,true,false,false,false,false",
+      "the category lands on its first plain service, leaving the site folds shut",
+    )
+    eq((await tabs()).join(" | "), "Virtual Machines | Virtual Machine Sizes | Templates & Images")
     // Every row leads with an icon, and none of them is the Overview grid.
     const grid = await console_.locator(".ck-nav-overview svg").evaluate((el) => el.innerHTML)
     const icons = await console_.locator(".ck-sec-group").evaluateAll((els) =>
@@ -242,7 +247,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
   })
 
   await test("the tab bar switches pages within the service and carries the live badge", async () => {
-    await console_.locator(".ck-sec-group", { hasText: "Virtual Machines" }).click()
+    await console_.locator(".ck-sec-group", { hasText: "Compute" }).click()
     await page.waitForSelector(".ck-cell-link")
     eq((await tabs()).join(" | "), "Virtual Machines | Virtual Machine Sizes | Templates & Images")
     await console_.locator(".ck-tabbar .tabs-trigger", { hasText: "Virtual Machine Sizes" }).click()
@@ -265,7 +270,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
   })
 
   await test("the project pill scopes the virtual machines table and switches its count", async () => {
-    await go("Virtual Data Centers", "Virtual Machines")
+    await go("Virtual Data Centers", "Compute")
     await page.waitForSelector(".ck-cell-link")
     const count = console_.locator(".ck-page-count")
     const rows = console_.locator(".ck-table tbody tr")
@@ -330,7 +335,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
   })
 
   await test("the wheel scrolls the page over a data table just as it does beside it", async () => {
-    await go("Virtual Data Centers", "Virtual Machines")
+    await go("Virtual Data Centers", "Compute")
     await page.waitForSelector(".ck-cell-link")
     await console_.locator(".ck-page-size select").selectOption("50")
     await console_.locator(".ck-table-pager span", { hasText: "Page 1 of 1" }).waitFor()
@@ -525,13 +530,13 @@ export default async function run({ page, baseUrl, test, eq, near }) {
   })
 
   await test("a category row opens its first service and marks itself active; Metrics mounts the status showcase", async () => {
-    await go("Operations")
+    await go("Operations", "Metrics")
     await page.waitForSelector(".ackp-status")
     eq(await console_.locator(".ck-nav-cat[data-active] .ck-nav-text").textContent(), "Operations")
     eq(await console_.locator(".ck-nav-overview[data-active]").count(), 0, "Overview let go")
-    eq((await secNames()).join(" | "), "Metrics | Events | Service Health")
-    eq(await activeFlags(".ck-sec-group"), "true,false,false")
-    eq((await tabs()).join(" | "), "Utilization")
+    eq((await secNames()).join(" | "), "Data Centers | Metrics | Events | Service Health")
+    eq(await activeFlags(".ck-sec-group"), "false,true,false,false")
+    eq(await console_.locator(".ck-tabbar").count(), 0, "Metrics has one page, so it draws no tab bar")
     eq(await console_.locator(".ackp-status .ackp-panel-title").textContent(), "Operations status")
     // Only one category is ever active.
     await go("Account")
@@ -578,7 +583,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
   })
 
   await test("a row's (…) menu and its right-click menu carry the same actions and toast with the row's name", async () => {
-    await go("Virtual Data Centers", "Virtual Machines")
+    await go("Virtual Data Centers", "Compute")
     await page.waitForSelector(".ck-cell-link")
     await settled()
     eq(
@@ -643,31 +648,42 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(await console_.locator(".ck-upload-btn").count(), 1)
   })
 
-  await test("Support sits at the top of its rail with four tabs; Settings renders its panel", async () => {
+  await test("Support Center splits into Tickets and Documentation, neither repeating a name above it", async () => {
     await go("Support Center")
     await page.waitForSelector(".ackp-support")
     eq(await console_.locator(".ackp-support .ackp-panel-title").first().textContent(), "Support")
-    eq((await secNames()).join(" | "), "Support")
-    eq(await activeFlags(".ck-sec-group"), "true", "Support is the selected row, at the top")
+    eq((await secNames()).join(" | "), "Tickets | Documentation")
+    eq(await activeFlags(".ck-sec-group"), "true,false", "Tickets is the selected row, at the top")
     const [toggleBox, rowBox] = await Promise.all([
       rect(console_.locator(".ck-sec-collapse")),
       rect(console_.locator(".ck-sec-group[data-active]")),
     ])
     eq(rowBox.y <= toggleBox.y + toggleBox.height, true, `the row (${rowBox.y}) shares the toggle's line (${toggleBox.y})`)
-    eq((await tabs()).join(" | "), "Tickets | Knowledge base | FAQ | Docs")
+    eq(await console_.locator(".ck-tabbar").count(), 0, "Tickets is one page, so no tab repeats its name")
 
-    await go("Account", "Settings")
-    await page.waitForSelector(".ackp-settings")
-    eq(await console_.locator(".ackp-settings .ackp-panel-title").first().textContent(), "Settings")
-    eq(await console_.locator(".ck-sec-group[data-active] .ck-sec-group-name").textContent(), "Settings")
+    await console_.locator(".ck-sec-group", { hasText: "Documentation" }).click()
+    await console_.locator(".ck-empty .empty-title", { hasText: "Knowledge base is quiet" }).waitFor()
+    eq((await tabs()).join(" | "), "Knowledge base | FAQ | Docs")
+    eq((await secNames()).join(" | "), "Tickets | Documentation", "the rail keeps both rows")
   })
 
-  await test("Contacts is called Contacts in the rail and the tab bar alike", async () => {
-    await go("Account", "Contacts")
-    await console_.locator(".ck-tabbar .tabs-trigger", { hasText: "Contacts" }).waitFor()
-    eq(await console_.locator(".ck-sec-group[data-active] .ck-sec-group-name").textContent(), "Contacts")
-    eq((await tabs()).join(" | "), "Contacts")
-    eq((await console_.textContent()).includes("People"), false, "the old name survives somewhere")
+  await test("Settings is two pages, Profile and Organization, and Contacts lives under Organization", async () => {
+    await go("Account", "Settings")
+    await page.waitForSelector(".ackp-settings")
+    eq(await console_.locator(".ck-sec-group[data-active] .ck-sec-group-name").textContent(), "Settings")
+    eq((await tabs()).join(" | "), "Profile | Organization")
+    eq(await console_.locator(".ackp-settings .ackp-panel-title").first().textContent(), "Profile")
+    eq(await console_.locator('[data-pg="settings-contacts"]').count(), 0, "contacts are not personal settings")
+    eq(await console_.locator(".ck-sec-group", { hasText: "Contacts" }).count(), 0, "Contacts left the rail")
+
+    await console_.locator(".ck-tabbar .tabs-trigger", { hasText: "Organization" }).click()
+    await console_.locator('[data-pg="panel-organization"]').waitFor()
+    eq(await console_.locator(".ackp-settings .ackp-panel-title").first().textContent(), "Organization")
+    const contacts = console_.locator('[data-pg="settings-contacts"]')
+    eq(await contacts.count(), 1)
+    eq(await contacts.locator("tbody tr").count(), 5)
+    eq(await contacts.locator("tbody tr").first().textContent(), "AOAccount Ownerowner@acme.cloudOwnerBillingIncidentsVerified")
+    eq(await console_.locator('[data-pg="settings-profile"]').count(), 0, "the profile card stayed on the other tab")
   })
 
   await test("Access Keys copies every identifier: fingerprints in the table, ids and masked secrets under each API key", async () => {
@@ -721,13 +737,14 @@ export default async function run({ page, baseUrl, test, eq, near }) {
   })
 
   await test("the order form is a page of its own: rails and tab bar step aside, seven numbered steps, a way back", async () => {
-    await go("Virtual Data Centers")
+    await go("Operations")
     await console_.locator(".ck-page-title", { hasText: "Data Centers" }).waitFor()
     eq(
       (await console_.locator(".ck-table thead th").allTextContents()).join(" | "),
       "Name | Region | Hosts | Virtual Machines | Status | ",
     )
     eq(await console_.getAttribute("data-focus"), null, "precondition: the rails are up")
+    eq(await console_.locator(".ck-tabbar").count(), 0, "precondition: Data Centers is one page, so no tab bar")
     const bodyBefore = await rect(console_.locator(".ck-main"))
     const open = console_.locator(".ck-actions .ck-order-open")
     eq(await open.textContent(), "Order a VDC")
@@ -737,7 +754,6 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(await console_.getAttribute("data-focus"), "order")
     eq(await style(console_.locator(".ck-pri"), "display"), "none", "the primary rail is still showing")
     eq(await style(console_.locator(".ck-sec"), "display"), "none", "the secondary rail is still showing")
-    eq(await console_.locator(".ck-tabbar").count(), 0, "the tab bar is still showing")
     eq(await console_.locator(".ck-resize").count(), 0, "no rail handles either")
     const [frameBox, mainBox] = await Promise.all([rect(console_), rect(console_.locator(".ck-main"))])
     eq(mainBox.width > bodyBefore.width + 300, true, `the content column grew (${bodyBefore.width} → ${mainBox.width})`)
@@ -780,7 +796,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await console_.locator(".ck-page-title", { hasText: "Data Centers" }).waitFor()
     eq(await console_.getAttribute("data-focus"), null)
     eq(await style(console_.locator(".ck-pri"), "display"), "flex")
-    eq(await console_.locator(".ck-tabbar").count(), 1)
+    eq(await console_.locator(".ck-resize").count(), 2, "the rail handles are back")
     await open.click()
     await console_.locator(".ck-order").waitFor()
   })
@@ -1126,7 +1142,9 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(await console_.locator(".ck-sec-group[data-active] .ck-sec-group-name").textContent(), "Data Centers", "back lands on the rail's Data Centers")
   })
 
-  await test("each site is a heavy folding row of its vDCs; a vDC gets its own page with the site's vDCs as tabs", async () => {
+  await test("each site is a heavy folding row of its vDCs, and the fold is the only place they are listed", async () => {
+    await go("Virtual Data Centers")
+    await page.waitForSelector(".ck-cell-link")
     const triggers = console_.locator(".ck-sec-cat-trigger")
     eq((await triggers.allTextContents()).join(" | "), "DFW Cage 6 | Chicago Cage 6 | SLC Cage 6")
     eq(await style(triggers.first(), "fontWeight"), "700", "site rows read as headings")
@@ -1146,16 +1164,15 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await console_.locator(".ck-sec-link", { hasText: "prod-edge" }).click()
     await console_.locator(".ck-page-title", { hasText: "prod-edge" }).waitFor()
     eq(await console_.locator(".ck-page-count").textContent(), "DFW Cage 6 · Plano, TX")
-    eq((await tabs()).join(" | "), "prod-core | prod-edge | staging", "the site's vDCs are the tabs")
-    eq(await console_.locator('.ck-tabbar .tabs-trigger[data-state="active"]').textContent(), "prod-edge")
+    eq(await console_.locator(".ck-tabbar").count(), 0, "the fold already lists the vDCs, so no tab bar repeats them")
     eq(await console_.locator(".ck-sec-link[data-active]").textContent(), "prod-edge")
     eq(await triggers.nth(0).getAttribute("data-active"), "true", "the site row reads as active too")
     eq((await console_.locator(".ck-util-label").allTextContents()).join(" | "), "CPU | RAM | Storage")
     eq((await console_.locator(".ck-util-val").allTextContents()).join(" | "), "38 / 60 GHz · 63% | 96 / 192 GB · 50% | 640 / 1,500 GB · 43%")
     eq(await console_.locator(".ck-vdc .badge", { hasText: "Warm standby" }).count(), 1)
 
-    // A tab switch lands on a sibling vDC without touching the fold.
-    await console_.locator(".ck-tabbar .tabs-trigger", { hasText: "staging" }).click()
+    // A sibling is one rail link away, and the fold stays as it was.
+    await console_.locator(".ck-sec-link", { hasText: "staging" }).click()
     await console_.locator(".ck-page-title", { hasText: "staging" }).waitFor()
     eq(await console_.locator(".ck-sec-link[data-active]").textContent(), "staging")
     eq(await triggers.nth(0).getAttribute("data-state"), "open")
@@ -1165,13 +1182,17 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await console_.locator(".ck-sec-link", { hasText: "ml-platform" }).click()
     await console_.locator(".ck-page-title", { hasText: "ml-platform" }).waitFor()
     eq((await triggers.evaluateAll((els) => els.map((el) => el.dataset.state))).join(","), "open,closed,open")
-    eq((await tabs()).join(" | "), "prod-core-dr | ml-platform")
+    eq(
+      (await console_.locator(".ck-sec-link").allTextContents()).join(" | "),
+      "prod-core | prod-edge | staging | prod-core-dr | ml-platform",
+      "both open folds list their own vDCs, and nothing else does",
+    )
     // The folded rail shows the site codes.
     await console_.locator('[aria-label="Collapse section rail"]').click()
     await console_.locator(".ck-sec.ck-rail--collapsed").waitFor()
     eq(
       (await secNames()).join(" | "),
-      "Data Centers | DFW | CHI | SLC | Virtual Machines | Networking | Storage | Order",
+      "DFW | CHI | SLC | Compute | Networking | Storage | Quotas | Order",
     )
     await console_.locator('[aria-label="Expand section rail"]').click()
     await console_.locator(".ck-sec:not(.ck-rail--collapsed)").waitFor()

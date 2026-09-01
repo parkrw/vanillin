@@ -347,6 +347,43 @@
   font-size: 0.75rem;
 }
 
+/* Contacts is a table, so it wants the full width the two-column grid has
+   at container width; the other settings cards stay a column each. */
+.ackp-contacts-card {
+  grid-column: 1 / -1;
+}
+
+.ackp-contact-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+.ackp-contact-avatar {
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  font-size: 0.625rem;
+}
+
+.ackp-contact-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.ackp-contacts-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.ackp-contacts-count {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
 .ackp-pref-row {
   align-items: center;
   justify-content: space-between;

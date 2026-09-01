@@ -48,7 +48,11 @@ export const ORDER_PAGE = "New virtual Data Center"
 // (secondary rail row) → page (a tab in the main column). Overview sits above
 // the categories, as the CloudKey console draws it; the category and service
 // names follow the CloudKey Core prototype. A site folds to its vDCs and its
-// vDCs are that site's tabs.
+// vDCs are its links in the rail.
+//
+// No level repeats the one above it. A service never carries its category's
+// name, and the tab bar is dropped wherever it would only echo the rail: a
+// single-page service, or a site whose open fold already lists its vDCs.
 export const OVERVIEW = {
   id: "overview", label: "Overview",
   items: [{ id: "overview", name: "Status", pages: ["Dashboard", "Capacity", "Health", "Recent Events"] }],
@@ -64,17 +68,18 @@ export const NAV_GROUPS = [
   {
     id: "vdcs", label: "Virtual Data Centers",
     items: [
-      { id: "vdc", name: "Data Centers", pages: ["Data Centers", "Quotas"] },
       ...SITE_ITEMS,
-      { id: "resources", name: "Virtual Machines", pages: ["Virtual Machines", "Virtual Machine Sizes", "Templates & Images"] },
+      { id: "resources", name: "Compute", pages: ["Virtual Machines", "Virtual Machine Sizes", "Templates & Images"] },
       { id: "networking", name: "Networking", pages: ["Networks", "Public IPs"] },
       { id: "storage", name: "Storage", pages: ["Volumes", "Snapshots"] },
+      { id: "quotas", name: "Quotas", pages: ["Quotas"] },
       { id: "order", name: "Order", pages: [ORDER_PAGE] },
     ],
   },
   {
     id: "operations", label: "Operations",
     items: [
+      { id: "data-centers", name: "Data Centers", pages: ["Data Centers"] },
       { id: "metrics", name: "Metrics", pages: ["Utilization"] },
       { id: "events", name: "Events", pages: ["Event Log"] },
       { id: "service-health", name: "Service Health", pages: ["Services"] },
@@ -84,15 +89,17 @@ export const NAV_GROUPS = [
     id: "account", label: "Account",
     items: [
       { id: "billing", name: "Billing", pages: ["Invoices"] },
-      { id: "contacts", name: "Contacts", pages: ["Contacts"] },
       { id: "security", name: "Security", pages: ["Access Keys"] },
       { id: "your-data", name: "Your Data", pages: ["Exports"] },
-      { id: "settings", name: "Settings", pages: ["Settings"] },
+      { id: "settings", name: "Settings", pages: ["Profile", "Organization"] },
     ],
   },
   {
     id: "support-center", label: "Support Center",
-    items: [{ id: "support", name: "Support", pages: ["Tickets", "Knowledge base", "FAQ", "Docs"] }],
+    items: [
+      { id: "support", name: "Tickets", pages: ["Tickets"] },
+      { id: "documentation", name: "Documentation", pages: ["Knowledge base", "FAQ", "Docs"] },
+    ],
   },
 ]
 
