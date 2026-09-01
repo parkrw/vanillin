@@ -9,12 +9,12 @@
 
 import assert from "node:assert/strict"
 import { spawnSync } from "node:child_process"
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, appendFileSync } from "node:fs"
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, appendFileSync, symlinkSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { hashFile, hashBytes, readManifest, STYLESHEETS } from "../scripts/manifest.mjs"
-import { createPickerState, pickerHandleKey, pickerLines } from "../bin/van.mjs"
+import { createPickerState, pickerHandleKey, pickerLines, drivePicker, pickerSelection, readKey } from "../bin/van.mjs"
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))
 const VAN = join(repoRoot, "bin", "van.mjs")
@@ -775,6 +775,220 @@ test("lib files that need use client get it under rsc", (dir) => {
   // The sidecar records the injected bytes, so nothing reads as edited.
   assert.match(van(dir, "add", "calendar").out, /0 files written/)
   assert.equal(van(dir, "diff").code, 0, van(dir, "diff").all)
+})
+
+// ── picker loop ─────────────────────────────────────────────────────
+
+/**
+ * Replay keystrokes through the real readKey, answering EAGAIN once before each
+ * one the way a non-blocking TTY does. Composed as runPicker composes them, so
+ * the retry and the loop are exercised together.
+ */
+function replay(keys) {
+  const queue = [...keys]
+  let pending = null
+  const syscall = (buf) => {
+    if (pending === null) {
+      if (!queue.length) return 0
+      pending = queue.shift()
+      const err = new Error("EAGAIN: resource temporarily unavailable, read")
+      err.code = "EAGAIN"
+      throw err
+    }
+    const bytes = Buffer.from(pending)
+    pending = null
+    bytes.copy(buf)
+    return bytes.length
+  }
+  return (buf) => readKey(buf, syscall)
+}
+
+test("picker: EAGAIN before a keypress does not drop it", () => {
+  const buf = Buffer.alloc(16)
+  let throws = 2
+  const n = readKey(buf, (b) => {
+    if (throws-- > 0) {
+      const err = new Error("EAGAIN")
+      err.code = "EAGAIN"
+      throw err
+    }
+    return Buffer.from("a").copy(b)
+  })
+  assert.equal(n, 1, "one byte read after two EAGAINs")
+  assert.equal(buf.subarray(0, 1).toString(), "a")
+})
+
+test("picker: a closed stdin reads as zero bytes, not an EOF throw", () => {
+  const buf = Buffer.alloc(16)
+  const n = readKey(buf, () => {
+    const err = new Error("EOF")
+    err.code = "EOF"
+    throw err
+  })
+  assert.equal(n, 0)
+})
+
+test("picker: a read error that is not EAGAIN or EOF propagates", () => {
+  assert.throws(
+    () =>
+      readKey(Buffer.alloc(16), () => {
+        const err = new Error("EIO")
+        err.code = "EIO"
+        throw err
+      }),
+    /EIO/,
+  )
+})
+
+test("picker: 'a' then enter selects every component", () => {
+  const slugs = ["accordion", "button", "card", "dialog"]
+  const state = createPickerState(slugs, new Set(["card"]), 10)
+  const done = drivePicker(state, replay(["a", "\r"]), () => {})
+  assert.equal(done.cancelled, false)
+  assert.deepEqual(pickerSelection(done), ["accordion", "button", "dialog"])
+})
+
+test("picker: arrows and space select one, then enter confirms", () => {
+  const state = createPickerState(["accordion", "button", "card"], new Set(), 10)
+  const done = drivePicker(state, replay(["\x1b[B", " ", "\r"]), () => {})
+  assert.deepEqual(pickerSelection(done), ["button"])
+})
+
+test("picker: a closed stdin cancels instead of hanging", () => {
+  const state = createPickerState(["accordion", "button"], new Set(), 10)
+  const done = drivePicker(state, replay([]), () => {})
+  assert.equal(done.cancelled, true)
+  assert.deepEqual(pickerSelection(done), [])
+})
+
+test("picker: q cancels an existing selection", () => {
+  const state = createPickerState(["accordion", "button"], new Set(), 10)
+  const done = drivePicker(state, replay(["a", "q"]), () => {})
+  assert.deepEqual(pickerSelection(done), [])
+})
+
+test("picker: render is called once per accepted key, with that state", () => {
+  const state = createPickerState(["accordion", "button"], new Set(), 10)
+  const counts = []
+  drivePicker(state, replay(["a", "\r"]), (s) => counts.push(s.selected.size))
+  assert.deepEqual(counts, [0, 2, 2], "initial draw, after 'a', after enter")
+})
+
+// ── add --all ───────────────────────────────────────────────────────
+
+test("add --all plans every component in the registry", (dir) => {
+  project(dir)
+  const r = van(dir, "add", "--all", "--dry-run")
+  assert.equal(r.code, 0, r.all)
+  const registry = JSON.parse(readFileSync(join(repoRoot, "registry.json"), "utf8"))
+  for (const slug of Object.keys(registry.components)) {
+    assert.match(r.out, new RegExp(`^${slug}$`, "m"), `${slug} missing from the plan`)
+  }
+  assert.match(r.out, /nothing written/)
+})
+
+test("add --all leaves an installed component's files alone", (dir) => {
+  project(dir)
+  assert.equal(van(dir, "add", "button").code, 0)
+  const r = van(dir, "add", "--all", "--dry-run")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /^card$/m, "a component you lack is still planned")
+  // button is a dependency of other components, so the closure reaches it
+  // either way; what --all must not do is rewrite it.
+  assert.match(r.out, /button\/button\.jsx unchanged/)
+})
+
+test("add --all a second time reports nothing left to install", (dir) => {
+  project(dir)
+  assert.equal(van(dir, "add", "--all").code, 0)
+  const r = van(dir, "add", "--all")
+  assert.equal(r.code, 1)
+  assert.match(r.all, /all components are already installed/)
+})
+
+test("add --all with --overwrite includes installed components", (dir) => {
+  project(dir)
+  assert.equal(van(dir, "add", "button").code, 0)
+  const r = van(dir, "add", "--all", "--overwrite", "--dry-run")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /^button$/m)
+})
+
+test("add --all rejects component names alongside it", (dir) => {
+  project(dir)
+  const r = van(dir, "add", "--all", "button")
+  assert.equal(r.code, 1)
+  assert.match(r.all, /--all takes no component names/)
+})
+
+test("add with no args off a TTY names --all in the error", (dir) => {
+  project(dir)
+  const r = van(dir, "add")
+  assert.equal(r.code, 1)
+  assert.match(r.all, /--all/)
+})
+
+// ── installed entrypoint ────────────────────────────────────────────
+
+test("van runs when argv[1] is a symlink, as npm's .bin shim makes it", (dir) => {
+  // npm links node_modules/.bin/van at bin/van.mjs. resolve() does not follow
+  // symlinks, so a resolved-path entrypoint check made every install a no-op.
+  const link = join(dir, "van")
+  symlinkSync(VAN, link)
+  const r = spawnSync(process.execPath, [link, "--version"], { encoding: "utf8" })
+  const version = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")).version
+  assert.equal(r.status, 0, r.stderr)
+  assert.equal(r.stdout.trim(), version)
+})
+
+test("a symlinked van still runs commands, not just --version", (dir) => {
+  const link = join(dir, "van")
+  symlinkSync(VAN, link)
+  project(dir)
+  const r = spawnSync(process.execPath, [link, "list", "--cwd", dir], {
+    encoding: "utf8",
+    env: { ...process.env, NO_COLOR: "1" },
+  })
+  assert.equal(r.status, 0, r.stderr)
+  assert.match(r.stdout, /components,.*installed/)
+})
+
+// ── packaged files ──────────────────────────────────────────────────
+
+test("package.json files covers everything the CLI imports and reads", () => {
+  const pkg = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8"))
+  const listed = pkg.files
+  assert.ok(Array.isArray(listed) && listed.length, "package.json needs a files allowlist")
+
+  const covered = (rel) => listed.some((e) => (e.endsWith("/") ? rel.startsWith(e) : rel === e))
+
+  // Walk the CLI's local import graph: an import npm does not pack is a
+  // consumer-only crash, invisible from this checkout.
+  const seen = new Set()
+  const queue = ["bin/van.mjs"]
+  while (queue.length) {
+    const rel = queue.shift()
+    if (seen.has(rel)) continue
+    seen.add(rel)
+    assert.ok(covered(rel), `${rel} is imported by the CLI but not in package.json files`)
+    const src = readFileSync(join(repoRoot, rel), "utf8")
+    const dir = rel.split("/").slice(0, -1)
+    for (const m of src.matchAll(/(?:^|\n)\s*(?:import|export)[^"']*from\s*["'](\.[^"']+)["']/g)) {
+      const parts = [...dir]
+      for (const seg of m[1].split("/")) {
+        if (seg === ".") continue
+        else if (seg === "..") parts.pop()
+        else parts.push(seg)
+      }
+      queue.push(parts.join("/"))
+    }
+  }
+  assert.ok(seen.size > 1, "expected the CLI to import at least one local module")
+
+  // The trees the CLI reads at run time, which no import mentions.
+  for (const rel of ["registry.json", "ui/button/button.jsx", "lib/cn.js", "styles/globals.css"]) {
+    assert.ok(covered(rel), `${rel} must be packed — the CLI reads it from the kit`)
+  }
 })
 
 // ── summary ─────────────────────────────────────────────────────────

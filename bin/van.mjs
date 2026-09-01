@@ -17,7 +17,7 @@
  */
 
 import { spawnSync } from "node:child_process"
-import { readFileSync, readSync, existsSync, readdirSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs"
+import { readFileSync, readSync, realpathSync, existsSync, readdirSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { resolve, dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -672,17 +672,48 @@ function parsePickerKey(buf, n) {
   return null
 }
 
+// Pausing between EAGAIN retries without a dependency: Atomics.wait blocks the
+// thread, which setTimeout cannot do inside a synchronous read loop.
+const IDLE = new Int32Array(new SharedArrayBuffer(4))
+
+const readStdin = (buf) => readSync(0, buf, 0, buf.length)
+
+/**
+ * Read the next keypress into `buf`, blocking until there is one.
+ *
+ * A TTY stdin is often left in non-blocking mode by whatever launched us — npm
+ * bin shims and pty wrappers both do it — and the read then throws EAGAIN with
+ * nothing read instead of waiting. Retrying is the only way to block on fd 0
+ * synchronously, and the picker cannot switch to the async stream API mid-loop.
+ * Returns 0 when stdin is closed, which the caller treats as cancel.
+ */
+export function readKey(buf, read = readStdin) {
+  for (;;) {
+    try {
+      return read(buf)
+    } catch (err) {
+      if (err.code === "EAGAIN") {
+        Atomics.wait(IDLE, 0, 0, 10)
+        continue
+      }
+      // EOF is how Windows reports a closed stdin; POSIX reports 0 bytes.
+      if (err.code === "EOF") return 0
+      throw err
+    }
+  }
+}
+
 function runPicker(slugs, installed) {
   const viewSize = Math.min((process.stdout.rows || 24) - 6, slugs.length)
   let state = createPickerState(slugs, installed, viewSize)
   const header = "van add — select components (space toggle, enter confirm, q cancel)"
   let linesWritten = 0
 
-  function render() {
+  function render(current) {
     if (linesWritten) process.stdout.write(`\x1b[${linesWritten}A\x1b[J`)
-    const rows = pickerLines(state)
-    const count = state.selected.size
-    const scroll = state.items.length > state.viewSize ? " · scroll for more" : ""
+    const rows = pickerLines(current)
+    const count = current.selected.size
+    const scroll = current.items.length > current.viewSize ? " · scroll for more" : ""
     const footer = dim(`${count} selected${scroll} · ↑↓ move · space toggle · a all · enter confirm`)
     const out = [header, "", ...rows, "", footer]
     process.stdout.write(out.join("\n") + "\n")
@@ -691,26 +722,41 @@ function runPicker(slugs, installed) {
 
   process.stdin.setRawMode(true)
   process.stdout.write("\x1b[?25l")
-  render()
-
-  const buf = Buffer.alloc(16)
   try {
-    while (!state.done) {
-      const n = readSync(0, buf, 0, buf.length)
-      const key = parsePickerKey(buf, n)
-      if (key === "ctrl-c") {
-        state = { ...state, cancelled: true, done: true }
-        break
-      }
-      if (!key) continue
-      state = pickerHandleKey(state, key)
-      render()
-    }
+    state = drivePicker(state, readKey, render)
   } finally {
     process.stdin.setRawMode(false)
     process.stdout.write("\x1b[?25h\n")
   }
 
+  return pickerSelection(state)
+}
+
+/**
+ * Run the picker to completion. `read` fills a buffer and returns the byte
+ * count, 0 meaning stdin closed; `render` draws the state it is handed.
+ *
+ * Split out from the terminal setup so the loop can be driven by a real key
+ * sequence in a test, where fd 0 is not a TTY and setRawMode would throw.
+ */
+export function drivePicker(state, read, render) {
+  const buf = Buffer.alloc(16)
+  render(state)
+  while (!state.done) {
+    const n = read(buf)
+    // Nothing more will arrive, so waiting for a confirm key would hang.
+    if (n === 0) return { ...state, cancelled: true, done: true }
+    const key = parsePickerKey(buf, n)
+    if (key === "ctrl-c") return { ...state, cancelled: true, done: true }
+    if (!key) continue
+    state = pickerHandleKey(state, key)
+    render(state)
+  }
+  return state
+}
+
+/** The slugs a finished picker state asks for — empty when cancelled. */
+export function pickerSelection(state) {
   if (state.cancelled) return []
   return [...state.selected].map((i) => state.items[i].slug)
 }
@@ -718,16 +764,19 @@ function runPicker(slugs, installed) {
 function cmdAdd(project, slugs) {
   const registry = loadRegistry()
 
+  if (flags.all && slugs.length) fail("--all takes no component names")
+
   if (!slugs.length) {
-    if (flags.yes) {
-      const installed = installedSlugs(project)
-      slugs = Object.keys(registry.components).sort().filter((s) => !installed.has(s))
+    const installed = installedSlugs(project)
+    const allSlugs = Object.keys(registry.components).sort()
+    if (flags.all || flags.yes) {
+      // Asking for everything you are missing is the useful default; wanting
+      // the ones you already have back is what --overwrite already means.
+      slugs = flags.overwrite ? allSlugs : allSlugs.filter((s) => !installed.has(s))
       if (!slugs.length) fail("all components are already installed")
     } else if (!process.stdin.isTTY) {
-      fail("nothing to add — pass component names, or run `van list` to see them")
+      fail("nothing to add — pass component names or --all, or run `van list` to see them")
     } else {
-      const installed = installedSlugs(project)
-      const allSlugs = Object.keys(registry.components).sort()
       if (allSlugs.every((s) => installed.has(s))) fail("all components are already installed")
       slugs = runPicker(allSlugs, installed)
       if (!slugs.length) {
@@ -1250,6 +1299,7 @@ const USAGE = `${bold("van")} — zero-dependency React components, copied into 
 
   van init                  scaffold ${CONFIG_FILE} and the stylesheets
   van add <slug…>           copy components and their dependencies
+  van add --all             copy every component you don't have yet
   van update [slug…]        merge upstream changes into installed components
   van diff [slug]           show local edits vs upstream changes
   van build                 regenerate the theme CSS from ${CONFIG_FILE}
@@ -1257,6 +1307,7 @@ const USAGE = `${bold("van")} — zero-dependency React components, copied into 
 
 Flags
   --cwd <dir>               run against another directory
+  --all                     (add) every component; (diff) include unchanged files
   --dry-run                 (add, update) print what would be written, write nothing
   --overwrite               (add, update) replace files you have edited
   --yes                     assume yes for prompts
@@ -1318,6 +1369,24 @@ export function main(argv = process.argv.slice(2)) {
   }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
+/**
+ * True when this file is the script node was told to run.
+ *
+ * npm links `node_modules/.bin/van` at this file, so under an install or `npx`
+ * argv[1] is the symlink and `import.meta.url` is its target. `resolve` does
+ * not follow symlinks, so comparing resolved paths made every installed
+ * invocation a silent no-op; realpaths are what make them equal.
+ */
+function isEntrypoint() {
+  if (!process.argv[1]) return false
+  const self = fileURLToPath(import.meta.url)
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(self)
+  } catch {
+    return resolve(process.argv[1]) === resolve(self)
+  }
+}
+
+if (isEntrypoint()) {
   main()
 }

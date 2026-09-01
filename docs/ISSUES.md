@@ -933,11 +933,9 @@ spending time on it — it may be a dev-server artefact rather than a page bug.
 - Optional (task 63): `.table-container`'s `overflow: auto` is dead weight
   whenever a table is wrapped in a scroll area. Removable if `ui/table` grows
   a `scrollable={false}`.
-- **Unverified end-to-end, needs the user:** `npx github:parkrw/vanillin init`
-  from a scratch Vite app, then rendering the copied components. It targets
-  `main` now that task 38 is merged. A bare `git clone` + `node
-  <clone>/bin/van.mjs` was verified locally, which is what `npx github:`
-  reduces to.
+- **Fixed 2026-09-01: `npx github:parkrw/vanillin` and `npm i -D github:parkrw/vanillin` both did nothing.** The assumption recorded here — that `npx github:` reduces to `git clone` + `node <clone>/bin/van.mjs` — was wrong, and it hid the bug for the whole of task 38. npm links `node_modules/.bin/van` at `bin/van.mjs`, so `process.argv[1]` is the symlink; the entrypoint check compared `resolve()`d paths, which do not follow symlinks, so `main()` never ran and every install exited 0 in silence. Now compared by realpath, with `tests/cli.unit.mjs` spawning node on a symlink. Verified from a packed tarball: `init`, `list`, `add --all` (158 files) and `build` all work through the `.bin` shim. Still user-gated: rendering the copied components in a real Vite app.
+
+- `van init` writes `"$schema": "./van.schema.json"` into the consumer's `van.config.json` (`bin/van.mjs:457`) but never copies `van.schema.json` there, and the file is not packed either. Every scaffolded project therefore carries a dangling schema reference, so editors give no completion or validation on the config — the one place the schema earns its keep. Either copy it at `init` and add it to `package.json` `files`, or point `$schema` at a URL (found 2026-09-01, not fixed).
 
 - `site/api-reference.jsx` has no column vocabulary for CSS custom properties: task 92 added a second `<ApiReference title="Custom properties">` to the badge, progress and status-dot pages for `--glow-duration`/`--glow-strength`, and the header still reads "Prop". A `columns` prop or a title-aware header fixes all three at once; do it when the next page needs one (2026-08-27).
 

@@ -10,6 +10,7 @@ This is not a package — the files land in your project and are yours to edit. 
 npm i -D github:parkrw/vanillin          # adds the `van` CLI to your project
 van init                                 # config + stylesheets, layout detected
 van add button dialog
+van add --all                            # or take the whole kit at once
 ```
 
 `init` reads your `package.json` and any `components.json` to work out where components belong (`src/components/ui` in a Next or aliased project, `./components/ui` otherwise), writes `van.config.json`, and copies the stylesheets. `add` brings each component's dependencies with it — other components it imports, and the `lib/` primitives it needs. In a Next App Router project the copied components get a `"use client"` directive; elsewhere they don't.
@@ -38,6 +39,8 @@ The other commands:
 | `van list` | every component, marking the ones you have |
 | `van build` | regenerate `van.css` after editing `van.config.json` |
 | `van diff` | which files you edited, and which the kit has changed since you copied them |
+
+`van add` with no names opens a picker — arrow keys move, space toggles, `a` selects everything, enter confirms. `van add --all` is the same choice without the picker: every component you don't have yet, dependencies included. Add `--overwrite` to it and installed components come down again too.
 
 `add` never overwrites a file you edited — it tells you and skips that component. `van add --overwrite` replaces it deliberately. That distinction comes from the `.van.json` sidecar written next to each component, which records what you were given.
 
