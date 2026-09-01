@@ -43,7 +43,7 @@ import "../code-example.css"
 // the same panels chunk the console already uses. Neither renders a
 // <Toaster/> of its own — the console hosts the page's single toaster, and
 // the support panel's toasts queue through it.
-const ConsoleShowcase = lazy(() => import("../showcase/console.jsx"))
+const ConsoleShowcase = lazy(() => import("../showcase/console/index.jsx"))
 const SupportPanel = lazy(() =>
   import("../showcase/panels/index.js").then((m) => ({ default: m.SupportPanel }))
 )
