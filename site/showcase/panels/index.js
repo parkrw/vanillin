@@ -7,5 +7,5 @@
  * in one tree queue against each other.
  */
 export { SupportPanel } from "./support-panel.jsx"
-export { SettingsPanel } from "./settings-panel.jsx"
+export { OrganizationPanel, ProfilePanel } from "./settings-panel.jsx"
 export { StatusShowcase } from "./status-showcase.jsx"

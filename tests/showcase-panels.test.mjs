@@ -103,10 +103,10 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(await rows.count(), 6, "filter cleared")
   })
 
-  // ── SettingsPanel ──
+  // ── ProfilePanel + OrganizationPanel ──
 
-  await test("settings renders its four cards", async () => {
-    for (const hook of ["profile", "organization", "api", "preferences"]) {
+  await test("the two settings panels render five cards between them", async () => {
+    for (const hook of ["profile", "preferences", "organization", "api", "contacts"]) {
       eq(await page.locator(`[data-pg="settings-${hook}"]`).count(), 1, `${hook} card`)
     }
     eq(
@@ -114,6 +114,12 @@ export default async function run({ page, baseUrl, test, eq }) {
       true,
       "profile email"
     )
+    eq(
+      await page.locator('[data-pg="panel-profile"] [data-pg="settings-contacts"]').count(),
+      0,
+      "contacts belong to the organization panel"
+    )
+    eq(await page.locator('[data-pg="settings-contacts"] tbody tr').count(), 5, "one row per contact")
   })
 
   await test("the API key is a secret CopyField: masked, revealable, copies the real value", async () => {
@@ -145,7 +151,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(await page.locator(".toast-title").first().textContent(), "Weekly digest on", "switch toast")
     await dismissToasts()
     await page.reload()
-    await page.locator('[data-pg="panel-settings"]').waitFor()
+    await page.locator('[data-pg="panel-profile"]').waitFor()
     eq(await page.locator("#ackp-notify-digest").getAttribute("aria-checked"), "false", "not persisted")
   })
 

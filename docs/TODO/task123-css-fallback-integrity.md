@@ -56,5 +56,6 @@ The repo's pre-existing fallback tests passed vacuously. `setProperty(name, "not
 Finding 2's browser figure was wrong and is corrected in the decision: `light-dark()` shipped in **Firefox 120**, not 129, so ESR 115 is the hard-fail case. The "≤127" figure belongs to `@property` token *interpolation*, a separate and much softer limit — README.md's support table already had both right.
 
 Note also that `scripts/contrast-nontext.mjs` **exits 0 even when it reports FAIL lines**, so the `contrast-nontext && check-tokens` chain in the Verify block does not gate on contrast. Read its output, do not trust its exit code. Filed as #58, which also triages the five failures.
+Note also that `scripts/contrast-nontext.mjs` **exits 0 even when it reports FAIL lines**, so the `contrast-nontext && check-tokens` chain in the Verify block does not gate on contrast. Read its output, do not trust its exit code.
 
 `scripts/contrast-nontext.mjs` reports **5 pre-existing FAILs** (progress track, slider rail, and three others) on `main` as well as here — byte-identical output before and after this task's changes. Not caused by this work and not in its scope.

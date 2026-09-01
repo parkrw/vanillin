@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client"
 import { Toaster, toast } from "../../../ui/toast/toast.jsx"
-import { SettingsPanel, StatusShowcase, SupportPanel } from "./index.js"
+import { OrganizationPanel, ProfilePanel, StatusShowcase, SupportPanel } from "./index.js"
 import "../../../styles/globals.css"
 import "../../../styles/typeset.css"
 import "../../../ui/toast/toast.css"
@@ -12,7 +12,8 @@ if (typeof window !== "undefined") window.__toast = toast
 createRoot(document.getElementById("root")).render(
   <>
     <SupportPanel />
-    <SettingsPanel />
+    <ProfilePanel />
+    <OrganizationPanel />
     <StatusShowcase />
     <Toaster />
   </>

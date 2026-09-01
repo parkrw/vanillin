@@ -56,20 +56,27 @@ function subscribe(fn) {
  * Renders a relative time string inside a <time> element.
  * `date` is a Date or epoch ms. When `live` is true the display updates
  * automatically via one shared interval (not a per-instance timer).
+ *
+ * Under SSR, pass `now` — one timestamp taken on the server and handed to
+ * every instance. Without it each render reads its own clock, so the server's
+ * "2 minutes ago" hydrates against the browser's "3 minutes ago". A `live`
+ * instance switches to the real clock once it starts ticking; `now` only fixes
+ * the render that has to match the server's.
  */
 export function RelativeTime({
   date,
   live = false,
+  now,
   className,
   ...rest
 }) {
   const locale = useLocale()
   const dateMs = typeof date === "number" ? date : date?.getTime()
+  const nowMs = now == null ? undefined : +now
   const isoStr = date != null ? new Date(dateMs).toISOString() : undefined
 
-  // Initial render uses date prop as "now" basis to avoid SSR/hydration mismatch
   const [result, setResult] = useState(() =>
-    date != null ? formatRelativeTime(dateMs, locale) : { text: "", unit: "second" }
+    date != null ? formatRelativeTime(dateMs, locale, nowMs) : { text: "", unit: "second" }
   )
 
   const localeRef = useRef(locale)
@@ -77,12 +84,12 @@ export function RelativeTime({
   const dateRef = useRef(dateMs)
   dateRef.current = dateMs
 
-  // Update when locale or date changes (non-live)
+  // Update when locale, date or the injected basis changes (non-live)
   useEffect(() => {
     if (date != null) {
-      setResult(formatRelativeTime(dateMs, locale))
+      setResult(formatRelativeTime(dateMs, locale, nowMs))
     }
-  }, [dateMs, locale]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [dateMs, locale, nowMs]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Live ticking
   useEffect(() => {
@@ -145,17 +152,22 @@ export function Bytes({
 
 /**
  * Display a duration in milliseconds as a human-readable string.
- * Uses Intl.DurationFormat where available, falls back to
- * Intl.NumberFormat + Intl.ListFormat composition.
+ *
+ * Composes Intl.NumberFormat + Intl.ListFormat by default, because
+ * `Intl.DurationFormat` is present on some runtimes and not others — a server
+ * that has it and a browser that does not render different words for the same
+ * value. Pass `engine="auto"` to use it where available, once you know the
+ * output is not being hydrated.
  */
 export function Duration({
   value,
   style = "narrow",
+  engine = "portable",
   className,
   ...rest
 }) {
   const locale = useLocale()
-  const text = fmtDuration(value, { locale, style })
+  const text = fmtDuration(value, { locale, style, engine })
   return (
     <span className={cn("format-duration", className)} {...rest}>
       {text}

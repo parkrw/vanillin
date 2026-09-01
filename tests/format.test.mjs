@@ -1,4 +1,4 @@
-export default async function run({ page, baseUrl, test, eq }) {
+export default async function run({ page, baseUrl, test, eq, repoRoot }) {
   await page.goto(`${baseUrl}/#format`)
   await page.locator('[data-pg="rt-5m"]').waitFor()
 
@@ -144,5 +144,96 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.locator('[data-pg="rt-5m"]').waitFor()
     const text = await page.locator('[data-pg="rt-live"]').textContent()
     eq(text.length > 0, true, "live instance works after remount")
+  })
+
+  // ---------------------------------------------------------------------------
+  // Runtime-dependent Intl APIs
+  // ---------------------------------------------------------------------------
+
+  const fsUrl = (rel) => `/@fs/${repoRoot.replace(/^\//, "")}${rel}`
+
+  await test("formatDuration composes the same string whatever the runtime has", async () => {
+    const probe = await page.evaluate(async (url) => {
+      const { formatDuration, hasDurationFormat } = await import(url)
+
+      // Built here from the two Intl constructors every supported runtime has,
+      // so the assertion is against an independent composition rather than
+      // against formatDuration's own output.
+      const nf = (unit, value) =>
+        new Intl.NumberFormat(undefined, {
+          style: "unit",
+          unit,
+          unitDisplay: "short",
+        }).format(value)
+      const portable = new Intl.ListFormat(undefined, {
+        type: "conjunction",
+        style: "narrow",
+      }).format([nf("minute", 1), nf("second", 30)])
+
+      return {
+        hasDurationFormat,
+        probeAgrees: hasDurationFormat === (typeof Intl.DurationFormat === "function"),
+        byDefault: formatDuration(90_000),
+        explicitPortable: formatDuration(90_000, { engine: "portable" }),
+        auto: formatDuration(90_000, { engine: "auto" }),
+        intlDirect: hasDurationFormat
+          ? new Intl.DurationFormat(undefined, { style: "narrow" }).format({
+              minutes: 1,
+              seconds: 30,
+            })
+          : null,
+        portable,
+      }
+    }, fsUrl("lib/format.js"))
+
+    eq(probe.probeAgrees, true, "precondition: hasDurationFormat reports this runtime honestly")
+    eq(probe.byDefault, probe.portable, "the default composes the portable path")
+    eq(probe.explicitPortable, probe.portable, "and naming it explicitly gives the same string")
+    if (probe.hasDurationFormat) {
+      // Counter-precondition: the opt-in still reaches Intl.DurationFormat, so
+      // the default above is a choice rather than the only path left.
+      eq(probe.auto, probe.intlDirect, 'engine "auto" uses Intl.DurationFormat where it exists')
+    } else {
+      eq(probe.auto, probe.portable, 'engine "auto" falls back where Intl.DurationFormat is absent')
+    }
+  })
+
+  await test("RelativeTime reads the injected now instead of the clock", async () => {
+    const probe = await page.evaluate(async (formatUrl) => {
+      const reactModule = await import("/@id/react")
+      const h = reactModule.createElement ?? reactModule.default.createElement
+      const domModule = await import("/@id/react-dom/client")
+      const createRoot = domModule.createRoot ?? domModule.default.createRoot
+      const { RelativeTime } = await import(formatUrl)
+
+      const settle = () => new Promise((resolve) => setTimeout(resolve, 60))
+      const render = async (props) => {
+        const host = document.createElement("div")
+        document.body.appendChild(host)
+        const root = createRoot(host, { identifierPrefix: "rt-now-" })
+        root.render(h(RelativeTime, props))
+        await settle()
+        const text = host.textContent
+        root.unmount()
+        host.remove()
+        return text
+      }
+
+      // Epoch as the date: whatever the wall clock says, an injected basis of
+      // 5 minutes later must read as 5 minutes, and the real clock cannot.
+      const injected = await render({ date: 0, now: 300_000 })
+      const fromClock = await render({ date: 0 })
+      const sameBasisTwice = await render({ date: 0, now: 300_000 })
+      await settle()
+      return { injected, fromClock, sameBasisTwice }
+    }, fsUrl("ui/format/format.jsx"))
+
+    eq(probe.injected, "5 minutes ago", "the injected basis decides the text")
+    eq(probe.sameBasisTwice, probe.injected, "the same basis renders the same text later")
+    eq(
+      probe.fromClock === probe.injected,
+      false,
+      "counter-precondition: the clock gives a different answer for this date"
+    )
   })
 }

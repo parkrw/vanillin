@@ -82,7 +82,6 @@ import {
   ItemActions,
   ItemGroup,
 } from "../../ui/item/item.jsx"
-import { Kbd, KbdGroup } from "../../ui/kbd/kbd.jsx"
 import { Label } from "../../ui/label/label.jsx"
 import { LiveValue } from "../../ui/live-value/live-value.jsx"
 import { Marker, MarkerIcon, MarkerContent } from "../../ui/marker/marker.jsx"
@@ -184,7 +183,7 @@ import {
 } from "./console-data.js"
 import { drift, history } from "./console-live.js"
 
-import { SettingsPanel, StatusShowcase, SupportPanel } from "./panels/index.js"
+import { OrganizationPanel, ProfilePanel, StatusShowcase, SupportPanel } from "./panels/index.js"
 import "../../ui/avatar/avatar.css"
 import "../../ui/attachment/attachment.css"
 import "../../ui/badge/badge.css"
@@ -427,16 +426,6 @@ const UserIcon = () =>
     </>
   )
 
-const UsersIcon = () =>
-  icon(
-    <>
-      <path d="M15 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
-      <circle cx="8.5" cy="7" r="3.5" />
-      <path d="M22 21v-2a4 4 0 00-3-3.87" />
-      <path d="M16 3.13a4 4 0 010 7.75" />
-    </>
-  )
-
 const CpuIcon = () =>
   icon(
     <>
@@ -556,6 +545,16 @@ const ArchiveIcon = () =>
     </>
   )
 
+const BookIcon = () =>
+  icon(
+    <>
+      <path d="M4 4.5A2.5 2.5 0 016.5 2H20v15H6.5A2.5 2.5 0 004 19.5z" />
+      <path d="M4 19.5A2.5 2.5 0 016.5 17H20v5H6.5A2.5 2.5 0 014 19.5z" />
+      <line x1="8" y1="7" x2="16" y2="7" />
+      <line x1="8" y1="11" x2="13.5" y2="11" />
+    </>
+  )
+
 const CheckIcon = () => icon(<polyline points="20 6 9 17 4 12" />, { strokeWidth: "2" })
 
 /* Every row in either rail carries an icon: categories in the primary rail,
@@ -571,20 +570,21 @@ const CATEGORY_ICONS = {
 
 const SERVICE_ICONS = {
   overview: GaugeIcon,
-  vdc: RacksIcon,
   resources: CpuIcon,
   networking: GlobeIcon,
   storage: DiskStackIcon,
+  quotas: SlidersIcon,
   order: CartIcon,
+  "data-centers": RacksIcon,
   metrics: BarChartIcon,
   events: ActivityIcon,
   "service-health": HeartPulseIcon,
   billing: CreditCardIcon,
-  contacts: UsersIcon,
   security: ShieldIcon,
   "your-data": DownloadIcon,
   settings: GearIcon,
   support: LifebuoyIcon,
+  documentation: BookIcon,
 }
 
 const serviceIcon = (svc) => SERVICE_ICONS[svc.id] ?? (svc.collapsible ? SiteIcon : LayersIcon)
@@ -606,6 +606,13 @@ function Tip({ label, side = "top", className, children }) {
 
 /* The console's own toggle only rocks its lamp; the site's navbar owns the scheme. */
 const THEME_HINT = "Change the theme in the vanillin navbar at the top of the page"
+/* The site owns the palette chord (site/app.jsx), so this search behaves like
+   the vanillin site's own: same chord, same palette. The label follows the
+   platform the same way site/app.jsx does — ⌘ on a Mac, Ctrl+ elsewhere. */
+const searchHint = () =>
+  `Search behaves as it does on the vanillin site — press ${
+    /mac/i.test(navigator.userAgent) ? "⌘" : "Ctrl+"
+  }K anywhere`
 
 const TONE_LABEL = {
   success: "Healthy",
@@ -730,6 +737,12 @@ function ContextPill({ label, value, options, onChange, menuLabel }) {
 }
 
 function ConsoleTopbar({ project, setProject, region, setRegion, orderCount, onOrder, onOpenPalette }) {
+  const hint = searchHint()
+  /* addToast never collapses ids — a repeated id would leave several toasts
+     sharing one, and dismiss filters on equality, so it would then clear them
+     all. Keep the last id and dismiss it instead, so repeated clicks show one
+     hint rather than a stack. */
+  const lastHint = useRef(null)
   // Decorative only: the lamp flips, the page theme never moves.
   const [moon, setMoon] = useState(false)
   return (
@@ -739,14 +752,25 @@ function ConsoleTopbar({ project, setProject, region, setRegion, orderCount, onO
         <span className="ck-brand-name">Acme Cloud</span>
         <span className="ck-brand-app">Console</span>
       </div>
-      <button type="button" className="ck-search" onClick={onOpenPalette}>
-        <SearchIcon />
-        <span>Search resources...</span>
-        <KbdGroup className="ck-search-kbd" aria-hidden="true">
-          <Kbd>&#8984;</Kbd>
-          <Kbd>K</Kbd>
-        </KbdGroup>
-      </button>
+      <Tip label={hint} side="bottom">
+        <button
+          type="button"
+          className="ck-search"
+          aria-describedby="ck-search-hint"
+          onClick={() => {
+            onOpenPalette()
+            if (lastHint.current) toast.dismiss(lastHint.current)
+            lastHint.current = toast(hint)
+          }}
+        >
+          <SearchIcon />
+          <span>Search resources...</span>
+        </button>
+      </Tip>
+      {/* Tooltip carries the hint for pointer users, but ui/tooltip puts
+          aria-describedby on its trigger span, which is not focusable — so a
+          keyboard user tabbing to the button would hear nothing without this. */}
+      <span id="ck-search-hint" className="ck-sr-only">{hint}</span>
       <div className="ck-topbar-right">
         <ContextPill label="Project" value={project} options={PROJECTS} onChange={setProject} menuLabel="Switch project" />
         <ContextPill label="Region" value={region} options={REGIONS} onChange={setRegion} />
@@ -807,7 +831,9 @@ function ConsoleTopbar({ project, setProject, region, setRegion, orderCount, onO
 
 function PriRail({ category, collapsed, onNavigate, onToggleCollapse }) {
   const isActive = (cat) => cat.id === category.id
-  const go = (cat) => onNavigate(cat.items[0].id)
+  // Land on the first plain service, never a site: arriving at a category
+  // should not force one of its folds open before the reader asks.
+  const go = (cat) => onNavigate((cat.items.find((s) => !s.collapsible) ?? cat.items[0]).id)
   const OverviewIcon = CATEGORY_ICONS.overview
 
   if (collapsed) {
@@ -2857,7 +2883,7 @@ function OrderView({ order, setOrder, onNavigate }) {
   return (
     <div className="ck-view ck-order">
       <div className="ck-order-head">
-        <Button variant="ghost" size="sm" className="ck-order-back" onClick={() => onNavigate("vdc", "Data Centers")}>
+        <Button variant="ghost" size="sm" className="ck-order-back" onClick={() => onNavigate("data-centers", "Data Centers")}>
           <ArrowLeftIcon />
           Data Centers
         </Button>
@@ -3037,8 +3063,10 @@ function PageContent({ svc, page, project, order, setOrder, onNavigate, onDetail
       return <CardPage title="Services" count={`${HEALTH.length} groups`}><HealthCard /></CardPage>
     case "Tickets":
       return <SupportPanel />
-    case "Settings":
-      return <SettingsPanel />
+    case "Profile":
+      return <ProfilePanel />
+    case "Organization":
+      return <OrganizationPanel />
     case "Access Keys":
       return <AccessKeysView />
     case "Templates & Images":
@@ -3373,7 +3401,12 @@ function ConsolePalette({ open, onOpenChange, onNavigate }) {
 
 /* ── Tab bar: the pages of the selected service ──────────────────────── */
 
+/* No bar when it would only echo the rail. A one-page service's lone tab
+   carries the rail row's own name; a site's tabs are the vDC links its open
+   fold is already showing. `TabBar` returning null keeps that rule in one
+   place rather than at every call site. */
 function TabBar({ svc, page, onNavigate }) {
+  if (svc.collapsible || svc.pages.length < 2) return null
   return (
     <div className="ck-tabbar">
       <Tabs value={page} onValueChange={(p) => onNavigate(svc.id, p)} className="ck-tabs">
@@ -3415,16 +3448,11 @@ export default function ConsoleShowcase() {
     setView({ svc: svcId, page: page ?? svc?.pages[0] ?? "Dashboard" })
   }, [])
 
-  useEffect(() => {
-    const onKey = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault()
-        setPaletteOpen((v) => !v)
-      }
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [])
+  /* No ⌘K handler here on purpose. site/app.jsx binds the chord on `document`
+     for the site palette, and the console mounts inside #home as well as on
+     #console, so a second binding opened both palettes stacked (#50). The
+     site palette owns the chord; the console's own palette opens from the
+     search button. */
 
   useEffect(() => {
     if (!dragging) return

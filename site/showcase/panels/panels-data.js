@@ -98,6 +98,16 @@ export const REGIONS = [
   { value: "chicago", label: "Chicago" },
 ]
 
+// Who the account notifies, and for what. Role-based names and RFC 5737
+// addresses, as everywhere else in this mock.
+export const CONTACTS = [
+  { id: "c1", name: "Account Owner", initials: "AO", email: "owner@acme.cloud", role: "Owner", notify: ["Billing", "Incidents"], status: "Verified" },
+  { id: "c2", name: "Operations Team", initials: "OP", email: "ops@acme.cloud", role: "Administrator", notify: ["Incidents", "Maintenance"], status: "Verified" },
+  { id: "c3", name: "Finance Contact", initials: "FC", email: "billing@acme.cloud", role: "Billing", notify: ["Billing"], status: "Verified" },
+  { id: "c4", name: "Security Reviewer", initials: "SR", email: "security@acme.cloud", role: "Security", notify: ["Incidents"], status: "Pending" },
+  { id: "c5", name: "Network Admin", initials: "NA", email: "netops@acme.cloud", role: "Technical", notify: ["Maintenance"], status: "Verified" },
+]
+
 /*
  * Status widgets. `duration` is the seconds one 0 to 100% sweep takes, and the
  * spread is the point of the showcase: the slow rings and the fast ones share

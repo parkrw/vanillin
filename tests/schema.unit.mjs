@@ -286,6 +286,29 @@ test("regex / email / url", () => {
   assert.equal(s.string().url().safeParse("not a url").success, false)
 })
 
+test("url() reports invalid rather than throwing where URL.canParse is missing", async () => {
+  // Safari <17 and Node <18.17 have no URL.canParse, and the old bare call made
+  // the validator itself throw — so a bad URL crashed the form instead of
+  // failing its check. Re-import with the method removed to take that path.
+  const original = Object.getOwnPropertyDescriptor(URL, "canParse")
+  assert.ok(original, "precondition: this runtime does have URL.canParse")
+  delete URL.canParse
+  try {
+    const legacy = await import("../lib/schema.js?no-can-parse")
+    assert.equal(typeof URL.canParse, "undefined", "precondition: the method is really gone")
+    assert.equal(legacy.s.string().url().safeParse("not a url").success, false)
+    assert.ok(legacy.s.string().url().safeParse("https://example.com/x").success)
+    // Relative and protocol-less strings are invalid to both paths.
+    assert.equal(legacy.s.string().url().safeParse("/just/a/path").success, false)
+  } finally {
+    Object.defineProperty(URL, "canParse", original)
+  }
+  // Counter-check: the same three answers with the method back in place.
+  assert.equal(s.string().url().safeParse("not a url").success, false)
+  assert.ok(s.string().url().safeParse("https://example.com/x").success)
+  assert.equal(s.string().url().safeParse("/just/a/path").success, false)
+})
+
 // ---------------------------------------------------------------------------
 // refinements — number, date, array
 // ---------------------------------------------------------------------------
