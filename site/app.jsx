@@ -321,7 +321,7 @@ function Sidebar({ route }) {
 }
 
 function PageBreadcrumb({ route }) {
-  if (route === "home" || route === "console") return null
+  if (route === "home" || route === "console" || route === "order") return null
 
   const inDocs = route in docs
   const category = !inDocs ? categoryForSlug(route) : null
@@ -389,7 +389,8 @@ export function App() {
 
   const isHome = route === "home"
   const isConsole = route === "console"
-  const fullBleed = isHome || isConsole
+  const isOrder = route === "order"
+  const fullBleed = isHome || isConsole || isOrder
 
   return (
     <div className="pg">
@@ -398,7 +399,10 @@ export function App() {
         {!fullBleed && <Sidebar route={route} />}
         <main
           className={
-            isConsole ? "pg-main pg-main--console" : isHome ? "pg-main pg-main--home" : "pg-main"
+            isConsole ? "pg-main pg-main--console"
+            : isOrder ? "pg-main pg-main--order"
+            : isHome ? "pg-main pg-main--home"
+            : "pg-main"
           }
         >
           <PageBreadcrumb route={route} />
@@ -409,6 +413,10 @@ export function App() {
           ) : isConsole ? (
             <Suspense fallback={null}>
               <ConsolePage />
+            </Suspense>
+          ) : isOrder ? (
+            <Suspense fallback={null}>
+              <OrderPage />
             </Suspense>
           ) : entry?.page ? (
             <Suspense fallback={null}>
@@ -426,4 +434,5 @@ export function App() {
 }
 
 const HomePage = lazy(() => import("./pages/home.jsx"))
-const ConsolePage = lazy(() => import("./showcase/console.jsx"))
+const ConsolePage = lazy(() => import("./showcase/console/index.jsx"))
+const OrderPage = lazy(() => import("./showcase/order/index.jsx"))

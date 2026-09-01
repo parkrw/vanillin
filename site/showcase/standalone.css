@@ -1,0 +1,14 @@
+/* The standalone entries (site/console.html, site/order.html) hand the whole
+   viewport to one frame. Nothing sits above it, so the embed's card look —
+   fixed height, border, radius, shadow — comes off. */
+
+body {
+  margin: 0;
+}
+
+.ck-console {
+  block-size: 100dvh;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}

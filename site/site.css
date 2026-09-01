@@ -74,6 +74,7 @@
    `:has()` takes its argument's specificity, so this outranks the 72rem rule
    below and home stays single-column at every width. */
 .pg-body:has(.pg-main--home),
+.pg-body:has(.pg-main--order),
 .pg-body:has(.pg-main--console) {
   grid-template-columns: 1fr;
 }
@@ -542,6 +543,19 @@
 }
 
 .pg-main--console .ck-console {
+  block-size: calc(100vh - var(--pg-topnav-h));
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* #order route: the wizard is a page of its own, framed like #console. */
+.pg-main--order {
+  max-inline-size: none;
+  padding: 0;
+}
+
+.pg-main--order .ck-console {
   block-size: calc(100vh - var(--pg-topnav-h));
   border: 0;
   border-radius: 0;

@@ -73,7 +73,6 @@ export const NAV_GROUPS = [
       { id: "networking", name: "Networking", pages: ["Networks", "Public IPs"] },
       { id: "storage", name: "Storage", pages: ["Volumes", "Snapshots"] },
       { id: "quotas", name: "Quotas", pages: ["Quotas"] },
-      { id: "order", name: "Order", pages: [ORDER_PAGE] },
     ],
   },
   {

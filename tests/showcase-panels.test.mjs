@@ -2,7 +2,7 @@
  * The showcase panels have no docs-site route: they are built to mount inside
  * the console mock, which task 88 owns. They render from
  * site/showcase/panels/fixture.html, a page vite's dev server serves and the
- * production build ignores (only site/index.html is a build input).
+ * production build ignores (it takes only the entries vite.config.js names).
  */
 export default async function run({ page, baseUrl, test, eq }) {
   const FIXTURE = `${baseUrl}/showcase/panels/fixture.html`

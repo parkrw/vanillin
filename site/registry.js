@@ -47,7 +47,12 @@ export const docsGroups = [
       console: {
         title: "Console demo",
         desc: "The Acme Cloud showcase full screen: a working console built from kit components.",
-        page: lazy(() => import("./showcase/console.jsx")),
+        page: lazy(() => import("./showcase/console/index.jsx")),
+      },
+      order: {
+        title: "Order demo",
+        desc: "The order wizard on its own page: seven steps, one running total.",
+        page: lazy(() => import("./showcase/order/index.jsx")),
       },
     },
   },

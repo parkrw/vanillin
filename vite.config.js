@@ -1,6 +1,7 @@
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import { fileURLToPath } from "node:url"
+import { resolve } from "node:path"
 const repoRoot = fileURLToPath(new URL(".", import.meta.url))
 const DEFAULTS_CONFIG = "van.defaults.json"
 
@@ -43,6 +44,17 @@ function vanillinDefaults() {
 export default defineConfig(({ command }) => ({
   base: command === "build" && process.env.GITHUB_ACTIONS ? "/vanillin/" : "/",
   root: "site",
+  /* Three HTML entries, not one: the console and the order wizard also ship as
+     standalone pages, so each needs its own document in the build. */
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(repoRoot, "site/index.html"),
+        console: resolve(repoRoot, "site/console.html"),
+        order: resolve(repoRoot, "site/order.html"),
+      },
+    },
+  },
   plugins: [vanillinDefaults(), react()],
   resolve: {
     alias: {
