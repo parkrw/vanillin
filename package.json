@@ -5,6 +5,17 @@
   "license": "MIT",
   "type": "module",
   "bin": { "van": "bin/van.mjs" },
+  "files": [
+    "bin/van.mjs",
+    "lib/",
+    "registry.json",
+    "scripts/build-registry.mjs",
+    "scripts/build-theme.mjs",
+    "scripts/config-schema.mjs",
+    "scripts/manifest.mjs",
+    "styles/",
+    "ui/"
+  ],
   "description": "Zero-dependency React components. Copy-paste JSX + CSS, that's it.",
   "scripts": {
     "dev": "vite",

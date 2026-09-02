@@ -15,6 +15,8 @@ import {
   readManifest,
   hashFile,
   deriveRequires,
+  listLibFiles,
+  STYLESHEETS,
 } from "../scripts/manifest.mjs"
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))
@@ -22,6 +24,7 @@ const uiDir = join(repoRoot, "ui")
 const testsDir = join(repoRoot, "tests")
 const sitePagesDir = join(repoRoot, "site", "pages")
 const registryPath = join(repoRoot, "site", "registry.js")
+const kitRegistryPath = join(repoRoot, "registry.json")
 const pkgPath = join(repoRoot, "package.json")
 
 let passed = 0
@@ -624,6 +627,85 @@ test("manifest: requires matches deriveRequires()", () => {
     }
   }
   assert.equal(errors.length, 0, "manifest (requires):\n  " + errors.join("\n  "))
+})
+
+// ── Rule 6b: Substrate sidecars (lib/, styles/) ─────────────────────
+
+// lib/ and styles/ are the substrate a consumer receives alongside components.
+// Without a recorded hash the CLI cannot tell a consumer's edit from an
+// upstream change, so these rules keep both sidecars honest.
+
+const SUBSTRATE = [
+  ["lib", () => listLibFiles(join(repoRoot, "lib"))],
+  ["styles", () => STYLESHEETS],
+]
+
+test("substrate: lib/ and styles/ each have .van.json", () => {
+  const errors = []
+  for (const [name] of SUBSTRATE) {
+    if (!readManifest(join(repoRoot, name))) {
+      errors.push(`${name}/ — missing .van.json. Run: npm run contracts`)
+    }
+  }
+  assert.equal(errors.length, 0, "substrate (missing):\n  " + errors.join("\n  "))
+})
+
+test("substrate: recorded hashes match the files on disk", () => {
+  const errors = []
+  for (const [name, expected] of SUBSTRATE) {
+    const manifest = readManifest(join(repoRoot, name))
+    if (!manifest) continue
+    for (const file of expected()) {
+      const recorded = manifest.files?.[file]
+      if (!recorded) {
+        errors.push(`${name}/.van.json — no hash recorded for "${file}". Run: npm run contracts`)
+        continue
+      }
+      const actual = hashFile(join(repoRoot, name, file))
+      if (actual !== recorded) {
+        errors.push(
+          `${name}/.van.json — hash mismatch for "${file}" (edited since the last write). ` +
+            `Run: npm run contracts`,
+        )
+      }
+    }
+    for (const file of Object.keys(manifest.files || {})) {
+      if (!expected().includes(file)) {
+        errors.push(`${name}/.van.json — records "${file}", which the kit does not ship. Run: npm run contracts`)
+      }
+    }
+  }
+  assert.equal(errors.length, 0, "substrate (hashes):\n  " + errors.join("\n  "))
+})
+
+test("substrate: lib/ coverage equals the registry lib union", () => {
+  // A lib file no component references is an orphan a consumer can never
+  // receive; a referenced file missing from lib/ breaks `van add` outright.
+  const union = Object.keys(JSON.parse(readFileSync(kitRegistryPath, "utf8")).lib).sort()
+  const onDisk = listLibFiles(join(repoRoot, "lib"))
+  const errors = []
+  for (const file of onDisk) {
+    if (!union.includes(file)) errors.push(`lib/${file} — on disk but no component references it. Delete it, or wire it up`)
+  }
+  for (const file of union) {
+    if (!onDisk.includes(file)) errors.push(`lib/${file} — registry references it but it is not on disk`)
+  }
+  assert.equal(errors.length, 0, "substrate (lib union):\n  " + errors.join("\n  "))
+})
+
+test("substrate: every file in STYLESHEETS exists and van.css is excluded", () => {
+  // styles/van.css is generated per consumer by `van build`. Tracking it would
+  // make the CLI overwrite the consumer's own theme output.
+  const errors = []
+  for (const file of STYLESHEETS) {
+    if (!existsSync(join(repoRoot, "styles", file))) {
+      errors.push(`styles/${file} — listed in STYLESHEETS but not on disk`)
+    }
+  }
+  if (STYLESHEETS.includes("van.css")) {
+    errors.push("STYLESHEETS lists van.css — that file is generated per consumer and must not be shipped")
+  }
+  assert.equal(errors.length, 0, "substrate (stylesheets):\n  " + errors.join("\n  "))
 })
 
 test("manifest: kitVersion matches package.json version", () => {

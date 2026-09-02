@@ -1,0 +1,10 @@
+{
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "files": {
+    "defaults.css": "sha256-bbJLZoD5R9CWBUkduNFXo/Aek7Ox53HLq3yt918QqDY=",
+    "forced-colors.css": "sha256-IDZmqjLINNashxDCaCCE474v2aWIYwya9Cv3hdxy8ns=",
+    "globals.css": "sha256-Dt41l3ooDt8aMzvih6udfzOXf5HkUU77eHyBWYNhN5g=",
+    "typeset.css": "sha256-UbcNcrW8kTP0zxKpVWxauHIbcd42NgOLGhVUJNj6D9o="
+  }
+}

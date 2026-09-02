@@ -1,4 +1,5 @@
-// Manifest reader/writer for ui/<slug>/.van.json sidecars.
+// Manifest reader/writer for .van.json sidecars: one per ui/<slug>, plus one
+// each for the lib/ and styles/ substrate directories.
 //
 // CLI:
 //   node scripts/manifest.mjs          — dry run (list what would change)
@@ -9,8 +10,20 @@ import { readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { basename, join, resolve, dirname } from "node:path"
 import { fileURLToPath } from "node:url"
 
-// Canonical key order for deterministic output.
+// Canonical key order for deterministic output. A substrate sidecar carries
+// only kitVersion/source/files, and writeManifest skips absent keys, so both
+// shapes order deterministically from this one list.
 const CANONICAL_KEYS = ["name", "kitVersion", "source", "requires", "files"]
+
+/**
+ * Stylesheets the kit ships to a consumer, in the order globals.css expects.
+ *
+ * Explicit rather than a directory walk: styles/van.css is generated per
+ * consumer by `van build`, so it is not substrate and must never be tracked
+ * or overwritten. typeset.css is standalone — globals.css does not @import it
+ * — so the import graph cannot derive this list either.
+ */
+export const STYLESHEETS = ["globals.css", "defaults.css", "forced-colors.css", "typeset.css"]
 
 /**
  * Read and parse the .van.json sidecar, or null if absent.
@@ -185,6 +198,40 @@ export function refreshManifest(componentDir, { kitVersion, source }) {
   return merged
 }
 
+/**
+ * List the kit's lib/ files, sorted. Flat layout, so no recursion.
+ */
+export function listLibFiles(libDir) {
+  return readdirSync(libDir, { withFileTypes: true })
+    .filter((e) => e.isFile() && e.name !== ".van.json")
+    .map((e) => e.name)
+    .sort()
+}
+
+/**
+ * Generate a manifest for a substrate directory — lib/ or styles/.
+ *
+ * No `name` and no `requires`: neither directory is a component, and neither
+ * has sibling edges to derive. `files` comes from an explicit list rather than
+ * a tree walk, because the kit's styles/ holds more than it ships.
+ */
+export function generateDirManifest(dir, files, { kitVersion, source }) {
+  const out = {}
+  for (const file of [...files].sort()) out[file] = hashFile(join(dir, file))
+  return { kitVersion, source, files: out }
+}
+
+/**
+ * Refresh a substrate sidecar, preserving unknown fields the way
+ * refreshManifest does for components.
+ */
+export function refreshDirManifest(dir, files, { kitVersion, source }) {
+  const existing = readManifest(dir) || {}
+  const merged = { ...existing, ...generateDirManifest(dir, files, { kitVersion, source }) }
+  writeManifest(dir, merged)
+  return merged
+}
+
 // ── CLI ─────────────────────────────────────────────────────────────
 
 const __filename = fileURLToPath(import.meta.url)
@@ -239,6 +286,40 @@ if (isCLI()) {
         console.log(`${slug}: updated (${changes.join(", ")})`)
       } else {
         console.log(`${slug}: would update (${changes.join(", ")})`)
+      }
+    }
+  }
+
+  // Substrate sidecars. Reported like the component ones so a dry run shows
+  // every artifact `--write` would touch.
+  for (const [label, dir, files] of [
+    ["lib", join(repoRoot, "lib"), listLibFiles(join(repoRoot, "lib"))],
+    ["styles", join(repoRoot, "styles"), STYLESHEETS],
+  ]) {
+    const existing = readManifest(dir)
+    const fresh = generateDirManifest(dir, files, { kitVersion, source })
+
+    if (!existing) {
+      anyChange = true
+      if (write) {
+        refreshDirManifest(dir, files, { kitVersion, source })
+        console.log(`${label}/: created`)
+      } else {
+        console.log(`${label}/: would create`)
+      }
+      continue
+    }
+
+    const changes = CANONICAL_KEYS.filter(
+      (key) => key in fresh && JSON.stringify(existing[key]) !== JSON.stringify(fresh[key]),
+    )
+    if (changes.length) {
+      anyChange = true
+      if (write) {
+        refreshDirManifest(dir, files, { kitVersion, source })
+        console.log(`${label}/: updated (${changes.join(", ")})`)
+      } else {
+        console.log(`${label}/: would update (${changes.join(", ")})`)
       }
     }
   }

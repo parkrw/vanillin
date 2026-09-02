@@ -59,13 +59,22 @@ export default function CliPage() {
       </p>
 
       <CodeBlock language="bash" code={`van add button dialog card
-van add --yes          # add all uninstalled components
+van add --all          # every component you don't have yet
 van add --dry-run      # print what would be written, write nothing`} />
 
       <p>
         Run bare <code>van add</code> in a terminal for an interactive
         picker: arrow keys to move, space to toggle, <code>a</code>{" "}
         to select all, enter to confirm, <code>q</code> to cancel.
+      </p>
+
+      <p>
+        <code>--all</code> makes the same choice without the picker, so it
+        also works in a script or a CI job with no terminal to draw one. It
+        takes no slugs, and covers only what you are missing unless you add{" "}
+        <code>--overwrite</code>, which brings installed components down
+        again as well. <code>--yes</code> is the older spelling and behaves
+        identically.
       </p>
 
       <p>
@@ -139,6 +148,7 @@ van update --overwrite  # replace even your edited files`} />
 
       <ul>
         <li><code>--cwd &lt;dir&gt;</code>: run against a different directory</li>
+        <li><code>--all</code>: every component (add); include unchanged files (diff)</li>
         <li><code>--dry-run</code>: print what would be written, write nothing (add, update)</li>
         <li><code>--overwrite</code>: replace files you have edited (add, update)</li>
         <li><code>--yes</code>: assume yes for prompts</li>
