@@ -14,10 +14,11 @@ van add button dialog
 
 `init` reads your `package.json` and any `components.json` to work out where components belong (`src/components/ui` in a Next or aliased project, `./components/ui` otherwise), writes `van.config.json`, and copies the stylesheets. `add` brings each component's dependencies with it — other components it imports, and the `lib/` primitives it needs. In a Next App Router project the copied components get a `"use client"` directive; elsewhere they don't.
 
-Then import the two stylesheets once, in this order, plus the components you use:
+Then import the stylesheets once, in this order, plus the components you use:
 
 ```jsx
 import "./styles/globals.css"   // every design token
+import "./styles/typeset.css"   // the .typeset prose classes
 import "./styles/van.css"       // your overrides, generated from van.config.json
 
 import { Button } from "./components/ui/button/button.jsx"
@@ -27,6 +28,8 @@ import "./components/ui/button/button.css"
 **React 19 or newer is required**, and `package.json` declares it as an optional peer dependency. A React 18 project therefore fails the install with `ERESOLVE` instead of discovering the mismatch at runtime, while a project with no React yet installs the CLI alone — the peer is optional precisely so that `van` never drags React into your tree. Four components use React 19 APIs that have no React 18 equivalent: `ui/select`, `ui/combobox` and `ui/resizable` take `ref` as a plain prop (on 18 the ref silently never attaches), and `ui/form` imports `useActionState` and `useFormStatus`. Everything in `lib/` is React-18-clean, so the coupling is those four files. The CLI itself is Node-stdlib only and needs Node 18.17 or newer.
 
 There is nothing to install at runtime — your bundler (Vite, Next, …) compiles the JSX. Copying the folders by hand works exactly as well: `styles/globals.css`, then `lib/`, then the `ui/<component>/` directories you want, keeping `lib/` and `ui/` as siblings.
+
+`van build` writes any `theme.typeset.presets` you configure into `styles/van.css` as `.typeset-<name>` classes. Those classes set the three rhythm variables and nothing else, so they do nothing until `styles/typeset.css` is imported — which is why `init` copies it.
 
 The other commands:
 
@@ -121,6 +124,7 @@ npm test      # smoke tests (needs Google Chrome installed)
 | `ui/<slug>/` | One component: `<slug>.jsx` + `<slug>.css` |
 | `lib/` | Shared primitives (`cn`, `useControllableState`, `usePresence`, focus/positioning helpers) |
 | `styles/globals.css` | All design tokens, light + dark |
+| `styles/typeset.css` | The `.typeset` prose system — rhythm and element styling for markdown-shaped content |
 | `site/` | Docs site (Vite) — a demo page per component |
 | `tests/` | Playwright smoke tests driving the docs site |
 

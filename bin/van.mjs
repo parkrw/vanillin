@@ -22,7 +22,14 @@ import { tmpdir } from "node:os"
 import { resolve, dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { generate } from "../scripts/build-theme.mjs"
-import { readManifest, writeManifest, hashFile, hashBytes } from "../scripts/manifest.mjs"
+import {
+  readManifest,
+  writeManifest,
+  hashFile,
+  hashBytes,
+  generateDirManifest,
+  STYLESHEETS,
+} from "../scripts/manifest.mjs"
 import { PATH_DEFAULTS, pathError } from "../scripts/config-schema.mjs"
 import { REGISTRY_FILE } from "../scripts/build-registry.mjs"
 
@@ -147,8 +154,10 @@ export function installedSlugs(project) {
 
 // ── layout detection ────────────────────────────────────────────────
 
-/** Stylesheets `init` copies: globals.css and the two files it @imports. */
-export const STYLESHEETS = ["globals.css", "defaults.css", "forced-colors.css"]
+// Stylesheets `init` copies. Defined in scripts/manifest.mjs so the sidecar
+// writer and the CLI cannot disagree about what the kit ships; re-exported
+// here because this is the surface consumers and tests reach for.
+export { STYLESHEETS }
 
 /**
  * Read `compilerOptions.paths` from tsconfig/jsconfig and return a resolver for
@@ -287,7 +296,28 @@ const CLIENT_ONLY = /\buse[A-Z]\w*\s*\(|\bcreateContext\s*\(/
  * actually written, so a later add or diff still compares like with like.
  */
 export function kitFileContent(project, slug, rel) {
-  const bytes = readFileSync(join(kitRoot, "ui", slug, rel))
+  return injectClient(project, readFileSync(join(kitRoot, "ui", slug, rel)), rel)
+}
+
+/**
+ * Bytes to write for one kit lib/ file in this project.
+ *
+ * lib/ goes through the same transform as ui/: lib/direction.jsx calls
+ * createContext at module scope, so a Next root layout importing
+ * DirectionProvider fails at build without the directive. Most lib hooks
+ * inherit "use client" through the import graph, which is why this went
+ * unnoticed.
+ */
+export function kitLibContent(project, file) {
+  return injectClient(project, readFileSync(join(kitRoot, "lib", file)), file)
+}
+
+/**
+ * Add a "use client" directive when this project needs one and these bytes
+ * would break without it. Shared by every path that hands kit bytes to a
+ * consumer, so add, update and merge-base all see identical content.
+ */
+export function injectClient(project, bytes, rel) {
   if (!project.config?.rsc || !/\.(jsx|js|tsx|ts)$/.test(rel)) return bytes
   const text = bytes.toString("utf8")
   if (/^\s*["']use client["']/.test(text) || !CLIENT_ONLY.test(text)) return bytes
@@ -348,6 +378,27 @@ export function fileState(expected, targetPath, recordedHash) {
 }
 
 /**
+ * Record provenance for a substrate directory — lib/ or styles/.
+ *
+ * `vouched` holds only files whose bytes this process wrote, or that were
+ * already byte-identical to the kit's copy. A file that differs and was never
+ * recorded gets no entry: inventing a hash would fabricate provenance and turn
+ * the consumer's own edit into "upstream changed" on the next update. An
+ * existing entry survives even when the file now differs, because that stale
+ * hash is exactly what makes `diverged` detectable.
+ */
+export function recordSubstrate(dir, vouched, { kitVersion, source }) {
+  const existing = readManifest(dir) || {}
+  mkdirSync(dir, { recursive: true })
+  writeManifest(dir, {
+    ...existing,
+    kitVersion,
+    source,
+    files: { ...existing.files, ...vouched },
+  })
+}
+
+/**
  * Plan an `add`: every file that would be written, with its state.
  *
  * Atomic per component — if any of a component's files is `edited`, the whole
@@ -376,12 +427,11 @@ export function planAdd(project, registry, slugs) {
     })
   }
 
+  const libRecorded = readManifest(join(project.root, project.paths.lib))?.files || {}
   for (const file of lib) {
-    const contents = readFileSync(join(kitRoot, "lib", file))
+    const contents = kitLibContent(project, file)
     const to = join(project.root, project.paths.lib, file)
-    // No sidecar covers lib/ (it is substrate, versioned by kitVersion), so a
-    // difference cannot be attributed and is treated as an edit.
-    plan.lib.push({ file, contents, to, state: fileState(contents, to) })
+    plan.lib.push({ file, contents, to, state: fileState(contents, to, libRecorded[file]) })
   }
 
   return plan
@@ -400,11 +450,7 @@ export function getBaseContent(project, slug, rel, kitVersion) {
     stdio: ["pipe", "pipe", "pipe"],
   })
   if (r.status !== 0 || r.error) return null
-  const bytes = r.stdout
-  if (!project.config?.rsc || !/\.(jsx|js|tsx|ts)$/.test(rel)) return bytes
-  const text = bytes.toString("utf8")
-  if (/^\s*["']use client["']/.test(text) || !CLIENT_ONLY.test(text)) return bytes
-  return Buffer.from(`"use client"\n\n${text}`)
+  return injectClient(project, r.stdout, rel)
 }
 
 /**
@@ -486,15 +532,24 @@ function cmdInit(project) {
   say(`  ${green("+")} ${CONFIG_FILE}`)
 
   // Stylesheets only: a component's lib/ deps come with `add`, not up front.
+  const vouchedStyles = {}
   for (const name of STYLESHEETS) {
     const to = join(project.root, layout.styles, name)
+    const contents = readFileSync(join(kitRoot, "styles", name))
     if (existsSync(to) && !flags.overwrite) {
       say(`  ${dim("=")} ${layout.styles}/${name} ${dim("exists, left alone")}`)
+      // Only vouch for a left-alone file when it already matches the kit.
+      if (readFileSync(to).equals(contents)) vouchedStyles[name] = hashBytes(contents)
       continue
     }
-    writeFileAtomic(to, readFileSync(join(kitRoot, "styles", name)))
+    writeFileAtomic(to, contents)
+    vouchedStyles[name] = hashBytes(contents)
     say(`  ${green("+")} ${layout.styles}/${name}`)
   }
+  recordSubstrate(join(project.root, layout.styles), vouchedStyles, {
+    kitVersion: registry.kitVersion,
+    source: registry.source,
+  })
 
   // First build, from the config we just wrote.
   const css = generate(config, {
@@ -508,8 +563,11 @@ function cmdInit(project) {
 
   say("")
   say(`${bold("Next")}`)
+  // typeset.css sits between the two: it reads the rhythm tokens globals.css
+  // defines, and van.css stays last so it remains the override layer.
   say(`  1. import the stylesheets, in this order:`)
   say(`       import "./${layout.styles}/globals.css"`)
+  say(`       import "./${layout.styles}/typeset.css"   // .typeset prose classes`)
   say(`       import "./${layout.css}"`)
   say(`  2. van add button dialog        ${dim(`(${Object.keys(registry.components).length} components available)`)}`)
   say(`  3. edit ${CONFIG_FILE} and re-run van build to retheme`)
@@ -728,10 +786,22 @@ function cmdAdd(project, slugs) {
       files: Object.fromEntries(comp.files.map((f) => [f.rel, hashBytes(f.contents)])),
     })
   }
+  const vouchedLib = {}
   for (const f of plan.lib) {
-    if (f.state === "identical" || blockedLib.includes(f)) continue
-    writeFileAtomic(f.to, f.contents)
-    written++
+    if (blockedLib.includes(f)) continue
+    if (f.state !== "identical") {
+      writeFileAtomic(f.to, f.contents)
+      written++
+    }
+    // Both branches vouch for the same bytes: one because we just wrote them,
+    // the other because the file on disk already equals them.
+    vouchedLib[f.file] = hashBytes(f.contents)
+  }
+  if (plan.lib.length) {
+    recordSubstrate(join(project.root, project.paths.lib), vouchedLib, {
+      kitVersion: registry.kitVersion,
+      source: registry.source,
+    })
   }
 
   say("")
@@ -783,6 +853,144 @@ export function diffComponent(project, registry, slug) {
   return { slug, kitVersion: manifest?.kitVersion || null, tracked: manifest !== null, files }
 }
 
+/**
+ * The lib/ files these components pull in, transitively.
+ *
+ * Starts from each named component's own `lib` list rather than its component
+ * closure: `van update badge` is about badge, not about the primitives its
+ * dependencies happen to need.
+ */
+export function libClosureFor(registry, slugs) {
+  const out = new Set()
+  const queue = slugs.flatMap((s) => registry.components[s].lib)
+  while (queue.length) {
+    const file = queue.shift()
+    if (out.has(file)) continue
+    out.add(file)
+    if (registry.lib[file]) queue.push(...registry.lib[file])
+  }
+  return out
+}
+
+/**
+ * Classify one substrate file, using the vocabulary diffComponent uses for a
+ * component's files. Three hashes decide it: what you have, what you were
+ * given, what the kit ships now.
+ */
+export function substrateState(kitBytes, localPath, recordedHash) {
+  if (!existsSync(localPath)) return recordedHash ? "deleted" : "absent"
+  const local = hashFile(localPath)
+  const kit = hashBytes(kitBytes)
+  if (local === kit) return "current"
+  if (!recordedHash) return "untracked"
+  if (local === recordedHash) return "upstream-changed"
+  if (kit === recordedHash) return "edited"
+  return "diverged"
+}
+
+/**
+ * The kit bytes a consumer should hold for each substrate file.
+ * lib/ goes through the RSC transform; CSS never does.
+ */
+export function substrateDirs(project) {
+  return [
+    { rel: project.paths.lib, contentsFor: (file) => kitLibContent(project, file) },
+    {
+      rel: project.paths.styles,
+      files: STYLESHEETS,
+      contentsFor: (file) => readFileSync(join(kitRoot, "styles", file)),
+    },
+  ]
+}
+
+/**
+ * Bring a substrate directory up to the current kit.
+ *
+ * Every outcome lands in one of the two counters. The predecessor printed a dim
+ * "differs, use --overwrite" line for any difference and counted it as neither,
+ * so `van update` could leave a stale primitive behind a freshly rewritten
+ * component and still exit 0 reporting everything up to date.
+ */
+function updateSubstrate(project, registry, dirRel, files, contentsFor) {
+  const dir = join(project.root, dirRel)
+  const recorded = readManifest(dir)?.files || {}
+  const vouched = {}
+  let updated = 0
+  let conflicted = 0
+  let headed = false
+
+  const head = () => {
+    if (!headed) say(`${bold(dirRel)}`)
+    headed = true
+  }
+
+  for (const file of [...files].sort()) {
+    const contents = contentsFor(file)
+    const to = join(dir, file)
+    const path = `${dirRel}/${file}`
+    const state = substrateState(contents, to, recorded[file])
+
+    const take = () => {
+      if (!flags.dryRun) writeFileAtomic(to, contents)
+      vouched[file] = hashBytes(contents)
+      updated++
+      head()
+    }
+
+    switch (state) {
+      // Byte-identical to the kit, so its provenance is safe to record. This
+      // is what seeds a sidecar for a consumer installed before they existed.
+      case "current":
+        vouched[file] = hashBytes(contents)
+        break
+
+      case "absent":
+        take()
+        say(`  ${green("+")} ${path} ${dim("new")}`)
+        break
+
+      // An installed component imports this file, so a missing copy is a build
+      // break already; restoring it destroys nothing.
+      case "deleted":
+        take()
+        say(`  ${green("+")} ${path} ${dim("restored — an installed component imports it")}`)
+        break
+
+      case "upstream-changed":
+        take()
+        say(`  ${green("~")} ${path} ${dim("updated")}`)
+        break
+
+      case "edited":
+        head()
+        say(`  ${dim("=")} ${path} ${dim("edited locally, upstream unchanged")}`)
+        break
+
+      case "diverged":
+      case "untracked": {
+        if (flags.overwrite) {
+          take()
+          say(`  ${green("~")} ${path} ${dim("overwritten")}`)
+          break
+        }
+        const why =
+          state === "diverged"
+            ? "edited locally, and upstream changed"
+            : "differs, and no recorded hash says why"
+        head()
+        say(`  ${red("!")} ${path} ${dim(`${why} — use --overwrite`)}`)
+        conflicted++
+        break
+      }
+    }
+  }
+
+  if (!flags.dryRun && Object.keys(vouched).length) {
+    recordSubstrate(dir, vouched, { kitVersion: registry.kitVersion, source: registry.source })
+  }
+  return { updated, conflicted }
+}
+
 const DIFF_LABEL = {
   edited: () => red("edited locally"),
   "upstream-changed": () => "upstream changed — run `van update`",
@@ -791,6 +999,14 @@ const DIFF_LABEL = {
   deleted: () => "recorded but missing locally",
   absent: () => dim("not installed"),
   current: () => dim("up to date"),
+}
+
+// Substrate reads two states differently from a component. An absent lib file
+// is not "not installed" — an installed component imports it, so it is missing.
+const SUBSTRATE_LABEL = {
+  ...DIFF_LABEL,
+  absent: () => "missing — run `van update`",
+  untracked: () => "differs, and no recorded hash says why",
 }
 
 function cmdDiff(project, slugs) {
@@ -821,6 +1037,24 @@ function cmdDiff(project, slugs) {
     for (const f of flags.all ? result.files : interesting) {
       say(`  ${f.rel} — ${DIFF_LABEL[f.state]()}`)
     }
+  }
+
+  // Substrate drift, same vocabulary. Reported here because a stale lib/ file
+  // breaks a component that `van diff` otherwise calls a match.
+  const libClosure = libClosureFor(registry, targets)
+  for (const { rel, files, contentsFor } of substrateDirs(project)) {
+    const dir = join(project.root, rel)
+    const recorded = readManifest(dir)?.files || {}
+    const lines = []
+    for (const file of [...(files || libClosure)].sort()) {
+      const state = substrateState(contentsFor(file), join(dir, file), recorded[file])
+      if (state === "current") continue
+      lines.push(`  ${rel}/${file} — ${SUBSTRATE_LABEL[state]()}`)
+    }
+    differing += lines.length
+    if (!lines.length && !flags.all) continue
+    say(`${bold(rel)}`)
+    for (const line of lines) say(line)
   }
 
   if (!differing) {
@@ -944,32 +1178,13 @@ function cmdUpdate(project, slugs) {
     }
   }
 
-  const libClosure = new Set()
-  const libQueue = targets.flatMap((s) => registry.components[s].lib)
-  const libSeen = new Set()
-  while (libQueue.length) {
-    const file = libQueue.shift()
-    if (libSeen.has(file)) continue
-    libSeen.add(file)
-    libClosure.add(file)
-    if (registry.lib[file]) libQueue.push(...registry.lib[file])
-  }
-  for (const file of [...libClosure].sort()) {
-    const contents = readFileSync(join(kitRoot, "lib", file))
-    const to = join(project.root, project.paths.lib, file)
-    const state = fileState(contents, to)
-    if (state === "identical") continue
-    if (state === "missing") {
-      if (!flags.dryRun) writeFileAtomic(to, contents)
-      say(`  ${green("+")} ${project.paths.lib}/${file} ${dim("new")}`)
-      updated++
-    } else if (flags.overwrite) {
-      if (!flags.dryRun) writeFileAtomic(to, contents)
-      say(`  ${green("~")} ${project.paths.lib}/${file} ${dim("overwritten")}`)
-      updated++
-    } else {
-      say(`  ${dim("=")} ${project.paths.lib}/${file} ${dim("differs, use --overwrite")}`)
-    }
+  const libClosure = libClosureFor(registry, targets)
+  // lib/ and styles/ are substrate: not components, but shipped from the kit
+  // and hash-tracked the same way, so an update reaches them too.
+  for (const { rel, files, contentsFor } of substrateDirs(project)) {
+    const result = updateSubstrate(project, registry, rel, files || [...libClosure], contentsFor)
+    updated += result.updated
+    conflicted += result.conflicted
   }
 
   if (flags.dryRun) {

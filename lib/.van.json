@@ -1,0 +1,31 @@
+{
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "files": {
+    "anchor-position.js": "sha256-VUf0lIa2NT5TSQI3dsZgk5+knFGIrptjHO5UwewKam0=",
+    "cn.js": "sha256-WCvw2U5d1FAl/q+lcNMi5wDfqz/st+mRH5woRGTctZg=",
+    "command-score.js": "sha256-M5Al+UlNk4ScJ90KSTlurDY9TIZpt9BF3NST351mZ3w=",
+    "compose-refs.js": "sha256-UojAfXX0n6Np8L6uD6TYIqR+Tse6GshdXjI0gCnbk+I=",
+    "direction.jsx": "sha256-LRacfLEkBD26ecloFqix3B+9Lux29b/28DQ7Qq/gTns=",
+    "format.js": "sha256-YAuktnHOxm0rC/kNNUiJhfJdz6bBz1XtB1qAeD0tlAw=",
+    "parse-date.js": "sha256-TPP6eMP7xIvs2HOtRubnqF+MoyBpMxRvj4pWWGjrww8=",
+    "portal.jsx": "sha256-fvEJDcOXswCf6wQG4JVse17xW9AI/eHiH2HQ8GPQ5Cg=",
+    "schema.js": "sha256-wI7ORw0w3dSB1I4fs7GHyeh3pbikuj8nrQBwEfNjrU4=",
+    "scroll-lock.js": "sha256-5/mreSVUaecYa+7QenLNHQY0Mn7aEpLECAjp8tO7TRk=",
+    "use-anchor-position.js": "sha256-5KHjmOQDFzEVPdlVrTY5i34o8I25DZ4mv7S4ZkinY3A=",
+    "use-color-scheme.js": "sha256-7z7jpk9kfT+Tov6SPBeqCHhjKds54jdCTYNaGANlxnQ=",
+    "use-controllable-state.js": "sha256-uE8HkaC93PgXWk95+JR3tbVMIarPh20CMXBlRwtLLX4=",
+    "use-data-table.js": "sha256-ZNqSYPpVFtcJlJmrWPTLmn/u9xZzxfs99vEhJygK3rQ=",
+    "use-dismissable-layer.js": "sha256-Z/GiDxzeNmld+xCjC84xcSkUCiRls6+0Xy3vrrefDhc=",
+    "use-focus-trap.js": "sha256-F0ZNlUesL2a039nAzv1KYfty+dc6rOZ2/c7fgpw4BLI=",
+    "use-form.js": "sha256-n4qOqRrWPMzIvgAFafWQ5J8bosXi7624QQTfD59YbLg=",
+    "use-highlight.js": "sha256-3Amy5d/Yb8334V5LxKsPXfkrdRw9stXszMr6gsHS8Vs=",
+    "use-presence.js": "sha256-sA+/pT566jnBzFH0Vpeh9ualbwco7AfrqFElTBEIqfk=",
+    "use-return-focus.js": "sha256-9Q4YKStriduj4og/0ApVoeSSAM35NZj+0h0lXrOiZIc=",
+    "use-roving-focus.js": "sha256-Od64z/SxzztJ8JWbPa5+VGWSKLbxveTznV44pxPuc5E=",
+    "use-safe-triangle.js": "sha256-DFKNvRUfxFqCCC5sF/wG8PZsZoce5rD6oHnQYM+q2G4=",
+    "use-swipe.js": "sha256-rOCxhun1MwZyyazjABIWf8mmiZL3Ds68hCe61TRsu44=",
+    "use-ticker.js": "sha256-o9vTYksGokpLq60N8hbmBg8+KwckLT9w+BUijJTBpVU=",
+    "view-transition.js": "sha256-s72cCo4k2vuNYbcNT6z5SCa2fLnyvuwvavMW90nc9So="
+  }
+}

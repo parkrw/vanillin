@@ -13,7 +13,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { hashFile } from "../scripts/manifest.mjs"
+import { hashFile, hashBytes, readManifest, STYLESHEETS } from "../scripts/manifest.mjs"
 import { createPickerState, pickerHandleKey, pickerLines } from "../bin/van.mjs"
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))
@@ -47,11 +47,21 @@ function van(dir, ...args) {
 /** A project with a config written straight to disk, skipping init. */
 function project(dir, config = {}) {
   writeFileSync(join(dir, "van.config.json"), JSON.stringify(config, null, 2) + "\n")
-  for (const name of ["globals.css", "defaults.css", "forced-colors.css"]) {
+  // Every stylesheet init would have copied, so a fixture is a consumer that
+  // is actually up to date rather than one missing a file update must deliver.
+  for (const name of STYLESHEETS) {
     mkdirSync(join(dir, "styles"), { recursive: true })
     writeFileSync(join(dir, "styles", name), readFileSync(join(repoRoot, "styles", name)))
   }
   return dir
+}
+
+/** Rewrite one recorded hash in a consumer's substrate sidecar. */
+function recordHash(dir, sub, file, hash) {
+  const path = join(dir, sub, ".van.json")
+  const sidecar = JSON.parse(readFileSync(path, "utf8"))
+  sidecar.files[file] = hash
+  writeFileSync(path, JSON.stringify(sidecar, null, 2) + "\n")
 }
 
 // ── init ────────────────────────────────────────────────────────────
@@ -611,6 +621,160 @@ test("picker: --yes selects all not-installed", (dir) => {
   assert.equal(r.code, 0, r.all)
   assert.match(r.out, /button/, "should include button")
   assert.match(r.out, /nothing written/)
+})
+
+// ── substrate: lib/ and styles/ ─────────────────────────────────────
+
+test("add records lib provenance so a reinstall reads as unchanged", (dir) => {
+  project(dir)
+  assert.equal(van(dir, "add", "badge").code, 0)
+
+  const sidecar = readManifest(join(dir, "lib"))
+  assert.ok(sidecar, "no lib/.van.json written")
+  assert.equal(sidecar.files["cn.js"], hashFile(join(dir, "lib/cn.js")))
+  assert.match(van(dir, "add", "badge").out, /0 files written/, "re-add rewrote an unchanged primitive")
+})
+
+test("init records styles provenance for every stylesheet it copies", (dir) => {
+  assert.equal(van(dir, "init").code, 0)
+
+  const sidecar = readManifest(join(dir, "styles"))
+  assert.ok(sidecar, "no styles/.van.json written")
+  for (const name of STYLESHEETS) {
+    assert.equal(sidecar.files[name], hashFile(join(dir, "styles", name)), `${name} not recorded`)
+  }
+})
+
+test("update replaces an upstream-changed lib file and counts it", (dir) => {
+  project(dir)
+  van(dir, "add", "badge")
+
+  // Stand in for an older kit: the consumer still holds the bytes they were
+  // given, and the kit has moved on since.
+  const target = join(dir, "lib/cn.js")
+  const stale = "// older kit\nexport function cn() {}\n"
+  writeFileSync(target, stale)
+  recordHash(dir, "lib", "cn.js", hashBytes(Buffer.from(stale)))
+
+  const r = van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /lib\/cn\.js.*updated/)
+  assert.match(r.out, /1 file updated/)
+  assert.equal(
+    readFileSync(target, "utf8"),
+    readFileSync(join(repoRoot, "lib/cn.js"), "utf8"),
+    "update reported success without writing the file",
+  )
+})
+
+test("update leaves an edited lib file alone, and says why", (dir) => {
+  project(dir)
+  van(dir, "add", "badge")
+
+  // Recorded hash still equals the kit's, so upstream has nothing to deliver.
+  const target = join(dir, "lib/cn.js")
+  const mine = "// mine\nexport function cn() { return \"mine\" }\n"
+  writeFileSync(target, mine)
+
+  const r = van(dir, "update")
+  assert.equal(readFileSync(target, "utf8"), mine, "an edited lib file was overwritten")
+  assert.match(r.out, /edited locally, upstream unchanged/)
+  assert.equal(r.code, 0, "a local edit with no upstream change is not a conflict")
+})
+
+test("an unattributable lib difference is a conflict, not a silent skip", (dir) => {
+  project(dir)
+  van(dir, "add", "badge")
+
+  // No recorded hash: what every install made before lib/.van.json existed
+  // looks like. This is the case that used to print a dim line and exit 0.
+  writeFileSync(join(dir, "lib/cn.js"), "// drifted\n")
+  rmSync(join(dir, "lib/.van.json"))
+
+  const r = van(dir, "update")
+  assert.match(r.out, /lib\/cn\.js.*no recorded hash/)
+  assert.match(r.all, /1 conflict/)
+  assert.equal(r.code, 1, "an unresolved lib difference exited 0")
+})
+
+test("update --overwrite takes the kit copy of a drifted lib file", (dir) => {
+  project(dir)
+  van(dir, "add", "badge")
+  writeFileSync(join(dir, "lib/cn.js"), "// drifted\n")
+  rmSync(join(dir, "lib/.van.json"))
+
+  const r = van(dir, "update", "--overwrite")
+  assert.equal(r.code, 0, r.all)
+  assert.equal(
+    readFileSync(join(dir, "lib/cn.js"), "utf8"),
+    readFileSync(join(repoRoot, "lib/cn.js"), "utf8"),
+  )
+})
+
+test("update restores a lib file the consumer deleted", (dir) => {
+  project(dir)
+  van(dir, "add", "badge")
+  rmSync(join(dir, "lib/cn.js"))
+
+  const r = van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /restored/)
+  assert.ok(existsSync(join(dir, "lib/cn.js")), "a primitive an installed component imports stayed missing")
+})
+
+test("update refreshes a stale stylesheet so van build still passes", (dir) => {
+  assert.equal(van(dir, "init").code, 0)
+  assert.equal(van(dir, "add", "badge").code, 0)
+
+  const globals = join(dir, "styles/globals.css")
+  const stale = "/* older kit */\n:root { --background: white; }\n"
+  writeFileSync(globals, stale)
+  recordHash(dir, "styles", "globals.css", hashBytes(Buffer.from(stale)))
+
+  const r = van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /styles\/globals\.css.*updated/)
+  assert.equal(
+    readFileSync(globals, "utf8"),
+    readFileSync(join(repoRoot, "styles/globals.css"), "utf8"),
+    "styles/ was never refreshed",
+  )
+  assert.equal(van(dir, "build").code, 0, "a refreshed stylesheet broke van build")
+})
+
+test("diff reports lib drift instead of calling the component a match", (dir) => {
+  project(dir)
+  van(dir, "add", "badge")
+  writeFileSync(join(dir, "lib/cn.js"), "// drifted\n")
+  rmSync(join(dir, "lib/.van.json"))
+
+  const r = van(dir, "diff")
+  assert.equal(r.code, 1, "diff exited 0 with a drifted primitive on disk")
+  assert.match(r.out, /lib\/cn\.js/)
+  assert.doesNotMatch(r.out, /components match/)
+})
+
+test("lib files that need use client get it under rsc", (dir) => {
+  writeFileSync(join(dir, "package.json"), '{"dependencies":{"next":"15.0.0"}}\n')
+  mkdirSync(join(dir, "app"), { recursive: true })
+  assert.equal(van(dir, "init").code, 0)
+  assert.equal(van(dir, "add", "calendar").code, 0)
+
+  // A Next project puts primitives under components/lib, not lib/.
+  const libDir = join(dir, JSON.parse(readFileSync(join(dir, "van.config.json"), "utf8")).paths.lib)
+
+  // createContext at module scope, so a Next root layout importing
+  // DirectionProvider fails at build without the directive.
+  assert.match(
+    readFileSync(join(libDir, "direction.jsx"), "utf8"),
+    /^"use client"\n\n/,
+    "lib/direction.jsx shipped without its directive",
+  )
+  assert.doesNotMatch(readFileSync(join(libDir, "cn.js"), "utf8"), /use client/, "directive added to a plain helper")
+
+  // The sidecar records the injected bytes, so nothing reads as edited.
+  assert.match(van(dir, "add", "calendar").out, /0 files written/)
+  assert.equal(van(dir, "diff").code, 0, van(dir, "diff").all)
 })
 
 // ── summary ─────────────────────────────────────────────────────────
