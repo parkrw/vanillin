@@ -343,6 +343,7 @@ export const ORDER_RATES = {
   drStorageGb: 0.05,
   replicationLicence: 15,
   backupGb: 0.02,
+  windowsLicence: 20,
 }
 
 export const POOLS = [
@@ -442,14 +443,20 @@ export const VM_DEFAULTS = { publicIp: false, backup: true, bootTier: "t2", star
 
 // The form's starting point for each new vDC.
 export const ORDER_DEFAULTS = {
+  path: "custom",
+  workload: "general",
+  users: "everywhere",
   site: "dfw",
   billing: "monthly",
+  image: "Ubuntu 24.04 LTS",
   cpu: 20,
   ram: 64,
   headroom: false,
   ips: 2,
+  ipv6: true,
   uplink: "10",
   addons: [],
+  access: { method: "ssh", sshKey: "", password: "", script: "" },
   storage: { t1: 500, t2: 250, t3: 0, t4: 0 },
   protection: "none",
   drSite: "slc",
@@ -458,3 +465,88 @@ export const ORDER_DEFAULTS = {
   retention: "7",
   vmGroup: VM_GROUP_DEFAULTS,
 }
+
+// Quick Deploy fills the form from the workload and lands on the review;
+// Custom walks every step. The last choice is remembered per browser.
+export const ORDER_PATHS = [
+  { id: "quick", name: "Quick Deploy", description: "Pick a workload and a site; the workload fills in size, image and storage and you land on the review." },
+  { id: "custom", name: "Custom", description: "Walk every step: software, size, network, storage, protection and add-ons." },
+]
+
+// A workload names the plan, image, machine size and storage mix the form
+// starts from, and says why in one sentence. Everything stays editable.
+export const WORKLOADS = [
+  {
+    id: "general", name: "General VM", preset: "m", image: "Ubuntu 24.04 LTS", size: "standard-2", storage: { t1: 250, t2: 250, t3: 0, t4: 0 },
+    reason: "M fits a web tier, an API and a modest database with room to grow.",
+    description: "A few services on one or two machines; the default when nothing below fits better.",
+  },
+  {
+    id: "website", name: "Website", preset: "s", image: "Ubuntu 24.04 LTS", size: "standard-2", storage: { t1: 0, t2: 250, t3: 0, t4: 0 },
+    reason: "S covers a web server and a cache; a traffic spike lands on the uplink, not the pools.",
+    description: "Static sites, CMSes and storefronts that need a public address and a quick uplink.",
+  },
+  {
+    id: "development", name: "Development", preset: "s", image: "Debian 12", size: "standard-1", storage: { t1: 500, t2: 0, t3: 0, t4: 0 },
+    reason: "S is enough for build agents and previews that sleep at night.",
+    description: "Build farms, previews and staging that can be rebuilt from an image.",
+  },
+  {
+    id: "database", name: "Database", preset: "l", image: "Rocky Linux 9.3", size: "standard-8", storage: { t1: 0, t2: 0, t3: 500, t4: 250 },
+    reason: "L keeps the working set in RAM; Tier 3 and Tier 4 give the log and the tablespace their IOPS.",
+    description: "PostgreSQL, MySQL and queues that notice latency and fill RAM before CPU.",
+  },
+  {
+    id: "gpu", name: "GPU", preset: "xl", image: "Ubuntu 22.04 LTS", size: "gpu-8", storage: { t1: 0, t2: 500, t3: 500, t4: 0 },
+    reason: "XL feeds a GPU machine's appetite for RAM; models load from Tier 3.",
+    description: "Training and inference on the gpu-8 size, with fast scratch storage beside it.",
+  },
+  {
+    id: "windows", name: "Windows", preset: "m", image: "Windows Server 2022", size: "standard-4", storage: { t1: 0, t2: 500, t3: 0, t4: 0 },
+    reason: "M leaves headroom for the licensed cores; Tier 2 carries the boot and data volumes.",
+    description: "Windows Server workloads; the licence is priced per machine and shown on every step.",
+  },
+]
+
+// "Where are most of your users?" → one recommended site and the reason.
+export const USER_REGIONS = [
+  { id: "south", name: "Texas and the South", site: "dfw", rationale: "DFW sits in the middle of the region: single-digit milliseconds to Dallas, Houston and Atlanta." },
+  { id: "midwest", name: "Midwest and Northeast", site: "chi", rationale: "Chicago is on the Midwest carrier hotels, one hop from New York and Toronto." },
+  { id: "west", name: "Mountain West and Pacific", site: "slc", rationale: "SLC is the closest site to Denver, Phoenix and the Bay Area, and it is out of the hurricane belt." },
+  { id: "everywhere", name: "Everywhere, or not sure", site: "dfw", rationale: "DFW has the widest size catalogue and the shortest queue for new capacity; pick it unless latency or law says otherwise." },
+]
+
+// Per-site figures for the comparison table. Latency is the median round trip
+// in milliseconds from each user region; tax is the estimated sales tax rate.
+export const SITE_FACTS = {
+  dfw: { latency: { south: 8, midwest: 24, west: 32 }, queue: "same day", seismic: "low", tax: 0.0825, taxLabel: "TX 8.25%" },
+  chi: { latency: { south: 26, midwest: 9, west: 44 }, queue: "2 days", seismic: "low", tax: 0.1025, taxLabel: "IL 10.25%" },
+  slc: { latency: { south: 30, midwest: 38, west: 12 }, queue: "same day", seismic: "moderate", tax: 0.0725, taxLabel: "UT 7.25%" },
+}
+
+// What new machines boot from, in four tabs. `popular` and `recent` sort to
+// the top of their tab; `licence` names a per-machine licence line.
+export const SOFTWARE_TABS = [
+  { id: "os", name: "Operating systems" },
+  { id: "apps", name: "Applications" },
+  { id: "snapshots", name: "Snapshots" },
+  { id: "custom", name: "Custom images" },
+]
+
+export const SOFTWARE = [
+  { tab: "os", name: "Ubuntu 24.04 LTS", popular: true, recent: true, description: "The default; five years of security updates and the widest package catalogue." },
+  { tab: "os", name: "Ubuntu 22.04 LTS", popular: true, description: "The previous LTS, for software that has not moved yet." },
+  { tab: "os", name: "Rocky Linux 9.3", popular: true, description: "Enterprise Linux compatible with RHEL 9; the usual base for databases." },
+  { tab: "os", name: "Debian 12", description: "Lean and conservative; good for build agents and long-lived services." },
+  { tab: "os", name: "Fedora CoreOS 40", description: "Immutable host for containers; updates itself and reboots on a schedule." },
+  { tab: "apps", name: "Docker host (Ubuntu 24.04)", popular: true, recent: true, description: "Docker Engine and Compose preinstalled, with the daemon on the private network only." },
+  { tab: "apps", name: "PostgreSQL 16 (Rocky 9)", popular: true, description: "Tuned for the machine's RAM on first boot; data directory on the fastest attached tier." },
+  { tab: "apps", name: "WordPress (Debian 12)", description: "Nginx, PHP-FPM and MariaDB on one machine; finish setup in the browser." },
+  { tab: "apps", name: "GitLab CE (Ubuntu 22.04)", description: "Omnibus GitLab with the registry enabled; needs 8 GB of RAM to be comfortable." },
+  { tab: "custom", name: "Windows Server 2022", licence: "Windows Server", description: "Datacenter edition; the licence is billed per machine and itemised on the receipt." },
+]
+
+export const ACCESS_METHODS = [
+  { id: "ssh", name: "SSH key", description: "Paste a public key; it is installed for the image's default user on first boot." },
+  { id: "password", name: "Password", description: "Set a root password instead; twelve characters at least, and rotate it after first login." },
+]

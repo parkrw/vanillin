@@ -51,7 +51,7 @@ export const docsGroups = [
       },
       order: {
         title: "Order demo",
-        desc: "The order wizard on its own page: seven steps, one running total.",
+        desc: "The order wizard on its own page: five steps, a live total and the whole order as one table.",
         page: lazy(() => import("./showcase/order/index.jsx")),
       },
     },

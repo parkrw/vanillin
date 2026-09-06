@@ -88,6 +88,9 @@ export function ActionItems({ name, items }) {
     ) : (
       <DropdownMenuItem
         key={item.label}
+        className={item.className}
+        disabled={item.disabled}
+        aria-disabled={item.disabled || undefined}
         onSelect={item.onSelect ?? (() => fakeTask(item.label, name))}
       >
         {item.label}
