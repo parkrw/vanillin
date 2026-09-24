@@ -43,7 +43,8 @@ function useHashRoute() {
     window.addEventListener("hashchange", onChange)
     return () => window.removeEventListener("hashchange", onChange)
   }, [])
-  return hash || "home"
+  // `#order?o=…` carries a shared order; the route is the part before `?`.
+  return hash.split("?")[0] || "home"
 }
 
 function categoryForSlug(slug) {
