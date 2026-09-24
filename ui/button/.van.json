@@ -4,7 +4,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "requires": [],
   "files": {
-    "button.css": "sha256-CGJ/LaA3KZApwY9TRBAl6nxfi53puH1QKfBybjUYUKA=",
+    "button.css": "sha256-P81rP2yGBlc83qJ5Y/9gd8OPmEFLwCWsEQEngo/dmpM=",
     "button.jsx": "sha256-cCCzSvMPRG9vWhQmd5ZbS6vznwE7tpuyTQDlpeJu9L4="
   }
 }
