@@ -549,6 +549,48 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(measured.withoutToken, "cursive", "an undefined token inherits, not initial-value")
   })
 
+  await test("a var() fallback at the consumption site beats the cursive inherit (#56)", async () => {
+    /*
+     * `.typeset code` now reads `var(--typeset-font-mono, <mono stack>)`
+     * (styles/typeset.css:153). Same invalidation as the test above, but
+     * through the real consumption site rather than an inline style, so the
+     * repair is measured where it actually lives.
+     */
+    const measured = await page.evaluate(() => {
+      const root = document.documentElement
+      const box = document.createElement("div")
+      box.className = "typeset"
+      // Same distinctive control as the test above — never the mono stack
+      // and never the fallback, so an inherit and a fallback can't be confused.
+      box.style.fontFamily = "cursive"
+      const code = document.createElement("code")
+      box.appendChild(code)
+      document.body.appendChild(box)
+
+      const withToken = getComputedStyle(code).fontFamily
+      root.style.setProperty("--typeset-font-mono", "var(--vanillin-undefined-token)")
+      const invalidated = getComputedStyle(root).getPropertyValue("--typeset-font-mono").trim()
+      const withoutToken = getComputedStyle(code).fontFamily
+      root.style.removeProperty("--typeset-font-mono")
+      box.remove()
+      return { withToken, invalidated, withoutToken }
+    })
+
+    eq(
+      measured.withToken.startsWith("ui-monospace"),
+      true,
+      "the token resolves normally when defined"
+    )
+    // Counter-precondition: the token itself is actually invalid/empty here,
+    // not silently still valid — matches the gap the test above pins.
+    eq(measured.invalidated, "", "the token reads back empty once invalidated")
+    eq(
+      measured.withoutToken.startsWith("ui-monospace"),
+      true,
+      "the var() fallback wins — the mono stack, not the inherited cursive"
+    )
+  })
+
   /* ------------------------------------------------------------------ */
   /* 10. Dark mode is root-only — measured, not assumed                  */
   /* ------------------------------------------------------------------ */
@@ -608,4 +650,117 @@ export default async function run({ page, baseUrl, test, eq }) {
       "root .dark resolves the dark arm"
     )
   })
+
+  /* ------------------------------------------------------------------ */
+  /* 11. .btn--outline's dark lift is aimed at <html>, not any ancestor  */
+  /*     with a .dark class (#57)                                        */
+  /* ------------------------------------------------------------------ */
+  await page.goto(`${baseUrl}#button`)
+  await page.waitForSelector(".btn--outline")
+
+  await test("outline button in a scoped .dark div matches the light outline button", async () => {
+    await page.evaluate(() => document.documentElement.classList.remove("dark"))
+    await page.waitForTimeout(50)
+
+    /*
+     * `:where(html).dark` only matches when .dark sits on the <html> element
+     * itself, so a div carrying the class — the scoped pattern #57 outlaws —
+     * must render identically to the plain light button, not pick up the
+     * --input-background lift meant for root dark mode.
+     */
+    const rendered = await page.evaluate(() => {
+      const light = document.querySelector(".btn--outline")
+      const lightStyle = getComputedStyle(light)
+
+      const wrap = document.createElement("div")
+      wrap.className = "dark"
+      const scoped = document.createElement("button")
+      scoped.className = "btn btn--outline"
+      wrap.appendChild(scoped)
+      document.body.appendChild(wrap)
+      const scopedStyle = getComputedStyle(scoped)
+
+      const result = {
+        lightBg: lightStyle.backgroundColor,
+        lightBorder: lightStyle.borderColor,
+        scopedBg: scopedStyle.backgroundColor,
+        scopedBorder: scopedStyle.borderColor,
+      }
+      wrap.remove()
+      return result
+    })
+
+    eq(
+      await normaliseColor(rendered.scopedBg),
+      await normaliseColor(rendered.lightBg),
+      "scoped .dark background matches the light outline button — no dark lift"
+    )
+    eq(
+      await normaliseColor(rendered.scopedBorder),
+      await normaliseColor(rendered.lightBorder),
+      "scoped .dark border matches the light outline button"
+    )
+  })
+
+  await test("outline button on a dark <html> does get the dark lift (counter-precondition)", async () => {
+    // If root dark stopped changing the button, the test above would pass
+    // for the wrong reason — the rule not matching anywhere, not just off
+    // a scoped ancestor.
+    const rendered = await page.evaluate(() => {
+      const btn = document.querySelector(".btn--outline")
+      const lightBg = getComputedStyle(btn).backgroundColor
+      document.documentElement.classList.add("dark")
+      const darkBg = getComputedStyle(btn).backgroundColor
+      document.documentElement.classList.remove("dark")
+      return { lightBg, darkBg }
+    })
+
+    const normLight = await normaliseColor(rendered.lightBg)
+    const normDark = await normaliseColor(rendered.darkBg)
+    eq(
+      normLight === normDark,
+      false,
+      ".dark on <html> changes the outline button's background — the lift applies at the root"
+    )
+  })
+
+  await test("outline button hover still wins over the dark lift in root dark mode", async () => {
+    // .btn transitions background-color, so a colour read right after a
+    // hover is the transition's start value, not the target (docs/QUIRKS.md).
+    // Wait for the CSSTransition to finish before reading.
+    const settled = () =>
+      page.waitForFunction(
+        () => !document.getAnimations().some((a) => a instanceof CSSTransition)
+      )
+
+    await page.evaluate(() => document.documentElement.classList.add("dark"))
+    await settled()
+
+    const outline = page.locator(".btn--outline").first()
+    const lifted = await outline.evaluate((el) => getComputedStyle(el).backgroundColor)
+    await outline.hover()
+    await settled()
+    const hovered = await outline.evaluate((el) => getComputedStyle(el).backgroundColor)
+    await page.mouse.move(0, 0)
+
+    const accent = await page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue("--accent").trim()
+    )
+
+    eq(
+      await normaliseColor(hovered) === (await normaliseColor(lifted)),
+      false,
+      "hover changes the outline button's background in dark mode"
+    )
+    eq(
+      await normaliseColor(hovered),
+      await normaliseColor(accent),
+      "hover resolves to --accent, not the --input-background dark lift — (0,2,0) ties preserve source order"
+    )
+
+    await page.evaluate(() => document.documentElement.classList.remove("dark"))
+  })
+
+  // Restore the page other suites expect after this file's #button detour.
+  await page.goto(baseUrl)
 }

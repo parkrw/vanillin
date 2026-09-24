@@ -191,8 +191,9 @@
   color: var(--foreground);
 }
 
-/* match .btn--outline's dark lift so the two read identically side by side */
-.dark .input-group-btn--outline {
+/* match .btn--outline's dark lift so the two read identically side by side;
+   :where(html) keeps specificity at (0,2,0) — dark is root-only */
+:where(html).dark .input-group-btn--outline {
   background-color: var(--input-background);
 }
 
