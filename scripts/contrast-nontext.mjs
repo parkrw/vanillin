@@ -12,9 +12,11 @@
  * than by parsing numbers out of the string, and translucent values are
  * composited over the resolved backdrop before the ratio is taken.
  *
- *   node scripts/contrast-nontext.mjs
+ *   node scripts/contrast-nontext.mjs            # measurement only, exits 0
+ *   node scripts/contrast-nontext.mjs --strict   # exits 1 on any unexempted FAIL
  *
- * Measurement only — it fixes nothing.
+ * It fixes nothing either way. Without --strict, read the output, not the
+ * exit code; --strict is the CI gate.
  */
 import { spawn } from "node:child_process"
 import { fileURLToPath } from "node:url"
@@ -59,9 +61,9 @@ const probes = [
   // Graphical objects (1.4.11's second clause). No chart component exists —
   // chart was excluded from the kit at plan time.
   ["status-dot", '.status-dot[data-status="success"], .status-dot[data-status="warning"], .status-dot[data-status="error"], .status-dot[data-status="info"]', ["backgroundColor"], "status dot"],
-  ["progress", ".progress", ["backgroundColor"], "progress track"],
+  ["progress", ".progress", ["backgroundColor"], "progress track", { exempt: "inactive track; the indicator carries the state and passes (17.93:1 light / 15.72:1 dark), as D5 checkbox fill" }],
   ["progress", ".progress-indicator", ["backgroundColor"], "progress indicator"],
-  ["slider", ".slider-track", ["backgroundColor"], "slider rail"],
+  ["slider", ".slider-track", ["backgroundColor"], "slider rail", { exempt: "inactive rail; the range carries the state and passes (16.44:1 light / 12.01:1 dark), as D5 checkbox fill" }],
   ["slider", ".slider-range", ["backgroundColor"], "slider range"],
 ]
 
@@ -147,12 +149,18 @@ for (const mode of ["light", "dark"]) {
 await browser.close()
 vite.kill()
 
+const strict = process.argv.includes("--strict")
+const counts = { ok: 0, exmp: 0, FAIL: 0 }
 const seen = new Set()
 for (const r of out) {
   const key = `${r.mode}|${r.label}|${r.prop}|${r.value}`
   if (seen.has(key)) continue
   seen.add(key)
   const flag = r.ratio >= 3 ? "ok  " : r.exempt ? "exmp" : "FAIL"
+  counts[flag.trim()]++
   const note = r.exempt && r.ratio < 3 ? `  [exempt: ${r.exempt}]` : ""
   console.log(`${flag} ${r.mode.padEnd(5)} ${r.ratio.toFixed(2).padStart(5)}:1  ${r.label} ${r.prop} ${r.value} on ${r.against}${note}`)
 }
+console.log(`${counts.ok} ok, ${counts.exmp} exempt, ${counts.FAIL} FAIL`)
+
+if (strict && counts.FAIL > 0) process.exit(1)

@@ -25,6 +25,9 @@ jobs:
       - run: git diff --exit-code
       # Runner images ship Google Chrome; tests/run.mjs launches it via channel "chrome".
       - run: npm test
+      # Non-text contrast (WCAG 1.4.11), which axe cannot see. Its own vite
+      # listens on 5197, clear of the suite's 5199.
+      - run: npm run contrast -- --strict
 
   build:
     needs: test

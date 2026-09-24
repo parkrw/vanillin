@@ -264,6 +264,50 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     eq(violations.length, 0, `axe violations: ${JSON.stringify(violations)}`)
   })
 
+  // 1.4.11: raw --warning is 2.31:1 on white. Resolved through a probe
+  // element, as for the ring halo above, so the test tracks the real rule.
+  const resolvedColour = (locator, expr) =>
+    locator.first().evaluate((el, expr) => {
+      const probe = document.createElement("span")
+      probe.style.backgroundColor = expr
+      el.parentElement.appendChild(probe)
+      const resolved = getComputedStyle(probe).backgroundColor
+      probe.remove()
+      return resolved
+    }, expr)
+
+  const contrastVsBackdrop = (rgbCss, backdrop) =>
+    page.evaluate(
+      ({ rgbCss, backdrop }) => {
+        const canvas = document.createElement("canvas")
+        const ctx = canvas.getContext("2d")
+        ctx.fillStyle = rgbCss
+        ctx.fillRect(0, 0, 1, 1)
+        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data
+        const lum = ([lr, lg, lb]) => {
+          const [sr, sg, sb] = [lr, lg, lb].map((v) => {
+            const s = v / 255
+            return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+          })
+          return 0.2126 * sr + 0.7152 * sg + 0.0722 * sb
+        }
+        const [hi, lo] = [lum([r, g, b]), lum(backdrop)].sort((x, y) => y - x)
+        return (hi + 0.05) / (lo + 0.05)
+      },
+      { rgbCss, backdrop },
+    )
+
+  await test("status-dot: warning boundary is repaired to >= 3:1 against white in light mode", async () => {
+    const warningDot = page.locator('[data-pg="sd-statuses"] .status-dot[data-status="warning"]')
+    const bg = await warningDot.evaluate((el) => getComputedStyle(el).backgroundColor)
+    const mixed = await resolvedColour(warningDot, "color-mix(in oklab, var(--warning) 78%, var(--warning-foreground) 22%)")
+    const raw = await resolvedColour(warningDot, "var(--warning)")
+    eq(bg, mixed, `warning dot renders the light-mode mix (${bg})`)
+    eq(bg !== raw, true, "precondition: the mix actually differs from the raw token")
+    const ratio = await contrastVsBackdrop(bg, [255, 255, 255])
+    eq(ratio >= 3, true, `warning dot vs white is ${ratio.toFixed(2)}:1`)
+  })
+
   // Dark mode: reload for fresh axe state
   await ensureTheme(true)
   await page.goto(`${baseUrl}/#status-dot`)
@@ -282,6 +326,17 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
   await test("status-dot: axe contrast check on ring variants (dark mode)", async () => {
     const violations = await runAxe('[data-pg="sd-ring"]')
     eq(violations.length, 0, `axe violations: ${JSON.stringify(violations)}`)
+  })
+
+  // Counter-case: the light-only mix must not reach dark, which already
+  // clears 3:1 on the raw token.
+  await test("status-dot: warning boundary stays the raw --warning token in dark mode", async () => {
+    const warningDot = page.locator('[data-pg="sd-statuses"] .status-dot[data-status="warning"]')
+    const bg = await warningDot.evaluate((el) => getComputedStyle(el).backgroundColor)
+    const raw = await resolvedColour(warningDot, "var(--warning)")
+    eq(bg, raw, `dark warning dot is untouched by the light-mode mix (${bg})`)
+    const ratio = await contrastVsBackdrop(bg, [10, 10, 10])
+    eq(ratio >= 3, true, `warning dot vs dark background is ${ratio.toFixed(2)}:1`)
   })
 
 

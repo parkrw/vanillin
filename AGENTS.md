@@ -20,6 +20,7 @@ No linter is configured.
 - **`npm test` exits 1 when any test fails**, and `tests/runner.unit.mjs` fails if that stops being true — trust a non-zero exit. For detail, piping through `tail` discards the `FAIL` lines: use `npm test > out.txt 2>&1`, then grep `^FAIL`.
 - **Run `npm run contracts` after any `ui/` edit** or conformance fails on stale hashes.
 - **The dev server's `base` is `/` everywhere, CI included** — the Pages prefix applies to `vite build` only. The suite drives the server through root-absolute URLs, so a prefixed base 404s them; see `docs/QUIRKS.md`.
+- **`npm run contrast` (`scripts/contrast-nontext.mjs`) exits 0 whatever it prints** — measurement only, for interactive use. `--strict` exits 1 on any unexempted `FAIL`; CI runs that. A new 1.4.11 carve-out is an `{ exempt: "why" }` on the probe row, never a deleted row.
 
 ## Layers
 
