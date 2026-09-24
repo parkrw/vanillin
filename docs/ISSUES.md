@@ -505,7 +505,9 @@ recording because the D items were all written as "light **and** dark unless
 noted" — for text, that framing is wrong. It does **not** clear dark mode for
 non-text contrast, where D9 fails in both.
 
-### D14. Warning status dot is 2.31:1 in light mode (found in task 72, 2026-08-02)
+### D14. ~~Warning status dot is 2.31:1 in light mode (found in task 72, 2026-08-02)~~ — FIXED (#58)
+
+Fixed in `ui/status-dot` alone, not in the token: light mode mixes `--warning` 78% toward `--warning-foreground` (3.20:1); dark keeps the raw token (10.08:1).
 
 The new graphical-object rows in `scripts/contrast-nontext.mjs` measure
 `--warning` (`oklch(0.75 0.18 65)`) at **2.31:1** on white; success, error and
@@ -515,7 +517,9 @@ means darkening the light `--warning` token, which touches every warning
 surface from task 32 (badge, status-dot) — a token design call, not a
 one-liner.
 
-### D15. Progress track and slider rail are invisible against the page (found in task 72, 2026-08-02)
+### D15. ~~Progress track and slider rail are invisible against the page (found in task 72, 2026-08-02)~~ — EXEMPT (#58)
+
+Decided as the inactive part, like D5's checkbox fill: the indicator and range carry the state and pass on their own. Both rows stay measured and print as `exmp` in `scripts/contrast-nontext.mjs`.
 
 Progress track (`--primary` at 20%) measures 1.53:1 light / 1.64:1 dark;
 slider rail (`--muted`) 1.09:1 light / 1.31:1 dark. The filled portion passes

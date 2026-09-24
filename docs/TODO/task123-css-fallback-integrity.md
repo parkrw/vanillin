@@ -23,7 +23,7 @@ Line numbers measured 2026-08-27; re-verify.
 
 ```sh
 node tests/run.mjs tokens contrast
-node scripts/contrast-nontext.mjs
+node scripts/contrast-nontext.mjs --strict
 npm run theme:defaults && git diff --exit-code styles/defaults.css
 npm test > out.txt 2>&1 && grep ^FAIL out.txt
 ```
