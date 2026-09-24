@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Orientation for coding agents. Everything here is what you cannot learn from a single file. `README.md` covers the consumer story and component API conventions; `docs/QUIRKS.md` carries the traps, `docs/DECISIONS.md` the settled calls. Don't duplicate any of them here. Current state lives in the task file you are working from (`docs/TODO/taskNN-*.md`, `## Handoff`), never in a standing document.
+Orientation for coding agents. Everything here is what you cannot learn from a single file. `README.md` covers the consumer story and component API conventions; `docs/QUIRKS.md` carries the traps, `docs/DECISIONS.md` the settled calls. Don't duplicate any of them here. Current state lives in GitHub issues — the issue you are working from and its comments — never in a standing document. `docs/TODO/taskNN-*.md`, `docs/TODO/README.md` and `docs/ISSUES.md` are archival: read them for history, never add to them.
 
 ## Commands
 
@@ -79,7 +79,7 @@ Implementation first, then tests, one green run — never test-driven. Assert re
 Spawning parallel workers in git worktrees works; the job is coordination.
 
 - **Absorb the setup yourself**: pre-create each worktree, symlink `node_modules` (and add it to `.git/info/exclude` — `.gitignore`'s `node_modules/` does not match a symlink), and assign each worker a distinct `VANILLIN_TEST_PORT`.
-- **Assign disjoint files, in writing.** This is why an 11-branch fan-out once cherry-picked with zero conflicts. Keep workers out of shared docs (`docs/ISSUES.md`, the task file) and record those centrally, or branches conflict where nothing needed to.
+- **Assign disjoint files, in writing.** This is why an 11-branch fan-out once cherry-picked with zero conflicts. Keep workers out of shared docs (`docs/QUIRKS.md`, `docs/DECISIONS.md`) and record those centrally, or branches conflict where nothing needed to.
 - **Brief them to measure before implementing, and to stop and report rather than force a stated fix.** Two of task 68's three diagnoses were wrong; both were caught only because of that instruction.
 - **Verify claims, don't relay them.** Re-run the suite yourself, read the diff, and check `git log` — one worker reported "no commits, staged only" two minutes after committing.
 - **Never detect liveness by tmux `pane_title`** (`claude` overwrites it within seconds) and don't poll with a bare zsh glob (`nomatch` aborts the monitor). Keep the task → `pane_id` map.
@@ -91,9 +91,9 @@ Spawning parallel workers in git worktrees works; the job is coordination.
 |---|---|
 | anything non-trivial | `docs/QUIRKS.md` — the traps, CSS through git |
 | about to argue for a different design | `docs/DECISIONS.md` — settled, with the reasoning |
-| planning, or a numbered task | `docs/TODO/README.md`, then `docs/TODO/taskNN-*.md` (its `## Handoff` is the live state) |
+| planning, or picking up work | GitHub issues — the [phase 3 epic](https://github.com/parkrw/vanillin/issues/11) and the `cycle-tracker` issues; state lives in issue comments |
 | asking why a past task went that way | `docs/TODO/LOG.md` — append here when a task lands, not to the TODO README |
-| touching bugs | `docs/ISSUES.md` — triage inbox; re-verify line numbers, they drift |
+| touching bugs or flakes | GitHub issues (`bug`, `ci`); file new ones there. `docs/ISSUES.md` is the archive — re-verify its line numbers, they drift |
 
 ## Hard rules
 
@@ -102,4 +102,4 @@ Spawning parallel workers in git worktrees works; the job is coordination.
 - Stage diffs and stop. No AI attribution in commits — no `Co-Authored-By`, no trailers.
 - The ~500-net-line branch-size hook is advisory. Never split or restructure work because of it.
 - Every task ships its prose in the same PR as its code.
-- Pushing `main` deploys `site/dist` to GitHub Pages, **gated on the CI test job**: `npm run contracts` freshness, then `npm test`. PRs run the same job. A flaky timing test (`docs/ISSUES.md` §G) can block a deploy — re-run the job, don't weaken the gate.
+- Pushing `main` deploys `site/dist` to GitHub Pages, **gated on the CI test job**: `npm run contracts` freshness, then `npm test`. PRs run the same job. A flaky timing test (issues labelled `ci`; older ones in `docs/ISSUES.md` §G) can block a deploy — re-run the job, don't weaken the gate.
