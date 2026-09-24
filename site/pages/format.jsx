@@ -162,11 +162,15 @@ import "./ui/format/format.css"
 <Duration value={-45_000} />`}>
               <div>
                 <p>
-                  Formats milliseconds as a human-readable duration. Uses{" "}
-                  <code>Intl.DurationFormat</code> where available (Chrome 129+,
-                  Safari 16.4+); falls back to an <code>Intl.NumberFormat</code>{" "}
-                  + <code>Intl.ListFormat</code> composition that is
-                  locale-correct and works everywhere.
+                  Formats milliseconds as a human-readable duration. By default
+                  it composes <code>Intl.NumberFormat</code> +{" "}
+                  <code>Intl.ListFormat</code>, which is locale-correct and words
+                  a value the same way on every runtime, so server-rendered
+                  output hydrates cleanly. <code>engine="auto"</code> uses{" "}
+                  <code>Intl.DurationFormat</code> where the runtime has it
+                  (Chrome 129+, Safari 16.4+, Node 22), which words some values
+                  differently. <code>v0.1.0</code> behaved as{" "}
+                  <code>"auto"</code>; pass it to keep that output.
                 </p>
                 <div className="pg-row" style={{ flexDirection: "column", alignItems: "flex-start", gap: "0.25rem" }}>
                   <span>0 ms: <Duration value={0} data-pg="d-zero" /></span>

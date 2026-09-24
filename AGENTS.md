@@ -17,7 +17,7 @@ npm run theme:defaults      # van.defaults.json → styles/defaults.css
 
 No linter is configured.
 
-- **`npm test` exits 0 even when tests fail.** The trailing `N/M passed` is the only signal; piping through `tail` discards the `FAIL` lines. Use `npm test > out.txt 2>&1`, then grep `^FAIL`.
+- **`npm test` exits 1 when any test fails**, and `tests/runner.unit.mjs` fails if that stops being true — trust a non-zero exit. For detail, piping through `tail` discards the `FAIL` lines: use `npm test > out.txt 2>&1`, then grep `^FAIL`.
 - **Run `npm run contracts` after any `ui/` edit** or conformance fails on stale hashes.
 - **The dev server's `base` is `/` everywhere, CI included** — the Pages prefix applies to `vite build` only. The suite drives the server through root-absolute URLs, so a prefixed base 404s them; see `docs/QUIRKS.md`.
 
