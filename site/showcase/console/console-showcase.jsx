@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useControllableState } from "../../../lib/use-controllable-state.js"
 import { Toaster } from "../../../ui/toast/toast.jsx"
 import { TooltipProvider } from "../../../ui/tooltip/tooltip.jsx"
@@ -19,6 +19,26 @@ import "../console.css"
 const PRI_W = { initial: 210, min: 120, max: 400 }
 const SEC_W = { initial: 200, min: 100, max: 350 }
 const RAIL_COLLAPSED_W = 56
+/* The main column's floor. Rail widths are px, so without it two rails dragged
+   wide squeeze the content to zero at every frame width between the rails' sum
+   and the 42rem query that hides them. */
+const MAIN_MIN = 320
+
+/* Rail widths that fit `frame`: the secondary gives ground first, then the
+   primary, neither past its own minimum, and a folded rail not at all. The
+   dragged widths themselves are untouched, so widening the frame restores
+   them. An unmeasured frame is Infinity and changes nothing. */
+function fitRails(pri, sec, frame, priFolded, secFolded) {
+  let over = pri + sec + MAIN_MIN - frame
+  if (!(over > 0)) return [pri, sec]
+  let fitSec = sec
+  if (!secFolded) {
+    fitSec = Math.max(SEC_W.min, sec - over)
+    over -= sec - fitSec
+  }
+  const fitPri = priFolded || over <= 0 ? pri : Math.max(PRI_W.min, pri - over)
+  return [fitPri, fitSec]
+}
 
 export default function ConsoleShowcase({ orderHref = "#order", paletteOpen, onPaletteOpenChange }) {
   const [view, setView] = useState({ svc: "overview", page: "Dashboard" })
@@ -35,6 +55,8 @@ export default function ConsoleShowcase({ orderHref = "#order", paletteOpen, onP
   const [priW, setPriW] = useState(PRI_W.initial)
   const [secW, setSecW] = useState(SEC_W.initial)
   const [dragging, setDragging] = useState(null)
+  const frameRef = useRef(null)
+  const [frameW, setFrameW] = useState(Infinity)
 
   const navigate = useCallback((svcId, page) => {
     const svc = findService(svcId)
@@ -47,12 +69,22 @@ export default function ConsoleShowcase({ orderHref = "#order", paletteOpen, onP
      and this palette opens from the search button; a standalone host that wants
      the chord binds it itself and drives `paletteOpen`. */
 
+  useLayoutEffect(() => {
+    const el = frameRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => setFrameW(entry.contentRect.width))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
   useEffect(() => {
     if (!dragging) return
     const onMove = (e) => {
       const width = dragging.startW + e.clientX - dragging.startX
-      if (dragging.rail === "pri") setPriW(clamp(width, PRI_W))
-      else setSecW(clamp(width, SEC_W))
+      const bounds = dragging.rail === "pri" ? PRI_W : SEC_W
+      const next = clamp(width, { min: bounds.min, max: dragging.max })
+      if (dragging.rail === "pri") setPriW(next)
+      else setSecW(next)
     }
     const onUp = () => setDragging(null)
     window.addEventListener("pointermove", onMove)
@@ -69,15 +101,28 @@ export default function ConsoleShowcase({ orderHref = "#order", paletteOpen, onP
 
   const svc = findService(view.svc)
   const category = svc.category
-  const priEdge = priCollapsed ? RAIL_COLLAPSED_W : priW
-  const secEdge = secCollapsed ? RAIL_COLLAPSED_W : secW
+  const [priEdge, secEdge] = fitRails(
+    priCollapsed ? RAIL_COLLAPSED_W : priW,
+    secCollapsed ? RAIL_COLLAPSED_W : secW,
+    frameW,
+    priCollapsed,
+    secCollapsed,
+  )
+
+  /* A drag stops where the main column's floor begins, so a rail can never be
+     dragged into space the frame does not have. */
+  const dragMax = (rail) => {
+    const bounds = rail === "pri" ? PRI_W : SEC_W
+    const other = rail === "pri" ? secEdge : priEdge
+    return Math.max(bounds.min, Math.min(bounds.max, frameW - MAIN_MIN - other))
+  }
 
   const handle = (rail, edge, startW) => (
     <div
       className="ck-resize"
       style={{ insetInlineStart: edge - 2 }}
       data-dragging={dragging?.rail === rail || undefined}
-      onPointerDown={(e) => setDragging({ rail, startX: e.clientX, startW })}
+      onPointerDown={(e) => setDragging({ rail, startX: e.clientX, startW, max: dragMax(rail) })}
       role="separator"
       aria-orientation="vertical"
       aria-label={rail === "pri" ? "Resize primary sidebar" : "Resize secondary sidebar"}
@@ -87,11 +132,12 @@ export default function ConsoleShowcase({ orderHref = "#order", paletteOpen, onP
   return (
     <TooltipProvider delayDuration={250}>
       <div
+        ref={frameRef}
         className="ck-console"
         data-pg="console"
         data-pri={priCollapsed ? "collapsed" : "expanded"}
         data-sec={secCollapsed ? "collapsed" : "expanded"}
-        style={{ "--pri-w": `${priW}px`, "--sec-w": `${secW}px` }}
+        style={{ "--pri-w": `${priEdge}px`, "--sec-w": `${secEdge}px` }}
       >
         <ConsoleTopbar
           project={project}
@@ -131,8 +177,8 @@ export default function ConsoleShowcase({ orderHref = "#order", paletteOpen, onP
               </div>
             </div>
           </div>
-          {!priCollapsed && handle("pri", priEdge, priW)}
-          {!secCollapsed && handle("sec", priEdge + secEdge, secW)}
+          {!priCollapsed && handle("pri", priEdge, priEdge)}
+          {!secCollapsed && handle("sec", priEdge + secEdge, secEdge)}
         </div>
         <ConsoleTaskbar />
         <ConsolePalette open={palette} onOpenChange={setPalette} onNavigate={navigate} orderHref={orderHref} />

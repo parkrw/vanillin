@@ -942,6 +942,61 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(await page.locator(".pg-main--console .ck-nav-overview[data-active]").count(), 1)
   })
 
+  await test("rails dragged wide yield to the main column as the frame narrows, then take their width back", async () => {
+    const viewport = page.viewportSize()
+    const widths = async () => ({
+      pri: Math.round((await rect(console_.locator(".ck-pri"))).width),
+      sec: Math.round((await rect(console_.locator(".ck-sec"))).width),
+      main: Math.round((await rect(console_.locator(".ck-main"))).width),
+    })
+    const dragRight = async (index) => {
+      const box = await rect(console_.locator(".ck-resize").nth(index))
+      await page.mouse.move(box.x + box.width / 2, box.y + 100)
+      await page.mouse.down()
+      await page.mouse.move(box.x + box.width / 2 + 400, box.y + 100, { steps: 10 })
+      await page.mouse.up()
+    }
+    await dragRight(0)
+    await dragRight(1)
+    const wide = await widths()
+    eq(wide.pri, 400, `the primary rail drags to PRI_W.max (${wide.pri})`)
+    eq(wide.sec, 350, `the secondary rail drags to SEC_W.max (${wide.sec})`)
+
+    // Both maxima plus the main column's floor need a 1070px frame. Below it
+    // the secondary gives ground first, then the primary, neither past its own
+    // minimum.
+    for (const [width, pri, sec] of [
+      [900, 400, 180],
+      [760, 340, 100],
+    ]) {
+      await page.setViewportSize({ width, height: viewport.height })
+      await page.waitForFunction(
+        ([p, s]) => {
+          const cs = getComputedStyle(document.querySelector(".ck-console"))
+          return (
+            cs.getPropertyValue("--pri-w").trim() === `${p}px` &&
+            cs.getPropertyValue("--sec-w").trim() === `${s}px`
+          )
+        },
+        [pri, sec],
+      )
+      const fitted = await widths()
+      eq(fitted.pri, pri, `primary at a ${width}px frame (${fitted.pri})`)
+      eq(fitted.sec, sec, `secondary at a ${width}px frame (${fitted.sec})`)
+      eq(fitted.main, 320, `the main column holds its floor at a ${width}px frame (${fitted.main})`)
+    }
+
+    // The dragged widths are kept, not overwritten, so widening restores them.
+    await page.setViewportSize(viewport)
+    await page.waitForFunction(
+      (w) => document.querySelector(".ck-console").getBoundingClientRect().width >= w - 1,
+      viewport.width,
+    )
+    const restored = await widths()
+    eq(restored.pri, 400, `the primary rail takes its dragged width back (${restored.pri})`)
+    eq(restored.sec, 350, `the secondary rail takes its dragged width back (${restored.sec})`)
+  })
+
   // Back to home for any suite that shares the page after this file.
   await page.goto(`${baseUrl}/#home`)
   await page.waitForSelector(".ck-console")

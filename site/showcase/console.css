@@ -450,8 +450,8 @@
 
 /* ── Body: the CloudKey console's three-pane grid ───────────────────── */
 
-/* Rail widths are the --pri-w/--sec-w the root writes from a handle drag; a
-   folded rail is a 3.5rem icon strip. */
+/* Rail widths are the --pri-w/--sec-w the root writes from a handle drag,
+   fitted to the frame; a folded rail is a 3.5rem icon strip. */
 .ck-body {
   position: relative;
   z-index: 1;
