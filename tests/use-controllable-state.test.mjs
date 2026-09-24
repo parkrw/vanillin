@@ -95,6 +95,8 @@ export default async function run({ page, baseUrl, test, eq, repoRoot }) {
       "1",
       "controlled: the next task computes from the prop, not the rejected value"
     )
+    // Pins our behaviour, not parity: Radix guards `value !== prop` here and
+    // stays silent (docs/DECISIONS.md, lib/).
     eq(probe.controlledSameValue.join(","), "0", "controlled: a same-value set still reports")
     eq(probe.uncontrolledSameValue.length, 0, "uncontrolled: a same-value set stays silent")
     eq(probe.uncontrolledStacked.join(","), "1,2", "uncontrolled: updates still compose")
