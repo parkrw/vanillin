@@ -403,4 +403,61 @@ export default async function run({ page, baseUrl, test, eq, near }) {
 
     eq(transform, "none", "no transform under reduced motion")
   })
+
+  // ── Scroll chaining (overscroll-behavior) ─────────────────
+  // Run last: both scroll the outer page to bring an off-screen fixture into
+  // the viewport for a real page.mouse.wheel, and earlier tests (e.g. the
+  // thumb-drag ones) assume sa-vertical sits where resetPage() left it.
+
+  await test("a viewport that doesn't overflow lets the wheel chain to its scrolling ancestor", async () => {
+    const ancestor = el("sa-chain-fit-ancestor")
+    const viewport = el("sa-chain-fit", ".scroll-area-viewport")
+    await ancestor.evaluate((node) => node.scrollIntoView({ block: "center" }))
+    await ancestor.evaluate((node) => { node.scrollTop = 0 })
+
+    const overflowY = await viewport.evaluate((node) => node.scrollHeight - node.clientHeight)
+    eq(overflowY <= 0, true, `precondition: the viewport does not overflow vertically (${overflowY}px)`)
+    eq(await viewport.evaluate((node) => getComputedStyle(node).overscrollBehaviorY), "auto", "a non-overflowing axis is not contained")
+
+    const box = await viewport.boundingBox()
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    eq(await viewport.evaluate((node, [x, y]) => node.contains(document.elementFromPoint(x, y)), [box.x + box.width / 2, box.y + box.height / 2]), true, "precondition: the wheel lands on the viewport")
+    await page.mouse.wheel(0, 200)
+    await page
+      .waitForFunction(
+        () => document.querySelector('[data-pg="sa-chain-fit-ancestor"]').scrollTop > 0,
+        null,
+        { timeout: 2000 }
+      )
+      .catch(() => {})
+
+    const scrollTop = await ancestor.evaluate((node) => node.scrollTop)
+    eq(scrollTop > 0, true, `the wheel chained to the ancestor (${scrollTop}px)`)
+  })
+
+  await test("a viewport scrolled to its overflow boundary still contains, not chaining to the ancestor", async () => {
+    const ancestor = el("sa-chain-overflow-ancestor")
+    const viewport = el("sa-chain-overflow", ".scroll-area-viewport")
+    await ancestor.evaluate((node) => node.scrollIntoView({ block: "center" }))
+    await ancestor.evaluate((node) => { node.scrollTop = 0 })
+    await viewport.evaluate((node) => { node.scrollTop = node.scrollHeight })
+    await page.waitForTimeout(120)
+
+    const overflowY = await viewport.evaluate((node) => node.scrollHeight - node.clientHeight)
+    eq(overflowY > 0, true, `counter-precondition: the viewport overflows vertically (${overflowY}px)`)
+    const atBottom = await viewport.evaluate(
+      (node) => node.scrollTop >= node.scrollHeight - node.clientHeight - 1
+    )
+    eq(atBottom, true, "counter-precondition: scrolled to its own bottom boundary")
+    eq(await viewport.evaluate((node) => getComputedStyle(node).overscrollBehaviorY), "contain", "an overflowing axis is contained")
+
+    const box = await viewport.boundingBox()
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    eq(await viewport.evaluate((node, [x, y]) => node.contains(document.elementFromPoint(x, y)), [box.x + box.width / 2, box.y + box.height / 2]), true, "precondition: the wheel lands on the viewport")
+    await page.mouse.wheel(0, 200)
+    await page.waitForTimeout(200)
+
+    const scrollTop = await ancestor.evaluate((node) => node.scrollTop)
+    eq(scrollTop, 0, "the ancestor did not move: containment held at the boundary")
+  })
 }
