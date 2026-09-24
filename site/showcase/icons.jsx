@@ -356,3 +356,42 @@ const SERVICE_ICONS = {
 }
 
 export const serviceIcon = (svc) => SERVICE_ICONS[svc.id] ?? (svc.collapsible ? SiteIcon : LayersIcon)
+
+/* Order wizard: workloads, sharing, the table toolbar and the deploy flow. */
+export const CodeIcon = () => icon(<><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></>)
+export const DatabaseIcon = () =>
+  icon(<><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></>)
+export const GpuIcon = () =>
+  icon(<><rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="9" cy="12" r="3" /><path d="M15 9.5h4M15 12h4M15 14.5h4" /><path d="M6 18v3M18 18v3" /></>)
+export const MapPinIcon = () => icon(<><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></>)
+export const MailIcon = () => icon(<><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 6-10 7L2 6" /></>)
+export const LinkIcon = () =>
+  icon(<><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></>)
+export const PinIcon = () =>
+  icon(<><path d="M12 17v5" /><path d="M9 10.76V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4.76l2.55 1.7A1 1 0 0 1 17 14H7a1 1 0 0 1-.55-1.83z" /></>)
+export const ColumnsIcon = () => icon(<><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M12 3v18" /></>)
+export const GroupIcon = () =>
+  icon(<><path d="M3 7h6M3 12h6M3 17h6" /><rect x="13" y="5" width="8" height="6" rx="1" /><rect x="13" y="14" width="8" height="6" rx="1" /></>)
+export const RowsExpandIcon = () => icon(<><path d="m7 15 5 5 5-5" /><path d="m7 9 5-5 5 5" /></>, { strokeWidth: "2" })
+export const RocketIcon = () =>
+  icon(
+    <>
+      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+      <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+      <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+      <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+    </>
+  )
+export const TerminalIcon = () => icon(<><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></>)
+export const AlertCircleIcon = () =>
+  icon(<><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></>, { strokeWidth: "2" })
+export const CheckCircleIcon = () => icon(<><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></>, { strokeWidth: "2" })
+export const SparkleIcon = () =>
+  icon(<><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" /><path d="M19 17l.7 1.8 1.8.7-1.8.7L19 22l-.7-1.8-1.8-.7 1.8-.7z" /></>)
+export const LockIcon = () => icon(<><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>)
+export const CopyIcon = () => icon(<><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>)
+export const FilterIcon = () => icon(<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />)
+export const ImageIcon = () => icon(<><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></>)
+export const CameraIcon = () =>
+  icon(<><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></>)
+export { CpuIcon, DownloadIcon, GlobeIcon, GridIcon, LayersIcon, ShieldIcon, UserIcon }

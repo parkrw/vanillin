@@ -8,58 +8,75 @@
    schemes. */
 
 .ck-console {
-  /* Brand accents. */
-  --ck-blue: light-dark(oklch(0.52 0.15 255), oklch(0.72 0.12 255));
-  --ck-blue-hover: light-dark(oklch(0.47 0.15 255), oklch(0.77 0.11 255));
-  --ck-blue-soft: light-dark(oklch(0.52 0.15 255 / 10%), oklch(0.72 0.12 255 / 14%));
-  /* CloudKey orange: vivid in both schemes, a shade deeper on hover in
-     light and brighter in dark, so the hover always moves away from the page. */
-  --ck-orange: light-dark(oklch(0.7 0.2 45), oklch(0.75 0.19 48));
-  --ck-orange-hover: light-dark(oklch(0.64 0.2 44), oklch(0.8 0.17 52));
-  --ck-orange-soft: light-dark(oklch(0.7 0.2 45 / 12%), oklch(0.75 0.19 48 / 16%));
+  /* CloudKey brand guide v1.2. Blue #426299 is the primary; Light Blue
+     #82A2D2 carries it on dark surfaces. Orange #E07038 is the impact accent
+     in both schemes ("orange and white" is an approved variant on dark);
+     Dark Orange #944A25 is its pressed shade in light, Soft Orange #DD803B
+     its lift in dark. Alpha comes from color-mix, never a second hue. */
+  --ck-blue: light-dark(oklch(0.497 0.096 260.7), oklch(0.706 0.079 258.3));
+  --ck-blue-hover: light-dark(oklch(0.44 0.1 260.7), oklch(0.76 0.075 258.3));
+  --ck-blue-soft: color-mix(in oklab, var(--ck-blue) 12%, transparent);
+  --ck-orange: oklch(0.667 0.156 45);
+  --ck-orange-hover: light-dark(oklch(0.58 0.14 45.3), oklch(0.72 0.145 52));
+  --ck-orange-soft: color-mix(in oklab, var(--ck-orange) 14%, transparent);
+  /* Extended palette: Blue Green #25576E (info), Mustard #DCB44F (warning),
+     Green #3BB74F (success), Red #C11B00 (error). */
+  --ck-blue-green: light-dark(oklch(0.433 0.065 230.9), oklch(0.7 0.07 231));
+  --ck-mustard: oklch(0.787 0.127 87.4);
 
   /* Kit token overrides. --primary-hover is re-derived because :root resolves
-     its `from var(--primary)` against the site's primary, not this one.
-     White on orange in light; dark text on the brighter dark-scheme orange. */
+     its `from var(--primary)` against the site's primary, not this one. */
   --primary: var(--ck-orange);
   --primary-hover: var(--ck-orange-hover);
-  --primary-foreground: light-dark(oklch(0.99 0 0), oklch(0.18 0.03 45));
+  --primary-foreground: oklch(0.99 0 0);
   --ring: var(--ck-blue);
-  --warning: light-dark(oklch(0.62 0.17 50), oklch(0.72 0.16 50));
-  --warning-foreground: light-dark(oklch(0.42 0.13 48), oklch(0.85 0.09 55));
-  --warning-background: light-dark(oklch(0.96 0.03 60), oklch(0.26 0.05 50));
-  --warning-border: light-dark(oklch(0.87 0.08 55), oklch(0.42 0.09 50));
-  --info: light-dark(oklch(0.55 0.15 255), oklch(0.7 0.12 255));
-  --info-foreground: light-dark(oklch(0.35 0.11 255), oklch(0.85 0.06 255));
-  --info-background: light-dark(oklch(0.95 0.03 255), oklch(0.25 0.04 255));
-  --info-border: light-dark(oklch(0.82 0.08 255), oklch(0.4 0.08 255));
-  --background: light-dark(oklch(0.958 0.002 250), oklch(0.163 0.006 255));
-  --foreground: light-dark(oklch(0.22 0.008 255), oklch(0.87 0.004 250));
-  --card: light-dark(oklch(1 0 0), oklch(0.204 0.006 255));
+  --warning: light-dark(oklch(0.7 0.13 87.4), var(--ck-mustard));
+  --warning-foreground: light-dark(oklch(0.45 0.1 87), oklch(0.9 0.1 90));
+  --warning-background: color-mix(in oklab, var(--ck-mustard) 16%, var(--card));
+  --warning-border: color-mix(in oklab, var(--ck-mustard) 45%, transparent);
+  --info: var(--ck-blue-green);
+  --info-foreground: light-dark(oklch(0.35 0.065 231), oklch(0.88 0.05 231));
+  --info-background: color-mix(in oklab, var(--ck-blue-green) 14%, var(--card));
+  --info-border: color-mix(in oklab, var(--ck-blue-green) 40%, transparent);
+  --success: light-dark(oklch(0.55 0.17 146), oklch(0.689 0.181 146));
+  --success-foreground: light-dark(oklch(0.33 0.12 146), oklch(0.88 0.12 146));
+  --success-background: color-mix(in oklab, var(--success) 14%, var(--card));
+  --success-border: color-mix(in oklab, var(--success) 40%, transparent);
+  --destructive: light-dark(oklch(0.519 0.2 31.3), oklch(0.66 0.19 31));
+  --destructive-foreground: oklch(0.99 0 0);
+  --destructive-background: color-mix(in oklab, var(--destructive) 12%, var(--card));
+  --destructive-border: color-mix(in oklab, var(--destructive) 40%, transparent);
+  /* Surfaces: Pale Grey #F2F2F2 page with white cards in light; Black
+     #0C0C0C page with Dark Grey #161616 cards in dark ("black adds depth to
+     dark grey"). Text is Medium Gray #3F3F3F; muted text Lite Gray #6B6B6B
+     and Shade Gray #898989. */
+  --background: light-dark(oklch(0.961 0 0), oklch(0.154 0 0));
+  --foreground: light-dark(oklch(0.368 0 0), oklch(0.93 0 0));
+  --card: light-dark(oklch(1 0 0), oklch(0.2 0 0));
   --card-foreground: var(--foreground);
-  --popover: light-dark(oklch(1 0 0), oklch(0.235 0.008 255));
+  --popover: light-dark(oklch(1 0 0), oklch(0.235 0 0));
   --popover-foreground: var(--foreground);
-  --border: light-dark(oklch(0.895 0.003 250), oklch(0.29 0.007 255));
-  --muted: light-dark(oklch(0.968 0.002 250), oklch(0.232 0.006 255));
-  --muted-foreground: light-dark(oklch(0.51 0.008 255), oklch(0.62 0.008 250));
-  --secondary: light-dark(oklch(0.955 0.003 250), oklch(0.26 0.007 255));
-  --secondary-foreground: light-dark(oklch(0.3 0.01 255), oklch(0.85 0.005 250));
-  --accent: light-dark(oklch(0.955 0.003 250), oklch(0.26 0.007 255));
-  --accent-foreground: light-dark(oklch(0.25 0.01 255), oklch(0.9 0.004 250));
-  --input: light-dark(oklch(0.78 0.005 250), oklch(1 0 0 / 30%));
-  --sidebar: light-dark(oklch(0.928 0.004 250), oklch(0.185 0.008 255));
-  --sidebar-foreground: light-dark(oklch(0.45 0.008 255), oklch(0.63 0.008 250));
-  --sidebar-border: light-dark(oklch(0.862 0.004 250), oklch(1 0 0 / 6%));
+  --border: light-dark(oklch(0.885 0 0), oklch(0.3 0 0));
+  --muted: light-dark(oklch(0.945 0 0), oklch(0.245 0 0));
+  --muted-foreground: light-dark(oklch(0.528 0 0), oklch(0.63 0 0));
+  --secondary: light-dark(oklch(0.93 0 0), oklch(0.27 0 0));
+  --secondary-foreground: light-dark(oklch(0.368 0 0), oklch(0.88 0 0));
+  --accent: light-dark(oklch(0.93 0 0), oklch(0.27 0 0));
+  --accent-foreground: light-dark(oklch(0.3 0 0), oklch(0.93 0 0));
+  --input: light-dark(oklch(0.75 0 0), oklch(1 0 0 / 28%));
+  --sidebar: light-dark(oklch(0.925 0 0), oklch(0.18 0 0));
+  --sidebar-foreground: light-dark(oklch(0.428 0 0), oklch(0.63 0 0));
+  --sidebar-border: light-dark(oklch(0.86 0 0), oklch(1 0 0 / 7%));
   --sidebar-accent: light-dark(oklch(0 0 0 / 5%), oklch(1 0 0 / 6%));
   --radius-sm: 3px;
   --radius-md: 4px;
   --radius-lg: 5px;
   --radius-xl: 8px;
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", system-ui, Roboto, sans-serif;
+  --font-sans: Montserrat, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", system-ui, Roboto, sans-serif;
   --font-mono: "SF Mono", ui-monospace, "Cascadia Code", "Fira Code", Menlo, Consolas, monospace;
 
   /* Chrome (top bar): navy in both schemes, so single values. */
-  --ck-chrome: oklch(0.235 0.028 262);
+  --ck-chrome: oklch(0.3 0.07 260.7);
   --ck-chrome-border: oklch(1 0 0 / 9%);
   --ck-chrome-text: oklch(0.72 0.02 255);
   --ck-chrome-bright: oklch(0.93 0.008 250);
@@ -1641,8 +1658,12 @@
 /* Its own page: the rails and tab bar are gone (see [data-focus="order"]),
    the form takes the frame's width up to a measure and centres, and the
    step strip is large enough to read as steps. Orange marks the chosen
-   option and the running total, as --primary does everywhere. */
+   option, as --primary does everywhere. The live total inverts the
+   console's trend colours: a price going up is blue (information), a price
+   going down is orange (the brand's good news). */
 .ck-order {
+  --live-value-up: var(--ck-blue);
+  --live-value-down: var(--ck-orange);
   gap: 0.875rem;
   inline-size: 100%;
   max-inline-size: 84rem;
@@ -1675,6 +1696,12 @@
   margin: 0.125rem 0 0;
   color: var(--muted-foreground);
   font-size: 0.875rem;
+}
+
+.ck-order-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .ck-order-cart {
@@ -1712,9 +1739,18 @@
 }
 
 .ck-order-cart-count {
+  display: flex;
+  flex-direction: column;
   color: var(--muted-foreground);
   font-size: 0.8125rem;
   font-weight: 500;
+  line-height: 1.2;
+  text-align: start;
+}
+
+.ck-order-cart-sub {
+  font-size: 0.6875rem;
+  font-weight: 400;
 }
 
 .ck-order-cart-total {
@@ -1774,6 +1810,22 @@
     color var(--motion-fast) var(--motion-ease);
 }
 
+/* A step with visible problems carries their count on its tab. */
+.ck-order-step-flag {
+  display: grid;
+  place-items: center;
+  min-inline-size: 1.125rem;
+  block-size: 1.125rem;
+  padding-inline: 0.3125rem;
+  border-radius: 999px;
+  background-color: var(--destructive);
+  color: var(--destructive-foreground);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
 .ck-order-tabs .tabs-trigger:hover {
   color: var(--foreground);
 }
@@ -1795,6 +1847,40 @@
   outline: 2px solid var(--ring);
   outline-offset: -2px;
   box-shadow: none;
+}
+
+/* Form on the left, the price rail on the right, stuck to the top while
+   the form scrolls under it. */
+.ck-order-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.ck-order-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-inline-size: 0;
+}
+
+.ck-order-step-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.ck-order-step-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.ck-order-step-head .ck-order-hint {
+  margin: 0;
+  font-size: 0.875rem;
 }
 
 .ck-order-panel {
@@ -1819,6 +1905,13 @@
 .ck-order-section--wide {
   grid-template-columns: minmax(0, 1fr);
   gap: 0.5rem;
+}
+
+.ck-order-section-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-inline-size: 0;
 }
 
 .ck-order-section-title {
@@ -1853,14 +1946,101 @@
   line-height: 1.5;
 }
 
-/* Site cards: three across, the chosen one outlined in blue. */
-.ck-sites {
+/* The one error shape: an icon and a sentence beside the control. */
+.ck-order-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.ck-order-error > svg {
+  flex-shrink: 0;
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  margin-block-start: 0.125rem;
+}
+
+/* "Recommended", in blue: it is information, not the chosen option. */
+.ck-recommended {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.375rem;
+  color: var(--ck-blue);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ck-recommended > svg {
+  align-self: center;
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+}
+
+.ck-recommended-reason {
+  color: var(--muted-foreground);
+  font-weight: 400;
+}
+
+.ck-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.0625rem 0.4375rem;
+  border-radius: 999px;
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.ck-chip--recent {
+  background-color: var(--ck-blue-soft);
+  color: var(--ck-blue);
+}
+
+/* What an unchosen option would do to the bill, in the trend colours. */
+.ck-delta {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ck-delta[data-sign="up"] {
+  color: var(--ck-blue);
+}
+
+.ck-delta[data-sign="down"] {
+  color: var(--ck-orange);
+}
+
+.ck-delta--included {
+  color: var(--success);
+}
+
+/* Path: the two presets, wider than the size ones. */
+.ck-path .ck-preset {
+  min-inline-size: 9rem;
+}
+
+/* Workloads: three across, the chosen one outlined in orange, its icon
+   turning orange with it. */
+.ck-workloads {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
-.ck-site {
+.ck-site,
+.ck-workload,
+.ck-plan {
+  padding-block: 0;
   cursor: pointer;
   border-color: var(--border);
   transition:
@@ -1868,13 +2048,133 @@
     box-shadow var(--motion-fast) var(--motion-ease);
 }
 
-.ck-site:hover {
+.ck-site:hover,
+.ck-workload:hover,
+.ck-plan:hover {
   border-color: color-mix(in oklab, var(--ck-orange) 50%, transparent);
 }
 
-.ck-site[data-state="checked"] {
+.ck-site[data-recommended]:not([data-state="checked"]),
+.ck-plan[data-recommended]:not([data-state="checked"]) {
+  border-color: color-mix(in oklab, var(--ck-blue) 55%, transparent);
+}
+
+.ck-site[data-state="checked"],
+.ck-workload[data-state="checked"],
+.ck-plan[data-state="checked"] {
   border-color: var(--ck-orange);
   box-shadow: 0 0 0 1px var(--ck-orange);
+}
+
+.ck-workload-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem;
+}
+
+.ck-workload-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border-radius: var(--radius-md);
+  background-color: var(--ck-blue-soft);
+  color: var(--ck-blue);
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-workload-icon svg {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+
+.ck-workload[data-state="checked"] .ck-workload-icon {
+  background-color: var(--ck-orange-soft);
+  color: var(--ck-orange);
+}
+
+.ck-workload-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-inline-size: 0;
+}
+
+.ck-workload-name {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.ck-workload-plan {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ck-users {
+  flex-wrap: wrap;
+}
+
+/* The recommendation line: informational until followed, then a success. */
+.ck-recommendation {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--info-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--info-background);
+  transition:
+    border-color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-recommendation > svg {
+  flex-shrink: 0;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  color: var(--ck-blue);
+}
+
+.ck-recommendation[data-followed] {
+  border-color: var(--success-border);
+  background-color: var(--success-background);
+}
+
+.ck-recommendation[data-followed] > svg {
+  color: var(--success);
+}
+
+.ck-recommendation-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-inline-size: 0;
+}
+
+.ck-recommendation-title {
+  font-size: 0.9375rem;
+}
+
+.ck-recommendation-use {
+  flex-shrink: 0;
+}
+
+/* Site cards: three across, the chosen one outlined in orange. */
+.ck-sites {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
 }
 
 .ck-site-body {
@@ -1892,6 +2192,10 @@
 }
 
 .ck-site-name {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
   font-size: 0.9375rem;
   font-weight: 600;
 }
@@ -1899,6 +2203,58 @@
 .ck-site-city {
   color: var(--muted-foreground);
   font-size: 0.8125rem;
+}
+
+/* Comparison tables behind a disclosure: plain, the chosen row tinted. */
+.ck-compare-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background-color: var(--card);
+}
+
+.ck-compare {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.ck-compare th,
+.ck-compare td {
+  padding: 0.5rem 0.75rem;
+  border-block-end: 1px solid var(--border);
+  text-align: start;
+  white-space: nowrap;
+}
+
+.ck-compare thead th {
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ck-compare tbody th {
+  font-weight: 600;
+}
+
+.ck-compare tbody th .ck-chip {
+  margin-inline-start: 0.5rem;
+}
+
+.ck-compare tbody tr:last-child th,
+.ck-compare tbody tr:last-child td {
+  border-block-end: none;
+}
+
+.ck-compare tr[data-state="checked"] {
+  background-color: var(--ck-orange-soft);
+}
+
+.ck-compare tr[data-state="checked"] th {
+  color: var(--ck-orange);
 }
 
 /* Radio rows share the card look, stacked. */
@@ -1929,14 +2285,25 @@
   box-shadow: 0 0 0 1px var(--ck-orange);
 }
 
+.ck-option[data-disabled] {
+  cursor: not-allowed;
+}
+
+.ck-option[data-disabled] .ck-option-name,
+.ck-option[data-disabled] .ck-option-desc {
+  opacity: 0.6;
+}
+
 .ck-option .radio-group-item {
   margin-block-start: 0.125rem;
 }
 
 .ck-option-text {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 0.25rem;
+  min-inline-size: 0;
 }
 
 .ck-option-name {
@@ -1957,12 +2324,31 @@
   font-weight: 600;
 }
 
+/* Why a blocked option is blocked, in the warning tone: it is a fact about
+   the order, not a mistake. */
+.ck-option-reason {
+  color: var(--warning-foreground);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.ck-option-delta {
+  align-self: center;
+  flex-shrink: 0;
+  margin-inline-start: auto;
+}
+
 .ck-order-field {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   max-inline-size: 28rem;
   transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.ck-order-field--wide {
+  max-inline-size: 40rem;
 }
 
 .ck-order-field[data-disabled] {
@@ -1977,6 +2363,133 @@
   inline-size: 1rem;
   block-size: 1rem;
   color: var(--muted-foreground);
+}
+
+.ck-order-key,
+.ck-order-script {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+/* Software: the kit tabs with a count on each, the option list under. */
+.ck-software {
+  gap: 0.75rem;
+}
+
+.ck-software-count {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 1.25rem;
+  block-size: 1.25rem;
+  padding-inline: 0.3125rem;
+  border-radius: 999px;
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ck-software .tabs-trigger[data-state="active"] .ck-software-count {
+  background-color: var(--ck-orange-soft);
+  color: var(--ck-orange);
+}
+
+.ck-software-panel:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.ck-software-empty {
+  padding-block: 1.5rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+}
+
+/* Plans: five across, hourly first, the workload's pick outlined in blue
+   until it is chosen. Custom is dashed until the pools match no card. */
+.ck-plans {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.625rem;
+}
+
+.ck-plan--custom {
+  border-style: dashed;
+  cursor: default;
+}
+
+.ck-plan--custom[data-state="checked"] {
+  border-style: solid;
+}
+
+.ck-plan-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 0.875rem;
+}
+
+.ck-plan-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.ck-plan-name {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.ck-plan-spec {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ck-plan-price {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ck-plan-price strong {
+  color: var(--foreground);
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.ck-plan-monthly {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ck-plan .ck-option-desc {
+  margin-block-start: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.ck-plan .ck-recommended {
+  margin-block-start: 0.25rem;
+}
+
+/* What the machines draw from the pools; red once they draw more. */
+.ck-order-draw {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.ck-order-draw strong {
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.ck-order-draw[data-over],
+.ck-order-draw[data-over] strong {
+  color: var(--destructive);
 }
 
 /* Sliders: label, rate and price on one line, the track under it, the
@@ -2039,27 +2552,64 @@
   opacity: 0.55;
 }
 
+/* Label, value and price share the first line; the rate takes its own so
+   a narrow row never folds the label. */
 .ck-slider-head {
   display: flex;
   align-items: baseline;
-  gap: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0 0.75rem;
 }
 
 .ck-slider-label {
   font-size: 0.9375rem;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .ck-slider-rate {
+  order: 3;
+  flex-basis: 100%;
   color: var(--muted-foreground);
   font-size: 0.8125rem;
 }
 
 .ck-slider-value {
+  display: inline-flex;
+  align-items: baseline;
   margin-inline-start: auto;
   font-size: 1rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+/* The number input bound to the track (#42): sized to its figure, the
+   spinner hidden so it reads as the value rather than a form control. */
+.ck-slider-input {
+  inline-size: 4.25rem;
+  block-size: 1.75rem;
+  padding-inline: 0.375rem;
+  border-color: transparent;
+  background-color: transparent;
+  font-size: 1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.ck-slider-input::-webkit-outer-spin-button,
+.ck-slider-input::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.ck-slider-input:hover,
+.ck-slider-input:focus-visible {
+  border-color: var(--input);
+  background-color: var(--card);
 }
 
 .ck-slider-unit {
@@ -2070,7 +2620,7 @@
 }
 
 .ck-slider-price {
-  min-inline-size: 6.5rem;
+  min-inline-size: 5.5rem;
   text-align: end;
   font-size: 0.9375rem;
   font-weight: 600;
@@ -2084,21 +2634,14 @@
   align-items: start;
 }
 
-.ck-order-two .ck-slider-head {
-  flex-wrap: wrap;
-}
-
-.ck-order-two .ck-slider-label {
-  white-space: nowrap;
-}
-
-.ck-order-two .ck-slider-rate {
-  order: 3;
-  flex-basis: 100%;
-}
-
 .ck-order-select {
   inline-size: 100%;
+}
+
+.ck-network-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .ck-order-line {
@@ -2129,48 +2672,834 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* The running total for this vDC, pinned under each configuration step. */
-.ck-order-bar {
-  position: sticky;
-  inset-block-end: 0;
+/* Advanced options fold behind one blue line; the chevron turns when open. */
+.ck-disclosure {
+  display: flex;
+  flex-direction: column;
+}
+
+.ck-disclosure-trigger {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background-color: var(--card);
-  box-shadow: var(--shadow-md);
-}
-
-.ck-order-bar-name {
-  color: var(--muted-foreground);
+  align-self: flex-start;
+  gap: 0.5rem;
+  margin-inline-start: -0.375rem;
+  padding: 0.25rem 0.375rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--ck-blue);
+  font: inherit;
   font-size: 0.875rem;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--motion-ease);
 }
 
-.ck-order-bar-total {
-  margin-inline-start: auto;
-  color: var(--ck-orange);
-  font-size: 1.25rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+.ck-disclosure-trigger:hover {
+  background-color: var(--ck-blue-soft);
 }
 
-.ck-order-bar-total > span,
-.ck-order-total > span {
-  margin-inline-start: 0.125rem;
+.ck-disclosure-trigger:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.ck-disclosure-trigger > svg {
+  flex-shrink: 0;
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  transition: rotate var(--motion-fast) var(--motion-ease);
+}
+
+.ck-disclosure-trigger[data-state="open"] > svg {
+  rotate: 90deg;
+}
+
+.ck-disclosure-hint {
   color: var(--muted-foreground);
   font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.ck-disclosure-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-block: 0.5rem 0.25rem;
+}
+
+/* The way forward: one large primary button at the end of every step, the
+   same one in the rail, and Deploy on the review. They glow orange on hover;
+   the button's own transition already covers box-shadow. */
+.ck-order-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-block-start: 0.5rem;
+}
+
+.ck-order .ck-order-continue:hover:not(:disabled),
+.ck-order .ck-order-cta:hover:not(:disabled),
+.ck-order .ck-order-add-vdc:hover:not(:disabled) {
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, var(--ck-orange) 22%, transparent),
+    0 0.25rem 1rem color-mix(in oklab, var(--ck-orange) 35%, transparent);
+}
+
+.ck-order .ck-order-cta {
+  font-weight: 700;
+}
+
+.ck-order-continue svg,
+.ck-order-cta svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+
+.ck-order-rail .ck-order-continue,
+.ck-order-rail .ck-order-cta {
+  inline-size: 100%;
+  block-size: auto;
+  min-block-size: 2.75rem;
+  padding-block: 0.625rem;
+  white-space: normal;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.ck-order .ck-order-skip {
+  margin-block-start: 0.375rem;
+  padding-inline: 0;
+  color: var(--ck-blue);
   font-weight: 500;
 }
 
-/* Virtual machines: editable cells, a chevron that opens the row's own
-   settings, and a group row that carries the vDC's placement popover and
-   can add to itself. */
-.ck-console .ck-vm-table td {
-  padding-block: 0.375rem;
+.ck-order-skip svg,
+.ck-order-add-vm svg,
+.ck-order-add-vdc svg,
+.ck-order-open svg,
+.ck-order-share svg,
+.ck-order-unpin svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
 }
 
+/* ── The price rail ──────────────────────────────────────────────────── */
+
+.ck-order-rail {
+  position: sticky;
+  inset-block-start: 0.75rem;
+  min-inline-size: 0;
+}
+
+.ck-order-rail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background-color: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+
+.ck-order-rail-name {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.ck-order-rail-name .ck-mono {
+  font-size: 0.875rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.ck-order-rail-name > span {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.ck-order-rail-reason {
+  margin: 0;
+  color: var(--destructive);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.ck-order-rail-issues {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ck-order-issue {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  inline-size: 100%;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--destructive-border);
+  border-radius: var(--radius-md);
+  background-color: var(--destructive-background);
+  color: var(--destructive);
+  font: inherit;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  text-align: start;
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-order-issue:hover {
+  border-color: var(--destructive);
+}
+
+.ck-order-issue:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.ck-order-issue > svg {
+  flex-shrink: 0;
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  margin-block-start: 0.125rem;
+}
+
+.ck-order-rail-order {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding-block-start: 0.75rem;
+  border-block-start: 1px solid var(--border);
+}
+
+.ck-order-rail-order-label {
+  color: var(--muted-foreground);
+  font-size: 0.71875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ck-order-rail-order strong {
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The live total. Its halo carries the colour of the last move in --ck-glow
+   (blue up, orange down): a custom property, never currentColor, so the
+   text-shadow interpolates (docs/QUIRKS.md). */
+.ck-order-total-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ck-order-total-glow {
+  --ck-glow: var(--ck-blue);
+  display: inline-flex;
+  align-items: baseline;
+  align-self: flex-start;
+  gap: 0.25rem;
+  margin-inline-start: -0.375rem;
+  padding: 0.125rem 0.375rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--foreground);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-order-total-glow[data-last-trend="down"] {
+  --ck-glow: var(--ck-orange);
+}
+
+.ck-order-total-glow:hover,
+.ck-order-total-glow[data-pinned] {
+  background-color: color-mix(in oklab, var(--ck-glow) 10%, transparent);
+}
+
+.ck-order-total-glow:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.ck-order-total-live {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  text-shadow: 0 0 0.5rem color-mix(in oklab, var(--ck-glow) 25%, transparent);
+  animation: ck-total-glow var(--glow-duration, 2s) ease-in-out infinite;
+}
+
+/* ui/live-value clears its trend after the tick; the total keeps the colour
+   of its last move until the next one. */
+.ck-order-total-glow[data-last-trend] .ck-order-total-live {
+  color: var(--ck-glow);
+}
+
+@keyframes ck-total-glow {
+  0%, 100% {
+    text-shadow: 0 0 0.5rem color-mix(in oklab, var(--ck-glow) 25%, transparent);
+  }
+  50% {
+    text-shadow: 0 0 1rem color-mix(in oklab, var(--ck-glow) 55%, transparent);
+  }
+}
+
+.ck-order-total-unit {
+  color: var(--muted-foreground);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.ck-order-total-block--compact .ck-order-total-live {
+  font-size: 1.375rem;
+}
+
+.ck-order-total-rates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ck-order-total-hr {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.ck-order-total-sep {
+  color: var(--border);
+}
+
+.ck-order-total-est em {
+  font-style: normal;
+}
+
+.ck-order-total-note {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.71875rem;
+}
+
+.ck-order-total-note > svg {
+  flex-shrink: 0;
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+}
+
+/* The receipt in its hover card. No `display` here: the card's own exit
+   state relies on the UA's display:none (ui/hover-card). */
+.ck-order-receipt-card {
+  width: 24rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.875rem 1rem;
+}
+
+.ck-order-receipt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-block-end: 0.75rem;
+}
+
+.ck-order-unpin {
+  block-size: 1.75rem;
+  padding-inline: 0.5rem;
+}
+
+/* The itemised receipt: label, hourly, monthly, Change on every line. */
+.ck-receipt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  font-size: 0.8125rem;
+}
+
+.ck-receipt--page {
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background-color: var(--card);
+  font-size: 0.875rem;
+}
+
+.ck-receipt-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ck-receipt-group-name {
+  color: var(--muted-foreground);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ck-receipt-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.ck-receipt:not(:has(.ck-receipt-change)) .ck-receipt-line {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.ck-receipt-label {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  min-inline-size: 0;
+}
+
+.ck-receipt-meta {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.ck-receipt-hr {
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.ck-receipt-amount {
+  min-inline-size: 5.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.ck-receipt-change {
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--ck-blue);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ck-receipt-change:hover {
+  text-decoration: underline;
+}
+
+.ck-receipt-change:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.ck-receipt-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding-block-start: 0.625rem;
+  border-block-start: 1px solid var(--border);
+}
+
+.ck-receipt-line--sum .ck-receipt-label {
+  font-weight: 600;
+}
+
+.ck-receipt-line--total {
+  font-size: 1.0625em;
+}
+
+.ck-receipt-line--total .ck-receipt-label,
+.ck-receipt-line--total .ck-receipt-amount {
+  font-weight: 700;
+}
+
+.ck-receipt-note {
+  margin: 0.25rem 0 0;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+/* The mobile bar: rendered always, shown only when the rail is not. */
+.ck-order-mobile {
+  display: none;
+}
+
+/* ── Review: the gate, save and share, deploy, provisioning ──────────── */
+
+.ck-order-gate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0.375rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ck-order-gate-list li {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+}
+
+.ck-order .ck-order-fix {
+  block-size: auto;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* Add-ons wait for a valid base: the fieldset dims as one, and its own
+   box model is reset so it lays out like the panel it sits in. */
+.ck-order-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.ck-order-fieldset:disabled {
+  opacity: 0.55;
+}
+
+.ck-order-share {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Hidden but focusable-by-script: display:none would make setInputFiles
+   and the button's click() no-ops in some browsers. */
+.ck-order-import-input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.ck-order-link {
+  max-inline-size: 40rem;
+}
+
+.ck-order-deploy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background-color: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+
+.ck-order-deploy-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-inline-size: 0;
+}
+
+.ck-order-deploy-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.ck-order-deploy-reason {
+  color: var(--destructive);
+  font-size: 0.8125rem;
+}
+
+.ck-order-provision {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background-color: var(--card);
+}
+
+.ck-order-provision-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.ck-order-provision-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.ck-order-provision-title svg {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  color: var(--ck-orange);
+}
+
+.ck-order-provision[data-state="done"] .ck-order-provision-title svg {
+  color: var(--success);
+}
+
+.ck-order-provision-bar {
+  --progress-glow: var(--ck-orange);
+}
+
+.ck-order-provision[data-state="done"] .ck-order-provision-bar .progress-indicator {
+  background-color: var(--success);
+}
+
+.ck-order-stages {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+}
+
+.ck-order-stages li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted-foreground);
+  transition: color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-order-stages li[data-state="running"] {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.ck-order-stages li[data-state="done"] {
+  color: var(--foreground);
+}
+
+.ck-order-outputs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-block-start: 0.75rem;
+  border-block-start: 1px solid var(--border);
+}
+
+.ck-order-output {
+  display: grid;
+  gap: 0.5rem;
+  max-inline-size: 40rem;
+}
+
+.ck-order-output-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.ck-order-copy .copy-field-value {
+  font-size: 0.75rem;
+}
+
+.ck-order-payload {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background-color: var(--muted);
+}
+
+.ck-order-payload-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem 0.375rem 0.75rem;
+  border-block-end: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.ck-order-payload-head svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.ck-order-payload-head .btn {
+  margin-inline-start: auto;
+}
+
+.ck-order-payload-body {
+  max-block-size: 18rem;
+  margin: 0;
+  padding: 0.75rem;
+  overflow: auto;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+/* ── The order table ─────────────────────────────────────────────────── */
+
+.ck-order-table-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding-block-start: 0.75rem;
+  border-block-start: 1px solid var(--border);
+}
+
+.ck-order-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+}
+
+.ck-order-toolbar-left,
+.ck-order-toolbar-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ck-order-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  inline-size: 16rem;
+  max-inline-size: 100%;
+}
+
+.ck-order-search > svg {
+  position: absolute;
+  inset-inline-start: 0.625rem;
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.ck-order-search-input {
+  block-size: 2rem;
+  padding-inline-start: 2rem;
+  font-size: 0.8125rem;
+}
+
+.ck-order-menubar {
+  block-size: 2rem;
+}
+
+.ck-order-menubar-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+}
+
+.ck-order-menubar-trigger svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+}
+
+/* The kit's --space ramp already follows --density-scale; the cell's block
+   padding is pinned to it here so the two densities read apart. */
+.ck-order-density-scope .ck-order-table td {
+  padding-block: calc(0.4375rem * var(--density-scale, 1));
+}
+
+.ck-order-actions-head,
+.ck-vdc-actions,
+.ck-vm-actions {
+  inline-size: 3rem;
+  text-align: end;
+}
+
+/* A vDC's row: the kit's group toggle, the figures and the live price, on
+   a flex div inside the cell (a flex td stops being a cell and its colspan
+   with it). The draft carries an orange edge; a name is an identifier and
+   keeps its case and its mono face where the kit would capitalise a prose
+   label. */
+.ck-vdc-cell {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.375rem 0.75rem;
+}
+
+.ck-vdc-cell .data-table-group-label {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  text-transform: none;
+}
+
+.ck-vdc-row[data-draft] > td:first-child {
+  box-shadow: inset 3px 0 0 var(--ck-orange);
+}
+
+.ck-vdc-facts {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.375rem 0.75rem;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.ck-vdc-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  margin-inline-start: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.ck-vdc-price-live {
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.ck-vdc-price-unit {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+/* Machines: editable cells, a chevron that opens the row's own settings. */
 .ck-vm-expand {
   display: grid;
   place-items: center;
@@ -2201,11 +3530,11 @@
   rotate: 90deg;
 }
 
-.ck-console .ck-vm-table .table-row[data-expanded] td {
+.ck-console .ck-order-table .table-row[data-expanded] td {
   border-block-end-color: transparent;
 }
 
-.ck-console .ck-vm-table .ck-vm-detail td {
+.ck-console .ck-order-table .ck-vm-detail td {
   padding: 0.25rem 0.75rem 0.75rem 2.75rem;
   background-color: color-mix(in oklab, var(--muted) 50%, transparent);
   white-space: normal;
@@ -2226,39 +3555,6 @@
 .ck-vm-setting-title {
   font-size: 0.875rem;
   font-weight: 500;
-}
-
-.ck-vm-group-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-/* The kit capitalises group labels for prose values; a vDC name is an
-   identifier and keeps its case and its mono face. */
-.ck-vm-group .data-table-group-label {
-  text-transform: none;
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-}
-
-.ck-vm-group-settings {
-  block-size: 1.75rem;
-  padding-inline: 0.5rem;
-  color: var(--muted-foreground);
-  font-weight: 500;
-}
-
-.ck-vm-group-settings svg {
-  inline-size: 0.875rem;
-  block-size: 0.875rem;
-}
-
-.ck-vm-group-pop {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  width: 22rem;
 }
 
 .ck-vm-input {
@@ -2282,133 +3578,188 @@
   font-variant-numeric: tabular-nums;
 }
 
-.ck-console .ck-vm-group td {
-  padding-block: 0.1875rem;
-}
-
-.ck-vm-group-action {
-  text-align: end;
-}
-
-.ck-vm-add svg,
-.ck-order-add svg,
-.ck-order-open svg,
-.ck-order-place-btn svg {
-  inline-size: 0.875rem;
-  block-size: 0.875rem;
-}
-
-/* Summary: the draft above the table, totals under it. */
-.ck-order-current {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.875rem 1rem;
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-lg);
-}
-
-.ck-order-current-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  min-inline-size: 0;
-}
-
-.ck-order-current-label {
-  color: var(--muted-foreground);
-  font-size: 0.71875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.ck-order-current-name {
-  font-size: 0.875rem;
-}
-
-.ck-order-current-price {
-  margin-inline-start: auto;
-  font-size: 1rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.ck-order-row-name {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.ck-console .ck-order-table .table-row[data-role="dr"] td {
-  color: var(--muted-foreground);
-}
-
 .ck-num {
   font-variant-numeric: tabular-nums;
 }
 
-.ck-order-row-price {
-  font-weight: 600;
-}
-
-.ck-order-totals {
+/* The pager ui/data-table does not ship (#39). */
+.ck-order-pager {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-inline-start: auto;
-  inline-size: 100%;
-  max-inline-size: 26rem;
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background-color: var(--card);
-}
-
-.ck-order-total-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  font-size: 0.9375rem;
-  font-weight: 500;
-}
-
-.ck-order-total {
-  font-size: 1.375rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--ck-orange);
-}
-
-.ck-order-due .ck-order-total {
-  color: var(--foreground);
-  font-size: 1.125rem;
-}
-
-.ck-order-place {
-  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-block-start: 0.5rem;
+  gap: 0.75rem 1rem;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Sits beside the disabled Place order button and says why it is disabled. */
-.ck-order-editing {
+.ck-order-pager .native-select {
+  inline-size: auto;
+  min-inline-size: 4.25rem;
+  block-size: 2rem;
+  padding-inline: 0.5rem 1.75rem;
+  font-size: 0.8125rem;
+}
+
+.ck-order-pager-range {
+  margin-inline-start: auto;
+}
+
+.ck-order-pages {
+  inline-size: auto;
   margin: 0;
-  text-align: end;
+}
+
+.ck-order-table-hint {
+  margin: 0;
+}
+
+@container ck-console (max-width: 72rem) {
+  .ck-plans {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* The rail folds into a bar along the bottom edge; the receipt opens up
+   from it. */
+@container ck-console (max-width: 64rem) {
+  .ck-order-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ck-order-rail {
+    display: none;
+  }
+
+  .ck-order-mobile {
+    position: sticky;
+    inset-block-end: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    margin-inline: -1.25rem;
+    border-block-start: 1px solid var(--border);
+    background-color: var(--card);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .ck-order-mobile-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+  }
+
+  .ck-order-mobile-row > .btn {
+    flex: 1 1 60%;
+    min-inline-size: 0;
+    block-size: auto;
+    min-block-size: 2.5rem;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.875rem;
+    line-height: 1.25;
+    white-space: normal;
+  }
+
+  .ck-order-mobile-toggle {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    gap: 0.5rem;
+    min-inline-size: 0;
+    padding: 0.25rem;
+    border: none;
+    border-radius: var(--radius-md);
+    background: none;
+    color: var(--foreground);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .ck-order-mobile-toggle:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  .ck-order-mobile-toggle > svg {
+    flex-shrink: 0;
+    inline-size: 1rem;
+    block-size: 1rem;
+    color: var(--muted-foreground);
+    transition: rotate var(--motion-fast) var(--motion-ease);
+  }
+
+  .ck-order-mobile-toggle[data-state="open"] > svg {
+    rotate: 180deg;
+  }
+
+  .ck-order-mobile-total {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ck-order-mobile-live {
+    color: var(--foreground);
+    font-size: 1.25rem;
+    font-weight: 800;
+  }
+
+  .ck-order-mobile-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-block-size: 50vh;
+    padding: 0.25rem 1rem 1rem;
+    overflow-y: auto;
+    border-block-start: 1px solid var(--border);
+  }
+
+  .ck-order-stages {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @container ck-console (max-width: 56rem) {
+  .ck-order-head {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .ck-order-head-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
   .ck-order-section {
     grid-template-columns: minmax(0, 1fr);
     gap: 0.75rem;
   }
 
   .ck-sites,
-  .ck-order-two {
+  .ck-order-two,
+  .ck-workloads,
+  .ck-plans {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ck-order-tabs .tabs-list {
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .ck-order-tabs .tabs-trigger {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .ck-order-deploy {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 
@@ -2477,6 +3828,7 @@
 .ck-check-row .field-label {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
   font-size: 0.875rem;
   font-weight: 600;
@@ -2659,6 +4011,12 @@
 .ck-bcdr-body {
   white-space: normal;
   line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ck-order-total-live {
+    animation: none;
+  }
 }
 
 /* Access keys: copy fields in table cells and stacked under each API key. */
