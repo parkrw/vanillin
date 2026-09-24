@@ -1038,14 +1038,6 @@
   overflow: hidden;
 }
 
-/* ui/scroll-area contains overscroll so its own squish can replace the
-   native one. A table that never overflows vertically is always at that
-   boundary, so the wheel died over it while the page scrolled beside it.
-   Let the vertical axis chain up to .ck-scroller. */
-.ck-table-wrap .scroll-area-viewport {
-  overscroll-behavior-y: auto;
-}
-
 .ck-console .ck-table {
   font-variant-numeric: tabular-nums;
 }

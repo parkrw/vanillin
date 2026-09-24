@@ -11,8 +11,21 @@
   border-radius: inherit;
   /* the overlay scrollbars replace the UA ones */
   scrollbar-width: none;
-  /* suppress native overscroll so the custom squish replaces it */
-  overscroll-behavior: contain;
+}
+
+/* Contain only the axes that actually overflow, so a viewport that never
+   scrolls on an axis still chains the wheel to its ancestor instead of
+   swallowing it. `data-overflow-{x,y}-{start,end}` always has at least one
+   of its pair set while that axis overflows (start clears at the leading
+   edge, end clears at the trailing edge, never both at once). */
+.scroll-area[data-overflow-y-start] > .scroll-area-viewport,
+.scroll-area[data-overflow-y-end] > .scroll-area-viewport {
+  overscroll-behavior-y: contain;
+}
+
+.scroll-area[data-overflow-x-start] > .scroll-area-viewport,
+.scroll-area[data-overflow-x-end] > .scroll-area-viewport {
+  overscroll-behavior-x: contain;
 }
 
 .scroll-area-viewport::-webkit-scrollbar {
