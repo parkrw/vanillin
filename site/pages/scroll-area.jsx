@@ -289,6 +289,53 @@ import "./ui/scroll-area/scroll-area.css"
       </section>
 
       <section className="pg-section">
+        <h3>Scroll chaining</h3>
+        <p className="pg-desc" style={{ marginBlockEnd: "0.75rem" }}>
+          The viewport only contains overscroll on axes that actually overflow (via the{" "}
+          <code>data-overflow-{"{x,y}"}-{"{start,end}"}</code> pair above), so a wheel over an area
+          that cannot scroll vertically chains through to whatever scrolls around it, while one
+          that does overflow keeps containing at its own scroll limit.
+        </p>
+        <ComponentPreview code={`{/* Nested inside a taller scrolling block. */}
+<div style={{ blockSize: "8rem", overflow: "auto" }}>
+  <ScrollArea style={{ blockSize: "4rem" }}>
+    <div style={{ padding: "0.5rem" }}>Fits — the wheel chains to the block around it.</div>
+  </ScrollArea>
+  <div style={{ blockSize: "16rem" }} />
+</div>`}>
+          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+            <div
+              data-pg="sa-chain-fit-ancestor"
+              style={{ ...frame, blockSize: "8rem", inlineSize: "14rem", overflow: "auto" }}
+            >
+              <ScrollArea data-pg="sa-chain-fit" style={{ blockSize: "4rem" }}>
+                <div style={{ padding: "0.5rem", fontSize: "0.875rem" }}>
+                  Fits — the wheel chains to the block around it.
+                </div>
+              </ScrollArea>
+              <div style={{ blockSize: "16rem" }} />
+            </div>
+            <div
+              data-pg="sa-chain-overflow-ancestor"
+              style={{ ...frame, blockSize: "8rem", inlineSize: "14rem", overflow: "auto" }}
+            >
+              <ScrollArea data-pg="sa-chain-overflow" style={{ blockSize: "4rem" }}>
+                <div style={{ padding: "0.5rem", fontSize: "0.875rem" }}>
+                  {tags.slice(0, 15).map((tag) => (
+                    <div key={tag}>{tag}</div>
+                  ))}
+                </div>
+              </ScrollArea>
+              <div style={{ blockSize: "16rem" }} />
+            </div>
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          The left area's content fits its box, so the viewport never overflows and the wheel passes through to the block holding it. The right area overflows and keeps the wheel until its own scroll limit, where it still contains instead of pushing the gesture up to the block.
+        </p>
+      </section>
+
+      <section className="pg-section">
         <h3>Snap content</h3>
         <p className="pg-desc" style={{ marginBlockEnd: "0.75rem" }}>
           Horizontal scroll-snap content inside a scroll area. Dragging the scrollbar thumb
