@@ -1,30 +1,37 @@
 import { useEffect, useRef, useState } from "react"
-import { Alert, AlertDescription, AlertTitle } from "../../../ui/alert/alert.jsx"
 import { Button } from "../../../ui/button/button.jsx"
 import { CopyField } from "../../../ui/copy-field/copy-field.jsx"
 import { Progress } from "../../../ui/progress/progress.jsx"
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "../../../ui/input-group/input-group.jsx"
+import { Label } from "../../../ui/label/label.jsx"
 import { StatusDot } from "../../../ui/status-dot/status-dot.jsx"
 import { toast } from "../../../ui/toast/toast.jsx"
-import { ORDER_COPY } from "../console-data.js"
-import { AlertCircleIcon, CheckCircleIcon, DownloadIcon, LinkIcon, MailIcon, RocketIcon, TerminalIcon, UploadIcon } from "../icons.jsx"
-import { Disclosure, OrderSection } from "./form.jsx"
-import { STEPS, money, moneyHr, siteName, siteOf, stepOfField, vdcCost } from "./pricing.js"
-import { Receipt } from "./rail.jsx"
+import { ToggleGroup, ToggleGroupItem } from "../../../ui/toggle-group/toggle-group.jsx"
+import { BILLING_TERMS } from "../console-data.js"
+import { CheckCircleIcon, DownloadIcon, LinkIcon, MailIcon, RocketIcon, SiteIcon, TerminalIcon, UploadIcon } from "../icons.jsx"
+import { Disclosure, InlineError, IssueGate, OrderSection } from "./form.jsx"
+import { money, siteName, siteOf, vdcCost } from "./pricing.js"
 import { copyText, download, mailtoHref, orderCsv, parseOrder, serializeOrder, shareUrlFor } from "./share.js"
-import "../../../ui/alert/alert.css"
 import "../../../ui/button/button.css"
 import "../../../ui/copy-field/copy-field.css"
+import "../../../ui/input-group/input-group.css"
+import "../../../ui/label/label.css"
 import "../../../ui/progress/progress.css"
 import "../../../ui/status-dot/status-dot.css"
+import "../../../ui/toggle/toggle.css"
+import "../../../ui/toggle-group/toggle-group.css"
 
-/* ── 5 · Review: receipt, save and share, deploy ─────────────────────── */
+/* ── 6 · Checkout: billing and name, save and share; the table sits on
+   this step, and the deploy button is the foot under it ──────────────── */
 
 const stamp = () => new Date().toISOString().slice(0, 10)
 
-export function ReviewStep({ order, cost, receipt, issues, onGo, onImport, onDeploy, deployLabel, canDeploy, deployReason }) {
+export function ReviewStep({ order, patch, touch, errors, issues, onGo, onImport }) {
   const [link, setLink] = useState(null)
   const fileRef = useRef(null)
-  const { draft, editing } = order
+  const { draft } = order
+  const billing = BILLING_TERMS.find((t) => t.id === draft.billing)
+  const site = siteOf(draft.site)
   const exportJson = () => download(`acme-order-${stamp()}.json`, "application/json", serializeOrder(order))
   const exportCsv = () => download(`acme-order-${stamp()}.csv`, "text/csv", orderCsv(order))
   const copyLink = async () => {
@@ -50,28 +57,47 @@ export function ReviewStep({ order, cost, receipt, issues, onGo, onImport, onDep
   }
   return (
     <>
-      <OrderSection id="receipt" title="Receipt" hint="Everything this vDC bills, hourly and monthly; Change jumps to the control that sets it." wide>
-        <Receipt lines={receipt} cost={cost} onChange={onGo} className="ck-receipt--page" />
-      </OrderSection>
-      {issues.size > 0 && (
-        <Alert variant="destructive" className="ck-order-gate" data-issues={issues.size}>
-          <AlertCircleIcon />
-          <AlertTitle>Not ready to deploy</AlertTitle>
-          <AlertDescription>
-            <ul className="ck-order-gate-list">
-              {[...issues].map(([field, message]) => (
-                <li key={field}>
-                  <span>{message}</span>
-                  <Button variant="link" size="sm" className="ck-order-fix" onClick={() => onGo(stepOfField(field), field)}>
-                    Fix in {STEPS.find((s) => s.id === stepOfField(field)).label}
-                  </Button>
-                </li>
+      <OrderSection id="billing" title="Billing and name" hint="Name the vDC and pick its billing term; the machines are under these, and Deploy closes the page below them.">
+        <div className="ck-order-two">
+          <div className="ck-order-field">
+            <Label>Billing term</Label>
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              value={draft.billing}
+              onValueChange={(id) => id && patch({ billing: id })}
+              className="ck-segments"
+              aria-label="Billing term"
+            >
+              {BILLING_TERMS.map((t) => (
+                <ToggleGroupItem key={t.id} value={t.id}>{t.name}</ToggleGroupItem>
               ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
-      )}
-      <OrderSection id="share" title="Save and share" hint="Prices travel with the file or the link: anyone can open them here without an account." wide>
+            </ToggleGroup>
+            <p className="ck-option-desc">{billing.description}</p>
+          </div>
+          <div className="ck-order-field">
+            <Label htmlFor="ck-order-name">vDC name</Label>
+            <InputGroup className="ck-order-name" data-invalid={errors.has("name") || undefined}>
+              <InputGroupAddon><SiteIcon /></InputGroupAddon>
+              <InputGroupInput
+                id="ck-order-name"
+                value={draft.name}
+                aria-invalid={errors.has("name") || undefined}
+                onChange={(e) => patch({ name: e.target.value })}
+                onBlur={() => touch("name")}
+                spellCheck={false}
+              />
+              <InputGroupAddon align="inline-end">
+                <InputGroupText>{site.code.toLowerCase()}.acme.cloud</InputGroupText>
+              </InputGroupAddon>
+            </InputGroup>
+            <p className="ck-option-desc">Shown on the total and on invoices; lower-case letters, digits and dashes.</p>
+            <InlineError field="name">{errors.get("name")}</InlineError>
+          </div>
+        </div>
+      </OrderSection>
+      <IssueGate title="Not ready to deploy" issues={issues} onGo={onGo} />
+      <OrderSection id="share" title="Save and share" hint="Prices travel with the file or the link: anyone can open them here without an account.">
         <div className="ck-order-share">
           <Button variant="outline" size="sm" className="ck-order-export-json" onClick={exportJson}>
             <DownloadIcon />
@@ -107,21 +133,6 @@ export function ReviewStep({ order, cost, receipt, issues, onGo, onImport, onDep
         </div>
         {link && <CopyField value={link} label="Share link" truncate="end" className="ck-order-link" />}
       </OrderSection>
-      <div className="ck-order-deploy">
-        <div className="ck-order-deploy-text">
-          <span className="ck-order-deploy-title">
-            {order.vdcs.length > 0
-              ? `Deploys ${order.vdcs.length + (editing ? 0 : 1)} vDC${order.vdcs.length + (editing ? 0 : 1) === 1 ? "" : "s"}: ${[...order.vdcs.map((v) => v.name), ...(editing ? [] : [draft.name])].join(", ")}`
-              : `Deploys ${draft.name} at ${siteName(draft.site)}`}
-          </span>
-          <span className="ck-option-desc">{ORDER_COPY.dueToday}</span>
-          {!canDeploy && deployReason && <span className="ck-order-deploy-reason">{deployReason}</span>}
-        </div>
-        <Button size="lg" className="ck-order-cta" disabled={!canDeploy} onClick={onDeploy}>
-          <RocketIcon />
-          {deployLabel}
-        </Button>
-      </div>
     </>
   )
 }
@@ -208,5 +219,5 @@ export function ProvisioningPanel({ deployed, consoleHref, onReset }) {
   )
 }
 
-export const deployLabelFor = (cost) => `Deploy — ${moneyHr(cost.total)}/hr, up to ${money(cost.totalWithTax)}/mo`
+export const deployLabelFor = (cost) => `Deploy — up to ${money(cost.totalWithTax)}/mo`
 export const orderCostOf = (vdcs, vms) => vdcs.reduce((sum, v) => sum + vdcCost(v, vms).total, 0)

@@ -349,11 +349,11 @@ export const ORDER_RATES = {
 export const POOLS = [
   {
     id: "cpu", name: "CPU pool", unit: "GHz", rate: 2, min: 4, max: 200, step: 2, tick: 50,
-    description: "Clock cycles shared by every virtual machine in the vDC; size it for the busiest hour, not the average.",
+    description: "Shared by every machine in the vDC; size it for the busiest hour.",
   },
   {
     id: "ram", name: "RAM pool", unit: "GB", rate: 7.5, min: 8, max: 1024, step: 8, tick: 256,
-    description: "Memory the vDC can hand to its virtual machines; databases and caches fill this before they touch the CPU pool.",
+    description: "Handed out to the machines; databases and caches fill it first.",
   },
   {
     id: "ips", name: "Public IPs", unit: "", rate: 5, min: 0, max: 32, step: 1, tick: 8,
@@ -427,23 +427,24 @@ export const BCDR_COPY = [
 ]
 
 export const ORDER_COPY = {
-  included: "Every vDC includes the edge firewall, hypervisor high availability, live migration and the management plane.",
   drSite: "Where the replica lives; choose a site far enough away that one storm cannot reach both.",
   drStorage: "How much of your storage the replica holds; set it above 100% to keep room for journals and point-in-time copies.",
   licences: "One licence per protected virtual machine covers the replication agent and its recovery runbook.",
   backups: "Nightly snapshots of every volume in the vDC, priced per GB of provisioned storage and scaled by how long they are kept.",
   vms: "Virtual machines draw from the pools you sized; add them here so the replica sizing and licence count are right on day one.",
-  headroom: "Keeps a tenth of both pools unallocated so a burst never waits on a resize; not billed.",
+  headroom: "keeps a tenth of both pools free, so a burst never waits on a resize; not billed",
+  media: "HDD, Hybrid, SSD and NVMe name each tier's performance class, the IOPS and latency it is held to, not the hardware behind it.",
   dueToday: "Usage bills at month end; nothing is charged until the first vDC is running.",
 }
 
 // Per-vDC placement settings for its virtual machines, and per-VM options.
 export const VM_GROUP_DEFAULTS = { antiAffinity: false, network: NETWORKS[0].name }
 export const VM_DEFAULTS = { publicIp: false, backup: true, bootTier: "t2", startOnCreate: true }
+// How one machine is reached; each machine carries its own.
+export const ACCESS_DEFAULTS = { method: "ssh", sshKey: "", username: "admin", password: "", script: "" }
 
 // The form's starting point for each new vDC.
 export const ORDER_DEFAULTS = {
-  path: "custom",
   workload: "general",
   users: "everywhere",
   site: "dfw",
@@ -456,7 +457,6 @@ export const ORDER_DEFAULTS = {
   ipv6: true,
   uplink: "10",
   addons: [],
-  access: { method: "ssh", sshKey: "", password: "", script: "" },
   storage: { t1: 500, t2: 250, t3: 0, t4: 0 },
   protection: "none",
   drSite: "slc",
@@ -465,13 +465,6 @@ export const ORDER_DEFAULTS = {
   retention: "7",
   vmGroup: VM_GROUP_DEFAULTS,
 }
-
-// Quick Deploy fills the form from the workload and lands on the review;
-// Custom walks every step. The last choice is remembered per browser.
-export const ORDER_PATHS = [
-  { id: "quick", name: "Quick Deploy", description: "Pick a workload and a site; the workload fills in size, image and storage and you land on the review." },
-  { id: "custom", name: "Custom", description: "Walk every step: software, size, network, storage, protection and add-ons." },
-]
 
 // A workload names the plan, image, machine size and storage mix the form
 // starts from, and says why in one sentence. Everything stays editable.
@@ -510,29 +503,22 @@ export const WORKLOADS = [
 
 // "Where are most of your users?" → one recommended site and the reason.
 export const USER_REGIONS = [
-  { id: "south", name: "Texas and the South", site: "dfw", rationale: "DFW sits in the middle of the region: single-digit milliseconds to Dallas, Houston and Atlanta." },
-  { id: "midwest", name: "Midwest and Northeast", site: "chi", rationale: "Chicago is on the Midwest carrier hotels, one hop from New York and Toronto." },
-  { id: "west", name: "Mountain West and Pacific", site: "slc", rationale: "SLC is the closest site to Denver, Phoenix and the Bay Area, and it is out of the hurricane belt." },
+  { id: "south", name: "Texas & the South", site: "dfw", rationale: "DFW sits in the middle of the region: single-digit milliseconds to Dallas, Houston and Atlanta." },
+  { id: "midwest", name: "Midwest & Northeast", site: "chi", rationale: "Chicago is on the Midwest carrier hotels, one hop from New York and Toronto." },
+  { id: "west", name: "Mountain West & Pacific", site: "slc", rationale: "SLC is the closest site to Denver, Phoenix and the Bay Area, and it is out of the hurricane belt." },
   { id: "everywhere", name: "Everywhere, or not sure", site: "dfw", rationale: "DFW has the widest size catalogue and the shortest queue for new capacity; pick it unless latency or law says otherwise." },
 ]
 
-// Per-site figures for the comparison table. Latency is the median round trip
-// in milliseconds from each user region; tax is the estimated sales tax rate.
+// Per-site figures. Latency is the median round trip in milliseconds from
+// each user region, for the comparison table; tax is the estimated sales
+// tax rate, on the site card and the receipt.
 export const SITE_FACTS = {
-  dfw: { latency: { south: 8, midwest: 24, west: 32 }, queue: "same day", seismic: "low", tax: 0.0825, taxLabel: "TX 8.25%" },
-  chi: { latency: { south: 26, midwest: 9, west: 44 }, queue: "2 days", seismic: "low", tax: 0.1025, taxLabel: "IL 10.25%" },
-  slc: { latency: { south: 30, midwest: 38, west: 12 }, queue: "same day", seismic: "moderate", tax: 0.0725, taxLabel: "UT 7.25%" },
+  dfw: { latency: { south: 8, midwest: 24, west: 32 }, tax: 0.0825, taxLabel: "TX 8.25%" },
+  chi: { latency: { south: 26, midwest: 9, west: 44 }, tax: 0.1025, taxLabel: "IL 10.25%" },
+  slc: { latency: { south: 30, midwest: 38, west: 12 }, tax: 0.0725, taxLabel: "UT 7.25%" },
 }
 
-// What new machines boot from, in four tabs. `popular` and `recent` sort to
-// the top of their tab; `licence` names a per-machine licence line.
-export const SOFTWARE_TABS = [
-  { id: "os", name: "Operating systems" },
-  { id: "apps", name: "Applications" },
-  { id: "snapshots", name: "Snapshots" },
-  { id: "custom", name: "Custom images" },
-]
-
+// What new machines boot from. `popular` and `recent` are catalogue facts; `licence` names a per-machine licence line.
 export const SOFTWARE = [
   { tab: "os", name: "Ubuntu 24.04 LTS", popular: true, recent: true, description: "The default; five years of security updates and the widest package catalogue." },
   { tab: "os", name: "Ubuntu 22.04 LTS", popular: true, description: "The previous LTS, for software that has not moved yet." },
@@ -548,5 +534,5 @@ export const SOFTWARE = [
 
 export const ACCESS_METHODS = [
   { id: "ssh", name: "SSH key", description: "Paste a public key; it is installed for the image's default user on first boot." },
-  { id: "password", name: "Password", description: "Set a root password instead; twelve characters at least, and rotate it after first login." },
+  { id: "password", name: "Username and password", description: "A login for the machine instead of a key; twelve characters at least, and rotate it after first login." },
 ]

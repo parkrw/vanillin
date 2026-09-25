@@ -1,4 +1,4 @@
-import { money, moneyHr, orderTotals, sanitizeOrder, siteName, vdcCost, vmMonthly } from "./pricing.js"
+import { money, orderTotals, sanitizeOrder, siteName, vdcCost, vmMonthly } from "./pricing.js"
 
 /* Save and share without a server: a JSON file that re-opens here, a CSV for
    the spreadsheet, a mailto: with the summary, and the whole order folded
@@ -7,7 +7,6 @@ import { money, moneyHr, orderTotals, sanitizeOrder, siteName, vdcCost, vmMonthl
 
 export const ORDER_FORMAT = 1
 const ORDER_KEY = "vanillin.order.draft"
-const PATH_KEY = "vanillin.order.path"
 
 const envelope = (order) => ({
   format: ORDER_FORMAT,
@@ -39,13 +38,13 @@ const csvCell = (value) => {
 }
 
 export function orderCsv(order) {
-  const rows = [["kind", "vdc", "name", "site", "cpu_ghz", "ram_gb", "storage_gb", "protection", "image", "size", "count", "monthly_usd", "hourly_usd"]]
+  const rows = [["kind", "vdc", "name", "site", "cpu_ghz", "ram_gb", "storage_gb", "protection", "image", "size", "count", "monthly_usd"]]
   for (const v of [...order.vdcs, order.draft]) {
     const c = vdcCost(v, order.vms)
-    rows.push(["vdc", v.name, v.name, siteName(v.site), v.cpu, v.ram, c.storageGb, c.tier.name, v.image, "", c.vmCount, c.total.toFixed(2), c.hourly.toFixed(4)])
+    rows.push(["vdc", v.name, v.name, siteName(v.site), v.cpu, v.ram, c.storageGb, c.tier.name, v.image, "", c.vmCount, c.total.toFixed(2)])
     for (const vm of order.vms.filter((m) => m.vdc === v.id)) {
       const monthly = vmMonthly(vm.size) * vm.count
-      rows.push(["vm", v.name, vm.name, siteName(v.site), "", "", "", "", vm.image, vm.size, vm.count, monthly.toFixed(2), (monthly / 730).toFixed(4)])
+      rows.push(["vm", v.name, vm.name, siteName(v.site), "", "", "", "", vm.image, vm.size, vm.count, monthly.toFixed(2)])
     }
   }
   return rows.map((r) => r.map(csvCell).join(",")).join("\r\n") + "\r\n"
@@ -66,10 +65,10 @@ export function orderSummaryText(order) {
   const all = [...order.vdcs, order.draft]
   const lines = all.map((v) => {
     const c = vdcCost(v, order.vms)
-    return `${v.name} · ${siteName(v.site)} · ${v.cpu} GHz · ${v.ram} GB · ${c.storageGb} GB · ${c.tier.name} — ${money(c.total)}/mo (${moneyHr(c.total)}/hr)`
+    return `${v.name} · ${siteName(v.site)} · ${v.cpu} GHz · ${v.ram} GB · ${c.storageGb} GB · ${c.tier.name} — ${money(c.total)}/mo`
   })
   const t = orderTotals(order)
-  return [...lines, "", `Total ${money(t.total)}/mo before tax, ${money(t.totalWithTax)}/mo with estimated tax (730-hour estimate).`].join("\n")
+  return [...lines, "", `Total ${money(t.total)}/mo before tax, ${money(t.totalWithTax)}/mo with estimated tax.`].join("\n")
 }
 
 export function mailtoHref(order) {
@@ -139,23 +138,6 @@ export function clearSavedOrder() {
     localStorage.removeItem(ORDER_KEY)
   } catch {
     /* nothing to clear */
-  }
-}
-
-export function loadPath() {
-  try {
-    const path = localStorage.getItem(PATH_KEY)
-    return path === "quick" || path === "custom" ? path : null
-  } catch {
-    return null
-  }
-}
-
-export function savePath(path) {
-  try {
-    localStorage.setItem(PATH_KEY, path)
-  } catch {
-    /* remembered for this visit only */
   }
 }
 
