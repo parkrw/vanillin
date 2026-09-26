@@ -1664,12 +1664,12 @@
 
 .ck-order-head {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 1rem;
 }
 
-.ck-order-back {
+.btn.ck-order-back {
   align-self: start;
   margin-inline-start: -0.5rem;
   color: var(--ck-blue);
@@ -1690,120 +1690,116 @@
   font-size: 0.875rem;
 }
 
-.ck-order-head-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
+/* ── The steps: the kit's tabs as one strip across the top ──────────── */
 
-.ck-order-cart {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  flex-shrink: 0;
-  padding: 0.5rem 0.875rem 0.5rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background-color: var(--card);
-  color: var(--foreground);
-  font: inherit;
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition:
-    border-color var(--motion-fast) var(--motion-ease),
-    background-color var(--motion-fast) var(--motion-ease);
-}
-
-.ck-order-cart:hover {
-  border-color: var(--ck-orange);
-  background-color: var(--ck-orange-soft);
-}
-
-.ck-order-cart:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
-
-.ck-order-cart > svg {
-  inline-size: 1.125rem;
-  block-size: 1.125rem;
-  color: var(--ck-orange);
-}
-
-.ck-order-cart-count {
-  display: flex;
-  flex-direction: column;
-  color: var(--muted-foreground);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  line-height: 1.2;
-  text-align: start;
-}
-
-.ck-order-cart-sub {
-  font-size: 0.6875rem;
-  font-weight: 400;
-}
-
-.ck-order-cart-total {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--ck-orange);
-}
-
-/* The console-scoped large tab variant: numbered steps, full width, the
-   orange rule under the current one. */
-.ck-order-tabs {
+/* An icon in a ring for each step, its label under it, a rule between
+   them; the steps behind the current one fill orange and so do their
+   rules, the current one is ringed in orange, the rest wait in grey.
+   Continue and the way down to the machines close the row. The strip
+   sticks to the top of the scroll with the page's background behind it,
+   so the steps are always a click away; the page measures its height
+   into --ck-order-strip-h for what sticks under it. Kit classes sit in
+   every selector so the override wins on specificity, not on which sheet
+   loaded last (see .card.ck-site). */
+.tabs.ck-order-wizard {
   gap: 1rem;
 }
 
-.ck-order-tabs .tabs-list {
-  inline-size: 100%;
-  block-size: auto;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  padding: 0;
-  border-radius: 0;
+.ck-order-strip {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 2rem;
+  padding-block: 0.5rem 0.75rem;
   border-block-end: 1px solid var(--border);
-  background: none;
 }
 
-.ck-order-tabs .tabs-trigger {
-  flex: 0 0 auto;
+/* The background runs a little past the strip on both sides, so a card's
+   focus ring or shadow at the column's edge never peeks past a stuck
+   strip; the strip's own box stays the columns' width. */
+.ck-order-strip::before {
+  content: "";
+  position: absolute;
+  inset: 0 -1.25rem;
+  z-index: -1;
+  background-color: var(--background);
+}
+
+.tabs-list.ck-order-steps {
+  flex: 1 1 34rem;
+  align-items: flex-start;
+  justify-content: flex-start;
+  inline-size: auto;
   block-size: auto;
-  margin-block-end: -1px;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border: none;
-  border-block-end: 2px solid transparent;
+  gap: 0;
+  padding: 0;
   border-radius: 0;
+  background: none;
+  color: inherit;
+}
+
+.tabs-trigger.ck-order-step {
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 0.625rem;
+  block-size: auto;
+  padding: 0.25rem 0.375rem;
+  border: none;
+  border-radius: var(--radius-md);
   background: none;
   box-shadow: none;
   color: var(--muted-foreground);
-  font-size: 1rem;
+  font-size: 0.75rem;
   font-weight: 500;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-.ck-order-step-num {
+.ck-order-step-mark {
+  position: relative;
   display: grid;
   place-items: center;
-  inline-size: 1.375rem;
-  block-size: 1.375rem;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  border: 1.5px solid var(--border);
   border-radius: 50%;
-  background-color: var(--muted);
+  background-color: var(--card);
   color: var(--muted-foreground);
-  font-size: 0.71875rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
   transition:
     background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease),
     color var(--motion-fast) var(--motion-ease);
 }
 
-/* A step with visible problems carries their count on its tab. */
+.tabs-trigger.ck-order-step .ck-order-step-mark svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+}
+
+/* The rule joins one ring to the next, at the rings' centre: the trigger's
+   top padding plus the ring's radius, less half its own thickness. */
+.ck-order-step-rule {
+  flex: 1 1 1.5rem;
+  min-inline-size: 1rem;
+  block-size: 2px;
+  margin-block-start: calc(0.25rem + 0.875rem - 1px);
+  border-radius: 1px;
+  background-color: var(--border);
+  transition: background-color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-order-step-rule[data-done] {
+  background-color: var(--ck-orange);
+}
+
+/* A step with visible problems carries their count on the ring's shoulder. */
 .ck-order-step-flag {
+  position: absolute;
+  inset-block-start: -0.375rem;
+  inset-inline-end: -0.5rem;
   display: grid;
   place-items: center;
   min-inline-size: 1.125rem;
@@ -1815,88 +1811,127 @@
   font-size: 0.6875rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
   line-height: 1;
 }
 
-.ck-order-tabs .tabs-trigger:hover {
+.tabs-trigger.ck-order-step:hover {
   color: var(--foreground);
 }
 
-.ck-order-tabs .tabs-trigger[data-state="active"] {
-  border-block-end-color: var(--ck-orange);
-  background: none;
-  box-shadow: none;
+.tabs-trigger.ck-order-step:hover .ck-order-step-mark {
+  border-color: var(--muted-foreground);
   color: var(--foreground);
-  font-weight: 600;
 }
 
-.ck-order-tabs .tabs-trigger[data-state="active"] .ck-order-step-num {
+.tabs-trigger.ck-order-step[data-done] .ck-order-step-mark,
+.tabs-trigger.ck-order-step[data-done]:hover .ck-order-step-mark {
+  border-color: var(--ck-orange);
   background-color: var(--ck-orange);
   color: var(--primary-foreground);
 }
 
-.ck-order-tabs .tabs-trigger:focus-visible {
+.tabs-trigger.ck-order-step[data-state="active"] {
+  background: none;
+  box-shadow: none;
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.tabs-trigger.ck-order-step[data-state="active"] .ck-order-step-mark,
+.tabs-trigger.ck-order-step[data-state="active"]:hover .ck-order-step-mark {
+  border-color: var(--ck-orange);
+  background-color: var(--card);
+  color: var(--ck-orange);
+}
+
+.tabs-trigger.ck-order-step:focus-visible {
   outline: 2px solid var(--ring);
-  outline-offset: -2px;
+  outline-offset: 2px;
   box-shadow: none;
 }
 
-/* Form on the left, the price rail on the right, stuck to the top while
-   the form scrolls under it. */
+/* The strip's end: Continue, then Machines with its count. */
+.ck-order-strip-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-inline-start: auto;
+}
+
+.ck-order-jump svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+}
+
+.ck-order-jump-count {
+  display: inline-flex;
+  align-items: center;
+  min-inline-size: 1.25rem;
+  padding: 0 0.375rem;
+  border-radius: 999px;
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 0.71875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25rem;
+}
+
+/* The options on the left three quarters with the order table under them
+   in the same column, the price card on the right quarter beside both; on
+   Checkout the deploy foot closes the column under the table. The card
+   keeps its own height and sticks under the strip for the whole page,
+   since its area spans every row. The quarter's floor is what 1/4
+   resolves to just above the 64rem stack. */
 .ck-order-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 20rem;
+  grid-template-columns: minmax(0, 3fr) minmax(16rem, 1fr);
+  grid-template-areas:
+    "main aside"
+    "table aside"
+    "foot aside";
   gap: 1.5rem;
   align-items: start;
 }
 
 .ck-order-main {
+  grid-area: main;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   min-inline-size: 0;
 }
 
-.ck-order-step-head {
+/* A stuck card sits a little under the stuck strip. */
+.ck-order-aside {
+  grid-area: aside;
+  position: sticky;
+  inset-block-start: calc(var(--ck-order-strip-h, 5.5rem) + 0.75rem);
+  align-self: start;
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
-}
-
-.ck-order-step-title {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-}
-
-.ck-order-step-head .ck-order-hint {
-  margin: 0;
-  font-size: 0.875rem;
+  min-inline-size: 0;
 }
 
 .ck-order-panel {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
-.ck-order-panel:focus-visible {
+.tabs-content.ck-order-panel:focus-visible {
   outline: none;
   box-shadow: none;
 }
 
+/* Title over body, the hint held to a measure so it never runs the whole
+   three quarters; the bodies' own grids take the width. */
 .ck-order-section {
   display: grid;
-  grid-template-columns: 12rem minmax(0, 1fr);
-  gap: 1.25rem;
-  transition: opacity var(--motion-fast) var(--motion-ease);
-}
-
-/* A section whose body is a table takes the whole width. */
-.ck-order-section--wide {
   grid-template-columns: minmax(0, 1fr);
-  gap: 0.5rem;
+  gap: 0.375rem;
+  transition: opacity var(--motion-fast) var(--motion-ease);
 }
 
 .ck-order-section-head {
@@ -1914,7 +1949,8 @@
 }
 
 .ck-order-hint {
-  margin: 0.375rem 0 0;
+  margin: 0.25rem 0 0;
+  max-inline-size: 72ch;
   color: var(--muted-foreground);
   font-size: 0.8125rem;
   line-height: 1.5;
@@ -1923,7 +1959,7 @@
 .ck-order-section-body {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
   min-inline-size: 0;
 }
 
@@ -1990,11 +2026,6 @@
   white-space: nowrap;
 }
 
-.ck-chip--recent {
-  background-color: var(--ck-blue-soft);
-  color: var(--ck-blue);
-}
-
 /* What an unchosen option would do to the bill, in the trend colours. */
 .ck-delta {
   color: var(--muted-foreground);
@@ -2016,22 +2047,12 @@
   color: var(--success);
 }
 
-/* Path: the two presets, wider than the size ones. */
-.ck-path .ck-preset {
-  min-inline-size: 9rem;
-}
-
-/* Workloads: three across, the chosen one outlined in orange, its icon
-   turning orange with it. */
-.ck-workloads {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.ck-site,
-.ck-workload,
-.ck-plan {
+/* Overrides of a kit class are written with the kit class in the selector:
+   they must win on specificity, never on source order. Arriving at #order
+   from #console loads the order's kit sheets after this file, a fresh
+   /order.html loads them before it, and a bare `.ck-x` rule flips between
+   the two. */
+.card.ck-site {
   padding-block: 0;
   cursor: pointer;
   border-color: var(--border);
@@ -2040,140 +2061,175 @@
     box-shadow var(--motion-fast) var(--motion-ease);
 }
 
-.ck-site:hover,
-.ck-workload:hover,
+.ck-site:hover {
+  border-color: color-mix(in oklab, var(--ck-orange) 50%, transparent);
+}
+
+.ck-site[data-recommended]:not([data-state="checked"]) {
+  border-color: color-mix(in oklab, var(--ck-blue) 55%, transparent);
+}
+
+.ck-site[data-state="checked"] {
+  border-color: var(--ck-orange);
+  box-shadow: 0 0 0 1px var(--ck-orange);
+}
+
+/* Site cards, three across the options column. */
+.radio-group.ck-sites {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+/* Plan cards, five across: the recommended one outlined blue, the chosen
+   one orange, Custom dashed until the pools match no card. */
+/* Size: Plans and Custom are the kit's tabs, the list beside the title so
+   the choice costs no row of its own. Kit classes in the selectors, as
+   everywhere a kit rule is overridden. */
+.ck-order-section--tabbed .ck-order-section-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  column-gap: 1rem;
+}
+
+.ck-order-section--tabbed .ck-order-section-head > * {
+  grid-column: 1;
+}
+
+.ck-order-section--tabbed .ck-order-section-head > .ck-order-draw {
+  margin-block-start: 0.375rem;
+}
+
+.ck-order-section--tabbed .ck-order-section-head > .tabs-list.ck-size-tablist {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+.tabs-trigger.ck-size-tab {
+  padding-inline: 0.875rem;
+}
+
+.tabs-content.ck-size-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.radio-group.ck-plans {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.625rem;
+}
+
+.card.ck-plan {
+  padding-block: 0;
+  cursor: pointer;
+  border-color: var(--border);
+  transition:
+    border-color var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) var(--motion-ease);
+}
+
 .ck-plan:hover {
   border-color: color-mix(in oklab, var(--ck-orange) 50%, transparent);
 }
 
-.ck-site[data-recommended]:not([data-state="checked"]),
 .ck-plan[data-recommended]:not([data-state="checked"]) {
   border-color: color-mix(in oklab, var(--ck-blue) 55%, transparent);
 }
 
-.ck-site[data-state="checked"],
-.ck-workload[data-state="checked"],
 .ck-plan[data-state="checked"] {
   border-color: var(--ck-orange);
   box-shadow: 0 0 0 1px var(--ck-orange);
 }
 
-.ck-workload-body {
+.card-content.ck-plan-body {
   display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.875rem;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.625rem 0.75rem;
 }
 
-.ck-workload-icon {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  inline-size: 2.25rem;
-  block-size: 2.25rem;
+.ck-plan-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ck-plan-head .radio-group-item {
+  margin-inline-start: auto;
+}
+
+.ck-plan-head .ck-recommended {
+  white-space: nowrap;
+}
+
+.ck-plan-name {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.ck-plan-spec {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ck-plan-price {
+  margin-block-start: 0.125rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ck-plan-price strong {
+  color: var(--foreground);
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.ck-plan .ck-option-desc {
+  margin-block-start: 0.25rem;
+  font-size: 0.75rem;
+}
+
+
+/* The monogram at the top with the radio across from it, then the name,
+   the city and the sentence under it. */
+.card-content.ck-site-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem 0.75rem;
+}
+
+.ck-site-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* The site's monogram (DFW, CHI, SLC): the kit avatar as a rounded tile,
+   orange once the site is chosen. */
+.avatar.ck-site-mark {
+  inline-size: 2rem;
+  block-size: 2rem;
   border-radius: var(--radius-md);
-  background-color: var(--ck-blue-soft);
-  color: var(--ck-blue);
+}
+
+.ck-site-mark .avatar-fallback {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   transition:
     background-color var(--motion-fast) var(--motion-ease),
     color var(--motion-fast) var(--motion-ease);
 }
 
-.ck-workload-icon svg {
-  inline-size: 1.125rem;
-  block-size: 1.125rem;
-}
-
-.ck-workload[data-state="checked"] .ck-workload-icon {
+.ck-site[data-state="checked"] .ck-site-mark .avatar-fallback {
   background-color: var(--ck-orange-soft);
   color: var(--ck-orange);
-}
-
-.ck-workload-text {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-inline-size: 0;
-}
-
-.ck-workload-name {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  font-size: 0.9375rem;
-  font-weight: 600;
-}
-
-.ck-workload-plan {
-  color: var(--muted-foreground);
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.ck-users {
-  flex-wrap: wrap;
-}
-
-/* The recommendation line: informational until followed, then a success. */
-.ck-recommendation {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 0.875rem;
-  border: 1px solid var(--info-border);
-  border-radius: var(--radius-lg);
-  background-color: var(--info-background);
-  transition:
-    border-color var(--motion-fast) var(--motion-ease),
-    background-color var(--motion-fast) var(--motion-ease);
-}
-
-.ck-recommendation > svg {
-  flex-shrink: 0;
-  inline-size: 1.125rem;
-  block-size: 1.125rem;
-  color: var(--ck-blue);
-}
-
-.ck-recommendation[data-followed] {
-  border-color: var(--success-border);
-  background-color: var(--success-background);
-}
-
-.ck-recommendation[data-followed] > svg {
-  color: var(--success);
-}
-
-.ck-recommendation-text {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 0.125rem;
-  min-inline-size: 0;
-}
-
-.ck-recommendation-title {
-  font-size: 0.9375rem;
-}
-
-.ck-recommendation-use {
-  flex-shrink: 0;
-}
-
-/* Site cards: three across, the chosen one outlined in orange. */
-.ck-sites {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.ck-site-body {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.875rem;
 }
 
 .ck-site-text {
@@ -2197,7 +2253,32 @@
   font-size: 0.8125rem;
 }
 
-/* Comparison tables behind a disclosure: plain, the chosen row tinted. */
+/* Comparison tables: plain, the chosen row tinted. Plans fold behind a
+   disclosure; the sites' latency table is always open under a head of
+   its own. */
+.ck-compare-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ck-compare-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
+}
+
+.ck-compare-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.ck-compare-hint {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
 .ck-compare-wrap {
   overflow-x: auto;
   border: 1px solid var(--border);
@@ -2207,13 +2288,14 @@
 
 .ck-compare {
   inline-size: 100%;
+  min-inline-size: 24rem;
   border-collapse: collapse;
   font-size: 0.8125rem;
 }
 
 .ck-compare th,
 .ck-compare td {
-  padding: 0.5rem 0.75rem;
+  padding: 0.375rem 0.75rem;
   border-block-end: 1px solid var(--border);
   text-align: start;
   white-space: nowrap;
@@ -2230,6 +2312,12 @@
 
 .ck-compare tbody th {
   font-weight: 600;
+}
+
+/* Figures sit at the right of their column, header included. */
+.ck-compare th.ck-num,
+.ck-compare td.ck-num {
+  text-align: end;
 }
 
 .ck-compare tbody th .ck-chip {
@@ -2249,18 +2337,22 @@
   color: var(--ck-orange);
 }
 
-/* Radio rows share the card look, stacked. */
-.ck-options {
-  display: flex;
-  flex-direction: column;
+/* Radio options are cards across the column, as the plans are: the
+   radio and the name on the first line, the sentence under it, the delta
+   on the card's last line, so the three deltas read in one row. */
+.radio-group.ck-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.5rem;
 }
 
 .ck-option {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.625rem 0.875rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0.375rem 0.625rem;
+  align-items: start;
+  padding: 0.5rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background-color: var(--card);
@@ -2292,9 +2384,8 @@
 
 .ck-option-text {
   display: flex;
-  flex: 1;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.125rem;
   min-inline-size: 0;
 }
 
@@ -2302,8 +2393,8 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  font-size: 0.9375rem;
+  gap: 0.25rem 0.5rem;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
@@ -2316,6 +2407,18 @@
   font-weight: 600;
 }
 
+/* In an option card the meta is the line under the name, as a plan's spec
+   is, not a pill that wraps. */
+.ck-option .ck-option-meta {
+  flex-basis: 100%;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Why a blocked option is blocked, in the warning tone: it is a fact about
    the order, not a mistake. */
 .ck-option-reason {
@@ -2326,15 +2429,14 @@
 }
 
 .ck-option-delta {
-  align-self: center;
-  flex-shrink: 0;
-  margin-inline-start: auto;
+  grid-column: 2;
+  align-self: end;
 }
 
-.ck-order-field {
+.ck-order .ck-order-field {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.375rem;
   max-inline-size: 28rem;
   transition: opacity var(--motion-fast) var(--motion-ease);
 }
@@ -2357,114 +2459,29 @@
   color: var(--muted-foreground);
 }
 
-.ck-order-key,
-.ck-order-script {
+.textarea.ck-order-key,
+.textarea.ck-order-script {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
 }
 
-/* Software: the kit tabs with a count on each, the option list under. */
-.ck-software {
+/* Access is asked in a dialog as each machine is added: wide enough for a
+   key on one line, its fields stacked. Two classes outrank the kit's
+   viewport-keyed max-width. */
+.dialog.ck-access-dialog {
+  max-inline-size: min(36rem, calc(100% - 2rem));
+}
+
+.ck-access-fields {
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
 }
 
-.ck-software-count {
-  display: inline-grid;
-  place-items: center;
-  min-inline-size: 1.25rem;
-  block-size: 1.25rem;
-  padding-inline: 0.3125rem;
-  border-radius: 999px;
-  background-color: var(--muted);
-  color: var(--muted-foreground);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.ck-software .tabs-trigger[data-state="active"] .ck-software-count {
-  background-color: var(--ck-orange-soft);
-  color: var(--ck-orange);
-}
-
-.ck-software-panel:focus-visible {
-  outline: none;
-  box-shadow: none;
-}
-
-.ck-software-empty {
-  padding-block: 1.5rem;
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-lg);
-}
-
-/* Plans: five across, hourly first, the workload's pick outlined in blue
-   until it is chosen. Custom is dashed until the pools match no card. */
-.ck-plans {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.625rem;
-}
-
-.ck-plan--custom {
-  border-style: dashed;
-  cursor: default;
-}
-
-.ck-plan--custom[data-state="checked"] {
-  border-style: solid;
-}
-
-.ck-plan-body {
+.ck-access-login {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.75rem 0.875rem;
-}
-
-.ck-plan-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.ck-plan-name {
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.ck-plan-spec {
-  color: var(--muted-foreground);
-  font-size: 0.8125rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.ck-plan-price {
-  color: var(--muted-foreground);
-  font-size: 0.875rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.ck-plan-price strong {
-  color: var(--foreground);
-  font-size: 1.125rem;
-  font-weight: 700;
-}
-
-.ck-plan-monthly {
-  color: var(--muted-foreground);
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.ck-plan .ck-option-desc {
-  margin-block-start: 0.25rem;
-  font-size: 0.75rem;
-}
-
-.ck-plan .ck-recommended {
-  margin-block-start: 0.25rem;
+  gap: 0.375rem;
 }
 
 /* What the machines draw from the pools; red once they draw more. */
@@ -2485,7 +2502,7 @@
 }
 
 /* Sliders: label, rate and price on one line, the track under it, the
-   ticks under that. Two to a row so no track runs the whole page. */
+   ticks under that. Two to a row so no track runs the whole column. */
 .ck-slider-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2577,7 +2594,7 @@
 
 /* The number input bound to the track (#42): sized to its figure, the
    spinner hidden so it reads as the value rather than a form control. */
-.ck-slider-input {
+.input.ck-slider-input {
   inline-size: 4.25rem;
   block-size: 1.75rem;
   padding-inline: 0.375rem;
@@ -2621,26 +2638,39 @@
 
 .ck-order-two {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem 1rem;
   align-items: start;
+}
+
+/* Two sections to a row: Network beside Advanced networking, Licences
+   beside Included, so each step fits a laptop screen above the table.
+   Network holds what costs and is the wider. */
+.ck-order-two.ck-infra-pair,
+.ck-order-two.ck-addons-pair {
+  gap: 1rem 1.5rem;
+}
+
+.ck-order-two.ck-infra-pair {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+}
+
+/* Backups: the switch beside its retention and the line it prices. */
+.ck-backups-terms {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .ck-order-select {
   inline-size: 100%;
 }
 
-.ck-network-facts {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
 .ck-order-line {
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
-  padding: 0.625rem 0.875rem;
+  padding: 0.5rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background-color: var(--card);
@@ -2672,9 +2702,10 @@
 
 .ck-disclosure-trigger {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   align-self: flex-start;
-  gap: 0.5rem;
+  gap: 0.25rem 0.5rem;
   margin-inline-start: -0.375rem;
   padding: 0.25rem 0.375rem;
   border: none;
@@ -2709,10 +2740,19 @@
   rotate: 90deg;
 }
 
+/* In the side column the hint wraps beside the label, never the label. */
+.ck-disclosure-label {
+  flex: none;
+}
+
+/* The hint takes the rest of the row, or the next row when the quarter
+   leaves it less than 10rem. */
 .ck-disclosure-hint {
+  flex: 1 1 10rem;
   color: var(--muted-foreground);
   font-size: 0.8125rem;
   font-weight: 400;
+  text-align: start;
 }
 
 .ck-disclosure-body {
@@ -2751,25 +2791,6 @@
   block-size: 1rem;
 }
 
-.ck-order-rail .ck-order-continue,
-.ck-order-rail .ck-order-cta {
-  inline-size: 100%;
-  block-size: auto;
-  min-block-size: 2.75rem;
-  padding-block: 0.625rem;
-  white-space: normal;
-  line-height: 1.3;
-  text-wrap: balance;
-}
-
-.ck-order .ck-order-skip {
-  margin-block-start: 0.375rem;
-  padding-inline: 0;
-  color: var(--ck-blue);
-  font-weight: 500;
-}
-
-.ck-order-skip svg,
 .ck-order-add-vm svg,
 .ck-order-add-vdc svg,
 .ck-order-open svg,
@@ -2779,50 +2800,226 @@
   block-size: 0.875rem;
 }
 
-/* ── The price rail ──────────────────────────────────────────────────── */
+/* ── The price card: the right quarter ───────────────────────────────── */
 
-.ck-order-rail {
-  position: sticky;
-  inset-block-start: 0.75rem;
-  min-inline-size: 0;
+/* Kit classes in the selectors so the card's own padding and gap lose on
+   specificity, not on source order. The card is as tall as its blocks and
+   no taller: it sticks, so it must fit the viewport with room to spare. */
+.card.ck-order-total-card {
+  flex: none;
+  gap: 0;
+  padding-block: 1rem;
 }
 
-.ck-order-rail-card {
+.card-content.ck-order-total-body {
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
-  padding: 1rem 1.125rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  background-color: var(--card);
-  box-shadow: var(--shadow-sm);
+  padding-inline: 1rem;
 }
 
-.ck-order-rail-name {
+.ck-order-total-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.ck-order-eyebrow,
+.ck-order-total-order-label {
+  color: var(--muted-foreground);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ck-order-total-name {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.125rem 0.5rem;
+  min-inline-size: 0;
+}
+
+.ck-order-total-name > span {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* One line per billed group: a quiet button that jumps to the step, the
+   amount at its end, the chevron only once the pointer is on it. The row
+   bleeds past the text edge on hover so the text stays aligned with the
+   sums under it. */
+.ck-order-groups {
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
+  padding-block: 0.375rem;
+  border-block: 1px solid var(--border);
 }
 
-.ck-order-rail-name .ck-mono {
-  font-size: 0.875rem;
-  font-weight: 600;
-  overflow-wrap: anywhere;
+.ck-order-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  inline-size: calc(100% + 0.75rem);
+  margin-inline: -0.375rem;
+  padding: 0.4375rem 0.375rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 0.8125rem;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--motion-ease);
 }
 
-.ck-order-rail-name > span {
+.ck-order-group:hover {
+  background-color: var(--muted);
+}
+
+.ck-order-group:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.ck-order-group-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
   color: var(--muted-foreground);
-  font-size: 0.8125rem;
 }
 
-.ck-order-rail-reason {
+.ck-order-group-name svg {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.ck-order-group:hover .ck-order-group-name svg,
+.ck-order-group:focus-visible .ck-order-group-name svg {
+  opacity: 1;
+}
+
+.ck-order-group-amount {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.ck-order-sums {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
   margin: 0;
-  color: var(--destructive);
   font-size: 0.8125rem;
-  line-height: 1.4;
 }
 
-.ck-order-rail-issues {
+.ck-order-sum {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ck-order-sum dt {
+  color: var(--muted-foreground);
+}
+
+.ck-order-sum dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.ck-order-sum-meta {
+  font-size: 0.71875rem;
+}
+
+.ck-order-sum--total dt,
+.ck-order-sum--total dd {
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.ck-order-sum--total dd {
+  font-size: 1rem;
+}
+
+.ck-order-sum-unit {
+  margin-inline-start: 0.125rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ck-order-total-order {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding-block-start: 0.875rem;
+  border-block-start: 1px solid var(--border);
+}
+
+.ck-order-total-order strong {
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A note: an (i) and a sentence, in the card and under the storage tiers. */
+.ck-order-note,
+.ck-order-total-note {
+  display: flex;
+  gap: 0.375rem;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.ck-order-note svg,
+.ck-order-total-note svg {
+  flex-shrink: 0;
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  margin-block-start: 0.125rem;
+}
+
+/* ── The step foot: issues; on Checkout the deploy summary and Deploy ── */
+
+.ck-order-foot {
+  grid-area: foot;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid var(--border);
+}
+
+.ck-order-foot-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem 1.5rem;
+}
+
+.ck-order-foot-summary {
+  display: flex;
+  flex: 1 1 18rem;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-inline-size: 0;
+}
+
+.ck-order-foot .ck-order-cta {
+  flex: 0 0 auto;
+  min-inline-size: 13rem;
+}
+
+.ck-order-issues {
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
@@ -2865,27 +3062,6 @@
   margin-block-start: 0.125rem;
 }
 
-.ck-order-rail-order {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  padding-block-start: 0.75rem;
-  border-block-start: 1px solid var(--border);
-}
-
-.ck-order-rail-order-label {
-  color: var(--muted-foreground);
-  font-size: 0.71875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.ck-order-rail-order strong {
-  font-size: 1rem;
-  font-variant-numeric: tabular-nums;
-}
-
 /* The live total. Its halo carries the colour of the last move in --ck-glow
    (blue up, orange down): a custom property, never currentColor, so the
    text-shadow interpolates (docs/QUIRKS.md). */
@@ -2898,11 +3074,12 @@
 .ck-order-total-glow {
   --ck-glow: var(--ck-blue);
   display: inline-flex;
-  align-items: baseline;
+  flex-direction: column;
+  align-items: flex-start;
   align-self: flex-start;
-  gap: 0.25rem;
+  gap: 0.125rem;
   margin-inline-start: -0.375rem;
-  padding: 0.125rem 0.375rem;
+  padding: 0.125rem 0.375rem 0.25rem;
   border: none;
   border-radius: var(--radius-md);
   background: none;
@@ -2924,6 +3101,44 @@
 .ck-order-total-glow:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+
+.ck-order-total-figure {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+/* The cue: the page's blue "this opens" line, the chevron turned to point
+   where the card comes from; it underlines as the pointer arrives. */
+.ck-order-total-cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  color: var(--ck-blue);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: underline dotted;
+  text-decoration-color: color-mix(in oklab, var(--ck-blue) 50%, transparent);
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--motion-fast) var(--motion-ease);
+}
+
+.ck-order-total-cue svg {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  rotate: 180deg;
+  transition: translate var(--motion-fast) var(--motion-ease);
+}
+
+.ck-order-total-glow:hover .ck-order-total-cue,
+.ck-order-total-glow[data-pinned] .ck-order-total-cue {
+  text-decoration-color: var(--ck-blue);
+}
+
+.ck-order-total-glow:hover .ck-order-total-cue svg,
+.ck-order-total-glow[data-pinned] .ck-order-total-cue svg {
+  translate: -2px 0;
 }
 
 .ck-order-total-live {
@@ -2956,54 +3171,21 @@
   font-weight: 600;
 }
 
-.ck-order-total-block--compact .ck-order-total-live {
-  font-size: 1.375rem;
-}
-
-.ck-order-total-rates {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.25rem;
-  color: var(--muted-foreground);
-  font-size: 0.8125rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.ck-order-total-hr {
-  color: var(--foreground);
-  font-weight: 600;
-}
-
-.ck-order-total-sep {
-  color: var(--border);
-}
-
-.ck-order-total-est em {
-  font-style: normal;
-}
-
-.ck-order-total-note {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 0.71875rem;
-}
-
-.ck-order-total-note > svg {
-  flex-shrink: 0;
-  inline-size: 0.75rem;
-  block-size: 0.75rem;
-}
-
 /* The receipt in its hover card. No `display` here: the card's own exit
-   state relies on the UA's display:none (ui/hover-card). */
-.ck-order-receipt-card {
+   state relies on the UA's display:none (ui/hover-card). Capped and
+   scrollable — protection, backups and add-ons can run past 30rem — but
+   no overscroll-behavior: contain (docs/QUIRKS.md: it swallows the wheel
+   once the card itself stops overflowing). */
+/* Opens to the left of the total. lib/anchor-position clamps the top so
+   the card stays 8px inside the viewport; the cap is the matching height,
+   so the bottom is never cut off, and the receipt scrolls inside. */
+.hover-card.ck-order-receipt-card {
   width: 24rem;
   max-width: calc(100vw - 2rem);
+  max-block-size: min(calc(100vh - 1rem), 40rem);
   padding: 0.875rem 1rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .ck-order-receipt-head {
@@ -3027,14 +3209,6 @@
   font-size: 0.8125rem;
 }
 
-.ck-receipt--page {
-  padding: 0.875rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background-color: var(--card);
-  font-size: 0.875rem;
-}
-
 .ck-receipt-group {
   display: flex;
   flex-direction: column;
@@ -3051,13 +3225,13 @@
 
 .ck-receipt-line {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: baseline;
   gap: 0.75rem;
 }
 
 .ck-receipt:not(:has(.ck-receipt-change)) .ck-receipt-line {
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .ck-receipt-label {
@@ -3071,12 +3245,6 @@
 .ck-receipt-meta {
   color: var(--muted-foreground);
   font-size: 0.75rem;
-}
-
-.ck-receipt-hr {
-  color: var(--muted-foreground);
-  font-variant-numeric: tabular-nums;
-  text-align: end;
 }
 
 .ck-receipt-amount {
@@ -3133,11 +3301,6 @@
   color: var(--muted-foreground);
   font-size: 0.75rem;
   line-height: 1.4;
-}
-
-/* The mobile bar: rendered always, shown only when the rail is not. */
-.ck-order-mobile {
-  display: none;
 }
 
 /* ── Review: the gate, save and share, deploy, provisioning ──────────── */
@@ -3202,26 +3365,7 @@
 }
 
 .ck-order-link {
-  max-inline-size: 40rem;
-}
-
-.ck-order-deploy {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  background-color: var(--card);
-  box-shadow: var(--shadow-sm);
-}
-
-.ck-order-deploy-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  min-inline-size: 0;
+  max-inline-size: 100%;
 }
 
 .ck-order-deploy-title {
@@ -3278,7 +3422,7 @@
 
 .ck-order-stages {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
   margin: 0;
   padding: 0;
@@ -3364,30 +3508,93 @@
   line-height: 1.5;
 }
 
-/* ── The order table ─────────────────────────────────────────────────── */
+/* ── The order card ──────────────────────────────────────────────────── */
 
+/* One card: the tools in its header, the table edge to edge in its body,
+   the pager and the hint in its foot, under a head of its own. Scrolled
+   to, it lands under the stuck strip, not behind it. */
 .ck-order-table-section {
+  grid-area: table;
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
-  padding-block-start: 0.75rem;
-  border-block-start: 1px solid var(--border);
+  gap: 0.375rem;
+  min-inline-size: 0;
+  scroll-margin-block-start: calc(var(--ck-order-strip-h, 5.5rem) + 0.5rem);
 }
 
+.ck-order-table-section:focus-visible {
+  outline: none;
+}
+
+/* The rule that closes the step's sections above the table; on Checkout
+   the table is part of the step, so there is nothing to close. */
+.separator.ck-order-table-rule {
+  margin-block: 0.5rem 0.875rem;
+}
+
+/* The title and the count on one line, the sentence under them. */
+.ck-order-table-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.625rem;
+}
+
+.ck-order-table-head .ck-order-hint {
+  margin-block-start: 0.125rem;
+}
+
+.ck-order[data-step="checkout"] .ck-order-table-rule {
+  display: none;
+}
+
+.card.ck-order-card {
+  flex: 1 1 auto;
+  gap: 0.75rem;
+  padding-block: 0.875rem 0.75rem;
+}
+
+/* The kit header aligns its grid items to the start; the rows here span
+   the header so the total reaches the right edge. */
+.card-header.ck-order-card-head {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  padding-inline: 1rem;
+}
+
+.card-content.ck-order-card-body {
+  flex: 1 1 auto;
+  padding-inline: 0;
+}
+
+.card-footer.ck-order-card-foot {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding-inline: 1rem;
+}
+
+.ck-order-card .ck-table-wrap {
+  border-inline: 0;
+  border-radius: 0;
+}
+
+/* Search, the view menus, then Add VM and Add vDC at the end; one row
+   while it fits, the actions dropping last. */
 .ck-order-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 0.5rem 0.75rem;
 }
 
-.ck-order-toolbar-left,
-.ck-order-toolbar-right {
+.ck-order-toolbar-actions {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+  margin-inline-start: auto;
 }
 
 .ck-order-search {
@@ -3407,7 +3614,7 @@
   pointer-events: none;
 }
 
-.ck-order-search-input {
+.input.ck-order-search-input {
   block-size: 2rem;
   padding-inline-start: 2rem;
   font-size: 0.8125rem;
@@ -3417,7 +3624,7 @@
   block-size: 2rem;
 }
 
-.ck-order-menubar-trigger {
+.menubar-trigger.ck-order-menubar-trigger {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
@@ -3429,29 +3636,47 @@
   block-size: 0.875rem;
 }
 
-/* The kit's --space ramp already follows --density-scale; the cell's block
-   padding is pinned to it here so the two densities read apart. */
+/* Rows are compact only. The kit's --space ramp follows --density-scale,
+   and the cell's block padding is pinned to the same scale so the rows
+   read as tight as the controls in them. The inline padding is tighter
+   than the kit's: eight columns of selects and inputs have to fit three
+   quarters of a 1280 frame without a sideways scroll. */
 .ck-order-density-scope .ck-order-table td {
   padding-block: calc(0.4375rem * var(--density-scale, 1));
 }
 
-.ck-order-actions-head,
-.ck-vdc-actions,
-.ck-vm-actions {
+.ck-order-density-scope .ck-order-table :is(td, th) {
+  padding-inline: 0.5rem;
+}
+
+.ck-order-table .ck-order-actions-head,
+.ck-order-table .ck-vdc-actions,
+.ck-order-table .ck-vm-actions {
   inline-size: 3rem;
   text-align: end;
 }
 
-/* A vDC's row: the kit's group toggle, the figures and the live price, on
-   a flex div inside the cell (a flex td stops being a cell and its colspan
-   with it). The draft carries an orange edge; a name is an identifier and
-   keeps its case and its mono face where the kit would capitalise a prose
-   label. */
+/* The count and the price sit at the right of their columns, header and
+   vDC row included; the count input keeps its figure at its own end. */
+.ck-order-table :is(th, td)[data-col="count"],
+.ck-order-table :is(th, td)[data-col="monthly"] {
+  text-align: end;
+}
+
+.ck-order-table .ck-vm-count {
+  text-align: end;
+}
+
+/* A vDC's row: the kit's group toggle and the badges on a flex div inside
+   the first cell (a flex td stops being a cell and its colspan with it),
+   then one fact per machine column so the headers describe it. The draft
+   carries an orange edge; a name is an identifier and keeps its case and
+   its mono face where the kit would capitalise a prose label. */
 .ck-vdc-cell {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.375rem 0.75rem;
+  gap: 0.375rem 0.5rem;
 }
 
 .ck-vdc-cell .data-table-group-label {
@@ -3464,20 +3689,17 @@
   box-shadow: inset 3px 0 0 var(--ck-orange);
 }
 
-.ck-vdc-facts {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.375rem 0.75rem;
+.ck-console .ck-order-table .ck-vdc-fact {
   color: var(--muted-foreground);
   font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .ck-vdc-price {
   display: flex;
   align-items: baseline;
+  justify-content: flex-end;
   gap: 0.25rem;
-  margin-inline-start: auto;
   font-variant-numeric: tabular-nums;
 }
 
@@ -3489,6 +3711,21 @@
 .ck-vdc-price-unit {
   color: var(--muted-foreground);
   font-size: 0.75rem;
+}
+
+/* An empty vDC's placeholder row, indented under the machine column: a
+   line and the way to fill it. */
+.ck-vdc-empty-cell {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  padding-inline-start: 2.5rem;
+}
+
+.btn.ck-vdc-empty-add {
+  padding-inline: 0.25rem;
+  color: var(--ck-blue);
 }
 
 /* Machines: editable cells, a chevron that opens the row's own settings. */
@@ -3549,13 +3786,13 @@
   font-weight: 500;
 }
 
-.ck-vm-input {
+.input.ck-vm-input {
   block-size: 2rem;
   font-size: 0.8125rem;
 }
 
 .ck-vm-count {
-  inline-size: 4.5rem;
+  inline-size: 4rem;
 }
 
 .ck-vm-select {
@@ -3563,7 +3800,7 @@
 }
 
 .ck-vm-select--wide {
-  min-inline-size: 12rem;
+  min-inline-size: 11rem;
 }
 
 .ck-vm-price {
@@ -3597,161 +3834,85 @@
   margin-inline-start: auto;
 }
 
-.ck-order-pages {
+/* The kit centres its pagination at full width; here it is the row's last
+   item. Two classes, so the kit's sheet cannot outrank it by loading later. */
+.ck-order-pager .ck-order-pages {
   inline-size: auto;
   margin: 0;
+}
+
+/* ui/pagination's Previous/Next padding ties with ui/button's at one class,
+   so which wins follows the route that loaded the sheets; pin the kit's
+   intended figure here. */
+.ck-order-pager .pagination-previous,
+.ck-order-pager .pagination-next {
+  padding-inline: 0.625rem;
 }
 
 .ck-order-table-hint {
   margin: 0;
 }
 
-@container ck-console (max-width: 72rem) {
-  .ck-plans {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-/* The rail folds into a bar along the bottom edge; the receipt opens up
-   from it. */
+/* @container ck-console measures the whole frame, not the options column.
+   Four plan cards need ~9rem each, which three quarters of the frame holds
+   down to the 64rem stack; under it the body stacks, the price card stops
+   sticking and follows the options, and the column is the frame again;
+   under 48rem the two- and three-up grids go to one column and the plans
+   to two. */
 @container ck-console (max-width: 64rem) {
   .ck-order-body {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "main"
+      "aside"
+      "table"
+      "foot";
   }
 
-  .ck-order-rail {
-    display: none;
+  .ck-order-aside {
+    position: static;
   }
 
-  .ck-order-mobile {
-    position: sticky;
-    inset-block-end: 0;
-    z-index: 5;
-    display: flex;
-    flex-direction: column;
-    margin-inline: -1.25rem;
-    border-block-start: 1px solid var(--border);
-    background-color: var(--card);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .ck-order-mobile-row {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.625rem 1rem;
-  }
-
-  .ck-order-mobile-row > .btn {
-    flex: 1 1 60%;
-    min-inline-size: 0;
-    block-size: auto;
-    min-block-size: 2.5rem;
-    padding: 0.5rem 0.875rem;
-    font-size: 0.875rem;
-    line-height: 1.25;
-    white-space: normal;
-  }
-
-  .ck-order-mobile-toggle {
-    display: flex;
-    flex: 0 1 auto;
-    align-items: center;
-    gap: 0.5rem;
-    min-inline-size: 0;
-    padding: 0.25rem;
-    border: none;
-    border-radius: var(--radius-md);
-    background: none;
-    color: var(--foreground);
-    font: inherit;
-    text-align: start;
-    cursor: pointer;
-  }
-
-  .ck-order-mobile-toggle:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-  }
-
-  .ck-order-mobile-toggle > svg {
-    flex-shrink: 0;
-    inline-size: 1rem;
-    block-size: 1rem;
-    color: var(--muted-foreground);
-    transition: rotate var(--motion-fast) var(--motion-ease);
-  }
-
-  .ck-order-mobile-toggle[data-state="open"] > svg {
-    rotate: 180deg;
-  }
-
-  .ck-order-mobile-total {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    color: var(--muted-foreground);
-    font-size: 0.8125rem;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .ck-order-mobile-live {
-    color: var(--foreground);
-    font-size: 1.25rem;
-    font-weight: 800;
-  }
-
-  .ck-order-mobile-body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    max-block-size: 50vh;
-    padding: 0.25rem 1rem 1rem;
-    overflow-y: auto;
-    border-block-start: 1px solid var(--border);
-  }
-
-  .ck-order-stages {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@container ck-console (max-width: 56rem) {
-  .ck-order-head {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .ck-order-head-actions {
-    grid-column: 1 / -1;
-    justify-content: flex-end;
-  }
-
-  .ck-order-section {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.75rem;
-  }
-
-  .ck-sites,
-  .ck-order-two,
-  .ck-workloads,
-  .ck-plans {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .ck-order-tabs .tabs-list {
+  .tabs-list.ck-order-steps {
+    flex-basis: 100%;
     overflow-x: auto;
     scrollbar-width: thin;
   }
 
-  .ck-order-tabs .tabs-trigger {
-    padding: 0.625rem 0.75rem;
-    font-size: 0.875rem;
+  .tabs-trigger.ck-order-step {
+    font-size: 0.6875rem;
   }
 
-  .ck-order-deploy {
-    flex-direction: column;
-    align-items: stretch;
+  .ck-order-strip-actions {
+    margin-inline-start: 0;
+  }
+}
+
+@container ck-console (max-width: 48rem) {
+  .radio-group.ck-sites,
+  .ck-slider-grid,
+  .ck-order-two,
+  .ck-order-two.ck-infra-pair,
+  .ck-order-two.ck-addons-pair,
+  .radio-group.ck-options,
+  .ck-check-list,
+  .item-group.ck-bcdr {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .radio-group.ck-plans {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Two cards to a row leave no room beside the name: the chip takes a
+     line of its own under it. */
+  .ck-plan-head {
+    flex-wrap: wrap;
+  }
+
+  .ck-plan-head .ck-recommended {
+    order: 3;
+    flex-basis: 100%;
   }
 }
 
@@ -3766,8 +3927,8 @@
   align-items: flex-start;
   gap: 0.125rem;
   block-size: auto;
-  min-inline-size: 7rem;
-  padding: 0.5rem 0.75rem;
+  min-inline-size: 6.5rem;
+  padding: 0.375rem 0.625rem;
   text-align: start;
 }
 
@@ -3804,7 +3965,8 @@
    sentence, the control at the end (switch) or the start (checkbox). */
 .ck-switch-row,
 .ck-check-row {
-  padding: 0.5rem 0.875rem;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background-color: var(--card);
@@ -3821,17 +3983,23 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.25rem 0.5rem;
   font-size: 0.875rem;
   font-weight: 600;
 }
 
-.ck-switch-row .field-description,
-.ck-check-row .field-description {
-  font-size: 0.8125rem;
+.ck-switch-row .field-content,
+.ck-check-row .field-content {
+  gap: 0.125rem;
 }
 
-.ck-check-row {
+.ck-switch-row .field-description,
+.ck-check-row .field-description {
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.field.ck-check-row {
   align-items: flex-start;
 }
 
@@ -3839,17 +4007,49 @@
   margin-block-start: 0.1875rem;
 }
 
+/* The edge services two across, each a compact card. */
 .ck-check-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
+  gap: 0.375rem 0.5rem;
 }
 
-/* Included features: a row of check markers. */
+/* A free option on one line: the box in its own column, the name and the
+   muted reason flowing as one text beside it, so a wrapped reason keeps
+   the box's column clear. */
+.ck-check-line {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: start;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.ck-check-line[data-disabled] {
+  opacity: 0.6;
+}
+
+.ck-check-line .checkbox {
+  margin-block-start: 0.1875rem;
+}
+
+.label.ck-check-line-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: inherit;
+}
+
+.ck-check-line-note {
+  color: var(--muted-foreground);
+}
+
+/* Included features: check markers two across. */
 .ck-markers {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 0.25rem 1rem;
 }
 
 .ck-marker .marker-icon {
@@ -3879,12 +4079,18 @@
   color: var(--muted-foreground);
 }
 
-.ck-spec-card {
-  display: grid;
+/* The grid is declared for the open state only: at two classes it would
+   tie with the kit's `.hover-card:not(:popover-open) { display: none }`
+   exit rule and leave every closed card painted. */
+.hover-card.ck-spec-card {
   gap: 0.5rem;
   width: 15rem;
   padding: 0.75rem;
   font-size: 0.8125rem;
+}
+
+.hover-card.ck-spec-card:popover-open {
+  display: grid;
 }
 
 .ck-spec-title {
@@ -3985,24 +4191,32 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* BCDR explainer: three cards in a row. */
-.ck-bcdr {
+/* BCDR explainer: three across, tighter than the kit's item. */
+.item-group.ck-bcdr {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.625rem;
+  gap: 0.5rem;
 }
 
-.ck-bcdr-item {
+.item.ck-bcdr-item {
   align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.625rem;
+}
+
+.ck-bcdr-item .item-media--icon {
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
 }
 
 .ck-bcdr-item .item-media--icon {
   color: var(--ck-orange);
 }
 
-.ck-bcdr-body {
+.item-description.ck-bcdr-body {
   white-space: normal;
-  line-height: 1.5;
+  font-size: 0.75rem;
+  line-height: 1.45;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -4055,13 +4269,6 @@
   gap: 0.5rem;
 }
 
-@container ck-console (max-width: 56rem) {
-  .ck-check-list,
-  .ck-bcdr {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
 /* ── Focus rings on the shell's own controls ────────────────────────── */
 
 .ck-nav-link:focus-visible,
@@ -4099,7 +4306,6 @@
     display: none;
   }
 
-  .ck-slider-grid,
   .ck-vm-settings {
     grid-template-columns: minmax(0, 1fr);
   }

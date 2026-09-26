@@ -1,33 +1,34 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { Button } from "../../../ui/button/button.jsx"
-import { ModeToggle } from "../../../ui/mode-toggle/mode-toggle.jsx"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../ui/tabs/tabs.jsx"
 import { toast } from "../../../ui/toast/toast.jsx"
-import { setSiteDark, useSiteDark } from "../../color-scheme.js"
-import { ORDER_PAGE } from "../console-data.js"
-import { ArrowLeftIcon, CartIcon } from "../icons.jsx"
+import { ACCESS_DEFAULTS, ORDER_PAGE } from "../console-data.js"
+import { ArrowLeftIcon, CartIcon, CpuIcon, DatabaseIcon, MapPinIcon, PuzzleIcon, ShieldCheckIcon } from "../icons.jsx"
+import { AccessDialog } from "./access-dialog.jsx"
+import { StepFooter, StripActions } from "./form.jsx"
 import { OrderTable } from "./order-table.jsx"
-import { STEPS, applyWorkload, firstBadStep, issuesByStep, issuesOf, money, newDraft, newOrder, newVm, nextStepOf, orderTotals, receiptOf, stepOfField, vdcCost } from "./pricing.js"
-import { PriceRail } from "./rail.jsx"
+import { PriceCard } from "./price-card.jsx"
+import { BASE_STEPS, STEPS, firstBadStep, fitOrderPools, issuesByStep, issuesOf, money, newDraft, newOrder, newVm, nextStepOf, orderTotals, receiptOf, siteName, stepIndex, stepOfField, vdcCost, vmWithoutAccess } from "./pricing.js"
 import { ProvisioningPanel, ReviewStep, deployLabelFor } from "./review.jsx"
-import { clearSavedOrder, loadPath, loadSavedOrder, orderFromLocation, saveOrder, savePath } from "./share.js"
-import { AddonsStep, InfrastructureStep, LocationStep, StorageStep } from "./steps.jsx"
+import { clearSavedOrder, loadSavedOrder, orderFromLocation, saveOrder } from "./share.js"
+import { AddonsStep, BcdrStep, InfrastructureStep, LocationStep, StorageStep } from "./steps.jsx"
 import "../../../ui/button/button.css"
-import "../../../ui/mode-toggle/mode-toggle.css"
 import "../../../ui/tabs/tabs.css"
 
 /* Fields a step validates, so Continue can surface that step's errors. */
 const STEP_FIELDS = {
-  location: ["name", "site", "workload"],
-  infrastructure: ["image", "cpu", "ram", "access", "ips"],
+  location: ["site"],
+  infrastructure: ["cpu", "ram", "access", "ips"],
   storage: ["storage"],
-  addons: ["protection", "drSite", "addons"],
-  review: [],
+  bcdr: ["protection", "drSite"],
+  addons: ["addons"],
+  checkout: ["name"],
 }
-// Typing a name or a key is not yet a decision; those two wait for blur.
-const TOUCH_ON_BLUR = new Set(["name", "access"])
+const STEP_ICONS = { location: MapPinIcon, infrastructure: CpuIcon, storage: DatabaseIcon, bcdr: ShieldCheckIcon, addons: PuzzleIcon, checkout: CartIcon }
+// Typing a name is not yet a decision; it waits for blur.
+const TOUCH_ON_BLUR = new Set(["name"])
 
-const firstOrder = () => orderFromLocation() ?? loadSavedOrder() ?? newOrder(1, 1, { path: loadPath() ?? "custom" })
+const firstOrder = () => orderFromLocation() ?? loadSavedOrder() ?? newOrder()
 
 export function OrderPage({ consoleHref = "#console" }) {
   const [order, setOrder] = useState(firstOrder)
@@ -35,8 +36,25 @@ export function OrderPage({ consoleHref = "#console" }) {
   const [touched, setTouched] = useState(() => new Set())
   const [reviewed, setReviewed] = useState(false)
   const [deployed, setDeployed] = useState(null)
-  const dark = useSiteDark()
+  // `{ vdcId, vmId }` while the access dialog is up; no vmId adds a machine.
+  const [accessRequest, setAccessRequest] = useState(null)
   const { draft, vdcs, vms, editing } = order
+
+  /* The strip sticks to the top of the scroll and the price card sticks
+     under it, so the card's offset is the strip's height, measured: the
+     strip wraps its actions under the steps as the frame narrows. */
+  const rootRef = useRef(null)
+  const stripRef = useRef(null)
+  useLayoutEffect(() => {
+    const root = rootRef.current
+    const strip = stripRef.current
+    if (!root || !strip) return
+    const measure = () => root.style.setProperty("--ck-order-strip-h", `${strip.offsetHeight}px`)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(strip)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     saveOrder(order)
@@ -68,19 +86,22 @@ export function OrderPage({ consoleHref = "#console" }) {
     },
     [touch]
   )
-  const patchAccess = useCallback((changes) => {
-    setOrder((o) => ({ ...o, draft: { ...o.draft, access: { ...o.draft.access, ...changes } } }))
-  }, [])
   const patchGroup = useCallback((changes) => {
     setOrder((o) => ({ ...o, draft: { ...o.draft, vmGroup: { ...o.draft.vmGroup, ...changes } } }))
   }, [])
 
-  /* Every tab is a link; arriving on a field scrolls it into view and lets
-     its error show. */
+  /* Every step is a link; arriving on a field scrolls it into view and lets
+     its error show. Access has no place on a step: it is each machine's,
+     so that link opens the dialog on the first machine without a way in. */
   const goTo = useCallback(
     (target, field) => {
+      if (field === "access") {
+        const vm = vmWithoutAccess(draft.id, vms)
+        if (vm) setAccessRequest({ vdcId: vm.vdc, vmId: vm.id })
+        return
+      }
       setStep(target)
-      if (target === "review") setReviewed(true)
+      if (target === "checkout") setReviewed(true)
       if (field) {
         touch(field)
         requestAnimationFrame(() =>
@@ -91,22 +112,23 @@ export function OrderPage({ consoleHref = "#console" }) {
         )
       }
     },
-    [touch]
+    [touch, draft.id, vms]
   )
 
-  const nextStep = step === "location" && draft.path === "quick" ? STEPS.at(-1) : nextStepOf(step)
+  const nextStep = nextStepOf(step)
   const onNext = () => {
     touch(...STEP_FIELDS[step])
     if (nextStep) goTo(nextStep.id)
   }
-
-  const setPath = (path) => {
-    savePath(path)
-    patch({ path })
-  }
-  const onWorkload = (workload) => {
-    setOrder((o) => ({ ...o, ...applyWorkload(o.draft, o.vms, workload) }))
-    touch("workload")
+  /* The table waits under the options on every step but Checkout; the
+     strip's Machines button is the way down to it without a scroll. */
+  const tableRef = useRef(null)
+  const jumpToTable = () => {
+    const el = tableRef.current
+    if (!el) return
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" })
+    el.focus({ preventScroll: true })
   }
 
   /* Only a valid draft joins the order, so committed vDCs never carry an
@@ -123,9 +145,8 @@ export function OrderPage({ consoleHref = "#console" }) {
     if (blockOnIssues("add it to the order")) return
     setOrder((o) => {
       const seq = o.seq + 1
-      const vmSeq = o.vmSeq + 1
-      const next = newDraft(seq, { path: o.draft.path, users: o.draft.users, site: o.draft.site, workload: o.draft.workload, image: o.draft.image, access: o.draft.access })
-      return { ...o, vdcs: [...o.vdcs, o.draft], draft: next, vms: [...o.vms, newVm(next, vmSeq)], editing: null, seq, vmSeq }
+      const next = newDraft(seq, { users: o.draft.users, site: o.draft.site, workload: o.draft.workload, image: o.draft.image })
+      return { ...o, vdcs: [...o.vdcs, o.draft], draft: next, editing: null, seq }
     })
     setTouched(new Set())
     setReviewed(false)
@@ -147,21 +168,50 @@ export function OrderPage({ consoleHref = "#console" }) {
       const source = [...o.vdcs, o.draft].find((v) => v.id === id)
       if (!source) return o
       const seq = o.seq + 1
-      const copy = { ...newDraft(seq, source), storage: { ...source.storage }, addons: [...source.addons], access: { ...source.access }, vmGroup: { ...source.vmGroup } }
+      const copy = { ...newDraft(seq, source), storage: { ...source.storage }, addons: [...source.addons], vmGroup: { ...source.vmGroup } }
       let vmSeq = o.vmSeq
       const copies = o.vms.filter((v) => v.vdc === id).map((v) => ({ ...v, id: `vm-${++vmSeq}`, vdc: copy.id, name: `vm-${String(vmSeq).padStart(2, "0")}` }))
       return { ...o, vdcs: [...o.vdcs, copy], vms: [...o.vms, ...copies], seq, vmSeq }
     })
   }, [])
-  const addVm = useCallback((vdcId) => {
-    setOrder((o) => {
-      const vdc = [...o.vdcs, o.draft].find((v) => v.id === vdcId) ?? o.draft
-      return { ...o, vms: [...o.vms, newVm(vdc, o.vmSeq + 1)], vmSeq: o.vmSeq + 1 }
-    })
-    touch("cpu", "ram", "storage")
-  }, [touch])
+  /* A machine is added through the access dialog, so every machine has a
+     way in; its row menu opens the same dialog to change it. The pools
+     follow the machines. */
+  const requestVm = useCallback((vdcId) => setAccessRequest({ vdcId, vmId: null }), [])
+  const requestAccess = useCallback((vmId) => setAccessRequest({ vmId }), [])
+  const confirmAccess = (access) => {
+    const { vdcId, vmId } = accessRequest
+    if (vmId) {
+      setOrder((o) => ({ ...o, vms: o.vms.map((v) => (v.id === vmId ? { ...v, access } : v)) }))
+    } else {
+      setOrder((o) => {
+        const vdc = [...o.vdcs, o.draft].find((v) => v.id === vdcId)
+        if (!vdc) return o
+        const vmSeq = o.vmSeq + 1
+        return fitOrderPools({ ...o, vms: [...o.vms, newVm(vdc, vmSeq, access)], vmSeq }, vdcId)
+      })
+      touch("cpu", "ram", "storage")
+    }
+    touch("access")
+    setAccessRequest(null)
+  }
+  /* A new machine starts from the last one's access in its vDC, else the
+     order's, so a key is pasted once. */
+  const accessTarget = useMemo(() => {
+    if (!accessRequest) return null
+    const vm = accessRequest.vmId ? vms.find((v) => v.id === accessRequest.vmId) : null
+    if (accessRequest.vmId && !vm) return null
+    const vdc = [...vdcs, draft].find((v) => v.id === (vm?.vdc ?? accessRequest.vdcId))
+    if (!vdc) return null
+    const seed = vm ?? vms.findLast((v) => v.vdc === vdc.id) ?? vms.at(-1)
+    return { vdc, vm, access: seed?.access ?? ACCESS_DEFAULTS }
+  }, [accessRequest, vms, vdcs, draft])
   const patchVm = useCallback((id, changes) => {
-    setOrder((o) => ({ ...o, vms: o.vms.map((v) => (v.id === id ? { ...v, ...changes } : v)) }))
+    setOrder((o) => {
+      const vms = o.vms.map((v) => (v.id === id ? { ...v, ...changes } : v))
+      const vm = vms.find((v) => v.id === id)
+      return vm ? fitOrderPools({ ...o, vms }, vm.vdc) : o
+    })
     if ("size" in changes || "count" in changes || "image" in changes) touch("cpu", "ram", "storage")
   }, [touch])
   const removeVm = useCallback((id) => {
@@ -172,7 +222,7 @@ export function OrderPage({ consoleHref = "#console" }) {
       const source = o.vms.find((v) => v.id === id)
       if (!source) return o
       const vmSeq = o.vmSeq + 1
-      return { ...o, vms: [...o.vms, { ...source, id: `vm-${vmSeq}`, name: `vm-${String(vmSeq).padStart(2, "0")}` }], vmSeq }
+      return fitOrderPools({ ...o, vms: [...o.vms, { ...source, id: `vm-${vmSeq}`, name: `vm-${String(vmSeq).padStart(2, "0")}` }], vmSeq }, source.vdc)
     })
   }, [])
 
@@ -184,7 +234,7 @@ export function OrderPage({ consoleHref = "#console" }) {
   }
   const resetOrder = () => {
     clearSavedOrder()
-    setOrder(newOrder(1, 1, { path: draft.path }))
+    setOrder(newOrder())
     setDeployed(null)
     setTouched(new Set())
     setReviewed(false)
@@ -205,10 +255,41 @@ export function OrderPage({ consoleHref = "#console" }) {
     toast.success("Deploying", { description: `${all.length} vDC${all.length === 1 ? "" : "s"} · ${money(totals.total)}/mo` })
   }
 
-  const current = STEPS.find((s) => s.id === step)
-  const committedCount = vdcs.length
+  const deployCount = vdcs.length + (editing ? 0 : 1)
+  const deploySummary =
+    vdcs.length > 0
+      ? `Deploys ${deployCount} vDC${deployCount === 1 ? "" : "s"}: ${[...vdcs.map((v) => v.name), ...(editing ? [] : [draft.name])].join(", ")}`
+      : `Deploys ${draft.name} at ${siteName(draft.site)}`
+
+  const currentIndex = stepIndex(step)
+  const baseIssues = useMemo(() => new Map([...issues].filter(([f]) => BASE_STEPS.includes(stepOfField(f)))), [issues])
+  const machineCount = vms.reduce((n, v) => n + v.count, 0)
+  const panels = {
+    location: <LocationStep draft={draft} patch={patch} errors={visibleIssues} />,
+    infrastructure: <InfrastructureStep draft={draft} cost={cost} patch={patch} patchGroup={patchGroup} errors={visibleIssues} />,
+    storage: <StorageStep draft={draft} cost={cost} patch={patch} errors={visibleIssues} />,
+    bcdr: <BcdrStep draft={draft} vms={vms} cost={cost} patch={patch} errors={visibleIssues} baseIssues={baseIssues} onGo={goTo} />,
+    addons: <AddonsStep draft={draft} cost={cost} patch={patch} errors={visibleIssues} baseIssues={baseIssues} onGo={goTo} />,
+    checkout: deployed ? (
+      <ProvisioningPanel deployed={deployed} consoleHref={consoleHref} onReset={resetOrder} />
+    ) : (
+      <ReviewStep order={order} patch={patch} touch={touch} errors={visibleIssues} issues={issues} onGo={goTo} onImport={importOrder} />
+    ),
+  }
+  const foot = (
+    <StepFooter
+      step={step}
+      issues={visibleIssues}
+      onGo={goTo}
+      summary={deployed ? null : deploySummary}
+      onDeploy={deploy}
+      deployLabel={deployLabel}
+      canDeploy={canDeploy}
+      deployReason={deployReason}
+    />
+  )
   return (
-    <div className="ck-view ck-order" data-step={step} data-path={draft.path}>
+    <div ref={rootRef} className="ck-view ck-order" data-step={step}>
       <header className="ck-order-head">
         <Button as="a" variant="ghost" size="sm" className="ck-order-back" href={consoleHref}>
           <ArrowLeftIcon />
@@ -218,139 +299,74 @@ export function OrderPage({ consoleHref = "#console" }) {
           <h4 className="ck-page-title">{ORDER_PAGE}</h4>
           <p className="ck-order-lede">Configure before you sign in; the price is itemised on every step and nothing is charged until the first vDC runs.</p>
         </div>
-        <div className="ck-order-head-actions">
-          <ModeToggle
-            className="ck-order-theme"
-            isDark={dark}
-            onIsDarkChange={setSiteDark}
-            labels={{ toDark: "Switch to dark theme", toLight: "Switch to light theme" }}
-          />
-          <button
-            type="button"
-            className="ck-order-cart"
-            onClick={() => goTo("review")}
-            aria-label={`Order: ${totals.vdcs} vDC${totals.vdcs === 1 ? "" : "s"}, ${money(totals.total)} a month. Open the review`}
-          >
-            <CartIcon />
-            <span className="ck-order-cart-count">
-              {totals.vdcs} {totals.vdcs === 1 ? "vDC" : "vDCs"}
-              {committedCount > 0 && <span className="ck-order-cart-sub">{committedCount} in order</span>}
-            </span>
-            <span className="ck-order-cart-total">{money(totals.total)}/mo</span>
-          </button>
-        </div>
       </header>
 
-      <Tabs value={step} onValueChange={(id) => goTo(id)} className="ck-order-tabs">
-        <TabsList>
-          {STEPS.map((s, i) => (
-            <TabsTrigger key={s.id} value={s.id} data-issues={stepCounts[s.id] || undefined}>
-              <span className="ck-order-step-num">{i + 1}</span>
-              {s.label}
-              {stepCounts[s.id] > 0 && (
-                <span className="ck-order-step-flag" aria-label={`${stepCounts[s.id]} problem${stepCounts[s.id] === 1 ? "" : "s"}`}>
-                  {stepCounts[s.id]}
-                </span>
-              )}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      {/* The steps are the kit's tabs, one strip across the top that sticks
+          there as the page scrolls: an icon in a ring for each, a rule
+          between them, the steps behind the current one filled and their
+          rules orange. Continue and the way down to the machines sit at the
+          strip's end. The strip names the step, so the panel opens straight
+          on its sections. Under it the current step's options take the left
+          three quarters, the table under them in the same column, and the
+          price card the right quarter, at its own height and stuck under
+          the strip; on Checkout the deploy foot closes the column under the
+          table. The panel is the tab's own tabpanel; the table is one
+          element on every step, so its view survives a step change. */}
+      <Tabs value={step} onValueChange={goTo} className="ck-order-wizard">
+        <div ref={stripRef} className="ck-order-strip">
+          <TabsList className="ck-order-steps" aria-label="Steps">
+            {STEPS.map((s, i) => {
+              const count = stepCounts[s.id]
+              const Icon = STEP_ICONS[s.id]
+              return (
+                <Fragment key={s.id}>
+                  {i > 0 && <span className="ck-order-step-rule" data-done={i <= currentIndex || undefined} aria-hidden="true" />}
+                  <TabsTrigger value={s.id} className="ck-order-step" data-done={i < currentIndex || undefined} data-issues={count || undefined}>
+                    <span className="ck-order-step-mark">
+                      <Icon />
+                      {count > 0 && (
+                        <span className="ck-order-step-flag" aria-label={`${count} problem${count === 1 ? "" : "s"}`}>
+                          {count}
+                        </span>
+                      )}
+                    </span>
+                    <span className="ck-order-step-label">{s.label}</span>
+                  </TabsTrigger>
+                </Fragment>
+              )
+            })}
+          </TabsList>
+          <StripActions next={nextStep} onNext={onNext} machines={machineCount} onJump={jumpToTable} />
+        </div>
         <div className="ck-order-body">
           <div className="ck-order-main">
-            <div className="ck-order-step-head">
-              <h5 className="ck-order-step-title">{current.title}</h5>
-              <p className="ck-order-hint">{current.lede}</p>
-            </div>
-            <TabsContent value="location" className="ck-order-panel" data-step="location">
-              <LocationStep
-                draft={draft}
-                patch={patch}
-                errors={visibleIssues}
-                touch={touch}
-                onPath={setPath}
-                onWorkload={onWorkload}
-                onSkip={() => goTo("infrastructure", "size")}
-                onNext={onNext}
-                next={nextStep}
-              />
-            </TabsContent>
-            <TabsContent value="infrastructure" className="ck-order-panel" data-step="infrastructure">
-              <InfrastructureStep
-                draft={draft}
-                cost={cost}
-                patch={patch}
-                patchAccess={patchAccess}
-                patchGroup={patchGroup}
-                errors={visibleIssues}
-                touch={touch}
-                onNext={onNext}
-                next={nextStep}
-              />
-            </TabsContent>
-            <TabsContent value="storage" className="ck-order-panel" data-step="storage">
-              <StorageStep draft={draft} cost={cost} patch={patch} errors={visibleIssues} onNext={onNext} next={nextStep} />
-            </TabsContent>
-            <TabsContent value="addons" className="ck-order-panel" data-step="addons">
-              <AddonsStep
-                draft={draft}
-                vms={vms}
-                cost={cost}
-                patch={patch}
-                errors={visibleIssues}
-                baseIssues={new Map([...issues].filter(([f]) => stepOfField(f) !== "addons"))}
-                onGo={goTo}
-                onNext={onNext}
-                next={nextStep}
-              />
-            </TabsContent>
-            <TabsContent value="review" className="ck-order-panel" data-step="review">
-              {deployed ? (
-                <ProvisioningPanel deployed={deployed} consoleHref={consoleHref} onReset={resetOrder} />
-              ) : (
-                <ReviewStep
-                  order={order}
-                  cost={cost}
-                  receipt={receipt}
-                  issues={issues}
-                  onGo={goTo}
-                  onImport={importOrder}
-                  onDeploy={deploy}
-                  deployLabel={deployLabel}
-                  canDeploy={canDeploy}
-                  deployReason={deployReason}
-                />
-              )}
-            </TabsContent>
+            {STEPS.map((s) => (
+              <TabsContent key={s.id} value={s.id} className="ck-order-panel" data-step={s.id}>
+                {panels[s.id]}
+              </TabsContent>
+            ))}
+            {step !== "checkout" && foot}
           </div>
-          <PriceRail
-            draft={draft}
-            cost={cost}
-            receipt={receipt}
-            step={step}
-            next={nextStep}
-            issues={visibleIssues}
-            onGo={goTo}
-            onNext={onNext}
-            totals={totals}
-            onDeploy={deploy}
-            deployLabel={deployLabel}
-            canDeploy={canDeploy}
-            deployReason={deployReason}
+          <aside className="ck-order-aside" aria-label="Price summary">
+            <PriceCard draft={draft} cost={cost} receipt={receipt} totals={totals} committed={vdcs.length} onChange={goTo} />
+          </aside>
+          <OrderTable
+            ref={tableRef}
+            order={order}
+            onAddVdc={addVdc}
+            onAddVm={requestVm}
+            onAccessVm={requestAccess}
+            onPatchVm={patchVm}
+            onRemoveVm={removeVm}
+            onDuplicateVm={duplicateVm}
+            onEditVdc={editVdc}
+            onRemoveVdc={removeVdc}
+            onDuplicateVdc={duplicateVdc}
           />
+          {step === "checkout" && foot}
         </div>
       </Tabs>
-
-      <OrderTable
-        order={order}
-        onAddVdc={addVdc}
-        onAddVm={addVm}
-        onPatchVm={patchVm}
-        onRemoveVm={removeVm}
-        onDuplicateVm={duplicateVm}
-        onEditVdc={editVdc}
-        onRemoveVdc={removeVdc}
-        onDuplicateVdc={duplicateVdc}
-      />
+      <AccessDialog request={accessTarget} onCancel={() => setAccessRequest(null)} onConfirm={confirmAccess} />
     </div>
   )
 }

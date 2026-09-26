@@ -1,29 +1,34 @@
 import { useEffect, useState } from "react"
 import { cn } from "../../../lib/cn.js"
+import { Alert, AlertDescription, AlertTitle } from "../../../ui/alert/alert.jsx"
 import { Button } from "../../../ui/button/button.jsx"
 import { Checkbox } from "../../../ui/checkbox/checkbox.jsx"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../../../ui/collapsible/collapsible.jsx"
 import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from "../../../ui/field/field.jsx"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../ui/hover-card/hover-card.jsx"
 import { Input } from "../../../ui/input/input.jsx"
+import { Label } from "../../../ui/label/label.jsx"
 import { RadioGroupItem } from "../../../ui/radio-group/radio-group.jsx"
 import { Slider } from "../../../ui/slider/slider.jsx"
 import { Switch } from "../../../ui/switch/switch.jsx"
-import { AlertCircleIcon, ChevronRightIcon, InfoIcon, SparkleIcon } from "../icons.jsx"
-import { compact, money } from "./pricing.js"
+import { ORDER_COPY } from "../console-data.js"
+import { AlertCircleIcon, ArrowDownIcon, ChevronRightIcon, InfoIcon, RocketIcon, SparkleIcon } from "../icons.jsx"
+import { STEPS, compact, money, stepOfField } from "./pricing.js"
+import "../../../ui/alert/alert.css"
 import "../../../ui/button/button.css"
 import "../../../ui/checkbox/checkbox.css"
 import "../../../ui/collapsible/collapsible.css"
 import "../../../ui/field/field.css"
 import "../../../ui/hover-card/hover-card.css"
 import "../../../ui/input/input.css"
+import "../../../ui/label/label.css"
 import "../../../ui/radio-group/radio-group.css"
 import "../../../ui/slider/slider.css"
 import "../../../ui/switch/switch.css"
 
-export function OrderSection({ id, title, hint, wide, className, children, aside }) {
+export function OrderSection({ id, title, hint, className, children, aside }) {
   return (
-    <section className={cn("ck-order-section", wide && "ck-order-section--wide", className)} data-section={id}>
+    <section className={cn("ck-order-section", className)} data-section={id}>
       <div className="ck-order-section-head">
         <h5 className="ck-order-section-title">{title}</h5>
         {hint && <p className="ck-order-hint">{hint}</p>}
@@ -69,9 +74,9 @@ export function Delta({ amount, included }) {
 
 /* A radio row: the kit's item, then the name, a short meta tag and the
    one-sentence description. A blocked row stays visible and says why. */
-export function OptionRow({ value, name, meta, description, badge, delta, disabled, reason }) {
+export function OptionRow({ value, name, meta, description, badge, delta, disabled, reason, recommended }) {
   return (
-    <label className="ck-option" data-disabled={disabled || undefined}>
+    <label className="ck-option" data-disabled={disabled || undefined} data-recommended={recommended || undefined}>
       <RadioGroupItem value={value} aria-label={name} disabled={disabled} />
       <span className="ck-option-text">
         <span className="ck-option-name">
@@ -102,6 +107,20 @@ export function SwitchRow({ id, title, meta, description, checked, onCheckedChan
       </FieldContent>
       <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} />
     </Field>
+  )
+}
+
+/* A free option on one line: the checkbox, its name, and the reason in a
+   muted clause after it. No card, no switch: it is a small yes or no. */
+export function CheckLine({ id, title, note, checked, onCheckedChange, disabled, className }) {
+  return (
+    <div className={cn("ck-check-line", className)} data-disabled={disabled || undefined}>
+      <Checkbox id={id} checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} />
+      <span className="ck-check-line-text">
+        <Label htmlFor={id} className="ck-check-line-label">{title}</Label>
+        {note && <span className="ck-check-line-note"> {note}</span>}
+      </span>
+    </div>
   )
 }
 
@@ -251,16 +270,91 @@ export function Disclosure({ id, label, hint, defaultOpen = false, className, ch
   )
 }
 
-/* The way forward at the end of every step: one unmistakable button. */
-export function StepFooter({ next, onNext, children }) {
+/* Every visible problem as a link to the control that fixes it. */
+export function IssueList({ issues, onGo }) {
+  if (issues.size === 0) return null
   return (
-    <div className="ck-order-footer">
-      {children}
-      {next && (
-        <Button size="lg" className="ck-order-continue" onClick={onNext}>
-          Continue to {next.label}
-          <ChevronRightIcon />
-        </Button>
+    <ul className="ck-order-issues" aria-label="Problems to fix">
+      {[...issues].map(([field, message]) => (
+        <li key={field}>
+          <button type="button" className="ck-order-issue" data-field={field} onClick={() => onGo(stepOfField(field), field)}>
+            <AlertCircleIcon />
+            <span>{message}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+/* A step that waits on earlier ones says so in one alert, each problem
+   with a link to the step that fixes it. */
+export function IssueGate({ title, lede, issues, onGo }) {
+  if (issues.size === 0) return null
+  return (
+    <Alert variant="destructive" className="ck-order-gate" data-issues={issues.size}>
+      <AlertCircleIcon />
+      <AlertTitle>{title}</AlertTitle>
+      <AlertDescription>
+        {lede}
+        <ul className="ck-order-gate-list">
+          {[...issues].map(([field, message]) => (
+            <li key={field}>
+              <span>{message}</span>
+              <Button variant="link" size="sm" className="ck-order-fix" onClick={() => onGo(stepOfField(field), field)}>
+                Fix in {STEPS.find((s) => s.id === stepOfField(field)).label}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </AlertDescription>
+    </Alert>
+  )
+}
+
+/* The end of the step strip: the one way forward, then the way down to
+   the machines. Checkout has neither: its table is on the step, and its
+   CTA is Deploy, in the foot under that table. */
+export function StripActions({ next, onNext, machines, onJump }) {
+  if (!next) return null
+  return (
+    <div className="ck-order-strip-actions">
+      <Button className="ck-order-continue" onClick={onNext}>
+        Continue to {next.label}
+        <ChevronRightIcon />
+      </Button>
+      <Button variant="outline" className="ck-order-jump" onClick={onJump}>
+        <ArrowDownIcon />
+        <span className="ck-sr-only">Scroll to the </span>Machines
+        <span className="ck-order-jump-count">{machines}</span>
+      </Button>
+    </div>
+  )
+}
+
+/* Under whichever step is open: what still needs fixing, and on Checkout
+   the deploy summary at the row's start with Deploy at its end. A step
+   with nothing to say has no foot. */
+export function StepFooter({ step, issues, onGo, summary, onDeploy, deployLabel, canDeploy, deployReason }) {
+  const checkout = step === "checkout"
+  if (!checkout && issues.size === 0) return null
+  return (
+    <div className="ck-order-foot">
+      <IssueList issues={issues} onGo={onGo} />
+      {checkout && (
+        <div className="ck-order-foot-row">
+          {summary && (
+            <div className="ck-order-foot-summary">
+              <span className="ck-order-deploy-title">{summary}</span>
+              <span className="ck-option-desc">{ORDER_COPY.dueToday}</span>
+              {!canDeploy && deployReason && <span className="ck-order-deploy-reason">{deployReason}</span>}
+            </div>
+          )}
+          <Button size="lg" className="ck-order-cta" disabled={!canDeploy} onClick={onDeploy} title={canDeploy ? undefined : deployReason}>
+            <RocketIcon />
+            {deployLabel}
+          </Button>
+        </div>
       )}
     </div>
   )
