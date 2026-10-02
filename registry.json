@@ -170,6 +170,18 @@
         "direction.jsx"
       ]
     },
+    "chart": {
+      "type": "ui",
+      "files": [
+        "chart.css",
+        "chart.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "chart-math.js",
+        "cn.js"
+      ]
+    },
     "checkbox": {
       "type": "ui",
       "files": [
@@ -891,6 +903,7 @@
   },
   "lib": {
     "anchor-position.js": [],
+    "chart-math.js": [],
     "cn.js": [],
     "command-score.js": [],
     "compose-refs.js": [],

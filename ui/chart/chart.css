@@ -1,0 +1,244 @@
+.chart {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  inline-size: 100%;
+  aspect-ratio: 16 / 9;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.chart-layout {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-self: stretch;
+  min-inline-size: 0;
+}
+
+/* flex-basis 0: the svg is sized from this box, so its own px size must never
+ * feed back into the box's size. */
+.chart-plot {
+  position: relative;
+  flex: 1 1 0px;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.chart-surface {
+  display: block;
+  overflow: visible;
+  outline: none;
+  touch-action: pan-y;
+}
+
+.chart-surface:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.chart-grid {
+  stroke: color-mix(in oklab, var(--border) 50%, transparent);
+  stroke-width: 1;
+}
+
+.chart-axis-line,
+.chart-tick {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.chart-tick-text {
+  fill: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.chart-line {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.chart-cursor {
+  fill: var(--muted);
+  stroke: none;
+}
+
+.chart-cursor--line {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.chart-label {
+  fill: var(--foreground);
+  font-size: 0.75rem;
+}
+
+/* ── Tooltip ─────────────────────────────────────────────────────── */
+
+.chart-tooltip-anchor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.chart-tooltip {
+  display: grid;
+  align-items: start;
+  gap: var(--space-1-5);
+  min-inline-size: 8rem;
+  padding: var(--space-1-5) var(--space-2-5);
+  border: 1px solid color-mix(in oklab, var(--border) 50%, transparent);
+  border-radius: var(--radius-lg);
+  background: var(--background);
+  color: var(--foreground);
+  box-shadow: var(--shadow-lg);
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+.chart-tooltip-label {
+  font-weight: 500;
+}
+
+.chart-tooltip-items {
+  display: grid;
+  gap: var(--space-1-5);
+}
+
+.chart-tooltip-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  inline-size: 100%;
+  gap: var(--space-2);
+}
+
+.chart-tooltip-item[data-indicator="dot"] {
+  align-items: center;
+}
+
+.chart-tooltip-item > svg {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  color: var(--muted-foreground);
+}
+
+.chart-tooltip-indicator {
+  flex-shrink: 0;
+  border-radius: 2px;
+  background: var(--chart-indicator);
+  border-color: var(--chart-indicator);
+}
+
+.chart-tooltip-indicator--dot {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+}
+
+.chart-tooltip-indicator--line {
+  inline-size: 0.25rem;
+}
+
+.chart-tooltip-indicator--dashed {
+  inline-size: 0;
+  border: 1.5px dashed var(--chart-indicator);
+  background: transparent;
+}
+
+.chart-tooltip-indicator--nested {
+  margin-block: 0.125rem;
+}
+
+.chart-tooltip-body {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  line-height: 1;
+}
+
+.chart-tooltip-body[data-nested] {
+  align-items: end;
+}
+
+.chart-tooltip-text {
+  display: grid;
+  gap: var(--space-1-5);
+}
+
+.chart-tooltip-name {
+  color: var(--muted-foreground);
+}
+
+.chart-tooltip-value {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+}
+
+/* ── Legend ──────────────────────────────────────────────────────── */
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.chart-legend--top {
+  padding-block-end: var(--space-3);
+}
+
+.chart-legend--bottom {
+  padding-block-start: var(--space-3);
+}
+
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+}
+
+.chart-legend-item > svg {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.chart-legend-swatch {
+  flex-shrink: 0;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: 2px;
+}
+
+/* Series colour is the datum: each fill is a different series, so the
+ * forced palette would merge them. Keep the fills and outline bars in
+ * CanvasText so every bar still has an edge against Canvas. */
+@media (forced-colors: active) {
+  .chart-bar,
+  .chart-line,
+  .chart-area,
+  .chart-dot,
+  .chart-legend-swatch,
+  .chart-tooltip-indicator {
+    forced-color-adjust: none;
+  }
+
+  .chart-bar {
+    stroke: CanvasText;
+    stroke-width: 1;
+  }
+
+  .chart-surface:focus-visible {
+    outline: 2px solid Highlight;
+  }
+}

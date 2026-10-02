@@ -58,8 +58,18 @@ const probes = [
   // components render the same token solid (settled 2026-08-02); the button
   // glow is asserted in tests/contrast.test.mjs.
   ["calendar", ".calendar-day-button:not([disabled])", ["outlineColor"], "D13 focus ring (outline)", { focus: true }],
-  // Graphical objects (1.4.11's second clause). No chart component exists —
-  // chart was excluded from the kit at plan time.
+  // Graphical objects (1.4.11's second clause): the status dot, and each
+  // series fill of ui/chart against the card it sits in. The probe reads
+  // getComputedStyle(el)[prop], so "fill" works like any colour property.
+  // --chart-1 dark (2.90:1), --chart-4 light (1.72:1) and --chart-5 light
+  // (2.13:1) are upstream's palette as shipped. Exempt rather than retuned:
+  // a token change is its own task, and a series is also named by its legend
+  // swatch label and tooltip text, so colour is never the only cue.
+  ["chart", '[data-pg="chart-contrast"] .chart-series[data-key="s1"] .chart-bar', ["fill"], "chart series 1", { exempt: "upstream palette, --chart-1 dark 2.90:1; series are also named by legend and tooltip text" }],
+  ["chart", '[data-pg="chart-contrast"] .chart-series[data-key="s2"] .chart-bar', ["fill"], "chart series 2"],
+  ["chart", '[data-pg="chart-contrast"] .chart-series[data-key="s3"] .chart-bar', ["fill"], "chart series 3"],
+  ["chart", '[data-pg="chart-contrast"] .chart-series[data-key="s4"] .chart-bar', ["fill"], "chart series 4", { exempt: "upstream palette, --chart-4 light 1.72:1; series are also named by legend and tooltip text" }],
+  ["chart", '[data-pg="chart-contrast"] .chart-series[data-key="s5"] .chart-bar', ["fill"], "chart series 5", { exempt: "upstream palette, --chart-5 light 2.13:1; series are also named by legend and tooltip text" }],
   ["status-dot", '.status-dot[data-status="success"], .status-dot[data-status="warning"], .status-dot[data-status="error"], .status-dot[data-status="info"]', ["backgroundColor"], "status dot"],
   ["progress", ".progress", ["backgroundColor"], "progress track", { exempt: "inactive track; the indicator carries the state and passes (17.93:1 light / 15.72:1 dark), as D5 checkbox fill" }],
   ["progress", ".progress-indicator", ["backgroundColor"], "progress indicator"],
