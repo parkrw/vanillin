@@ -14,6 +14,16 @@ import {
   curvePath,
   linePath,
   areaPath,
+  polarToCartesian,
+  cartesianToPolar,
+  resolveLength,
+  arcPath,
+  arcLinePath,
+  pieSlices,
+  sliceIndexAt,
+  nearestAngleIndex,
+  radarPath,
+  polarGridPath,
 } from "../lib/chart-math.js"
 import assert from "node:assert/strict"
 
@@ -307,6 +317,185 @@ test("linePath joins one subpath per run", () => {
 test("areaPath walks the lower edge back and closes", () => {
   const d = areaPath([[0, 10], [10, 0]], [[0, 50], [10, 50]], "linear")
   assert.equal(d, "M 0 10 L 10 0 L 10 50 L 0 50 Z")
+})
+
+// --- polar: angles ---
+
+const nearPoint = (p, [x, y], msg) => {
+  assert.ok(Math.abs(p[0] - x) < 1e-9 && Math.abs(p[1] - y) < 1e-9, `${msg}: got ${p}`)
+}
+
+test("polarToCartesian: 0° is 3 o'clock, 90° is up, counter-clockwise", () => {
+  nearPoint(polarToCartesian(10, 10, 5, 0), [15, 10], "0°")
+  nearPoint(polarToCartesian(10, 10, 5, 90), [10, 5], "90°")
+  nearPoint(polarToCartesian(10, 10, 5, 180), [5, 10], "180°")
+  nearPoint(polarToCartesian(10, 10, 5, -90), [10, 15], "-90°")
+})
+
+test("cartesianToPolar inverts polarToCartesian", () => {
+  for (const a of [0, 45, 90, 135, 180, -45, -135]) {
+    const [x, y] = polarToCartesian(3, 4, 7, a)
+    const [r, angle] = cartesianToPolar(3, 4, x, y)
+    assert.ok(Math.abs(r - 7) < 1e-9 && Math.abs(angle - a) < 1e-9, `${a}° → ${r} ${angle}`)
+  }
+})
+
+test("resolveLength: px as is, percent of the total, fallback otherwise", () => {
+  assert.equal(resolveLength(30, 200, 1), 30)
+  assert.equal(resolveLength("80%", 200, 1), 160)
+  assert.equal(resolveLength("12", 200, 1), 12)
+  assert.equal(resolveLength(undefined, 200, 1), 1)
+  assert.equal(resolveLength("auto", 200, 1), 1)
+})
+
+// --- polar: arcPath ---
+
+const arcs = (d) => (d.match(/ A /g) || []).length
+
+test("arcPath: a quarter disc is one arc to the centre, a quarter ring two arcs", () => {
+  assert.equal(arcPath(0, 0, 0, 10, 0, 90), "M 10 0 A 10 10 0 0 0 0 -10 L 0 0 Z")
+  assert.equal(arcPath(0, 0, 5, 10, 0, 90), "M 10 0 A 10 10 0 0 0 0 -10 L 0 -5 A 5 5 0 0 1 5 0 Z")
+})
+
+test("arcPath: a sweep past 180° sets the large-arc flag; a negative sweep flips the direction", () => {
+  assert.ok(arcPath(0, 0, 0, 10, 0, 270).includes("A 10 10 0 1 0"), "large arc")
+  assert.ok(arcPath(0, 0, 0, 10, 0, -90).includes("A 10 10 0 0 1"), "clockwise sweep")
+  assert.equal(arcPath(0, 0, 0, 10, 0, -90), "M 10 0 A 10 10 0 0 1 0 10 L 0 0 Z")
+})
+
+test("arcPath: a full circle is two half arcs per edge, never a 360° arc", () => {
+  const disc = arcPath(0, 0, 0, 10, 0, 360)
+  assert.equal(arcs(disc), 2)
+  assert.ok(!disc.includes("NaN"))
+  const ring = arcPath(0, 0, 4, 10, 0, 360)
+  assert.equal(arcs(ring), 4)
+  assert.ok(ring.includes("A 10 10 0 0 0") && ring.includes("A 4 4 0 0 1"), "opposite windings")
+  assert.equal(arcPath(0, 0, 0, 10, 90, -270), disc, "any 360° sweep is the same ring")
+})
+
+test("arcPath: nothing for a zero sweep or radius", () => {
+  assert.equal(arcPath(0, 0, 0, 10, 45, 45), "")
+  assert.equal(arcPath(0, 0, 0, 0, 0, 90), "")
+})
+
+test("arcPath: cornerRadius adds four corner arcs on a ring, two on a disc", () => {
+  const ring = arcPath(0, 0, 20, 30, 0, 90, 3)
+  assert.equal(arcs(ring), 6)
+  assert.ok(ring.startsWith("M 26."), `starts on the radial edge inside the outer radius: ${ring}`)
+  const disc = arcPath(0, 0, 0, 30, 0, 90, 3)
+  assert.equal(arcs(disc), 3)
+  assert.ok(disc.endsWith("L 0 0 Z"))
+})
+
+test("arcPath: cornerRadius is clamped to half the ring and to the sweep's room", () => {
+  // Half the thickness: the two corners on an edge meet, so the join is a zero-length line.
+  const thin = arcPath(0, 0, 20, 30, 0, 90, 50)
+  assert.equal(arcs(thin), 6)
+  assert.ok(!thin.includes("NaN"))
+  // A 2° sliver has no room for a 5px corner at r=30 and must not go NaN.
+  const sliver = arcPath(0, 0, 20, 30, 0, 2, 5)
+  assert.ok(!sliver.includes("NaN"), sliver)
+  assert.equal(arcs(sliver), 6)
+  assert.ok(sliver.startsWith("M 29.9") || sliver.startsWith("M 30 ") || sliver.startsWith("M 29."), sliver)
+})
+
+test("arcLinePath: one arc the text follows; a full turn is two half arcs, since one arc back to its own start draws nothing", () => {
+  assert.equal(arcLinePath(0, 0, 10, 0, 90), "M 10 0 A 10 10 0 0 0 0 -10")
+  assert.equal(arcLinePath(0, 0, 10, 0, 360), "M 10 0 A 10 10 0 0 0 -10 0 A 10 10 0 0 0 10 0")
+  assert.equal(arcs(arcLinePath(0, 0, 10, 0, 270)), 1)
+})
+
+// --- polar: pieSlices ---
+
+test("pieSlices: shares of the sweep, contiguous, from startAngle counter-clockwise", () => {
+  const s = pieSlices([1, 1, 2])
+  assert.deepEqual(
+    s.map((x) => [x.start, x.end]),
+    [
+      [0, 90],
+      [90, 180],
+      [180, 360],
+    ],
+  )
+  assert.equal(s[2].mid, 270)
+  assert.equal(s[0].value, 1)
+})
+
+test("pieSlices: a partial sweep pads between slices only; a full circle pads the wrap too", () => {
+  const half = pieSlices([1, 1], { startAngle: 0, endAngle: 180, paddingAngle: 10 })
+  assert.deepEqual(
+    half.map((x) => [x.start, x.end]),
+    [
+      [0, 85],
+      [95, 180],
+    ],
+  )
+  const full = pieSlices([1, 1], { paddingAngle: 10 })
+  assert.deepEqual(
+    full.map((x) => [x.start, x.end]),
+    [
+      [0, 170],
+      [180, 350],
+    ],
+  )
+})
+
+test("pieSlices: null, zero and negative values are empty slices that keep their index and take no padding", () => {
+  const s = pieSlices([2, null, 0, -3, 2], { paddingAngle: 10 })
+  assert.equal(s.length, 5)
+  assert.equal(s[1].start, s[1].end)
+  assert.equal(s[3].start, s[3].end)
+  assert.deepEqual([s[0].start, s[0].end], [0, 170])
+  assert.deepEqual([s[4].start, s[4].end], [180, 350])
+})
+
+test("pieSlices: all-empty data is all empty slices at startAngle; a reversed sweep runs clockwise", () => {
+  assert.ok(pieSlices([0, null], { startAngle: 90 }).every((x) => x.start === 90 && x.end === 90))
+  const s = pieSlices([1, 3], { startAngle: 90, endAngle: -270 })
+  assert.deepEqual(
+    s.map((x) => [x.start, x.end]),
+    [
+      [90, 0],
+      [0, -270],
+    ],
+  )
+})
+
+test("sliceIndexAt: the slice whose span holds the angle, modulo 360; a gap is -1", () => {
+  const s = pieSlices([1, 1, 2])
+  assert.equal(sliceIndexAt(45, s), 0)
+  assert.equal(sliceIndexAt(-100, s), 2, "wraps: -100 is 260")
+  assert.equal(sliceIndexAt(90, s), 0, "a shared edge resolves to the lower index")
+  const padded = pieSlices([1, 1], { paddingAngle: 20 })
+  assert.equal(sliceIndexAt(170, padded), -1, "inside the padding")
+  assert.equal(sliceIndexAt(355, padded), -1, "inside the wrap gap")
+  assert.equal(sliceIndexAt(0, []), -1)
+})
+
+test("nearestAngleIndex: shortest angular distance, modulo 360", () => {
+  const angles = [90, 30, -30, -90, -150, -210]
+  assert.equal(nearestAngleIndex(100, angles), 0)
+  assert.equal(nearestAngleIndex(179, angles), 5, "150 (= -210) is nearer than 90")
+  assert.equal(nearestAngleIndex(-179, angles), 4)
+  assert.equal(nearestAngleIndex(0, []), -1)
+})
+
+// --- polar: radarPath / polarGridPath ---
+
+test("radarPath: closed polygon through the points, nulls skipped", () => {
+  assert.equal(radarPath([[0, 0], [10, 0], null, [10, 10]]), "M 0 0 L 10 0 L 10 10 Z")
+  assert.equal(radarPath([null]), "")
+})
+
+test("polarGridPath: a polygon has one vertex per angle; a circle is two arcs", () => {
+  const poly = polarGridPath(0, 0, 10, [90, -30, -150])
+  assert.equal((poly.match(/ L /g) || []).length, 2)
+  assert.ok(poly.startsWith("M 0 -10") && poly.endsWith("Z"))
+  const circle = polarGridPath(0, 0, 10, [90, -30, -150], "circle")
+  assert.equal(arcs(circle), 2)
+  assert.ok(!circle.includes("L"))
+  assert.equal(polarGridPath(0, 0, 10, [0, 180]), circle, "fewer than three angles falls back to a circle")
+  assert.equal(polarGridPath(0, 0, 0, [0, 90, 180]), "")
 })
 
 // --- summary ---
