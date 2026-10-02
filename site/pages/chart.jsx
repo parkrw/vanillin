@@ -885,7 +885,8 @@ const chartConfig = {
           function of the slice's geometry (<code>cx</code>, <code>cy</code>, <code>innerRadius</code>,{" "}
           <code>outerRadius</code>, <code>startAngle</code>, <code>endAngle</code>, <code>fill</code>) returning an
           element, or an object of overrides; <code>Sector</code> draws one sector from those props, so a shape can
-          grow the slice or add a ring around it.
+          grow the slice or add a ring around it. <code>inactiveShape</code> takes the same forms and redraws every
+          other slice while one is active, here to fade them.
         </p>
         <ComponentPreview code={`<PieChart>
   <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
@@ -901,13 +902,14 @@ const chartConfig = {
         <Sector {...props} outerRadius={outerRadius + 25} innerRadius={outerRadius + 12} />
       </g>
     )}
+    inactiveShape={{ fillOpacity: 0.4 }}
   />
 </PieChart>`}>
           <Frame pg="chart-pie-active" square>
             <ChartContainer config={browserConfig} style={{ aspectRatio: "1" }}>
               <PieChart accessibilityLayer aria-label="Visitors by browser, active slice raised">
                 <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                <Pie data={browserData} dataKey="visitors" nameKey="browser" innerRadius={60} strokeWidth={5} activeShape={raisedSector} />
+                <Pie data={browserData} dataKey="visitors" nameKey="browser" innerRadius={60} strokeWidth={5} activeShape={raisedSector} inactiveShape={{ fillOpacity: 0.4 }} />
               </PieChart>
             </ChartContainer>
           </Frame>
@@ -1134,6 +1136,7 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "labelLine", type: "boolean | { stroke, … } | (slice) => node", default: "true", description: "Pie: a line from the edge to the label, drawn only with label" },
         { name: "activeShape", type: "(slice) => node | { outerRadius, fill, … }", description: "Pie: redraws the active slice; the slice props feed a Sector" },
         { name: "activeIndex", type: "number | number[]", description: "Pie: pins the active slice instead of following the pointer" },
+        { name: "inactiveShape", type: "(slice) => node | { fillOpacity, … }", description: "Pie: redraws every other slice while one is active" },
         { name: "cornerRadius", type: "number", default: "0", description: "Rounded sector corners, px" },
         { name: "fill / fillOpacity", type: "string / number", description: "Series colour; defaults to the next --chart-n, Radar fillOpacity 1" },
         { name: "stroke / strokeWidth", type: "string / number", default: "background / 0", description: "Sector edge, a gap in the page colour; Radar outline" },
