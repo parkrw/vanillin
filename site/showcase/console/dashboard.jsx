@@ -5,6 +5,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../ui/hover
 import { Item, ItemActions, ItemContent, ItemGroup, ItemTitle } from "../../../ui/item/item.jsx"
 import { LiveValue } from "../../../ui/live-value/live-value.jsx"
 import { Progress } from "../../../ui/progress/progress.jsx"
+import { Sparkline } from "../../../ui/sparkline/sparkline.jsx"
 import { StatusDot } from "../../../ui/status-dot/status-dot.jsx"
 import { EVENTS, HEALTH, INCOMING_EVENTS, STATS, UTILIZATION } from "../console-data.js"
 import { drift, history } from "../console-live.js"
@@ -15,23 +16,10 @@ import "../../../ui/hover-card/hover-card.css"
 import "../../../ui/item/item.css"
 import "../../../ui/live-value/live-value.css"
 import "../../../ui/progress/progress.css"
+import "../../../ui/sparkline/sparkline.css"
 import "../../../ui/status-dot/status-dot.css"
 
 /* The overview dashboard: every number on it breathes. */
-
-function Sparkline({ points, width = 72, height = 24, max = 100 }) {
-  const step = width / (points.length - 1)
-  const y = (v) => height - 2 - (v / max) * (height - 4)
-  const coords = points.map((v, i) => `${(i * step).toFixed(1)},${y(v).toFixed(1)}`)
-  const last = points[points.length - 1]
-  return (
-    <svg className="ck-spark" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
-      <polygon className="ck-spark-fill" points={`0,${height} ${coords.join(" ")} ${width},${height}`} />
-      <polyline points={coords.join(" ")} />
-      <circle cx={width} cy={y(last)} r="2" />
-    </svg>
-  )
-}
 
 const SPARK = Object.fromEntries(STATS.map((s, i) => [s.label, drift(`spark:${s.label}`, 40 + i * 8, { spread: 18 })]))
 const RUNNING = drift("stat:running", 38, { spread: 1, min: 37, max: 39 })
@@ -55,7 +43,7 @@ export function StatCards() {
                 )}
               </div>
               <div className="ck-stat-spark">
-                <Sparkline points={history(SPARK[s.label], tick)} />
+                <Sparkline points={history(SPARK[s.label], tick)} max={100} />
               </div>
             </CardContent>
           </HoverCardTrigger>

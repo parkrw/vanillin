@@ -761,6 +761,18 @@
         "use-controllable-state.js"
       ]
     },
+    "sparkline": {
+      "type": "ui",
+      "files": [
+        "sparkline.css",
+        "sparkline.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "chart-math.js",
+        "cn.js"
+      ]
+    },
     "spinner": {
       "type": "ui",
       "files": [

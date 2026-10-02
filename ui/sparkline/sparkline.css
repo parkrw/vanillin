@@ -1,0 +1,41 @@
+/*
+ * Sparkline — an inline trend line in the colour of the text beside it.
+ *
+ * The stroke is currentColor so a parent's `color` tints the whole line; the
+ * area is a wash of the same colour. The dot reads --sparkline-dot with a
+ * currentColor fallback, never declared here: a value set on the element
+ * itself would beat the ancestor override the API promises.
+ */
+.sparkline {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Round joins: a miter at an acute peak can poke past the inset. */
+.sparkline-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.sparkline-area {
+  fill: color-mix(in oklab, currentColor 12%, transparent);
+  stroke: none;
+}
+
+.sparkline-dot {
+  fill: var(--sparkline-dot, currentColor);
+  stroke: none;
+}
+
+/* The stroke is the datum: the forced palette would flatten the wash into
+ * the line and the dot into the stroke, so keep the three parts as authored. */
+@media (forced-colors: active) {
+  .sparkline-line,
+  .sparkline-area,
+  .sparkline-dot {
+    forced-color-adjust: none;
+  }
+}
