@@ -987,11 +987,13 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     }
 
     // The dragged widths are kept, not overwritten, so widening restores them.
+    // The rails re-fit in a render after the frame's ResizeObserver fires, so
+    // the frame's own width arrives first: wait for the rails' variables.
     await page.setViewportSize(viewport)
-    await page.waitForFunction(
-      (w) => document.querySelector(".ck-console").getBoundingClientRect().width >= w - 1,
-      viewport.width,
-    )
+    await page.waitForFunction(() => {
+      const cs = getComputedStyle(document.querySelector(".ck-console"))
+      return cs.getPropertyValue("--pri-w").trim() === "400px" && cs.getPropertyValue("--sec-w").trim() === "350px"
+    })
     const restored = await widths()
     eq(restored.pri, 400, `the primary rail takes its dragged width back (${restored.pri})`)
     eq(restored.sec, 350, `the secondary rail takes its dragged width back (${restored.sec})`)
