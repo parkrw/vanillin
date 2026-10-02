@@ -46,33 +46,24 @@ export function LocationStep({ draft, patch, errors }) {
           >
             <CardContent className="ck-site-body">
               <div className="ck-site-head">
+                <div className="ck-site-name">
+                  {s.name}
+                  {s.id === recommended && <Recommended />}
+                </div>
                 <Avatar className="ck-site-mark" aria-hidden="true">
                   <AvatarFallback>{s.code}</AvatarFallback>
                 </Avatar>
                 <RadioGroupItem value={s.id} aria-label={s.name} />
               </div>
-              <div className="ck-site-text">
-                <div className="ck-site-name">
-                  {s.name}
-                  {s.id === recommended && <Recommended />}
-                </div>
-                <div className="ck-site-city">{s.city} · sales tax {SITE_FACTS[s.id].taxLabel}</div>
-                <p className="ck-option-desc">{s.description}</p>
-              </div>
+              <p className="ck-option-desc">{s.description}</p>
             </CardContent>
           </Card>
         ))}
       </RadioGroup>
       <InlineError field="site">{errors.get("site")}</InlineError>
-      {/* Always open: the one fact the cards cannot hold is the round trip
-          from each user region. Tax is on the card; nothing else moved. */}
-      <div className="ck-compare-block" data-compare="sites">
-        <div className="ck-compare-head">
-          <span className="ck-compare-title">Compare sites</span>
-          <span className="ck-compare-hint">median round trip from where your users are</span>
-        </div>
+      <Disclosure id="compare-sites" label="Compare sites" hint="median round trip from where your users are">
         <div className="ck-compare-wrap">
-          <table className="ck-compare">
+          <table className="ck-compare ck-compare--center">
             <thead>
               <tr>
                 <th>Site</th>
@@ -99,7 +90,7 @@ export function LocationStep({ draft, patch, errors }) {
             </tbody>
           </table>
         </div>
-      </div>
+      </Disclosure>
     </OrderSection>
   )
 }

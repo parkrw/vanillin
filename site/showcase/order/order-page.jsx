@@ -30,6 +30,12 @@ const TOUCH_ON_BLUR = new Set(["name"])
 
 const firstOrder = () => orderFromLocation() ?? loadSavedOrder() ?? newOrder()
 
+// The next draft keeps who the users are and where, not what the last vDC held.
+const freshDraft = (o) => {
+  const seq = o.seq + 1
+  return { seq, draft: newDraft(seq, { users: o.draft.users, site: o.draft.site, workload: o.draft.workload, image: o.draft.image }) }
+}
+
 export function OrderPage({ consoleHref = "#console" }) {
   const [order, setOrder] = useState(firstOrder)
   const [step, setStep] = useState("location")
@@ -143,11 +149,7 @@ export function OrderPage({ consoleHref = "#console" }) {
 
   const addVdc = () => {
     if (blockOnIssues("add it to the order")) return
-    setOrder((o) => {
-      const seq = o.seq + 1
-      const next = newDraft(seq, { users: o.draft.users, site: o.draft.site, workload: o.draft.workload, image: o.draft.image })
-      return { ...o, vdcs: [...o.vdcs, o.draft], draft: next, editing: null, seq }
-    })
+    setOrder((o) => ({ ...o, vdcs: [...o.vdcs, o.draft], editing: null, ...freshDraft(o) }))
     setTouched(new Set())
     setReviewed(false)
     toast.success(`${draft.name} added to the order`, { description: `${money(cost.total)}/mo · the form holds a new draft.` })
@@ -160,9 +162,27 @@ export function OrderPage({ consoleHref = "#console" }) {
     })
     setStep("location")
   }, [])
-  const removeVdc = useCallback((id) => {
-    setOrder((o) => ({ ...o, vdcs: o.vdcs.filter((v) => v.id !== id), vms: o.vms.filter((v) => v.vdc !== id) }))
-  }, [])
+  /* The form always holds a draft, so deleting it leaves a fresh one, as
+     adding it to the order does. Its machines go with it either way. */
+  const removeVdc = useCallback(
+    (id) => {
+      const vdc = [...vdcs, draft].find((v) => v.id === id)
+      if (!vdc) return
+      const isDraft = id === draft.id
+      setOrder((o) => {
+        const vms = o.vms.filter((v) => v.vdc !== id)
+        return id === o.draft.id
+          ? { ...o, vms, editing: null, ...freshDraft(o) }
+          : { ...o, vdcs: o.vdcs.filter((v) => v.id !== id), vms }
+      })
+      if (isDraft) {
+        setTouched(new Set())
+        setReviewed(false)
+      }
+      toast.success(`${vdc.name} deleted`, { description: isDraft ? "The form holds a new draft." : undefined })
+    },
+    [vdcs, draft]
+  )
   const duplicateVdc = useCallback((id) => {
     setOrder((o) => {
       const source = [...o.vdcs, o.draft].find((v) => v.id === id)

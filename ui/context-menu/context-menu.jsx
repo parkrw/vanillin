@@ -76,10 +76,25 @@ export function ContextMenuTrigger({
 
   const openAt = (x, y) => {
     setPoint(x, y)
+    // An Escape or a press before the deferred open runs is the user closing
+    // the menu (native light dismiss), not Chrome's contextmenu hide; the
+    // re-show below must not undo it, or the menu sticks open.
+    let dismissed = false
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") dismissed = true
+    }
+    const onPress = () => {
+      dismissed = true
+    }
+    window.addEventListener("keydown", onKeyDown, true)
+    window.addEventListener("pointerdown", onPress, true)
     // Chrome hides all auto popovers while processing the contextmenu event
     // (even when it's prevented) — opening synchronously there gets undone
     // immediately. Open in a later task, after the gesture completes.
     setTimeout(() => {
+      window.removeEventListener("keydown", onKeyDown, true)
+      window.removeEventListener("pointerdown", onPress, true)
+      if (dismissed) return
       setOpen(true)
       // Right-click while already open: state never left "open" (the native
       // hide's toggle event is queued, not yet synced), so the setOpen above
