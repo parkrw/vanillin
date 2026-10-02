@@ -172,6 +172,30 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await page.mouse.move(0, 0)
   })
 
+  await test('tooltip: trigger="click" ignores hover, toggles on a press, and a press outside dismisses', async () => {
+    const name = "chart-tooltip-click"
+    await hoverBand(name, 1)
+    eq(await tooltip(name).count(), 0, "hover alone shows nothing")
+    const box = await rect(`${pg(name)} .chart-surface`)
+    const at = (i) => [box.x + (box.width / 6) * (i + 0.5), box.y + box.height * 0.5]
+    const label = () => page.locator(`${pg(name)} .chart-tooltip-label`).textContent()
+    await page.mouse.click(...at(1))
+    await tooltip(name).waitFor()
+    eq(await label(), "February")
+    eq(await page.locator(`${pg(name)} .chart-cursor`).count(), 1, "the cursor band marks the pressed band")
+    await page.mouse.click(...at(2))
+    await page.waitForFunction(() => document.querySelector('[data-pg="chart-tooltip-click"] .chart-tooltip-label')?.textContent === "March")
+    await page.mouse.move(...at(4))
+    eq(await label(), "March", "moving the pointer does not move it")
+    await page.mouse.click(...at(2))
+    await tooltip(name).waitFor({ state: "detached" })
+    await page.mouse.click(...at(0))
+    await tooltip(name).waitFor()
+    eq(await label(), "January")
+    await page.locator("h2").click()
+    await tooltip(name).waitFor({ state: "detached" })
+  })
+
   await test("tooltip: indicator variants and hideLabel", async () => {
     await hoverBand("chart-tooltip-dashed", 2)
     await tooltip("chart-tooltip-dashed").waitFor()

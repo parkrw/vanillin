@@ -866,3 +866,7 @@ Branch `feat/chart-inactive-shape`, #88. `Pie` takes Recharts' `inactiveShape`: 
 ## ui/chart — legend over every Pie (2026-10-02)
 
 Branch `feat/chart-pie-legend-2`, #89. `pieLayout`'s `legendPayload` spans every `Pie` in the chart, each name once with the colour from the first pie that names it, where #86 had listed the first pie only; the keyboard still steps the first. The "Two pies" section gains a `ChartLegend`.
+
+## ui/chart — tooltip on click (2026-10-02)
+
+Branch `feat/chart-tooltip-click-3`, #90. `ChartTooltip` takes Recharts' `trigger="click"`: `useActiveIndex` swaps its surface handlers for a single pointerdown that toggles the pressed category (the same one again clears), ignores movement, and leaves dismissal to the document pointerdown listener the touch path already had. Both roots read it off the tooltip element beside `defaultIndex`, so pie, radar and radial charts take it unchanged. Page: "Tooltip on click" after "Tooltip without cursor".

@@ -495,9 +495,10 @@ const pick = (props, keys) => keys.map((key) => props?.[key])
  * The active category: set by the pointer (the surface's own coordinates
  * travel with it so the tooltip can follow), by the keyboard, or by a
  * tooltip's defaultIndex. A touch tooltip has no leave event: it stays
- * until a press lands outside the chart.
+ * until a press lands outside the chart. trigger="click" treats every
+ * pointer the same way: a press toggles, movement is ignored.
  */
-function useActiveIndex({ count, defaultIndex, indexAt }) {
+function useActiveIndex({ count, defaultIndex, indexAt, trigger = "hover" }) {
   const [activeIndex, setActiveIndex] = useState(() => (Number.isInteger(defaultIndex) ? defaultIndex : null))
   const [pointer, setPointer] = useState({ source: "default", point: null })
   const layoutRef = useRef(null)
@@ -511,11 +512,19 @@ function useActiveIndex({ count, defaultIndex, indexAt }) {
     setPointer((prev) => (prev.source === "default" && prev.point === null ? prev : { source: "default", point: null }))
   }
 
-  const locate = (event) => {
+  const hit = (event) => {
     const rect = event.currentTarget.getBoundingClientRect()
     const point = { x: event.clientX - rect.left, y: event.clientY - rect.top }
-    const index = indexAt(point)
+    return { point, index: indexAt(point) }
+  }
+  const locate = (event) => {
+    const { point, index } = hit(event)
     if (index < 0) clear()
+    else activate(index, "pointer", point)
+  }
+  const toggle = (event) => {
+    const { point, index } = hit(event)
+    if (index < 0 || (index === activeIndex && pointer.source === "pointer")) clear()
     else activate(index, "pointer", point)
   }
   const onPointerLeave = (event) => {
@@ -572,7 +581,7 @@ function useActiveIndex({ count, defaultIndex, indexAt }) {
     activeIndex,
     pointer,
     layoutRef,
-    surface: { onPointerMove: locate, onPointerDown: locate, onPointerLeave },
+    surface: trigger === "click" ? { onPointerDown: toggle } : { onPointerMove: locate, onPointerDown: locate, onPointerLeave },
     keyboard: { onKeyDown, onFocus, onBlur },
   }
 }
@@ -647,6 +656,7 @@ function CartesianChart({
   const { activeIndex, pointer, layoutRef, surface, keyboard } = useActiveIndex({
     count: computed.category.count,
     defaultIndex: tooltipEl?.props.defaultIndex,
+    trigger: tooltipEl?.props.trigger,
     indexAt: computed.indexAt,
   })
 
@@ -1123,6 +1133,7 @@ function PolarChart({
   const { activeIndex, pointer, layoutRef, surface, keyboard } = useActiveIndex({
     count: computed.category.count,
     defaultIndex: tooltipEl?.props.defaultIndex,
+    trigger: tooltipEl?.props.trigger,
     indexAt: computed.indexAt,
   })
 
@@ -2128,7 +2139,7 @@ PolarRadiusAxis.chartRole = "polarradiusaxis"
  * not an overlay, and the top layer would lift it out of the chart's
  * stacking context.
  */
-export function ChartTooltip({ content, cursor = true, defaultIndex, ...props }) {
+export function ChartTooltip({ content, cursor = true, defaultIndex, trigger, ...props }) {
   const layout = useContext(LayoutContext)
   const index = useContext(ActiveIndexContext)
   const pointer = useContext(PointerContext)
