@@ -223,7 +223,7 @@ function vdcItems({ vdc, draft, editing, onEdit, onRemove, onDuplicate, onAddVm,
       : { label: "Edit", onSelect: () => onEdit(vdc.id) },
     { label: "Add virtual machine", onSelect: () => onAddVm(vdc.id) },
     { label: "Duplicate", onSelect: () => onDuplicate(vdc.id) },
-    ...(isDraft ? [] : [{ label: "Remove from order", onSelect: () => onRemove(vdc.id), className: "ck-menu-danger" }]),
+    { label: "Delete", onSelect: () => onRemove(vdc.id), className: "ck-menu-danger" },
   ]
 }
 

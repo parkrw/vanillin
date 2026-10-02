@@ -5,11 +5,13 @@ export const PROJECTS = ["admin", "engineering", "data-science", "marketing"]
 export const REGIONS = ["Dallas", "Salt Lake City", "Chicago"]
 
 // The three sites a vDC can live in. `code` is the folded rail's label;
-// descriptions are the order form's copy: what the site is and who needs it.
+// descriptions are the order form's copy: one sentence of where the site is
+// and who it suits, about the length of the others, with no claims about
+// capacity or catalogue, so every card reads alike.
 export const ORDER_SITES = [
   {
     id: "dfw", code: "DFW", name: "DFW Cage 6", city: "Plano, TX",
-    description: "Our largest footprint, with the widest size catalogue and the shortest queue for new capacity; pick it unless latency or law says otherwise.",
+    description: "South-Central site in the Dallas metro, for teams whose users and offices sit in Texas and the South.",
   },
   {
     id: "chi", code: "CHI", name: "Chicago Cage 6", city: "Chicago, IL",
@@ -506,7 +508,7 @@ export const USER_REGIONS = [
   { id: "south", name: "Texas & the South", site: "dfw", rationale: "DFW sits in the middle of the region: single-digit milliseconds to Dallas, Houston and Atlanta." },
   { id: "midwest", name: "Midwest & Northeast", site: "chi", rationale: "Chicago is on the Midwest carrier hotels, one hop from New York and Toronto." },
   { id: "west", name: "Mountain West & Pacific", site: "slc", rationale: "SLC is the closest site to Denver, Phoenix and the Bay Area, and it is out of the hurricane belt." },
-  { id: "everywhere", name: "Everywhere, or not sure", site: "dfw", rationale: "DFW has the widest size catalogue and the shortest queue for new capacity; pick it unless latency or law says otherwise." },
+  { id: "everywhere", name: "Everywhere, or not sure", site: "dfw", rationale: "DFW is the default when users are spread out or not yet known." },
 ]
 
 // Per-site figures. Latency is the median round trip in milliseconds from

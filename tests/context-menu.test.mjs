@@ -85,6 +85,32 @@ export default async function run({ page, baseUrl, test, eq }) {
     await waitClosed()
   })
 
+  await test("Escape right after a right-click on the open menu closes it; the deferred open does not re-show it", async () => {
+    const box = await trigger.boundingBox()
+    await rightClickAt(Math.round(box.x + box.width / 2), Math.round(box.y + box.height / 2))
+    // One task, before the deferred open runs: a right-click while open
+    // (Windows order, contextmenu after the release, so it opens at once),
+    // then the user's Escape. A synthetic Escape does not light-dismiss, so
+    // the native hide it would cause is done by hand.
+    const x = Math.round(box.x + (box.width * 3) / 4)
+    const y = Math.round(box.y + (box.height * 3) / 4)
+    const wasOpen = await page.evaluate(({ x, y }) => {
+      const menu = document.querySelector('[data-pg="context-menu"]')
+      const open = menu.matches(":popover-open")
+      document
+        .querySelector('[data-pg="context-trigger"]')
+        .dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: x, clientY: y, buttons: 0 }))
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
+      menu.hidePopover()
+      return open
+    }, { x, y })
+    eq(wasOpen, true, "the menu was open when the second right-click landed")
+    await page.waitForFunction((expectedLeft) => Math.abs(parseFloat(document.querySelector('[data-pg="context-menu"]').style.left) - expectedLeft) < 1, x - 2)
+    await waitClosed()
+    await page.waitForTimeout(100)
+    eq(await page.evaluate(() => document.querySelector('[data-pg="context-menu"]').matches(":popover-open")), false, "still closed once the deferred open has run")
+  })
+
   await test("arrow nav + Enter selects item, updates readout, closes", async () => {
     const box = await trigger.boundingBox()
     await rightClickAt(Math.round(box.x + 40), Math.round(box.y + 40))
