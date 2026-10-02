@@ -1242,29 +1242,12 @@
 }
 
 .ck-stat-spark {
+  --sparkline-dot: var(--ck-orange);
   position: absolute;
   inset-inline-end: 0.625rem;
   inset-block-start: 0.875rem;
+  color: var(--ck-blue);
   opacity: 0.9;
-}
-
-.ck-spark {
-  display: block;
-}
-
-.ck-spark polyline {
-  fill: none;
-  stroke: var(--ck-blue);
-  stroke-width: 1.5;
-}
-
-.ck-spark circle {
-  fill: var(--ck-orange);
-}
-
-.ck-spark-fill {
-  fill: var(--ck-blue-soft);
-  stroke: none;
 }
 
 .ck-stat-hover {
