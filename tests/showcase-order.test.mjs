@@ -241,7 +241,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await page.waitForFunction(() => getComputedStyle(document.querySelector(".ck-order-body")).gridTemplateColumns.trim().split(" ").length === 2)
   })
 
-  await test("Continue and the way down to the machines sit at the strip's end, Continue first; Machines scrolls the table into view and lands focus on it", async () => {
+  await test("Continue and the way down to the machines sit at the strip's end, Continue first, one size; Machines scrolls the table into view and lands focus on it", async () => {
     await reset()
     const strip = order.locator(".ck-order-strip")
     const [stepsBox, actionsBox, jumpBox, continueBox] = await Promise.all([".ck-order-steps", ".ck-order-strip-actions", ".ck-order-jump", ".ck-order-continue"].map((s) => rect(strip.locator(s))))
@@ -249,6 +249,16 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(actionsBox.left >= stepsBox.right - 1, true, "at the strip's end")
     eq(continueBox.right <= jumpBox.left, true, "Continue first, Machines last")
     near(jumpBox.right, actionsBox.right, 1, "Machines closes the row")
+    // One size, and it follows Continue's label from step to step: a
+    // shorter label narrows both, so equal widths are not a coincidence.
+    near(jumpBox.width, continueBox.width, 1, "Machines is as wide as Continue")
+    near(jumpBox.height, continueBox.height, 1, "and as tall")
+    await goTab("Storage", "storage")
+    eq(await strip.locator(".ck-order-continue").textContent(), "Continue to Backup & DR")
+    const [shortJump, shortContinue] = await Promise.all([".ck-order-jump", ".ck-order-continue"].map((s) => rect(strip.locator(s))))
+    eq(shortContinue.width < continueBox.width - 4, true, `the shorter label narrows Continue (${shortContinue.width}px from ${continueBox.width}px)`)
+    near(shortJump.width, shortContinue.width, 1, "and Machines with it")
+    await goTab("Location", "location")
     eq(await strip.locator(".ck-order-continue").textContent(), "Continue to Infrastructure")
     eq(await order.locator(".ck-order-foot").count(), 0, "with nothing to fix, a step has no foot")
     const jump = strip.locator(".ck-order-jump")
@@ -549,18 +559,73 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(await order.locator(".ck-order-step-flag").count(), 0)
   })
 
-  await test("location: the site cards carry monograms, the recommended one is marked, a click chooses, and the comparison folds open", async () => {
+  await test("location: the hint is one line, each site card is one row of name, monogram and radio with no city or tax, the recommended one is marked, a click chooses, and the comparison folds open", async () => {
     await reset()
     eq(await order.locator('[data-section="site"] .ck-order-section-title').textContent(), "Site")
-    eq(await texts(order.locator(".ck-site-city")), "Plano, TX · sales tax TX 8.25% | Chicago, IL · sales tax IL 10.25% | Salt Lake City, UT · sales tax UT 7.25%")
+    // Precondition: the hint is longer than the 72ch other hints wrap at, so
+    // one line means the cap is lifted, not that the text is short.
+    const hint = order.locator('[data-section="site"] .ck-order-hint')
+    const [hintBox, hintLine, cap] = await Promise.all([
+      rect(hint),
+      style(hint, "lineHeight"),
+      hint.evaluate((el) => {
+        const probe = document.createElement("span")
+        probe.style.cssText = "display: inline-block; inline-size: 72ch"
+        el.appendChild(probe)
+        const w = probe.getBoundingClientRect().width
+        probe.remove()
+        return w
+      }),
+    ])
+    eq(hintBox.width > cap, true, `the hint runs ${hintBox.width}px, past the ${cap}px cap`)
+    near(hintBox.height, parseFloat(hintLine), 1, "on one line")
+    eq(await style(order.locator(".ck-order-table-head .ck-order-hint"), "maxInlineSize") !== "none", true, "other hints keep the cap")
+    eq(await order.locator(".ck-site-city").count(), 0, "no city line on the cards")
+    eq(await order.locator(".ck-site").evaluateAll((els) => els.some((el) => /sales tax|, (TX|IL|UT)\b/.test(el.textContent))), false, "and no tax or state anywhere on them")
     eq(await texts(order.locator(".ck-site .ck-site-mark .avatar-fallback")), "DFW | CHI | SLC", "every site card carries its code as a monogram")
     eq(await order.locator(".ck-site .ck-site-mark").first().evaluate((el) => el.matches(".avatar")), true, "the monogram is the kit's avatar")
-    const first = order.locator(".ck-site").first()
-    const [markBox, radioBox, nameBox, descBox] = await Promise.all([".ck-site-mark", ".radio-group-item", ".ck-site-name", ".ck-option-desc"].map((sel) => rect(first.locator(sel))))
-    eq(markBox.bottom <= nameBox.top, true, "the monogram sits over the name")
-    eq(nameBox.bottom <= descBox.top, true, "and the name over the sentence")
-    near(markBox.top + markBox.height / 2, radioBox.top + radioBox.height / 2, 2, "the radio across from the monogram")
-    eq(radioBox.left > markBox.right, true)
+    // One row per card, the recommended one's chip included: the name at
+    // the start, the monogram just left of the radio at the end, all three
+    // centred on each other, the sentence under them.
+    for (const site of ["DFW Cage 6", "Chicago Cage 6", "SLC Cage 6"]) {
+      const card = order.locator(".ck-site", { hasText: site })
+      const [cardBox, markBox, radioBox, nameBox, descBox] = await Promise.all([rect(card), ...[".ck-site-mark", ".radio-group-item", ".ck-site-name", ".ck-option-desc"].map((sel) => rect(card.locator(sel)))])
+      const mid = (b) => b.top + b.height / 2
+      near(mid(nameBox), mid(markBox), 1, `${site}: the name level with the monogram`)
+      near(mid(radioBox), mid(markBox), 1, `${site}: and the radio`)
+      eq(nameBox.right <= markBox.left, true, `${site}: the name before the monogram`)
+      near(radioBox.left - markBox.right, 8, 1, `${site}: the monogram just left of the radio`)
+      eq(markBox.left > cardBox.left + cardBox.width / 2, true, `${site}: both at the row's end`)
+      eq(Math.max(markBox.bottom, nameBox.bottom) <= descBox.top, true, `${site}: the sentence under the row`)
+    }
+    const sentenceHeights = await order.locator(".ck-site .ck-option-desc").evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().height)))
+    eq(new Set(sentenceHeights).size, 1, `every sentence runs the same lines (${sentenceHeights.join(", ")}px), so the cards match`)
+    eq(await order.locator(".ck-site .ck-option-desc").evaluateAll((els) => els.some((el) => /largest|queue|catalogue/i.test(el.textContent))), false, "no capacity or catalogue claims")
+    // A site past the third wraps to a card the same size, however long its
+    // sentence: a clone with a tripled sentence joins the group, and every
+    // row grows to the tallest card.
+    const cardHeight = (await rect(order.locator(".ck-site").first())).height
+    const grown = await order.locator(".ck-sites").evaluate((group) => {
+      const cards = [...group.querySelectorAll(".ck-site")]
+      const clone = cards[2].cloneNode(true)
+      const desc = clone.querySelector(".ck-option-desc")
+      desc.textContent = `${desc.textContent} ${desc.textContent} ${desc.textContent}`
+      group.appendChild(clone)
+      const all = [...cards, clone]
+      const sentence = (el) => el.querySelector(".ck-option-desc").getBoundingClientRect().height
+      const out = {
+        tops: all.map((el) => el.getBoundingClientRect().top),
+        heights: all.map((el) => Math.round(el.getBoundingClientRect().height)),
+        long: sentence(clone),
+        short: sentence(cards[1]),
+      }
+      clone.remove()
+      return out
+    })
+    eq(grown.tops[3] > grown.tops[0], true, "the fourth card wraps to a row of its own")
+    eq(grown.long > grown.short + 10, true, `its sentence is the taller (${grown.long}px against ${grown.short}px)`)
+    eq(new Set(grown.heights).size, 1, `every card one height (${grown.heights.join(", ")}px)`)
+    eq(grown.heights[0] > cardHeight + 10, true, `the first row grew with it, from ${cardHeight}px to ${grown.heights[0]}px`)
     eq(await order.locator(".ck-site[data-recommended]").count(), 1, "one site is recommended")
     eq(await order.locator(".ck-site[data-recommended] .ck-site-name").textContent(), "DFW Cage 6Recommended")
     eq(await order.locator('.ck-site[data-state="checked"] .ck-site-name').textContent(), "DFW Cage 6Recommended", "the default is the recommended site")
@@ -576,18 +641,19 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await settled()
     eq(await style(order.locator('.ck-site[data-state="checked"] .avatar-fallback'), "color"), orange, "the orange moved with the choice")
 
-    // Compare sites: always open under the cards, latency only; the chosen
-    // row tinted, the recommended one chipped.
-    eq(await order.locator('[data-disclosure="compare-sites"]').count(), 0, "no disclosure to open")
-    const block = order.locator('.ck-compare-block[data-compare="sites"]')
-    eq(await block.locator(".ck-compare-title").textContent(), "Compare sites")
-    eq(await block.locator(".ck-compare-hint").textContent(), "median round trip from where your users are")
-    eq(await block.locator(".ck-compare").isVisible(), true, "open without a click")
+    // Compare sites: folded under the cards, latency only; the chosen row
+    // tinted, the recommended one chipped, the figures centred.
+    const block = order.locator('[data-disclosure="compare-sites"]')
+    eq(await block.locator(".ck-disclosure-label").textContent(), "Compare sites")
+    eq(await block.locator(".ck-disclosure-hint").textContent(), "median round trip from where your users are")
+    eq(await block.locator(".ck-compare").count(), 0, "folded until asked")
+    await block.locator(".ck-disclosure-trigger").click()
+    await block.locator(".ck-compare").waitFor()
     const [sitesBox, blockBox] = await Promise.all([rect(order.locator(".ck-sites")), rect(block)])
     eq(blockBox.top >= sitesBox.bottom, true, "under the site cards")
     eq(await texts(block.locator(".ck-compare thead th")), "Site | Texas & the South | Midwest & Northeast | Mountain West & Pacific")
-    eq(await style(block.locator(".ck-compare thead th").nth(1), "textAlign"), "end", "figures and their headers sit at the right")
-    eq(await style(block.locator(".ck-compare tbody td").first(), "textAlign"), "end")
+    eq(await style(block.locator(".ck-compare thead th").nth(1), "textAlign"), "center", "the latencies and their headers sit centred")
+    eq(await style(block.locator(".ck-compare tbody td").first(), "textAlign"), "center")
     eq(await style(block.locator(".ck-compare thead th").first(), "textAlign"), "start", "the site column does not")
     eq(await block.locator(".ck-compare thead th").evaluateAll((els) => els.some((el) => /capacity|seismic|tax/i.test(el.textContent))), false, "capacity, seismic risk and tax columns are gone")
     eq(await block.locator(".ck-compare tbody tr").count(), 3)
@@ -597,7 +663,8 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(await block.locator(".ck-compare .ck-chip").count(), 1, "one recommended chip")
     eq(await block.locator(".ck-compare tr:has(.ck-chip) th").textContent(), "DFW Cage 6recommended")
     eq(await style(block.locator(".ck-compare-wrap"), "overflowX"), "auto")
-    eq(await texts(order.locator(".ck-site-city")), "Plano, TX · sales tax TX 8.25% | Chicago, IL · sales tax IL 10.25% | Salt Lake City, UT · sales tax UT 7.25%", "tax stays on the cards")
+    await block.locator(".ck-disclosure-trigger").click()
+    await noneLeft('[data-disclosure="compare-sites"] .ck-compare')
   })
 
   await test("size: Plans and Custom are tabs of their own; four plans, M recommended and chosen by default; a plan sets both pools, pools that match none open on Custom, one shrunk under the machines is an error, headroom is free", async () => {
@@ -1008,7 +1075,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     const context = page.locator('.ck-order-context[data-state="open"]')
     await context.waitFor()
     eq(await context.locator(".ck-context-label code").textContent(), "vdc-01")
-    eq(await texts(context.locator(".dropdown-menu-item")), "Add to order | Add virtual machine | Duplicate")
+    eq(await texts(context.locator(".dropdown-menu-item")), "Add to order | Add virtual machine | Duplicate | Delete", "the draft deletes too")
     await page.keyboard.press("Escape")
     await noneLeft('.ck-order-context[data-state="open"]')
 
@@ -1215,7 +1282,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await vdcRows.first().locator('.ck-vdc-fact[data-col="size"]').click({ button: "right" })
     await context.waitFor()
     eq(await context.locator(".ck-context-label code").textContent(), "vdc-01")
-    eq(await texts(context.locator(".dropdown-menu-item")), "Add to order | Add virtual machine | Duplicate")
+    eq(await texts(context.locator(".dropdown-menu-item")), "Add to order | Add virtual machine | Duplicate | Delete")
     await context.locator(".dropdown-menu-item", { hasText: "Add virtual machine" }).click()
     await accessDialog.waitFor()
     eq(await accessDialog.locator("#ck-order-username").inputValue(), "deploy", "the dialog starts from the vDC's last machine, vm-02")
@@ -1242,7 +1309,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
 
     // Edit adopts a committed vDC; while it is out, nothing deploys.
     await order.locator('[aria-label="Actions for vdc-01"]').click()
-    eq(await texts(menu.locator(".dropdown-menu-item")), "Edit | Add virtual machine | Duplicate | Remove from order")
+    eq(await texts(menu.locator(".dropdown-menu-item")), "Edit | Add virtual machine | Duplicate | Delete")
     await menu.locator(".dropdown-menu-item", { hasText: "Edit" }).click()
     await vdcRows.locator(".badge", { hasText: "Editing" }).waitFor()
     eq(await draftName.textContent(), "vdc-01")
@@ -1273,6 +1340,28 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await table.locator('tr[data-row="empty"][data-id="vdc-4"]').waitFor()
     eq(await texts(vdcRows.locator(".data-table-group-count")), "2 | 0 | 0")
     eq(await vdcRows.count(), 3, "both empty vDCs keep their rows")
+
+    // Every vDC deletes, from its (…) menu or a right-click. A committed one
+    // leaves the order; the draft takes its machines with it and the form
+    // holds a fresh draft.
+    await order.locator('[aria-label="Actions for vdc-04"]').click()
+    await menu.locator(".dropdown-menu-item.ck-menu-danger", { hasText: "Delete" }).click()
+    await toastWith("vdc-04 deleted")
+    await page.waitForFunction(() => document.querySelectorAll('.ck-order-table tr[data-row="vdc"]').length === 2)
+    eq(await texts(vdcRows.locator(".data-table-group-label")), "vdc-01 | vdc-03")
+    eq(await draftName.textContent(), "vdc-03", "a committed delete leaves the draft alone")
+    await addVm()
+    eq(await texts(vdcRows.locator(".data-table-group-count")), "2 | 1", "the draft holds a machine")
+    await vdcRows.nth(1).locator('.ck-vdc-fact[data-col="size"]').click({ button: "right" })
+    await context.waitFor()
+    eq(await context.locator(".ck-context-label code").textContent(), "vdc-03")
+    await context.locator(".dropdown-menu-item.ck-menu-danger", { hasText: "Delete" }).click()
+    await toastWith("vdc-03 deleted")
+    await draftName.filter({ hasText: "vdc-05" }).waitFor()
+    eq(await texts(vdcRows.locator(".data-table-group-label")), "vdc-01 | vdc-05", "a fresh draft takes the deleted one's place")
+    eq(await texts(vdcRows.locator(".data-table-group-count")), "2 | 0", "and the deleted draft's machine went with it")
+    eq(await table.locator('tr[data-row="empty"][data-id="vdc-5"]').count(), 1)
+    eq(await order.locator(".ck-order-table-head .ck-order-table-count").textContent(), "2 vDCs · 2 machines")
   })
 
   await test("the pools follow the machines: a count that outgrows them grows them to the step that fits, and they never shrink back", async () => {
@@ -1625,7 +1714,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
 
   await test("deleted surface stays deleted, anywhere on the page", async () => {
     await reset()
-    const gone = ".ck-order-cart, .ck-order-rail, .ck-order-mobile, .ck-order-tabs, .ck-path, .ck-workload, .ck-order-skip, .ck-order-side, .ck-receipt--page, [data-path], .ck-order-density, .ck-order-toolbar-left, .ck-order-toolbar-right, .ck-vdc-facts, .ck-users, .ck-recommendation, .ck-software, .ck-option-price, [data-section=\"software\"], [data-section=\"access\"], .ck-plan--custom, .ck-network-facts, .ck-order-step-num, [data-disclosure=\"compare-sites\"], .ck-order-foot .ck-order-continue, .ck-order-step-head, .ck-order-step-title, .ck-order-card-title, [data-disclosure=\"advanced-network\"], .ck-order-head-actions, .ck-order-theme, .ck-order .mode-toggle"
+    const gone = ".ck-order-cart, .ck-order-rail, .ck-order-mobile, .ck-order-tabs, .ck-path, .ck-workload, .ck-order-skip, .ck-order-side, .ck-receipt--page, [data-path], .ck-order-density, .ck-order-toolbar-left, .ck-order-toolbar-right, .ck-vdc-facts, .ck-users, .ck-recommendation, .ck-software, .ck-option-price, [data-section=\"software\"], [data-section=\"access\"], .ck-plan--custom, .ck-network-facts, .ck-order-step-num, .ck-compare-block, .ck-site-city, .ck-order-foot .ck-order-continue, .ck-order-step-head, .ck-order-step-title, .ck-order-card-title, [data-disclosure=\"advanced-network\"], .ck-order-head-actions, .ck-order-theme, .ck-order .mode-toggle"
     eq(await frame.locator(gone).count(), 0, "none of the deleted hooks remain")
     eq(await frame.locator("h2").count(), 0, "the page still carries no h2; sections are h5")
   })
