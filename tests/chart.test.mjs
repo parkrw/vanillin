@@ -502,6 +502,138 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await page.waitForFunction((prev) => Number(document.querySelector('[data-pg="chart-pie"] .chart-series').dataset.outer) > prev, narrow)
   })
 
+  await test("pie labels: a value past each slice's edge along its middle, joined by a line in the slice colour", async () => {
+    eq(await page.locator(`${pg("chart-pie")} .chart-pie-label`).count(), 0, "label is off by default")
+    const frame = await polarSeries("chart-pie-labels")
+    const slices = await sectors("chart-pie-labels")
+    const labels = await page.locator(`${pg("chart-pie-labels")} .chart-pie-label`).evaluateAll((els) =>
+      els.map((el) => {
+        const text = el.querySelector("text")
+        const line = el.querySelector(".chart-label-line")
+        return {
+          index: Number(el.dataset.index),
+          text: text.textContent,
+          x: Number(text.getAttribute("x")),
+          y: Number(text.getAttribute("y")),
+          anchor: text.getAttribute("text-anchor"),
+          fill: getComputedStyle(text).fill,
+          d: line.getAttribute("d"),
+          stroke: getComputedStyle(line).stroke,
+        }
+      }),
+    )
+    eq(labels.length, 5)
+    eq(labels.map((l) => l.text).join(","), "275,200,187,173,90")
+    eq(labels[0].fill, await tokenColour("chart-pie-labels", "--foreground"), "label text is the foreground")
+    for (const l of labels) {
+      const slice = slices.find((s) => s.index === l.index)
+      const rad = (((slice.start + slice.end) / 2) * Math.PI) / 180
+      near(l.x, frame.cx + Math.cos(rad) * (frame.outer + 20), 0.05, `label ${l.index} sits 20px past the edge`)
+      near(l.y, frame.cy - Math.sin(rad) * (frame.outer + 20), 0.05, `label ${l.index} y`)
+      const [, x1, y1, , x2, y2] = l.d.split(" ")
+      near(Number(x1), frame.cx + Math.cos(rad) * frame.outer, 0.05, `line ${l.index} starts at the edge`)
+      near(Number(y1), frame.cy - Math.sin(rad) * frame.outer, 0.05, `line ${l.index} starts at the edge`)
+      near(Number(x2), l.x, 0.05, `line ${l.index} ends at the label`)
+      near(Number(y2), l.y, 0.05, `line ${l.index} ends at the label`)
+      eq(l.stroke, slice.fill, `line ${l.index} takes the slice colour`)
+    }
+    eq(labels.map((l) => l.anchor).join(","), "start,end,end,start,start", "text reads away from the centre")
+  })
+
+  await test("pie active: the slice under the pointer renders through activeShape, the rest stay plain; the keys move it", async () => {
+    const name = "chart-pie-active"
+    const active = page.locator(`${pg(name)} .chart-sector-active`)
+    eq(await active.count(), 0, "nothing raised at rest")
+    eq(await page.locator(`${pg(name)} .chart-sector`).count(), 5)
+    await hoverSlice(name, 2)
+    await active.waitFor()
+    eq(await active.getAttribute("data-index"), "2")
+    eq(await page.locator(`${pg(name)} .chart-tooltip-name`).textContent(), "Firefox")
+    const frame = await polarSeries(name)
+    const raised = await active.locator(".chart-sector").evaluateAll((els) => els.map((el) => ({ d: el.getAttribute("d"), fill: getComputedStyle(el).fill })))
+    eq(raised.length, 2, "the shape draws two sectors")
+    const reach = (d) => {
+      const pairs = d.split(/[MLAZ]/).filter((part) => part.trim()).map((part) => part.trim().split(/\s+/).map(Number).slice(-2))
+      return Math.max(...pairs.map(([x, y]) => Math.hypot(x - frame.cx, y - frame.cy)))
+    }
+    near(reach(raised[0].d), frame.outer + 10, 0.05, "the slice grows by 10")
+    near(reach(raised[1].d), frame.outer + 25, 0.05, "the ring reaches outer + 25")
+    eq(raised[0].fill, await tokenColour(name, "--chart-3"), "firefox keeps its colour")
+    const plain = await page.locator(`${pg(name)} .chart-sector`).evaluateAll((els) => els.filter((el) => !el.closest(".chart-sector-active")).length)
+    eq(plain, 4, "the other four slices are plain")
+    const outside = polarPoint(frame, frame.outer + 40, 45)
+    await page.mouse.move(outside.x, outside.y)
+    await active.waitFor({ state: "detached" })
+    await page.locator(`${pg(name)} .chart-surface`).focus()
+    await active.waitFor()
+    eq(await active.getAttribute("data-index"), "0", "focus raises the first slice")
+    await page.keyboard.press("ArrowRight")
+    eq(await active.getAttribute("data-index"), "1")
+    await page.keyboard.press("Escape")
+    await active.waitFor({ state: "detached" })
+    await page.locator("h2").click()
+  })
+
+  await test("pie pinned: activeIndex holds the raised slice while the pointer drives the tooltip; the select moves it", async () => {
+    const name = "chart-pie-pinned"
+    const active = page.locator(`${pg(name)} .chart-sector-active`)
+    const centre = () => page.locator(`${pg(name)} .chart-series text tspan`).first().textContent()
+    eq(await active.getAttribute("data-index"), "0", "chrome raised at rest")
+    eq(await centre(), "275")
+    await hoverSlice(name, 3)
+    await tooltip(name).waitFor()
+    eq(await page.locator(`${pg(name)} .chart-tooltip-name`).textContent(), "Edge")
+    eq(await active.getAttribute("data-index"), "0", "the pointer does not move a pinned slice")
+    await page.mouse.move(0, 0)
+    await tooltip(name).waitFor({ state: "detached" })
+    await page.locator(`${pg(name)} select`).selectOption("firefox")
+    await page.waitForFunction(() => document.querySelector('[data-pg="chart-pie-pinned"] .chart-sector-active')?.dataset.index === "2")
+    eq(await centre(), "187", "the centre reads the pinned slice")
+    await page.locator(`${pg(name)} select`).selectOption("chrome")
+    await page.waitForFunction(() => document.querySelector('[data-pg="chart-pie-pinned"] .chart-sector-active')?.dataset.index === "0")
+  })
+
+  await test("two pies: the pointer picks a pie by radius and the tooltip reads that pie's slice; the keys step the first", async () => {
+    const name = "chart-pie-two"
+    const frames = await page.locator(`${pg(name)} .chart-series`).evaluateAll((els) =>
+      els.map((el) => ({ key: el.dataset.key, inner: Number(el.dataset.inner), outer: Number(el.dataset.outer) })),
+    )
+    eq(frames.map((f) => `${f.key}:${f.inner}-${f.outer}`).join(","), "desktop:0-60,mobile:70-90")
+    await page.locator(`${pg(name)} .chart-surface`).evaluate((el) => el.scrollIntoView({ block: "center" }))
+    const frame = await polarSeries(name)
+    const read = async () => ({
+      label: await page.locator(`${pg(name)} .chart-tooltip-label`).textContent(),
+      name: await page.locator(`${pg(name)} .chart-tooltip-name`).textContent(),
+      value: await page.locator(`${pg(name)} .chart-tooltip-value`).textContent(),
+    })
+    const inner = (await sectors(name, "desktop")).find((s) => s.index === 1)
+    const p1 = polarPoint(frame, 30, (inner.start + inner.end) / 2)
+    await page.mouse.move(p1.x, p1.y)
+    await tooltip(name).waitFor()
+    let tip = await read()
+    eq(`${tip.label} ${tip.name} ${tip.value}`, "Desktop February 305")
+    const covers = (s, angle) => (((angle - Math.min(s.start, s.end)) % 360) + 360) % 360 <= Math.abs(s.end - s.start)
+    const ring = (await sectors(name, "mobile")).find((s) => covers(s, 180))
+    const p2 = polarPoint(frame, 80, 180)
+    await page.mouse.move(p2.x, p2.y)
+    await page.waitForFunction(() => document.querySelector('[data-pg="chart-pie-two"] .chart-tooltip-label')?.textContent === "Mobile")
+    tip = await read()
+    const months = ["January", "February", "March", "April", "May"]
+    const mobile = [80, 200, 120, 190, 130]
+    eq(`${tip.name} ${tip.value}`, `${months[ring.index]} ${mobile[ring.index]}`, "the outer ring's own slice")
+    const gap = polarPoint(frame, 66, 180)
+    await page.mouse.move(gap.x, gap.y)
+    await tooltip(name).waitFor({ state: "detached" })
+    await page.locator(`${pg(name)} .chart-surface`).focus()
+    await tooltip(name).waitFor()
+    await page.keyboard.press("End")
+    tip = await read()
+    eq(`${tip.label} ${tip.name} ${tip.value}`, "Desktop May 209", "the keys step the first pie")
+    await page.keyboard.press("Escape")
+    await tooltip(name).waitFor({ state: "detached" })
+    await page.locator("h2").click()
+  })
+
   // ── Theme ──
 
   const fillOf = (name, key) =>

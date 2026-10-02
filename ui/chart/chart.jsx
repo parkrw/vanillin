@@ -785,7 +785,11 @@ function valueTicks(axis, columns, fallbackDomain = [0, "auto"]) {
   return { domain, ticks, clamp: (v) => Math.min(hi, Math.max(lo, v)) }
 }
 
-/* Each Pie carries its own data; the first one drives the tooltip and legend. */
+/*
+ * Each Pie carries its own data. The first one drives the legend and the
+ * keyboard; the pointer picks a pie by radius, and `focus(k)` is the same
+ * layout with the tooltip view (category, payloadAt, anchorAt) on pie k.
+ */
 function pieLayout(ctx, series) {
   const { frame, config } = ctx
   const { cx, cy } = frame
@@ -819,30 +823,56 @@ function pieLayout(ctx, series) {
       props: el.props,
     }
   })
+  const slice = (pie, i) => ({ ...pie.data[i], fill: pie.colors[i] })
+  const views = entries.map((pie, k) => ({
+    activeSeries: k,
+    category: { labels: pie.names, count: pie.data.length },
+    anchorAt: (i) => polarToCartesian(cx, cy, (pie.inner + pie.outer) / 2, pie.slices[i].mid),
+    payloadAt: (i) => [
+      { dataKey: pie.dataKey, name: pie.names[i], value: pie.values[i], color: pie.colors[i], fill: pie.colors[i], payload: slice(pie, i) },
+    ],
+  }))
+  // Where pies overlap the topmost paint wins, as it would under a pointer.
+  const seriesAt = (point) => {
+    if (!point) return 0
+    const [r] = cartesianToPolar(cx, cy, point.x, point.y)
+    for (let k = entries.length - 1; k >= 0; k--) {
+      if (r >= entries[k].inner && r <= entries[k].outer + HIT_SLACK) return k
+    }
+    return -1
+  }
   const primary = entries[0]
-  const count = primary?.data.length ?? 0
-  const slice = (i) => ({ ...primary.data[i], fill: primary.colors[i] })
-  return {
+  const layout = {
     ...ctx.base,
-    category: { labels: primary?.names ?? [], count },
+    activeSeries: 0,
+    category: { labels: [], count: 0 },
+    anchorAt: () => [cx, cy],
+    payloadAt: () => [],
+    ...views[0],
     series: entries,
     ...indexEntries(entries),
     indexAt: (point) => {
-      if (!primary) return -1
-      const [r, angle] = cartesianToPolar(cx, cy, point.x, point.y)
-      if (r > primary.outer + HIT_SLACK || r < primary.inner) return -1
-      return sliceIndexAt(angle, primary.slices)
+      const k = seriesAt(point)
+      if (k < 0) return -1
+      const [, angle] = cartesianToPolar(cx, cy, point.x, point.y)
+      return sliceIndexAt(angle, entries[k].slices)
     },
-    anchorAt: (i) => polarToCartesian(cx, cy, (primary.inner + primary.outer) / 2, primary.slices[i].mid),
-    payloadAt: (i) => [
-      { dataKey: primary.dataKey, name: primary.names[i], value: primary.values[i], color: primary.colors[i], fill: primary.colors[i], payload: slice(i) },
-    ],
-    legendPayload: primary ? primary.data.map((_, i) => ({ dataKey: primary.nameKey, value: primary.names[i], color: primary.colors[i], type: "rect", payload: slice(i) })) : [],
+    seriesAt,
+    legendPayload: primary
+      ? primary.data.map((_, i) => ({ dataKey: primary.nameKey, value: primary.names[i], color: primary.colors[i], type: "rect", payload: slice(primary, i) }))
+      : [],
     angleItems: [],
     radiusItems: [],
     gridRadii: [],
     gridAngles: [],
   }
+  const focused = [layout]
+  layout.focus = (k) => {
+    if (!views[k]) return layout
+    if (!focused[k]) focused[k] = { ...layout, ...views[k] }
+    return focused[k]
+  }
+  return layout
 }
 
 /* The angle axis is the category, spread evenly from startAngle; the radius axis is the value. */
@@ -1092,9 +1122,10 @@ function PolarChart({
   const legendTop = legendEl && legendEl.props.verticalAlign === "top"
   const a11y = surfaceA11y(accessibilityLayer, ariaLabel != null || ariaLabelledBy != null, keyboard)
   const { viewBox } = computed
+  const hostLayout = computed.focus ? computed.focus(computed.seriesAt(pointer.point)) : computed
 
   return (
-    <LayoutContext.Provider value={computed}>
+    <LayoutContext.Provider value={hostLayout}>
       <ActiveIndexContext.Provider value={activeIndex}>
         <PointerContext.Provider value={pointer}>
           <PolarViewBoxContext.Provider value={viewBox}>
@@ -1614,6 +1645,79 @@ function outwardText(angle) {
 
 const sectorAttrs = (i, arc) => ({ "data-index": i, "data-start": round2(arc.start), "data-end": round2(arc.end) })
 
+/*
+ * One sector under Recharts' name, the shape an activeShape renders with.
+ * The data fields a Pie hands along (midAngle, index, value, name, percent,
+ * payload) are consumed here so they never reach the DOM.
+ */
+export function Sector({
+  cx,
+  cy,
+  innerRadius,
+  outerRadius,
+  startAngle,
+  endAngle,
+  cornerRadius = 0,
+  midAngle,
+  index,
+  value,
+  name,
+  percent,
+  payload,
+  className,
+  ...props
+}) {
+  const d = arcPath(cx, cy, innerRadius, outerRadius, startAngle, endAngle, cornerRadius)
+  if (!d) return null
+  return <path className={cn("chart-sector", className)} data-index={index} data-start={round2(startAngle)} data-end={round2(endAngle)} d={d} {...props} />
+}
+
+/* Recharts' shape slots: an element is cloned over the geometry, a function renders it, an object overrides it. */
+function renderShape(option, props) {
+  if (isValidElement(option)) return cloneElement(option, props)
+  if (typeof option === "function") return option(props) ?? null
+  return <Sector {...props} {...(typeof option === "object" && option ? option : null)} />
+}
+
+function renderSliceLabel(option, props) {
+  if (isValidElement(option)) return cloneElement(option, props)
+  let text = props.value
+  if (typeof option === "function") {
+    text = option(props)
+    if (isValidElement(text)) return text
+  }
+  if (text == null) return null
+  const { offsetRadius, fill, className, ...custom } = typeof option === "object" && option ? option : {}
+  return (
+    <text
+      className={cn("chart-label", className)}
+      x={props.x}
+      y={props.y}
+      textAnchor={props.textAnchor}
+      dominantBaseline={props.dominantBaseline}
+      style={fill ? { fill } : undefined}
+      {...custom}
+    >
+      {typeof text === "number" ? text.toLocaleString() : String(text)}
+    </text>
+  )
+}
+
+function renderLabelLine(option, props) {
+  if (isValidElement(option)) return cloneElement(option, props)
+  if (typeof option === "function") return option(props) ?? null
+  const { className, stroke, ...custom } = typeof option === "object" && option ? option : {}
+  const [from, to] = props.points
+  return (
+    <path
+      className={cn("chart-label-line", className)}
+      d={`M ${round2(from.x)} ${round2(from.y)} L ${round2(to.x)} ${round2(to.y)}`}
+      stroke={stroke ?? props.fill}
+      {...custom}
+    />
+  )
+}
+
 export function Pie({
   data,
   dataKey,
@@ -1627,20 +1731,55 @@ export function Pie({
   fill,
   stroke,
   strokeWidth = 0,
+  label = false,
+  labelLine = true,
+  activeIndex,
+  activeShape,
   className,
   children,
   ...props
 }) {
   const layout = useContext(LayoutContext)
+  const hovered = useContext(ActiveIndexContext)
   const entry = layout?.byKey.get(`pie:${dataKey}`)
   if (!layout || !entry) return null
   const { cx, cy } = layout.viewBox
   const midRadius = (entry.inner + entry.outer) / 2
   const edge = stroke ?? SECTOR_STROKE
+  const total = entry.slices.reduce((sum, slice) => sum + slice.value, 0)
+  // A controlled activeIndex wins over the pointer, as in Recharts; the
+  // pointer reaches only the pie it is over.
+  const active = activeIndex !== undefined ? activeIndex : layout.activeSeries === entry.index ? hovered : null
+  const isActive = (i) => (Array.isArray(active) ? active.includes(i) : active === i)
+  const shapeProps = (slice, i) => ({
+    cx,
+    cy,
+    innerRadius: entry.inner,
+    outerRadius: entry.outer,
+    startAngle: slice.start,
+    endAngle: slice.end,
+    midAngle: slice.mid,
+    cornerRadius,
+    fill: entry.colors[i],
+    stroke: edge,
+    strokeWidth,
+    index: i,
+    value: entry.values[i],
+    name: entry.names[i],
+    percent: total ? slice.value / total : 0,
+    payload: entry.data[i],
+  })
   const sectors = entry.slices.map((slice, i) => {
-    const d = arcPath(cx, cy, entry.inner, entry.outer, slice.start, slice.end, cornerRadius)
-    if (!d) return null
-    return <path key={i} className="chart-sector" {...sectorAttrs(i, slice)} d={d} fill={entry.colors[i]} stroke={edge} strokeWidth={strokeWidth} />
+    if (!(slice.value > 0)) return null
+    const shape = shapeProps(slice, i)
+    if (activeShape && isActive(i)) {
+      return (
+        <g key={i} className="chart-sector-active" data-index={i}>
+          {renderShape(activeShape, shape)}
+        </g>
+      )
+    }
+    return <Sector key={i} {...shape} />
   })
   const points = entry.slices.map((slice) => (slice.value > 0 ? polarToCartesian(cx, cy, midRadius, slice.mid) : null))
   const place = (i, position, offset) => {
@@ -1652,6 +1791,23 @@ export function Pie({
     const [x, y] = polarToCartesian(cx, cy, midRadius, mid)
     return { x, y, anchor: "middle", baseline: "middle" }
   }
+  // Recharts draws `label` at outerRadius + 20 along the mid angle, with
+  // `labelLine` from the edge out to it in the slice colour.
+  const labelOffset = finite(label?.offsetRadius) ?? 20
+  const sliceLabels = label
+    ? entry.slices.map((slice, i) => {
+        if (!(slice.value > 0)) return null
+        const at = place(i, "outside", labelOffset)
+        const [ex, ey] = polarToCartesian(cx, cy, entry.outer, slice.mid)
+        const shape = { ...shapeProps(slice, i), stroke: "none", x: at.x, y: at.y, textAnchor: at.anchor, dominantBaseline: at.baseline }
+        return (
+          <g key={i} className="chart-pie-label" data-index={i}>
+            {labelLine ? renderLabelLine(labelLine, { ...shape, points: [{ x: ex, y: ey }, { x: at.x, y: at.y }] }) : null}
+            {renderSliceLabel(label, shape)}
+          </g>
+        )
+      })
+    : null
   const labels = Children.toArray(children).filter((child) => !isCell(child))
   return (
     <g
@@ -1665,6 +1821,7 @@ export function Pie({
       {...props}
     >
       {sectors}
+      {sliceLabels}
       {labels.length ? (
         <PolarViewBoxContext.Provider
           value={{ cx, cy, innerRadius: entry.inner, outerRadius: entry.outer, startAngle: entry.startAngle, endAngle: entry.endAngle }}

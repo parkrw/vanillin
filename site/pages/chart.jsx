@@ -1,4 +1,4 @@
-import { useId } from "react"
+import { useId, useState } from "react"
 import {
   ChartContainer,
   ChartTooltip,
@@ -25,8 +25,11 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Label,
+  Sector,
 } from "../../ui/chart/chart.jsx"
+import { NativeSelect, NativeSelectOption } from "../../ui/native-select/native-select.jsx"
 import "../../ui/chart/chart.css"
+import "../../ui/native-select/native-select.css"
 import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
@@ -112,6 +115,41 @@ const browserConfig = {
 
 const stackedData = [{ month: "january", mobile: 570, desktop: 1260 }]
 
+const desktopData = [
+  { month: "january", desktop: 186, fill: "var(--color-january)" },
+  { month: "february", desktop: 305, fill: "var(--color-february)" },
+  { month: "march", desktop: 237, fill: "var(--color-march)" },
+  { month: "april", desktop: 173, fill: "var(--color-april)" },
+  { month: "may", desktop: 209, fill: "var(--color-may)" },
+]
+
+const mobileData = [
+  { month: "january", mobile: 80, fill: "var(--color-january)" },
+  { month: "february", mobile: 200, fill: "var(--color-february)" },
+  { month: "march", mobile: 120, fill: "var(--color-march)" },
+  { month: "april", mobile: 190, fill: "var(--color-april)" },
+  { month: "may", mobile: 130, fill: "var(--color-may)" },
+]
+
+const monthConfig = {
+  visitors: { label: "Visitors" },
+  desktop: { label: "Desktop" },
+  mobile: { label: "Mobile" },
+  january: { label: "January", color: "var(--chart-1)" },
+  february: { label: "February", color: "var(--chart-2)" },
+  march: { label: "March", color: "var(--chart-3)" },
+  april: { label: "April", color: "var(--chart-4)" },
+  may: { label: "May", color: "var(--chart-5)" },
+}
+
+// Recharts' interactive pie: the hovered or pinned slice grows an outer ring.
+const raisedSector = ({ outerRadius = 0, ...props }) => (
+  <g>
+    <Sector {...props} outerRadius={outerRadius + 10} />
+    <Sector {...props} outerRadius={outerRadius + 25} innerRadius={outerRadius + 12} />
+  </g>
+)
+
 const totalDonut = donutData.reduce((sum, d) => sum + d.visitors, 0)
 const totalStacked = stackedData[0].desktop + stackedData[0].mobile
 
@@ -137,6 +175,30 @@ function Frame({ pg, square = false, children }) {
     <div data-pg={pg} style={{ width: "100%", maxWidth: square ? "16rem" : "40rem" }}>
       {children}
     </div>
+  )
+}
+
+function PinnedPie() {
+  const [browser, setBrowser] = useState(browserData[0].browser)
+  const activeIndex = browserData.findIndex((row) => row.browser === browser)
+  return (
+    <>
+      <NativeSelect value={browser} onChange={(event) => setBrowser(event.target.value)} aria-label="Pinned slice" style={{ maxWidth: "10rem" }}>
+        {browserData.map((row) => (
+          <NativeSelectOption key={row.browser} value={row.browser}>
+            {browserConfig[row.browser].label}
+          </NativeSelectOption>
+        ))}
+      </NativeSelect>
+      <ChartContainer config={browserConfig} style={{ aspectRatio: "1" }}>
+        <PieChart>
+          <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+          <Pie data={browserData} dataKey="visitors" nameKey="browser" innerRadius={60} strokeWidth={5} activeIndex={activeIndex} activeShape={raisedSector}>
+            <Label content={centreText([[browserData[activeIndex].visitors.toLocaleString(), 0, true], ["Visitors", 24, false]])} />
+          </Pie>
+        </PieChart>
+      </ChartContainer>
+    </>
   )
 }
 
@@ -791,6 +853,138 @@ const chartConfig = {
       </section>
 
       <section className="pg-section">
+        <h3>Pie with labels</h3>
+        <p>
+          <code>label</code> writes each slice's value outside the disc, 20px past the edge along the slice's middle, and{" "}
+          <code>labelLine</code> (on by default) joins the edge to it in the slice colour. Pass an object to restyle the text
+          or move it (<code>offsetRadius</code>), or a function of the slice (<code>value</code>, <code>name</code>,{" "}
+          <code>percent</code>, <code>payload</code>, <code>x</code>, <code>y</code>, <code>textAnchor</code>) to return your
+          own text or element. <code>labelLine={"{false}"}</code> drops the lines.
+        </p>
+        <ComponentPreview code={`<ChartContainer config={chartConfig}>
+  <PieChart>
+    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+    <Pie data={chartData} dataKey="visitors" nameKey="browser" label />
+  </PieChart>
+</ChartContainer>`}>
+          <Frame pg="chart-pie-labels">
+            <ChartContainer config={browserConfig}>
+              <PieChart>
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                <Pie data={browserData} dataKey="visitors" nameKey="browser" label />
+              </PieChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Pie with an active slice</h3>
+        <p>
+          <code>activeShape</code> redraws the slice under the pointer, or the one the arrow keys reach. It takes a
+          function of the slice's geometry (<code>cx</code>, <code>cy</code>, <code>innerRadius</code>,{" "}
+          <code>outerRadius</code>, <code>startAngle</code>, <code>endAngle</code>, <code>fill</code>) returning an
+          element, or an object of overrides; <code>Sector</code> draws one sector from those props, so a shape can
+          grow the slice or add a ring around it.
+        </p>
+        <ComponentPreview code={`<PieChart>
+  <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+  <Pie
+    data={chartData}
+    dataKey="visitors"
+    nameKey="browser"
+    innerRadius={60}
+    strokeWidth={5}
+    activeShape={({ outerRadius = 0, ...props }) => (
+      <g>
+        <Sector {...props} outerRadius={outerRadius + 10} />
+        <Sector {...props} outerRadius={outerRadius + 25} innerRadius={outerRadius + 12} />
+      </g>
+    )}
+  />
+</PieChart>`}>
+          <Frame pg="chart-pie-active" square>
+            <ChartContainer config={browserConfig} style={{ aspectRatio: "1" }}>
+              <PieChart accessibilityLayer aria-label="Visitors by browser, active slice raised">
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <Pie data={browserData} dataKey="visitors" nameKey="browser" innerRadius={60} strokeWidth={5} activeShape={raisedSector} />
+              </PieChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Pie with a pinned slice</h3>
+        <p>
+          <code>activeIndex</code> pins the active slice: the pointer still drives the tooltip, but the shape stays
+          where the prop says, as in Recharts. Here a select chooses the browser and a <code>Label</code> in the hole
+          reads its value.
+        </p>
+        <ComponentPreview code={`const [browser, setBrowser] = useState("chrome")
+const activeIndex = chartData.findIndex((row) => row.browser === browser)
+
+<NativeSelect value={browser} onChange={(event) => setBrowser(event.target.value)}>
+  {chartData.map((row) => (
+    <NativeSelectOption key={row.browser} value={row.browser}>{chartConfig[row.browser].label}</NativeSelectOption>
+  ))}
+</NativeSelect>
+<PieChart>
+  <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+  <Pie data={chartData} dataKey="visitors" nameKey="browser" innerRadius={60} strokeWidth={5} activeIndex={activeIndex} activeShape={raisedSector}>
+    <Label content={({ viewBox }) => ( … chartData[activeIndex].visitors … )} />
+  </Pie>
+</PieChart>`}>
+          <Frame pg="chart-pie-pinned" square>
+            <PinnedPie />
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Two pies</h3>
+        <p>
+          A second <code>Pie</code> with its own radii nests inside or around the first. The pointer picks the pie by
+          radius, so the tooltip reads whichever slice is under it; the legend and the arrow keys follow the first.
+          With <code>labelKey</code> and a <code>labelFormatter</code> the tooltip can name the series as well as the
+          slice.
+        </p>
+        <ComponentPreview code={`<PieChart>
+  <ChartTooltip
+    content={
+      <ChartTooltipContent
+        labelKey="visitors"
+        nameKey="month"
+        indicator="line"
+        labelFormatter={(_, payload) => chartConfig[payload?.[0].dataKey].label}
+      />
+    }
+  />
+  <Pie data={desktopData} dataKey="desktop" nameKey="month" outerRadius={60} />
+  <Pie data={mobileData} dataKey="mobile" nameKey="month" innerRadius={70} outerRadius={90} />
+</PieChart>`}>
+          <Frame pg="chart-pie-two" square>
+            <ChartContainer config={monthConfig} style={{ aspectRatio: "1" }}>
+              <PieChart accessibilityLayer aria-label="Visitors by month, desktop inside mobile">
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      labelKey="visitors"
+                      nameKey="month"
+                      indicator="line"
+                      labelFormatter={(_, payload) => monthConfig[payload?.[0].dataKey].label}
+                    />
+                  }
+                />
+                <Pie data={desktopData} dataKey="desktop" nameKey="month" outerRadius={60} />
+                <Pie data={mobileData} dataKey="mobile" nameKey="month" innerRadius={70} outerRadius={90} />
+              </PieChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Radar</h3>
         <p>
           A <code>RadarChart</code> takes the rows on the chart, like a bar chart. The <code>PolarAngleAxis</code>{" "}
@@ -936,6 +1130,10 @@ const chartConfig = {
         { name: "nameKey", type: "string", description: "Pie: field naming each slice, looked up in config" },
         { name: "innerRadius / outerRadius / startAngle / endAngle", type: "number | string", description: "Pie: override the chart's" },
         { name: "paddingAngle", type: "number", default: "0", description: "Pie: gap between slices, degrees" },
+        { name: "label", type: "boolean | { offsetRadius, fill, … } | (slice) => node | string", default: "false", description: "Pie: a value outside each slice, 20px past the edge" },
+        { name: "labelLine", type: "boolean | { stroke, … } | (slice) => node", default: "true", description: "Pie: a line from the edge to the label, drawn only with label" },
+        { name: "activeShape", type: "(slice) => node | { outerRadius, fill, … }", description: "Pie: redraws the active slice; the slice props feed a Sector" },
+        { name: "activeIndex", type: "number | number[]", description: "Pie: pins the active slice instead of following the pointer" },
         { name: "cornerRadius", type: "number", default: "0", description: "Rounded sector corners, px" },
         { name: "fill / fillOpacity", type: "string / number", description: "Series colour; defaults to the next --chart-n, Radar fillOpacity 1" },
         { name: "stroke / strokeWidth", type: "string / number", default: "background / 0", description: "Sector edge, a gap in the page colour; Radar outline" },
@@ -944,7 +1142,7 @@ const chartConfig = {
         { name: "dot", type: "boolean | { r, fill, fillOpacity, stroke }", default: "false", description: "Radar point markers" },
       ]} />
 
-      <ApiReference title="PolarGrid / PolarAngleAxis / PolarRadiusAxis / Label / Cell" props={[
+      <ApiReference title="PolarGrid / PolarAngleAxis / PolarRadiusAxis / Label / Cell / Sector" props={[
         { name: "gridType", type: '"polygon" | "circle"', default: '"polygon"', description: "Ring shape" },
         { name: "radialLines", type: "boolean", default: "true", description: "Spokes from the centre" },
         { name: "polarRadius / polarAngles", type: "number[]", description: "Explicit ring radii and spoke angles" },
@@ -955,6 +1153,7 @@ const chartConfig = {
         { name: "content", type: "({ viewBox }) => node", description: "Label: viewBox is { cx, cy, innerRadius, outerRadius, startAngle, endAngle }" },
         { name: "value", type: "string", description: "Label: plain text at the centre" },
         { name: "fill", type: "string", description: "Cell: colour of the slice or ring at its index" },
+        { name: "cx / cy / innerRadius / outerRadius / startAngle / endAngle", type: "number", description: "Sector: one sector's geometry; other props land on the path" },
       ]} />
 
       <ApiReference title="ChartTooltip / ChartLegend" props={[

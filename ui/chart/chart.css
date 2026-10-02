@@ -87,6 +87,11 @@
   font-size: 0.75rem;
 }
 
+.chart-label-line {
+  fill: none;
+  stroke-width: 1;
+}
+
 /* ── Tooltip ─────────────────────────────────────────────────────── */
 
 .chart-tooltip-anchor {
@@ -241,6 +246,7 @@
   .chart-line,
   .chart-area,
   .chart-dot,
+  .chart-label-line,
   .chart-legend-swatch,
   .chart-tooltip-indicator {
     forced-color-adjust: none;
