@@ -114,6 +114,7 @@ const INDETERMINATE_LOOPS = {
 // Combobox are NOT here: they forward leftover props to their trigger/input.
 // Keyed "slug/ComponentName".
 const PROVIDER_COMPONENTS = {
+  "chart/ChartStyle": "emits a <style> from config — no DOM node to spread props onto",
   "context-menu/ContextMenu": "renders DropdownMenu + context; the trigger is a child part",
   "dialog/Dialog": "context provider; DialogContent renders the <dialog>",
   "dialog/DialogPortal": "portal wrapper, renders children elsewhere",

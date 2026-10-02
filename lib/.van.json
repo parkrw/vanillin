@@ -3,6 +3,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "files": {
     "anchor-position.js": "sha256-VUf0lIa2NT5TSQI3dsZgk5+knFGIrptjHO5UwewKam0=",
+    "chart-math.js": "sha256-p17tnk9sYGvYV0p0I3IKqEsc2rn2XvpXECEJvb+E/vY=",
     "cn.js": "sha256-WCvw2U5d1FAl/q+lcNMi5wDfqz/st+mRH5woRGTctZg=",
     "command-score.js": "sha256-M5Al+UlNk4ScJ90KSTlurDY9TIZpt9BF3NST351mZ3w=",
     "compose-refs.js": "sha256-UojAfXX0n6Np8L6uD6TYIqR+Tse6GshdXjI0gCnbk+I=",

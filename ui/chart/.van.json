@@ -1,0 +1,10 @@
+{
+  "name": "chart",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [],
+  "files": {
+    "chart.css": "sha256-YV1nEwPMR/eXK5rohKTlmrHUxA1bZksnpXaP+cF1NBA=",
+    "chart.jsx": "sha256-LSgc580KNV2q4Y4g14ee4LQJayyxGVIsjieJWajplvQ="
+  }
+}
