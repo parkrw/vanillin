@@ -1735,6 +1735,7 @@ export function Pie({
   labelLine = true,
   activeIndex,
   activeShape,
+  inactiveShape,
   className,
   children,
   ...props
@@ -1751,6 +1752,7 @@ export function Pie({
   // pointer reaches only the pie it is over.
   const active = activeIndex !== undefined ? activeIndex : layout.activeSeries === entry.index ? hovered : null
   const isActive = (i) => (Array.isArray(active) ? active.includes(i) : active === i)
+  const hasActive = Array.isArray(active) ? active.length > 0 : active != null && active >= 0
   const shapeProps = (slice, i) => ({
     cx,
     cy,
@@ -1776,6 +1778,13 @@ export function Pie({
       return (
         <g key={i} className="chart-sector-active" data-index={i}>
           {renderShape(activeShape, shape)}
+        </g>
+      )
+    }
+    if (inactiveShape && hasActive && !isActive(i)) {
+      return (
+        <g key={i} className="chart-sector-inactive" data-index={i}>
+          {renderShape(inactiveShape, shape)}
         </g>
       )
     }

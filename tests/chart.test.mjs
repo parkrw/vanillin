@@ -574,6 +574,26 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await page.locator("h2").click()
   })
 
+  await test("pie inactive: the other slices fade through inactiveShape only while one is active", async () => {
+    const name = "chart-pie-active"
+    const inactive = page.locator(`${pg(name)} .chart-sector-inactive`)
+    const opacities = () => page.locator(`${pg(name)} .chart-sector`).evaluateAll((els) => els.map((el) => getComputedStyle(el).fillOpacity))
+    eq(await inactive.count(), 0, "nothing faded at rest")
+    eq((await opacities()).every((o) => o === "1"), true, "every slice opaque at rest")
+    await hoverSlice(name, 1)
+    await inactive.first().waitFor()
+    eq(await inactive.count(), 4, "the four other slices")
+    eq(await inactive.evaluateAll((els) => els.map((el) => el.dataset.index).join(",")), "0,2,3,4")
+    eq(await inactive.first().locator(".chart-sector").evaluate((el) => getComputedStyle(el).fillOpacity), "0.4")
+    const raised = await page.locator(`${pg(name)} .chart-sector-active .chart-sector`).evaluateAll((els) => els.map((el) => getComputedStyle(el).fillOpacity))
+    eq(raised.join(","), "1,1", "the active slice stays opaque")
+    const frame = await polarSeries(name)
+    const outside = polarPoint(frame, frame.outer + 40, 45)
+    await page.mouse.move(outside.x, outside.y)
+    await inactive.first().waitFor({ state: "detached" })
+    eq((await opacities()).every((o) => o === "1"), true, "opaque again after leaving")
+  })
+
   await test("pie pinned: activeIndex holds the raised slice while the pointer drives the tooltip; the select moves it", async () => {
     const name = "chart-pie-pinned"
     const active = page.locator(`${pg(name)} .chart-sector-active`)
