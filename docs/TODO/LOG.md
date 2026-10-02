@@ -862,3 +862,7 @@ Follow-up on the same branch (#86): `Pie` gains Recharts' `label`/`labelLine` (a
 ## ui/chart — Pie inactiveShape (2026-10-02)
 
 Branch `feat/chart-inactive-shape`, #88. `Pie` takes Recharts' `inactiveShape`: while any slice is active (controlled `activeIndex`, or the pointer or keys on that pie) every other slice renders through it, with the same function, object and element forms `activeShape` accepts via `renderShape`; nothing changes at rest. The "Pie with an active slice" section fades the rest with `{ fillOpacity: 0.4 }`.
+
+## ui/chart — tooltip on click (2026-10-02)
+
+Branch `feat/chart-tooltip-click-2`, #90. `ChartTooltip` takes Recharts' `trigger="click"`: `useActiveIndex` swaps its surface handlers for a single pointerdown that toggles the pressed category (the same one again clears), ignores movement, and leaves dismissal to the document pointerdown listener the touch path already had. Both roots read it off the tooltip element beside `defaultIndex`, so pie, radar and radial charts take it unchanged. Page: "Tooltip on click" after "Tooltip without cursor".
