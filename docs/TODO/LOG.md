@@ -862,3 +862,7 @@ Follow-up on the same branch (#86): `Pie` gains Recharts' `label`/`labelLine` (a
 ## ui/chart — Pie inactiveShape (2026-10-02)
 
 Branch `feat/chart-inactive-shape`, #88. `Pie` takes Recharts' `inactiveShape`: while any slice is active (controlled `activeIndex`, or the pointer or keys on that pie) every other slice renders through it, with the same function, object and element forms `activeShape` accepts via `renderShape`; nothing changes at rest. The "Pie with an active slice" section fades the rest with `{ fillOpacity: 0.4 }`.
+
+## ui/chart — legend over every Pie (2026-10-02)
+
+Branch `feat/chart-pie-legend-2`, #89. `pieLayout`'s `legendPayload` spans every `Pie` in the chart, each name once with the colour from the first pie that names it, where #86 had listed the first pie only; the keyboard still steps the first. The "Two pies" section gains a `ChartLegend`.

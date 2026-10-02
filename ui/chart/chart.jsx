@@ -786,9 +786,10 @@ function valueTicks(axis, columns, fallbackDomain = [0, "auto"]) {
 }
 
 /*
- * Each Pie carries its own data. The first one drives the legend and the
- * keyboard; the pointer picks a pie by radius, and `focus(k)` is the same
- * layout with the tooltip view (category, payloadAt, anchorAt) on pie k.
+ * Each Pie carries its own data. The first one drives the keyboard; the
+ * pointer picks a pie by radius, and `focus(k)` is the same layout with the
+ * tooltip view (category, payloadAt, anchorAt) on pie k. The legend spans
+ * every pie.
  */
 function pieLayout(ctx, series) {
   const { frame, config } = ctx
@@ -841,7 +842,16 @@ function pieLayout(ctx, series) {
     }
     return -1
   }
-  const primary = entries[0]
+  // Every pie's slices, each name once: the first pie to name it sets the colour.
+  const named = new Set()
+  const legendPayload = []
+  for (const pie of entries) {
+    pie.names.forEach((name, i) => {
+      if (named.has(name)) return
+      named.add(name)
+      legendPayload.push({ dataKey: pie.nameKey, value: name, color: pie.colors[i], type: "rect", payload: slice(pie, i) })
+    })
+  }
   const layout = {
     ...ctx.base,
     activeSeries: 0,
@@ -858,9 +868,7 @@ function pieLayout(ctx, series) {
       return sliceIndexAt(angle, entries[k].slices)
     },
     seriesAt,
-    legendPayload: primary
-      ? primary.data.map((_, i) => ({ dataKey: primary.nameKey, value: primary.names[i], color: primary.colors[i], type: "rect", payload: slice(primary, i) }))
-      : [],
+    legendPayload,
     angleItems: [],
     radiusItems: [],
     gridRadii: [],
