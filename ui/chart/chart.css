@@ -45,8 +45,19 @@
 
 .chart-axis-line,
 .chart-tick {
+  fill: none;
   stroke: var(--border);
   stroke-width: 1;
+}
+
+.chart-polar-grid {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.chart-radar {
+  stroke-linejoin: round;
 }
 
 .chart-tick-text {
@@ -74,6 +85,11 @@
 .chart-label {
   fill: var(--foreground);
   font-size: 0.75rem;
+}
+
+.chart-label-line {
+  fill: none;
+  stroke-width: 1;
 }
 
 /* ── Tooltip ─────────────────────────────────────────────────────── */
@@ -225,15 +241,19 @@
  * CanvasText so every bar still has an edge against Canvas. */
 @media (forced-colors: active) {
   .chart-bar,
+  .chart-sector,
+  .chart-radar,
   .chart-line,
   .chart-area,
   .chart-dot,
+  .chart-label-line,
   .chart-legend-swatch,
   .chart-tooltip-indicator {
     forced-color-adjust: none;
   }
 
-  .chart-bar {
+  .chart-bar,
+  .chart-sector {
     stroke: CanvasText;
     stroke-width: 1;
   }
