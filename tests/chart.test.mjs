@@ -485,6 +485,19 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(await page.locator(`${pg("chart-radial-stacked")} .chart-axis[data-axis="radius"] line`).count(), 0, "axis line and ticks off")
   })
 
+  await test("two pies: the legend lists every pie's slices, each name once, in the first pie's colours", async () => {
+    const name = "chart-pie-two"
+    const items = await page.locator(`${pg(name)} .chart-legend-item`).evaluateAll((els) =>
+      els.map((el) => ({ text: el.textContent.trim(), swatch: getComputedStyle(el.querySelector(".chart-legend-swatch")).backgroundColor })),
+    )
+    eq(items.map((item) => item.text).join(","), "January,February,March,April,May", "five months, not ten")
+    eq(items[0].swatch, await tokenColour(name, "--chart-1"))
+    eq(items[4].swatch, await tokenColour(name, "--chart-5"))
+    const legend = await rect(`${pg(name)} .chart-legend`)
+    const plot = await rect(`${pg(name)} .chart-plot`)
+    eq(legend.y >= plot.bottom - 0.5, true, "the legend sits under the plot")
+  })
+
   await test("polar: the radius follows the container width", async () => {
     const host = page.locator(pg("chart-pie"))
     const outer = async () => (await polarSeries("chart-pie")).outer

@@ -947,9 +947,9 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         <h3>Two pies</h3>
         <p>
           A second <code>Pie</code> with its own radii nests inside or around the first. The pointer picks the pie by
-          radius, so the tooltip reads whichever slice is under it; the legend and the arrow keys follow the first.
-          With <code>labelKey</code> and a <code>labelFormatter</code> the tooltip can name the series as well as the
-          slice.
+          radius, so the tooltip reads whichever slice is under it; the arrow keys follow the first. The legend lists
+          every pie's slices, each name once. With <code>labelKey</code> and a <code>labelFormatter</code> the tooltip
+          can name the series as well as the slice.
         </p>
         <ComponentPreview code={`<PieChart>
   <ChartTooltip
@@ -962,6 +962,7 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
       />
     }
   />
+  <ChartLegend content={<ChartLegendContent />} />
   <Pie data={desktopData} dataKey="desktop" nameKey="month" outerRadius={60} />
   <Pie data={mobileData} dataKey="mobile" nameKey="month" innerRadius={70} outerRadius={90} />
 </PieChart>`}>
@@ -978,6 +979,7 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
                     />
                   }
                 />
+                <ChartLegend content={<ChartLegendContent />} />
                 <Pie data={desktopData} dataKey="desktop" nameKey="month" outerRadius={60} />
                 <Pie data={mobileData} dataKey="mobile" nameKey="month" innerRadius={70} outerRadius={90} />
               </PieChart>
