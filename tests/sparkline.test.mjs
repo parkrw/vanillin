@@ -1,6 +1,7 @@
 // Sparkline: the x scale spans inset → width - inset, the y scale puts the
-// last value where the dot sits, one point is a dot alone, and the svg is
-// always hidden from the accessibility tree.
+// last value where the dot sits, one point is a dot alone, the svg is always
+// hidden from the accessibility tree, and the colour props reach the part
+// each one names.
 
 export default async function run({ page, baseUrl, test, eq, near }) {
   await page.goto(`${baseUrl}/#sparkline`)
@@ -119,5 +120,112 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(stroke, color, "stroke = parent color")
     eq(dot, dotToken, "dot = --sparkline-dot")
     if (stroke === dot) throw new Error("fixture: stroke and dot colours coincide")
+  })
+
+  // Computed colour of a CSS colour value, in the format getComputedStyle reports.
+  const resolve = (values) =>
+    page.evaluate((vs) => {
+      const probe = document.createElement("span")
+      document.body.appendChild(probe)
+      const out = vs.map((v) => {
+        probe.style.color = v
+        return getComputedStyle(probe).color
+      })
+      probe.remove()
+      return out
+    }, values)
+  const palette = await resolve([1, 2, 3, 4, 5].map((n) => `var(--chart-${n})`))
+
+  const paint = (host) =>
+    page.$$eval(`[data-pg="${host}"] .sparkline`, (svgs) =>
+      svgs.map((svg) =>
+        [...svg.querySelectorAll(".sparkline-series")].map((g) => {
+          const cs = (sel) => {
+            const el = g.querySelector(sel)
+            return el && getComputedStyle(el)
+          }
+          return {
+            stroke: cs(".sparkline-line")?.stroke,
+            area: cs(".sparkline-area")?.fill,
+            areaOpacity: cs(".sparkline-area")?.fillOpacity,
+            dot: cs(".sparkline-dot")?.fill,
+            cy: Number(g.querySelector(".sparkline-dot")?.getAttribute("cy")),
+          }
+        }),
+      ),
+    )
+
+  await test("color tints the line, wash and dot; dotColor repaints only the dot", async () => {
+    // Precondition: the five tokens are distinct, so a line stuck on one colour fails.
+    eq(new Set(palette).size, 5, `palette ${palette}`)
+    const svgs = await paint("spark-colors")
+    eq(svgs.length, 6)
+    for (let i = 0; i < 5; i++) {
+      const [s] = svgs[i]
+      eq(s.stroke, palette[i], `line ${i + 1}`)
+      eq(s.area, palette[i], `wash ${i + 1}`)
+      eq(s.dot, palette[i], `dot ${i + 1}`)
+    }
+    const [own] = svgs[5]
+    eq(own.stroke, palette[2], "line keeps color")
+    eq(own.area, palette[2], "wash keeps color")
+    eq(own.dot, palette[0], "dot takes dotColor")
+  })
+
+  await test("areaColor and areaOpacity repaint the wash and nothing else", async () => {
+    const [[base]] = await paint("spark-default")
+    eq(base.areaOpacity, "0.12", "default wash strength")
+    eq(base.area, base.stroke, "default wash = line colour")
+    const [[strong], [own]] = await paint("spark-wash")
+    eq(strong.areaOpacity, "0.3", "areaOpacity")
+    eq(strong.area, palette[1], "wash keeps the line colour")
+    eq(strong.stroke, palette[1], "line")
+    eq(own.areaOpacity, "0.4", "areaOpacity")
+    eq(own.area, palette[3], "wash takes areaColor")
+    eq(own.stroke, palette[2], "line keeps color")
+    eq(own.dot, palette[2], "dot keeps color")
+  })
+
+  await test("series share one scale and take the palette in order", async () => {
+    const inbound = [30, 34, 28, 41, 38, 45, 40, 48]
+    const outbound = [12, 15, 11, 18, 22, 19, 25, 21]
+    const yAt = (v, top) => height - inset - (v / top) * (height - 2 * inset)
+    const shared = yAt(outbound.at(-1), Math.max(...inbound, ...outbound))
+    // Fixture: scaled to its own max the outbound dot would sit elsewhere.
+    if (Math.abs(shared - yAt(outbound.at(-1), Math.max(...outbound))) < 1) throw new Error("fixture: scales coincide")
+
+    const [auto, custom] = await paint("spark-series")
+    eq(auto.length, 2, "two series")
+    eq(auto.map((s) => s.stroke).join(" | "), [palette[0], palette[1]].join(" | "), "palette order")
+    eq(auto.map((s) => s.dot).join(" | "), [palette[0], palette[1]].join(" | "), "dots follow")
+    eq(auto[0].cy, inset, "the overall max sits at the top inset")
+    near(auto[1].cy, shared, 0.01, "outbound on the shared scale")
+    const lines = await page.$$eval('[data-pg="spark-series"] .sparkline:first-child .sparkline-line', (els) =>
+      els.map((el) => el.getAttribute("d").match(/M [\d.]+ ([\d.]+)/)[1]),
+    )
+    near(Number(lines[0]), yAt(inbound[0], 48), 0.01, "first series painted first")
+
+    eq(custom.map((s) => s.stroke).join(" | "), [palette[2], palette[4]].join(" | "), "item colours")
+    eq(custom.map((s) => s.dot).join(" | "), [palette[2], palette[0]].join(" | "), "item dotColor")
+    eq(custom.filter((s) => s.area !== undefined).length, 0, "area={false} applies to every series")
+  })
+
+  await test("theme switches the line with the colour scheme", async () => {
+    const [light, dark] = await resolve(["oklch(0.55 0.2 250)", "oklch(0.78 0.14 250)"])
+    // The site seeds its scheme at import time: emulate, then navigate.
+    const strokeIn = async (scheme) => {
+      await page.emulateMedia({ colorScheme: scheme })
+      await page.goto("about:blank")
+      await page.goto(`${baseUrl}/#sparkline`)
+      await page.locator('[data-pg="spark-theme"] .sparkline-line').waitFor()
+      const [[s]] = await paint("spark-theme")
+      return s.stroke
+    }
+    try {
+      eq(await strokeIn("light"), light, "light")
+      eq(await strokeIn("dark"), dark, "dark")
+    } finally {
+      await page.emulateMedia({ colorScheme: "light" })
+    }
   })
 }
