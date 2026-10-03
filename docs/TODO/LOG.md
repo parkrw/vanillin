@@ -870,3 +870,7 @@ Branch `feat/chart-pie-legend-2`, #89. `pieLayout`'s `legendPayload` spans every
 ## ui/chart — tooltip on click (2026-10-02)
 
 Branch `feat/chart-tooltip-click-3`, #90. `ChartTooltip` takes Recharts' `trigger="click"`: `useActiveIndex` swaps its surface handlers for a single pointerdown that toggles the pressed category (the same one again clears), ignores movement, and leaves dismissal to the document pointerdown listener the touch path already had. Both roots read it off the tooltip element beside `defaultIndex`, so pie, radar and radial charts take it unchanged. Page: "Tooltip on click" after "Tooltip without cursor".
+
+## ui/sparkline — a Live series section on the page (2026-10-02)
+
+Branch `docs/sparkline-live-series`. The page said how the box is scaled but not that the component is a pure function of `points`, so a reader of the console could take the movement for the sparkline's own. A "Live series" section between Beside a figure and Without area now says it holds no state and samples nothing, shows the consumer wiring (last 24 readings kept in state, `max` pinned), and previews a 24-point window sliding on the shared `useTicker` beat with the figure beside it. The test pins the vertex count across a tick and that the figure equals the value under the dot.
