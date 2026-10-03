@@ -135,6 +135,80 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(stacked, 2)
   })
 
+  await test("composed: a line's points sit on the bar band centres and one tooltip names both", async () => {
+    const bars = await barRects("chart-composed", "desktop")
+    const dots = await page.locator(`${pg("chart-composed")} .chart-series[data-key="mobile"] .chart-dot`).evaluateAll((els) =>
+      els.map((el) => {
+        const r = el.getBoundingClientRect()
+        return r.x + r.width / 2
+      }),
+    )
+    eq(bars.length, 6)
+    eq(dots.length, 6)
+    dots.forEach((cx, i) => near(cx, bars[i].x + bars[i].width / 2, 0.5, `dot ${i} on band centre`))
+    eq(bars[0].width > 20, true, "the lone bar takes the band, not a point")
+    await hoverBand("chart-composed", 2)
+    await tooltip("chart-composed").waitFor()
+    eq(await page.locator(`${pg("chart-composed")} .chart-tooltip-label`).textContent(), "March")
+    eq(await page.locator(`${pg("chart-composed")} .chart-tooltip-name`).allTextContents().then((t) => t.join(",")), "Desktop,Mobile")
+    await page.mouse.move(0, 0)
+    await tooltip("chart-composed").waitFor({ state: "detached" })
+  })
+
+  await test("scatter: a dot per row at the numeric x and y, sized by ZAxis area, on number ticks", async () => {
+    const name = "chart-scatter"
+    const dots = await page.locator(`${pg(name)} .chart-series[data-key="a"] .chart-dot`).evaluateAll((els) =>
+      els.map((el) => ({ cx: Number(el.getAttribute("cx")), cy: Number(el.getAttribute("cy")), r: Number(el.getAttribute("r")) })),
+    )
+    eq(dots.length, 6)
+    eq(dots[2].cx > dots[1].cx && dots[1].cx > dots[0].cx, true, "cx grows with x")
+    eq(dots[4].cy < dots[2].cy && dots[2].cy < dots[1].cy, true, "cy falls as y grows")
+    near(dots[0].cx + ((dots[2].cx - dots[0].cx) * (120 - 100)) / (170 - 100), dots[1].cx, 0.05, "x is linear")
+    near(dots[1].cy + ((dots[4].cy - dots[1].cy) * (300 - 100)) / (400 - 100), dots[2].cy, 0.05, "y is linear")
+    eq(dots[4].r > dots[2].r && dots[2].r > dots[0].r, true, "r grows with z")
+    near(dots[0].r, dots[5].r, 0.001, "equal z, equal r")
+    near(dots[0].r, Math.sqrt(60 / Math.PI), 0.01, "the smallest z takes the bottom of the area range")
+    near(dots[4].r, Math.sqrt(400 / Math.PI), 0.01, "the largest z takes the top")
+    const numeric = (texts) => texts.length >= 3 && texts.every((t) => Number.isFinite(Number(t.replace(/,/g, ""))))
+    const xt = await page.locator(`${pg(name)} .chart-axis[data-axis="x"] .chart-tick-text`).allTextContents()
+    const yt = await page.locator(`${pg(name)} .chart-axis[data-axis="y"] .chart-tick-text`).allTextContents()
+    eq(numeric(xt), true, `numeric x ticks: ${xt.join(",")}`)
+    eq(numeric(yt), true, `numeric y ticks: ${yt.join(",")}`)
+    eq(await page.locator(`${pg(name)} .chart-legend-item`).allTextContents().then((t) => t.join(",")), "School A,School B")
+  })
+
+  await test("scatter: the nearest dot of any series drives the tooltip; the keys step the first series", async () => {
+    const name = "chart-scatter"
+    await page.locator(`${pg(name)} .chart-surface`).evaluate((el) => el.scrollIntoView({ block: "center" }))
+    const centre = (key, i) =>
+      page.locator(`${pg(name)} .chart-series[data-key="${key}"] .chart-dot[data-index="${i}"]`).evaluate((el) => {
+        const r = el.getBoundingClientRect()
+        return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
+      })
+    const names = () => page.locator(`${pg(name)} .chart-tooltip-name`).allTextContents().then((t) => t.join(","))
+    const values = () => page.locator(`${pg(name)} .chart-tooltip-value`).allTextContents().then((t) => t.join(","))
+    const b2 = await centre("b", 2)
+    await page.mouse.move(b2.x, b2.y)
+    await tooltip(name).waitFor()
+    eq(await page.locator(`${pg(name)} .chart-tooltip-label`).textContent(), "School B")
+    eq(await names(), "Stature,Weight,Score")
+    eq(await values(), "190,290,250")
+    eq(await page.locator(`${pg(name)} .chart-series[data-key="b"] .chart-dot--active`).getAttribute("data-index"), "2", "the hovered dot is marked")
+    eq(await page.locator(`${pg(name)} .chart-series[data-key="a"] .chart-dot--active`).count(), 0, "only on its own series")
+    eq(await page.locator(`${pg(name)} .chart-cursor`).count(), 0, "no cursor band")
+    const svg = await rect(`${pg(name)} .chart-surface`)
+    await page.mouse.move(svg.x + 2, svg.y + 2)
+    await tooltip(name).waitFor({ state: "detached" })
+    await page.locator(`${pg(name)} .chart-surface`).focus()
+    await tooltip(name).waitFor()
+    eq(await page.locator(`${pg(name)} .chart-tooltip-label`).textContent(), "School A", "focus seeds the first series")
+    await page.keyboard.press("End")
+    eq(await values(), "110,280,200")
+    await page.keyboard.press("Escape")
+    await tooltip(name).waitFor({ state: "detached" })
+    await page.locator("h2").click()
+  })
+
   // ── Tooltip ──
 
   await test("tooltip: absent until hover, then names the band and both series", async () => {

@@ -8,6 +8,10 @@ import {
   BarChart,
   LineChart,
   AreaChart,
+  ComposedChart,
+  ScatterChart,
+  Scatter,
+  ZAxis,
   Bar,
   Line,
   Area,
@@ -114,6 +118,32 @@ const browserConfig = {
 }
 
 const stackedData = [{ month: "january", mobile: 570, desktop: 1260 }]
+
+const schoolA = [
+  { x: 100, y: 200, z: 200 },
+  { x: 120, y: 100, z: 260 },
+  { x: 170, y: 300, z: 400 },
+  { x: 140, y: 250, z: 280 },
+  { x: 150, y: 400, z: 500 },
+  { x: 110, y: 280, z: 200 },
+]
+
+const schoolB = [
+  { x: 200, y: 260, z: 240 },
+  { x: 240, y: 290, z: 220 },
+  { x: 190, y: 290, z: 250 },
+  { x: 198, y: 250, z: 210 },
+  { x: 180, y: 280, z: 260 },
+  { x: 210, y: 220, z: 230 },
+]
+
+const schoolConfig = {
+  stature: { label: "Stature" },
+  weight: { label: "Weight" },
+  score: { label: "Score" },
+  a: { label: "School A", color: "var(--chart-1)" },
+  b: { label: "School B", color: "var(--chart-2)" },
+}
 
 const desktopData = [
   { month: "january", desktop: 186, fill: "var(--color-january)" },
@@ -601,6 +631,70 @@ const chartConfig = {
                 <Area dataKey="mobile" fill="var(--color-mobile)" fillOpacity={0.4} stroke="var(--color-mobile)" stackId="a" />
                 <Area dataKey="desktop" fill="var(--color-desktop)" fillOpacity={0.4} stroke="var(--color-desktop)" stackId="a" />
               </AreaChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Composed</h3>
+        <p>
+          <code>ComposedChart</code> takes <code>Bar</code>, <code>Line</code> and <code>Area</code> together. Any
+          bar present puts the categories on bands, and the line and area points sit on the band centres, so one
+          tooltip names every series at a category.
+        </p>
+        <ComponentPreview code={`<ComposedChart data={chartData}>
+  <CartesianGrid vertical={false} />
+  <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(v) => v.slice(0, 3)} />
+  <ChartTooltip content={<ChartTooltipContent />} />
+  <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
+  <Line dataKey="mobile" stroke="var(--color-mobile)" type="monotone" />
+</ComposedChart>`}>
+          <Frame pg="chart-composed">
+            <ChartContainer config={chartConfig}>
+              <ComposedChart data={chartData}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={monthTick} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
+                <Line dataKey="mobile" stroke="var(--color-mobile)" type="monotone" />
+              </ComposedChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Scatter</h3>
+        <p>
+          A <code>ScatterChart</code> puts numbers on both axes: <code>XAxis</code> and <code>YAxis</code>{" "}
+          <code>dataKey</code> name the fields, their <code>name</code> labels the tooltip rows through the config, and
+          each <code>Scatter</code> carries its own rows. A <code>ZAxis</code> sizes the dots by area over its{" "}
+          <code>range</code> in px², as in Recharts. The pointer takes the nearest dot of any series; the arrow keys
+          step the first series. <code>line</code> joins a series' dots in row order.
+        </p>
+        <ComponentPreview code={`<ScatterChart accessibilityLayer aria-label="Stature against weight">
+  <CartesianGrid />
+  <XAxis type="number" dataKey="x" name="stature" unit="cm" />
+  <YAxis type="number" dataKey="y" name="weight" unit="kg" />
+  <ZAxis dataKey="z" name="score" range={[60, 400]} />
+  <ChartTooltip content={<ChartTooltipContent />} />
+  <ChartLegend content={<ChartLegendContent />} />
+  <Scatter name="a" data={schoolA} fill="var(--color-a)" />
+  <Scatter name="b" data={schoolB} fill="var(--color-b)" />
+</ScatterChart>`}>
+          <Frame pg="chart-scatter">
+            <ChartContainer config={schoolConfig}>
+              <ScatterChart accessibilityLayer aria-label="Stature against weight">
+                <CartesianGrid />
+                <XAxis type="number" dataKey="x" name="stature" unit="cm" />
+                <YAxis type="number" dataKey="y" name="weight" unit="kg" />
+                <ZAxis dataKey="z" name="score" range={[60, 400]} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+                <Scatter name="a" data={schoolA} fill="var(--color-a)" />
+                <Scatter name="b" data={schoolB} fill="var(--color-b)" />
+              </ScatterChart>
             </ChartContainer>
           </Frame>
         </ComponentPreview>
@@ -1102,7 +1196,7 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />
 
-      <ApiReference title="BarChart / LineChart / AreaChart" props={[
+      <ApiReference title="BarChart / LineChart / AreaChart / ComposedChart" props={[
         { name: "data", type: "object[]", description: "One row per category" },
         { name: "layout", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "vertical runs the bars across (Recharts naming)" },
         { name: "margin", type: "{ top, right, bottom, left }", default: "5 each", description: "Space around the plot, inside the surface" },
@@ -1139,6 +1233,16 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "horizontal / vertical", type: "boolean", default: "true", description: "CartesianGrid line sets" },
         { name: "position", type: "string", default: '"top"', description: "LabelList placement: top, bottom, left, right, inside*, center" },
         { name: "offset / formatter", type: "number / fn", default: "5", description: "LabelList distance from the datum and text shaping" },
+      ]} />
+
+      <ApiReference title="ScatterChart / Scatter / ZAxis" props={[
+        { name: "data", type: "object[]", description: "Scatter: its rows; x, y and z are read by the axes' dataKey" },
+        { name: "name", type: "string", description: "Scatter: series name, the legend entry, tooltip heading and config key" },
+        { name: "fill / fillOpacity / stroke / strokeWidth", type: "string / number", description: "Dot paint; Cell children override per row" },
+        { name: "line", type: "boolean | { strokeWidth, strokeDasharray }", default: "false", description: "Join the dots in row order" },
+        { name: "shape", type: "(dot) => node | element", description: "Replaces the circle; dot is { cx, cy, r, fill, index, payload, x, y, z }" },
+        { name: "type / name / unit", type: '"number" / string / string', description: "XAxis and YAxis: numeric field, tooltip row name, unit (kept on the payload)" },
+        { name: "dataKey / range", type: "string / [min, max]", default: "— / [64, 64]", description: "ZAxis: field and dot area range in px²" },
       ]} />
 
       <ApiReference title="PieChart / RadarChart / RadialBarChart" props={[
