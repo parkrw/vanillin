@@ -258,8 +258,8 @@ function getPayloadConfigFromPayload(config, payload, key) {
 // What each root accepts: series roles, axes that must be unique, parts that
 // take the first occurrence. Anything else is passthrough SVG or a warning.
 const CARTESIAN_PARTS = {
-  series: new Set(["bar", "line", "area"]),
-  unique: ["xaxis", "yaxis"],
+  series: new Set(["bar", "line", "area", "scatter"]),
+  unique: ["xaxis", "yaxis", "zaxis"],
   first: ["grid", "tooltip", "legend"],
 }
 const POLAR_PARTS = {
@@ -361,6 +361,19 @@ function useElementSize(ref, initial) {
 }
 
 const finite = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null)
+const paletteColor = (i) => `var(--chart-${(i % PALETTE_SIZE) + 1})`
+const isCell = (el) => isValidElement(el) && el.type?.chartRole === "cell"
+const cellFills = (el) => Children.toArray(el.props.children).filter(isCell).map((cell) => cell.props.fill)
+const EMPTY_DATA = []
+const SCATTER_HIT = 12
+
+// A new array each render, so compare members: a Pie's or Scatter's data is a
+// prop on the series element, not on the root.
+function useSameList(list) {
+  const ref = useRef(list)
+  if (ref.current.length !== list.length || ref.current.some((item, i) => item !== list[i])) ref.current = list
+  return ref.current
+}
 
 function categoryGapFraction(gap, step) {
   if (typeof gap === "number") return step > 0 ? Math.min(0.9, gap / step) : 0
@@ -487,6 +500,115 @@ function computeLayout({ data, vertical, margin, width, height, barCategoryGap, 
   }
 }
 
+function numericAxis(axis, columns, range) {
+  const tickCount = axis?.props.tickCount ?? 5
+  const domain = resolveDomain(axis?.props.domain ?? [0, "auto"], extent(columns), tickCount, axis?.props.allowDataOverflow)
+  const [lo, hi] = domain
+  const ticks = (axis?.props.ticks ?? niceTicks(lo, hi, tickCount)).filter((t) => t >= lo && t <= hi)
+  return { domain, ticks, scale: linearScale(domain, range), dataKey: axis?.props.dataKey, name: axis?.props.name, unit: axis?.props.unit }
+}
+
+/*
+ * Both axes numeric, each Scatter with its own rows; a ZAxis sizes the dots by
+ * area, as Recharts does (range is px², default 64). The active index is a
+ * point of one series: the pointer takes the nearest dot across series and
+ * `focus(k)` turns the tooltip view onto that series; the keys step the first.
+ */
+function computeScatterLayout({ margin, width, height, series, xaxis, yaxis, zaxis }) {
+  const space = (el, dim, fallback) => (el && !el.props.hide ? (el.props[dim] ?? fallback) : 0)
+  const left = space(yaxis, "width", 60)
+  const bottom = space(xaxis, "height", 30)
+  const plot = {
+    x: margin.left + left,
+    y: margin.top,
+    width: Math.max(0, width - margin.left - margin.right - left),
+    height: Math.max(0, height - margin.top - margin.bottom - bottom),
+  }
+  const xKey = xaxis?.props.dataKey ?? "x"
+  const yKey = yaxis?.props.dataKey ?? "y"
+  const zKey = zaxis?.props.dataKey
+  const entries = series.map((el, index) => {
+    const rows = Array.isArray(el.props.data) ? el.props.data : EMPTY_DATA
+    const name = el.props.name ?? el.props.dataKey ?? `scatter-${index}`
+    const cells = cellFills(el)
+    return {
+      key: `scatter:${name}`,
+      role: "scatter",
+      dataKey: el.props.dataKey ?? yKey,
+      name,
+      index,
+      data: rows,
+      xs: rows.map((d) => finite(d?.[xKey])),
+      values: rows.map((d) => finite(d?.[yKey])),
+      zs: rows.map((d) => (zKey != null ? finite(d?.[zKey]) : null)),
+      colors: rows.map((d, i) => cells[i] ?? d?.fill ?? el.props.fill ?? paletteColor(index)),
+      color: el.props.fill ?? paletteColor(index),
+      props: el.props,
+    }
+  })
+  const x = numericAxis(xaxis, entries.map((entry) => entry.xs), [plot.x, plot.x + plot.width])
+  const y = numericAxis(yaxis, entries.map((entry) => entry.values), [plot.y + plot.height, plot.y])
+  const zRange = zaxis?.props.range ?? [64, 64]
+  const zScale = linearScale(extent(entries.map((entry) => entry.zs)), zRange)
+  const radius = (z) => Math.sqrt(Math.max(0, z == null ? zRange[0] : zScale(z)) / Math.PI)
+  for (const entry of entries) {
+    entry.points = entry.xs.map((vx, i) => (vx == null || entry.values[i] == null ? null : [x.scale(vx), y.scale(entry.values[i]), radius(entry.zs[i])]))
+  }
+  const nearest = (point) => {
+    let best = null
+    entries.forEach((entry, k) => {
+      entry.points.forEach((p, i) => {
+        if (!p) return
+        const d = Math.hypot(p[0] - point.x, p[1] - point.y)
+        if (d <= Math.max(SCATTER_HIT, p[2]) && (!best || d < best.d)) best = { k, i, d }
+      })
+    })
+    return best
+  }
+  const item = (axis, key, value, entry, row) => ({ dataKey: key, name: axis?.name ?? key, unit: axis?.unit, value, color: entry.color, fill: entry.color, payload: row })
+  const views = entries.map((entry, k) => ({
+    activeSeries: k,
+    category: { labels: entry.data.map(() => entry.name), count: entry.data.length },
+    anchorAt: (i) => entry.points[i] ?? [plot.x, plot.y],
+    payloadAt: (i) => {
+      const row = entry.data[i]
+      const items = [item(xaxis?.props, xKey, entry.xs[i], entry, row), item(yaxis?.props, yKey, entry.values[i], entry, row)]
+      if (zKey != null) items.push(item(zaxis?.props, zKey, entry.zs[i], entry, row))
+      return items
+    },
+  }))
+  const layout = {
+    data: EMPTY_DATA,
+    kind: "scatter",
+    vertical: false,
+    width,
+    height,
+    plot,
+    hasBar: false,
+    activeSeries: 0,
+    category: { labels: [], count: 0 },
+    anchorAt: () => [plot.x, plot.y],
+    payloadAt: () => [],
+    ...views[0],
+    x,
+    y,
+    value: y,
+    series: entries,
+    ...indexEntries(entries),
+    indexAt: (point) => nearest(point)?.i ?? -1,
+    seriesAt: (point) => (point ? (nearest(point)?.k ?? -1) : 0),
+    clampValue: (v) => Math.min(y.domain[1], Math.max(y.domain[0], v)),
+    legendPayload: entries.map((entry) => ({ dataKey: entry.name, value: entry.name, color: entry.color, type: "circle" })),
+  }
+  const focused = [layout]
+  layout.focus = (k) => {
+    if (!views[k]) return layout
+    if (!focused[k]) focused[k] = { ...layout, ...views[k] }
+    return focused[k]
+  }
+  return layout
+}
+
 const AXIS_SIG_KEYS = ["dataKey", "hide", "width", "height", "domain", "ticks", "tickCount", "allowDataOverflow"]
 const SERIES_SIG_KEYS = ["dataKey", "stackId", "name", "barSize", "maxBarSize", "fill", "stroke"]
 const pick = (props, keys) => keys.map((key) => props?.[key])
@@ -592,6 +714,7 @@ function surfaceA11y(accessibilityLayer, labelled, keyboard) {
 }
 
 function CartesianChart({
+  kind = "category",
   data = [],
   layout = "horizontal",
   margin,
@@ -611,24 +734,33 @@ function CartesianChart({
   const vertical = layout === "vertical"
 
   const parts = collect(children, CARTESIAN_PARTS)
-  const { series, xaxis, yaxis } = parts
+  const scatter = kind === "scatter"
+  const series = parts.series.filter((el) => (el.type.chartRole === "scatter") === scatter)
+  const foreign = parts.series.filter((el) => (el.type.chartRole === "scatter") !== scatter)
+  const { xaxis, yaxis, zaxis } = parts
   const fullMargin = { ...DEFAULT_MARGIN, ...margin }
 
   // Keyed on what the geometry reads, never on children identity: a parent
   // re-render hands down fresh elements every time.
+  const seriesData = useSameList(series.map((el) => el.props.data))
   const signature = JSON.stringify({
+    kind,
     vertical,
     margin: fullMargin,
     barCategoryGap,
     barGap,
-    series: series.map((el) => [el.type.chartRole, ...pick(el.props, SERIES_SIG_KEYS)]),
+    series: series.map((el) => [el.type.chartRole, ...pick(el.props, SERIES_SIG_KEYS), cellFills(el)]),
     xaxis: xaxis && pick(xaxis.props, AXIS_SIG_KEYS),
     yaxis: yaxis && pick(yaxis.props, AXIS_SIG_KEYS),
+    zaxis: zaxis && pick(zaxis.props, ["dataKey", "range"]),
   })
   const computed = useMemo(
-    () => computeLayout({ data, vertical, margin: fullMargin, width, height, barCategoryGap, barGap, series, xaxis, yaxis }),
+    () =>
+      scatter
+        ? computeScatterLayout({ margin: fullMargin, width, height, series, xaxis, yaxis, zaxis })
+        : computeLayout({ data, vertical, margin: fullMargin, width, height, barCategoryGap, barGap, series, xaxis, yaxis }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, width, height, signature],
+    [data, seriesData, width, height, signature],
   )
 
   if (process.env.NODE_ENV !== "production") {
@@ -637,19 +769,22 @@ function CartesianChart({
       for (const el of parts.duplicates) {
         console.warn(`<${componentName(el)}> declared twice in one chart; only the first is used.`)
       }
+      for (const el of foreign) {
+        console.warn(`<${componentName(el)}> belongs in a different chart root and was ignored: Scatter in ScatterChart, Bar, Line and Area elsewhere.`)
+      }
       for (const el of parts.unknown) {
         console.warn(
-          `<${componentName(el)}> is not a cartesian chart primitive and was ignored. A wrapper around <Bar>, <Line> or <Area> is ` +
+          `<${componentName(el)}> is not a cartesian chart primitive and was ignored. A wrapper around <Bar>, <Line>, <Area> or <Scatter> is ` +
             "invisible to the chart; render the primitives as direct children or inside a Fragment.",
         )
       }
       for (const el of parts.stray) {
-        console.warn(`<${componentName(el)}> must be a child of a <Bar>, <Line> or <Area>; at the chart root it draws nothing.`)
+        console.warn(`<${componentName(el)}> must be a child of a <Bar>, <Line>, <Area> or <Scatter>; at the chart root it draws nothing.`)
       }
       for (const key of computed.duplicateKeys) {
         console.warn(`Two series share ${key}; the second is ignored. Give each series its own dataKey.`)
       }
-    }, [parts.duplicates.length, parts.unknown.length, parts.stray.length, computed])
+    }, [parts.duplicates.length, foreign.length, parts.unknown.length, parts.stray.length, computed])
   }
 
   const tooltipEl = parts.tooltip
@@ -659,8 +794,9 @@ function CartesianChart({
     trigger: tooltipEl?.props.trigger,
     indexAt: computed.indexAt,
   })
+  const hostLayout = computed.focus ? computed.focus(computed.seriesAt(pointer.point)) : computed
 
-  const showCursor = tooltipEl && tooltipEl.props.cursor !== false && activeIndex != null && activeIndex < computed.category.count
+  const showCursor = !scatter && tooltipEl && tooltipEl.props.cursor !== false && activeIndex != null && activeIndex < computed.category.count
   const { plot, category } = computed
   let cursor = null
   if (showCursor) {
@@ -687,10 +823,10 @@ function CartesianChart({
   const a11y = surfaceA11y(accessibilityLayer, ariaLabel != null || ariaLabelledBy != null, keyboard)
 
   return (
-    <LayoutContext.Provider value={computed}>
+    <LayoutContext.Provider value={hostLayout}>
       <ActiveIndexContext.Provider value={activeIndex}>
         <PointerContext.Provider value={pointer}>
-          <div ref={layoutRef} className={cn("chart-layout", className)} data-layout={layout} {...props}>
+          <div ref={layoutRef} className={cn("chart-layout", className)} data-layout={scatter ? "scatter" : layout} {...props}>
             {legendTop ? legendEl : null}
             <div className="chart-plot" ref={plotRef}>
               <svg
@@ -732,6 +868,18 @@ export function AreaChart({ children, ...props }) {
   return <CartesianChart {...props}>{children}</CartesianChart>
 }
 
+export function ComposedChart({ children, ...props }) {
+  return <CartesianChart {...props}>{children}</CartesianChart>
+}
+
+export function ScatterChart({ children, ...props }) {
+  return (
+    <CartesianChart {...props} kind="scatter">
+      {children}
+    </CartesianChart>
+  )
+}
+
 // ── Polar root ──────────────────────────────────────────────────────
 
 /*
@@ -761,16 +909,12 @@ const POLAR_SERIES_SIG_KEYS = [
 ]
 const POLAR_AXIS_SIG_KEYS = ["dataKey", "domain", "ticks", "tickCount", "allowDataOverflow"]
 const HIT_SLACK = 4
-const EMPTY_DATA = []
 const PolarViewBoxContext = createContext(null)
 
-const paletteColor = (i) => `var(--chart-${(i % PALETTE_SIZE) + 1})`
 const configColor = (config, key) => {
   const item = key != null ? config?.[key] : null
   return item && (item.color || item.theme) ? `var(--color-${key})` : null
 }
-const isCell = (el) => isValidElement(el) && el.type?.chartRole === "cell"
-const cellFills = (el) => Children.toArray(el.props.children).filter(isCell).map((cell) => cell.props.fill)
 const round2 = (v) => Math.round(v * 100) / 100
 
 function polarFrame({ margin, width, height, cx, cy, innerRadius, outerRadius }) {
@@ -1048,14 +1192,6 @@ function computePolarLayout({ kind, data, series, angleAxis, radiusAxis, config,
   if (kind === "pie") return pieLayout(ctx, series)
   if (kind === "radar") return radarLayout(ctx, series)
   return radialLayout(ctx, series)
-}
-
-// A new array each render, so compare members: a Pie's data is a prop on the
-// series element, not on the root.
-function useSameList(list) {
-  const ref = useRef(list)
-  if (ref.current.length !== list.length || ref.current.some((item, i) => item !== list[i])) ref.current = list
-  return ref.current
 }
 
 function PolarChart({
@@ -1408,6 +1544,59 @@ export function Area({
 }
 Area.chartRole = "area"
 
+export function Scatter({ data, dataKey, name, fill, fillOpacity, stroke, strokeWidth, line = false, shape, className, children, ...props }) {
+  const layout = useContext(LayoutContext)
+  const active = useContext(ActiveIndexContext)
+  const entry = layout?.series?.find((e) => e.role === "scatter" && e.props.data === data && e.name === (name ?? dataKey ?? e.name))
+  if (!layout || !entry) return null
+  const activeAt = layout.activeSeries === entry.index ? active : null
+  const lineProps = typeof line === "object" && line ? line : {}
+  const dots = entry.points.map((p, i) => {
+    if (!p) return null
+    const isActive = i === activeAt
+    const dot = { cx: p[0], cy: p[1], r: p[2], fill: entry.colors[i], index: i, payload: entry.data[i], x: entry.xs[i], y: entry.values[i], z: entry.zs[i] }
+    if (isValidElement(shape) || typeof shape === "function") {
+      return (
+        <g key={i} className="chart-scatter-dot" data-index={i}>
+          {isValidElement(shape) ? cloneElement(shape, dot) : shape(dot)}
+        </g>
+      )
+    }
+    return (
+      <circle
+        key={i}
+        className={cn("chart-dot", isActive && "chart-dot--active")}
+        data-index={i}
+        cx={p[0]}
+        cy={p[1]}
+        r={isActive ? p[2] + 2 : p[2]}
+        fill={entry.colors[i]}
+        fillOpacity={fillOpacity}
+        stroke={isActive ? "var(--background)" : stroke}
+        strokeWidth={isActive ? 2 : strokeWidth}
+      />
+    )
+  })
+  const points = entry.points.map((p) => (p ? [p[0], p[1]] : null))
+  const labels = Children.toArray(children).filter((child) => !isCell(child))
+  return (
+    <g className={cn("chart-series", className)} data-key={entry.name} data-role="scatter" {...props}>
+      {line ? (
+        <path className="chart-line" d={linePath(points, "linear", true)} stroke={entry.color} strokeWidth={lineProps.strokeWidth ?? 1} strokeDasharray={lineProps.strokeDasharray} />
+      ) : null}
+      {dots}
+      {labels.length ? <SeriesContext.Provider value={{ entry, points, data: entry.data }}>{labels}</SeriesContext.Provider> : null}
+    </g>
+  )
+}
+Scatter.chartRole = "scatter"
+
+/* Sizes a ScatterChart's dots by area: read by the chart root, draws nothing itself. */
+export function ZAxis() {
+  return null
+}
+ZAxis.chartRole = "zaxis"
+
 const LABEL_ANCHORS = {
   top: { dx: 0, dy: -1, anchor: "middle", baseline: "auto" },
   bottom: { dx: 0, dy: 1, anchor: "middle", baseline: "hanging" },
@@ -1579,7 +1768,7 @@ export function XAxis({
 }) {
   const layout = useContext(LayoutContext)
   if (!layout || hide) return null
-  const axis = layout.category.axis === "x" ? layout.category : layout.value
+  const axis = layout.x ?? (layout.category.axis === "x" ? layout.category : layout.value)
   return (
     <AxisGroup
       axis={axis}
@@ -1617,7 +1806,7 @@ export function YAxis({
 }) {
   const layout = useContext(LayoutContext)
   if (!layout || hide) return null
-  const axis = layout.category.axis === "y" ? layout.category : layout.value
+  const axis = layout.y ?? (layout.category.axis === "y" ? layout.category : layout.value)
   return (
     <AxisGroup
       axis={axis}
@@ -1639,7 +1828,7 @@ export function CartesianGrid({ horizontal = true, vertical = true, strokeDashar
   const layout = useContext(LayoutContext)
   if (!layout) return null
   const { plot, category, value } = layout
-  const categoryPositions = category.centers
+  const categoryPositions = layout.x ? layout.x.ticks.map((tick) => layout.x.scale(tick)) : category.centers
   const valuePositions = value.ticks.map((tick) => value.scale(tick))
   const xs = layout.vertical ? valuePositions : categoryPositions
   const ys = layout.vertical ? categoryPositions : valuePositions
