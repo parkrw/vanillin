@@ -195,6 +195,52 @@ test("stackSeries: null contributes nothing", () => {
   assert.deepEqual(b[0], { y0: 0, y1: 4 })
 })
 
+test('stackSeries "expand": every stack spans exactly 0 to 1 in its shares', () => {
+  const rows = [
+    [186, 305, 237],
+    [80, 200, 120],
+    [45, 100, 150],
+  ]
+  const none = stackSeries(rows)
+  const expanded = stackSeries(rows, "expand")
+  assert.equal(none[2][0].y1, 311, "the default offset keeps raw sums")
+  for (let i = 0; i < 3; i++) {
+    const total = rows[0][i] + rows[1][i] + rows[2][i]
+    assert.equal(expanded[0][i].y0, 0)
+    assert.equal(expanded[2][i].y1, 1, `datum ${i} tops out at exactly 1`)
+    assert.ok(Math.abs(expanded[0][i].y1 - rows[0][i] / total) < 1e-12, `datum ${i} first share`)
+    assert.ok(Math.abs(expanded[1][i].y1 - expanded[1][i].y0 - rows[1][i] / total) < 1e-12, `datum ${i} second share`)
+  }
+})
+
+test('stackSeries "expand": mixed signs split one unit of span across zero by absolute share', () => {
+  const [a, b] = stackSeries(
+    [
+      [3, -1],
+      [1, -3],
+    ],
+    "expand",
+  )
+  assert.deepEqual(a[0], { y0: 0, y1: 0.75 })
+  assert.deepEqual(b[0], { y0: 0.75, y1: 1 })
+  assert.deepEqual(a[1], { y0: 0, y1: -0.25 })
+  assert.deepEqual(b[1], { y0: -0.25, y1: -1 })
+})
+
+test('stackSeries "expand": an empty or all-zero datum stays at 0, a null still contributes nothing', () => {
+  const [a, b] = stackSeries(
+    [
+      [0, null, 2],
+      [0, null, null],
+    ],
+    "expand",
+  )
+  assert.deepEqual(a[0], { y0: 0, y1: 0 })
+  assert.deepEqual(b[1], { y0: 0, y1: 0 })
+  assert.deepEqual(a[2], { y0: 0, y1: 1 })
+  assert.deepEqual(b[2], { y0: 1, y1: 1 })
+})
+
 // --- nearestIndex ---
 
 test("nearestIndex picks the closest centre", () => {

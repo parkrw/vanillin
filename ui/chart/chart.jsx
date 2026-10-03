@@ -295,7 +295,7 @@ const componentName = (el) => el.type?.displayName ?? el.type?.name ?? "componen
  * Rows sharing a stackId pile on each other; everything else stands on zero.
  * Sets entry.stack = { y0, y1 }[] on every entry.
  */
-function stackEntries(entries, canStack) {
+function stackEntries(entries, canStack, offset) {
   const stacks = new Map()
   for (const entry of entries) {
     if (entry.stackId == null || !canStack(entry)) continue
@@ -304,7 +304,7 @@ function stackEntries(entries, canStack) {
     stacks.get(key).push(entry)
   }
   for (const group of stacks.values()) {
-    const stacked = stackSeries(group.map((entry) => entry.values))
+    const stacked = stackSeries(group.map((entry) => entry.values), offset)
     group.forEach((entry, i) => {
       entry.stack = stacked[i]
     })
@@ -386,7 +386,7 @@ function seriesColor(role, props, index) {
   return explicit ?? `var(--chart-${(index % PALETTE_SIZE) + 1})`
 }
 
-function computeLayout({ data, vertical, margin, width, height, barCategoryGap, barGap, series, xaxis, yaxis }) {
+function computeLayout({ data, vertical, margin, width, height, barCategoryGap, barGap, stackOffset, series, xaxis, yaxis }) {
   const space = (el, dim, fallback) => (el && !el.props.hide ? (el.props[dim] ?? fallback) : 0)
   const left = space(yaxis, "width", 60)
   const bottom = space(xaxis, "height", 30)
@@ -423,7 +423,7 @@ function computeLayout({ data, vertical, margin, width, height, barCategoryGap, 
     }
   })
 
-  stackEntries(entries, (entry) => entry.role !== "line")
+  stackEntries(entries, (entry) => entry.role !== "line", stackOffset)
 
   const columns = entries.flatMap((entry) =>
     entry.role === "line" || entry.stackId == null
@@ -720,6 +720,7 @@ function CartesianChart({
   margin,
   barCategoryGap = "10%",
   barGap,
+  stackOffset = "none",
   accessibilityLayer = false,
   className,
   children,
@@ -749,6 +750,7 @@ function CartesianChart({
     margin: fullMargin,
     barCategoryGap,
     barGap,
+    stackOffset,
     series: series.map((el) => [el.type.chartRole, ...pick(el.props, SERIES_SIG_KEYS), cellFills(el)]),
     xaxis: xaxis && pick(xaxis.props, AXIS_SIG_KEYS),
     yaxis: yaxis && pick(yaxis.props, AXIS_SIG_KEYS),
@@ -758,7 +760,7 @@ function CartesianChart({
     () =>
       scatter
         ? computeScatterLayout({ margin: fullMargin, width, height, series, xaxis, yaxis, zaxis })
-        : computeLayout({ data, vertical, margin: fullMargin, width, height, barCategoryGap, barGap, series, xaxis, yaxis }),
+        : computeLayout({ data, vertical, margin: fullMargin, width, height, barCategoryGap, barGap, stackOffset, series, xaxis, yaxis }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [data, seriesData, width, height, signature],
   )
@@ -1381,69 +1383,129 @@ function roundedRectPath({ x, y, width, height }, radius) {
   )
 }
 
-export function Bar({ dataKey, name, fill, fillOpacity, radius = 0, stackId, barSize, maxBarSize, className, children, ...props }) {
+/*
+ * One bar under Recharts' name, the shape `shape` and `activeBar` render with.
+ * Sizes are signed as Recharts hands them over: a bar runs from (x, y) by
+ * (width, height) toward its base, so a negative bar has a negative extent and
+ * its corner radii follow the value end. The data fields a Bar hands along are
+ * consumed here so they never reach the DOM.
+ */
+export function Rectangle({ x = 0, y = 0, width = 0, height = 0, radius = 0, index, value, payload, dataKey, className, ...props }) {
+  let radii = Array.isArray(radius) ? radius : [radius, radius, radius, radius]
+  if (height < 0) radii = [radii[3], radii[2], radii[1], radii[0]]
+  if (width < 0) radii = [radii[1], radii[0], radii[3], radii[2]]
+  const rect = { x: Math.min(x, x + width), y: Math.min(y, y + height), width: Math.abs(width), height: Math.abs(height) }
+  const d = roundedRectPath(rect, radii)
+  if (!d) return null
+  return <path className={cn("chart-bar", className)} data-index={index} d={d} {...props} />
+}
+
+export function Bar({
+  dataKey,
+  name,
+  fill,
+  fillOpacity,
+  stroke,
+  strokeWidth,
+  radius = 0,
+  stackId,
+  barSize,
+  maxBarSize,
+  shape,
+  activeBar = false,
+  activeIndex,
+  // The chart's layout decides; a Bar takes the prop only so Recharts snippets paste in.
+  layout: _layout,
+  className,
+  children,
+  ...props
+}) {
   const layout = useContext(LayoutContext)
+  const hovered = useContext(ActiveIndexContext)
   const entry = layout?.byKey.get(`bar:${dataKey}`)
   if (!layout || !entry || !entry.slot) return null
-  const { category, value, vertical } = layout
-  const color = fill ?? entry.color
-  const bars = entry.stack.map((p, i) => {
+  const { category, value, vertical, data } = layout
+  const cells = Children.toArray(children).filter(isCell)
+  // A controlled activeIndex wins over the pointer, as in Recharts.
+  const active = activeIndex !== undefined ? activeIndex : hovered
+  // Recharts' viewBox per bar: from the value end toward the base, signed.
+  const rects = entry.stack.map((p, i) => {
     if (entry.values[i] == null) return null
     const start = category.scale.start(i) + entry.slot.offset
-    const a = value.scale(p.y0)
-    const b = value.scale(p.y1)
-    const rect = vertical
-      ? { x: Math.min(a, b), y: start, width: Math.abs(b - a), height: entry.slot.size }
-      : { x: start, y: Math.min(a, b), width: entry.slot.size, height: Math.abs(b - a) }
-    const d = roundedRectPath(rect, radius)
-    if (!d) return null
-    return <path key={i} className="chart-bar" data-index={i} d={d} fill={color} fillOpacity={fillOpacity} />
+    const base = value.scale(p.y0)
+    const end = value.scale(p.y1)
+    return vertical
+      ? { x: base, y: start, width: end - base, height: entry.slot.size }
+      : { x: start, y: end, width: entry.slot.size, height: base - end }
+  })
+  // A Cell beats the row's own fill, which beats the series fill, as in Recharts.
+  const bars = rects.map((rect, i) => {
+    if (!rect) return null
+    const { fill: cellFill, ...cell } = cells[i]?.props ?? {}
+    const bar = {
+      ...rect,
+      radius,
+      fill: cellFill ?? data[i]?.fill ?? fill ?? entry.color,
+      fillOpacity,
+      stroke,
+      strokeWidth,
+      ...cell,
+      index: i,
+      value: entry.values[i],
+      payload: data[i],
+      dataKey,
+    }
+    const option = activeBar && i === active ? activeBar : shape
+    if (isValidElement(option) || typeof option === "function") {
+      return (
+        <g key={i} className="chart-bar-shape" data-index={i}>
+          {renderShape(option, bar, Rectangle)}
+        </g>
+      )
+    }
+    return <Rectangle key={i} {...bar} {...(typeof option === "object" && option ? option : null)} />
   })
   const points = entry.stack.map((p, i) => (entry.values[i] == null ? null : layout.pointAt(i, p.y1)))
+  const labels = Children.toArray(children).filter((child) => !isCell(child))
   return (
     <g className={cn("chart-series", className)} data-key={dataKey} data-role="bar" {...props}>
       {bars}
-      {children ? <SeriesContext.Provider value={{ entry, points }}>{children}</SeriesContext.Provider> : null}
+      {labels.length ? <SeriesContext.Provider value={{ entry, points, rects }}>{labels}</SeriesContext.Provider> : null}
     </g>
   )
 }
 Bar.chartRole = "bar"
 
-function Dots({ points, dot, color, active, activeDot }) {
-  const dotProps = typeof dot === "object" && dot ? dot : {}
-  const activeProps = typeof activeDot === "object" && activeDot ? activeDot : {}
-  const activePoint = activeDot && active != null ? points[active] : null
+/*
+ * One point marker under Recharts' name, the shape `dot` and `activeDot`
+ * render with. The data fields a series hands along are consumed here so they
+ * never reach the DOM.
+ */
+export function Dot({ cx, cy, r, index, value, payload, dataKey, className, ...props }) {
+  if (finite(cx) == null || finite(cy) == null || !(r > 0)) return null
+  return <circle className={cn("chart-dot", className)} data-index={index} cx={cx} cy={cy} r={r} {...props} />
+}
+
+function renderDot(option, props, key) {
+  if (isValidElement(option) || typeof option === "function") {
+    return (
+      <g key={key} className="chart-dot-shape" data-index={props.index}>
+        {renderShape(option, props, Dot)}
+      </g>
+    )
+  }
+  return <Dot key={key} {...props} {...(typeof option === "object" && option ? option : null)} />
+}
+
+function Dots({ points, values, data, dataKey, dot, color, active, activeDot }) {
+  const at = (i) => ({ cx: points[i][0], cy: points[i][1], index: i, value: values[i], payload: data[i], dataKey })
+  const activePoint = activeDot && active != null && points[active]
   return (
     <>
-      {dot
-        ? points.map(
-            (p, i) =>
-              p && (
-                <circle
-                  key={i}
-                  className="chart-dot"
-                  data-index={i}
-                  cx={p[0]}
-                  cy={p[1]}
-                  r={dotProps.r ?? 3}
-                  stroke={dotProps.stroke ?? color}
-                  strokeWidth={dotProps.strokeWidth ?? 2}
-                  fill={dotProps.fill ?? "var(--background)"}
-                />
-              ),
-          )
+      {dot ? points.map((p, i) => p && renderDot(dot, { ...at(i), r: 3, stroke: color, strokeWidth: 2, fill: "var(--background)" }, i)) : null}
+      {activePoint
+        ? renderDot(activeDot, { ...at(active), className: "chart-dot--active", r: 4, stroke: "var(--background)", strokeWidth: 2, fill: color }, "active")
         : null}
-      {activePoint ? (
-        <circle
-          className="chart-dot chart-dot--active"
-          cx={activePoint[0]}
-          cy={activePoint[1]}
-          r={activeProps.r ?? 4}
-          stroke={activeProps.stroke ?? "var(--background)"}
-          strokeWidth={activeProps.strokeWidth ?? 2}
-          fill={activeProps.fill ?? color}
-        />
-      ) : null}
     </>
   )
 }
@@ -1477,7 +1539,7 @@ export function Line({
         strokeWidth={strokeWidth}
         strokeDasharray={strokeDasharray}
       />
-      <Dots points={points} dot={dot} color={color} active={active} activeDot={activeDot} />
+      <Dots points={points} values={entry.values} data={layout.data} dataKey={dataKey} dot={dot} color={color} active={active} activeDot={activeDot} />
       {children ? <SeriesContext.Provider value={{ entry, points }}>{children}</SeriesContext.Provider> : null}
     </g>
   )
@@ -1537,7 +1599,7 @@ export function Area({
         strokeWidth={strokeWidth}
         strokeDasharray={strokeDasharray}
       />
-      <Dots points={upper} dot={dot} color={color} active={active} activeDot={activeDot} />
+      <Dots points={upper} values={entry.values} data={layout.data} dataKey={dataKey} dot={dot} color={color} active={active} activeDot={activeDot} />
       {children ? <SeriesContext.Provider value={{ entry, points: upper }}>{children}</SeriesContext.Provider> : null}
     </g>
   )
@@ -1597,86 +1659,87 @@ export function ZAxis() {
 }
 ZAxis.chartRole = "zaxis"
 
-const LABEL_ANCHORS = {
-  top: { dx: 0, dy: -1, anchor: "middle", baseline: "auto" },
-  bottom: { dx: 0, dy: 1, anchor: "middle", baseline: "hanging" },
-  left: { dx: -1, dy: 0, anchor: "end", baseline: "middle" },
-  right: { dx: 1, dy: 0, anchor: "start", baseline: "middle" },
-  inside: { dx: 0, dy: 0, anchor: "middle", baseline: "middle", inside: true },
-  center: { dx: 0, dy: 0, anchor: "middle", baseline: "middle", inside: true },
-  insideTop: { dx: 0, dy: 1, anchor: "middle", baseline: "hanging", inside: true },
-  insideBottom: { dx: 0, dy: -1, anchor: "middle", baseline: "auto", inside: true },
-  insideLeft: { dx: 1, dy: 0, anchor: "start", baseline: "middle", inside: true },
-  insideRight: { dx: -1, dy: 0, anchor: "end", baseline: "middle", inside: true },
+/*
+ * Recharts' placement against a datum's box: a bar's signed box, or a point's
+ * empty one. "top" lies past the value end and "bottom" past the base, so a
+ * negative bar's labels flip with it.
+ */
+function cartesianLabelAt({ x, y, width = 0, height = 0 }, position, offset) {
+  const v = height >= 0 ? 1 : -1
+  const h = width >= 0 ? 1 : -1
+  const above = v > 0 ? "auto" : "hanging"
+  const below = v > 0 ? "hanging" : "auto"
+  const before = h > 0 ? "end" : "start"
+  const after = h > 0 ? "start" : "end"
+  const midX = x + width / 2
+  const midY = y + height / 2
+  switch (position) {
+    case "bottom":
+      return { x: midX, y: y + height + v * offset, anchor: "middle", baseline: below }
+    case "left":
+      return { x: x - h * offset, y: midY, anchor: before, baseline: "middle" }
+    case "right":
+      return { x: x + width + h * offset, y: midY, anchor: after, baseline: "middle" }
+    case "insideTop":
+      return { x: midX, y: y + v * offset, anchor: "middle", baseline: below }
+    case "insideBottom":
+      return { x: midX, y: y + height - v * offset, anchor: "middle", baseline: above }
+    case "insideLeft":
+      return { x: x + h * offset, y: midY, anchor: after, baseline: "middle" }
+    case "insideRight":
+      return { x: x + width - h * offset, y: midY, anchor: before, baseline: "middle" }
+    case "inside":
+    case "center":
+      return { x: midX, y: midY, anchor: "middle", baseline: "middle" }
+    default:
+      return { x: midX, y: y - v * offset, anchor: "middle", baseline: above }
+  }
 }
 
-export function LabelList({ dataKey, position = "top", offset = 5, formatter, fill, className, ...props }) {
+export function LabelList({ dataKey, position = "top", offset = 5, formatter, content, fill, className, ...props }) {
   const layout = useContext(LayoutContext)
   const series = useContext(SeriesContext)
   const pathId = useId().replace(/[^\w-]/g, "")
   if (!layout || !series) return null
-  const { entry, points } = series
+  const { entry, points, rects } = series
   const rows = series.data ?? layout.data
-  const spec = LABEL_ANCHORS[position] ?? LABEL_ANCHORS.top
   const labels = points.map((p, i) => {
     if (!p) return null
     const raw = dataKey != null ? rows[i]?.[dataKey] : entry.values[i]
     if (raw == null) return null
-    const text = formatter ? formatter(raw) : typeof raw === "number" ? raw.toLocaleString() : String(raw)
-    if (series.place) {
-      const at = series.place(i, position, offset)
-      if (at.arc) {
-        const id = `${pathId}-${i}`
-        return (
-          <g key={i} className="chart-label-arc" data-index={i}>
-            <path id={id} d={at.arc} fill="none" stroke="none" />
-            <text className={cn("chart-label", className)} dominantBaseline="middle" style={fill ? { fill } : undefined}>
-              <textPath href={`#${id}`} startOffset={at.startOffset} textAnchor={at.anchor}>
-                {text}
-              </textPath>
-            </text>
-          </g>
-        )
-      }
+    const box = rects?.[i] ?? { x: p[0], y: p[1] }
+    if (isValidElement(content) || typeof content === "function") {
+      const labelProps = { ...box, value: raw, index: i, offset, position }
       return (
-        <text
-          key={i}
-          className={cn("chart-label", className)}
-          data-index={i}
-          x={at.x}
-          y={at.y}
-          textAnchor={at.anchor}
-          dominantBaseline={at.baseline}
-          style={fill ? { fill } : undefined}
-        >
-          {text}
-        </text>
+        <g key={i} className="chart-label-shape" data-index={i}>
+          {isValidElement(content) ? cloneElement(content, labelProps) : (content(labelProps) ?? null)}
+        </g>
       )
     }
-    let [x, y] = p
-    if (spec.inside && entry.role === "bar") {
-      const [bx, by] = layout.pointAt(i, entry.stack[i].y0)
-      if (position === "inside" || position === "center") {
-        x = (x + bx) / 2
-        y = (y + by) / 2
-      } else if (layout.vertical) {
-        x = spec.dx > 0 ? Math.min(x, bx) + offset : Math.max(x, bx) - offset
-      } else {
-        y = spec.dy > 0 ? Math.min(y, by) + offset : Math.max(y, by) - offset
-      }
-    } else if (!spec.inside) {
-      x += spec.dx * offset
-      y += spec.dy * offset
+    const text = formatter ? formatter(raw) : typeof raw === "number" ? raw.toLocaleString() : String(raw)
+    const at = series.place ? series.place(i, position, offset) : cartesianLabelAt(box, position, offset)
+    if (at.arc) {
+      const id = `${pathId}-${i}`
+      return (
+        <g key={i} className="chart-label-arc" data-index={i}>
+          <path id={id} d={at.arc} fill="none" stroke="none" />
+          <text className={cn("chart-label", className)} dominantBaseline="middle" style={fill ? { fill } : undefined}>
+            <textPath href={`#${id}`} startOffset={at.startOffset} textAnchor={at.anchor}>
+              {text}
+            </textPath>
+          </text>
+        </g>
+      )
     }
     return (
       <text
         key={i}
         className={cn("chart-label", className)}
         data-index={i}
-        x={x}
-        y={y}
-        textAnchor={spec.anchor}
-        dominantBaseline={spec.baseline}
+        x={at.x}
+        y={at.y}
+        textAnchor={at.anchor}
+        dominantBaseline={at.baseline}
         style={fill ? { fill } : undefined}
       >
         {text}
@@ -1889,10 +1952,10 @@ export function Sector({
 }
 
 /* Recharts' shape slots: an element is cloned over the geometry, a function renders it, an object overrides it. */
-function renderShape(option, props) {
+function renderShape(option, props, Shape = Sector) {
   if (isValidElement(option)) return cloneElement(option, props)
   if (typeof option === "function") return option(props) ?? null
-  return <Sector {...props} {...(typeof option === "object" && option ? option : null)} />
+  return <Shape {...props} {...(typeof option === "object" && option ? option : null)} />
 }
 
 function renderSliceLabel(option, props) {
@@ -2197,7 +2260,7 @@ export function Label({ content, value, className, ...props }) {
 }
 Label.chartRole = "label"
 
-export function PolarGrid({ gridType = "polygon", radialLines = true, polarAngles, polarRadius, className, ...props }) {
+export function PolarGrid({ gridType = "polygon", radialLines = true, polarAngles, polarRadius, fill, fillOpacity, className, ...props }) {
   const layout = useContext(LayoutContext)
   if (!layout?.viewBox) return null
   const { cx, cy, innerRadius, outerRadius } = layout.viewBox
@@ -2206,7 +2269,7 @@ export function PolarGrid({ gridType = "polygon", radialLines = true, polarAngle
   return (
     <g className={cn("chart-polar-grid", className)} {...props}>
       {radii.map((r, i) => (
-        <path key={`r${i}`} className="chart-polar-ring" d={polarGridPath(cx, cy, r, angles, gridType)} />
+        <path key={`r${i}`} className="chart-polar-ring" d={polarGridPath(cx, cy, r, angles, gridType)} fill={fill} fillOpacity={fillOpacity} />
       ))}
       {radialLines
         ? angles.map((angle, i) => {
@@ -2262,7 +2325,18 @@ export function PolarAngleAxis({
         return (
           <g key={i} className="chart-tick-group" data-index={i}>
             {tickLine ? <line className="chart-tick" x1={x1} y1={y1} x2={x2} y2={y2} /> : null}
-            {tick ? (
+            {isValidElement(tick) || typeof tick === "function" ? (
+              <g className="chart-tick-shape">
+                {renderShape(tick, {
+                  x: tx,
+                  y: ty,
+                  textAnchor: anchor,
+                  dominantBaseline: baseline,
+                  index: i,
+                  payload: { value: item.label, coordinate: item.angle, index: i },
+                })}
+              </g>
+            ) : tick ? (
               <text className="chart-tick-text" x={tx} y={ty} textAnchor={anchor} dominantBaseline={baseline}>
                 {String(tickFormatter ? tickFormatter(item.label, i) : item.label)}
               </text>
