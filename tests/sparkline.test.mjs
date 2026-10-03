@@ -78,6 +78,25 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     near(box.height, height, 0.5, "height")
   })
 
+  await test("a live series slides its window and the figure tracks the dot", async () => {
+    const sel = '[data-pg="spark-live"] .sparkline-line'
+    eq((await lineXs(sel)).length, 24, "24 vertices")
+    const before = await page.$eval(sel, (el) => el.getAttribute("d"))
+    await page.waitForFunction(
+      ([s, d]) => document.querySelector(s).getAttribute("d") !== d,
+      [sel, before],
+      { timeout: 8000 },
+    )
+    eq((await lineXs(sel)).length, 24, "still 24 vertices after a tick")
+    // Read the dot and the figure in one evaluate so a tick cannot land between them.
+    const [cy, figure] = await page.$eval('[data-pg="spark-live"]', (host) => [
+      Number(host.querySelector(".sparkline-dot").getAttribute("cy")),
+      host.querySelector(".pg-stat-num").textContent,
+    ])
+    // max={100}, so the dot's y inverts to the value the figure shows.
+    near(((height - inset - cy) / (height - 2 * inset)) * 100, Number(figure.replace("%", "")), 0.01, "figure = last point")
+  })
+
   await test("every sparkline is aria-hidden", async () => {
     const all = page.locator(".sparkline")
     const n = await all.count()

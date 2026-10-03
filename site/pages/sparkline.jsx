@@ -1,3 +1,4 @@
+import { useTicker } from "../../lib/use-ticker.js"
 import { Sparkline } from "../../ui/sparkline/sparkline.jsx"
 import { Card, CardContent } from "../../ui/card/card.jsx"
 import "../../ui/sparkline/sparkline.css"
@@ -12,6 +13,23 @@ import "../api-reference.css"
 const requests = [12, 18, 9, 24, 20, 35, 27, 31]
 const latency = [42, 38, 45, 40, 36, 39, 33, 35]
 const cpu = [61, 64, 58, 70, 66, 72, 69, 74]
+
+/* Deterministic wander around a base, as on the Live Value page: the demo reads as a metric, not noise. */
+const drift = (base, spread) => (tick) =>
+  Math.round(base + (Math.sin(tick / 2) * 0.6 + Math.sin(tick / 5) * 0.4) * spread)
+const sampleCpu = drift(62, 14)
+
+/* The last 24 samples of the shared 2s ticker, so the window slides one step a beat. */
+function LiveSparkline() {
+  const tick = useTicker(2000)
+  const points = Array.from({ length: 24 }, (_, i) => sampleCpu(tick - 23 + i))
+  return (
+    <>
+      <span className="pg-stat-num">{points[points.length - 1]}%</span>
+      <Sparkline points={points} max={100} />
+    </>
+  )
+}
 
 const statCard = {
   display: "flex",
@@ -98,6 +116,39 @@ import "./ui/sparkline/sparkline.css"
             </Card>
           </div>
         </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Live series</h3>
+        <p>
+          The sparkline holds no state and samples nothing. It draws the <code>points</code> it is
+          given, oldest first, and moves only when that array does: keep the last few readings in
+          state, append each new one, and pass the slice. Until the first reading lands the empty
+          array draws the bare box, so a card keeps its layout.
+        </p>
+        <ComponentPreview code={`import { useEffect, useState } from "react"
+import { Sparkline } from "./ui/sparkline/sparkline"
+
+function CpuTrend() {
+  const [points, setPoints] = useState([])
+  useEffect(() => {
+    const id = setInterval(async () => {
+      const v = await readCpu()
+      setPoints((s) => [...s.slice(-23), v]) // keep the last 24
+    }, 2000)
+    return () => clearInterval(id)
+  }, [])
+  return <Sparkline points={points} max={100} />
+}`}>
+          <div className="pg-row" data-pg="spark-live">
+            <LiveSparkline />
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          The preview slides a 24-point window one step every two seconds on the shared{" "}
+          <code>useTicker</code> timer, the way the console's stat cards do, so the figure and the
+          line move together.
+        </p>
       </section>
 
       <section className="pg-section">
