@@ -2,9 +2,11 @@
  * Sparkline — an inline trend line in the colour of the text beside it.
  *
  * The stroke is currentColor so a parent's `color` tints the whole line; the
- * area is a wash of the same colour. The dot reads --sparkline-dot with a
- * currentColor fallback, never declared here: a value set on the element
- * itself would beat the ancestor override the API promises.
+ * area is a wash of the same colour. The dot and the wash read
+ * --sparkline-dot, --sparkline-area and --sparkline-area-opacity with
+ * fallbacks, never declared here: a value set on the element itself would
+ * beat the ancestor override the API promises. The colour props set the same
+ * properties inline, and only when passed.
  */
 .sparkline {
   display: inline-block;
@@ -21,7 +23,8 @@
 }
 
 .sparkline-area {
-  fill: color-mix(in oklab, currentColor 12%, transparent);
+  fill: var(--sparkline-area, currentColor);
+  fill-opacity: var(--sparkline-area-opacity, 0.12);
   stroke: none;
 }
 
