@@ -30,6 +30,9 @@ import {
   PolarRadiusAxis,
   Label,
   Sector,
+  Cell,
+  Rectangle,
+  Dot,
 } from "../../ui/chart/chart.jsx"
 import { NativeSelect, NativeSelectOption } from "../../ui/native-select/native-select.jsx"
 import "../../ui/chart/chart.css"
@@ -68,6 +71,25 @@ const negativeData = [
 
 const negativeConfig = {
   visitors: { label: "Visitors", color: "var(--chart-1)" },
+}
+
+const labelConfig = {
+  ...chartConfig,
+  label: { color: "var(--background)" },
+}
+
+const expandData = [
+  { month: "January", desktop: 186, mobile: 80, other: 45 },
+  { month: "February", desktop: 305, mobile: 200, other: 100 },
+  { month: "March", desktop: 237, mobile: 120, other: 150 },
+  { month: "April", desktop: 73, mobile: 190, other: 50 },
+  { month: "May", desktop: 209, mobile: 130, other: 100 },
+  { month: "June", desktop: 214, mobile: 140, other: 160 },
+]
+
+const expandConfig = {
+  ...chartConfig,
+  other: { label: "Other", color: "var(--chart-3)" },
 }
 
 const themedConfig = {
@@ -115,6 +137,11 @@ const browserConfig = {
   firefox: { label: "Firefox", color: "var(--chart-3)" },
   edge: { label: "Edge", color: "var(--chart-4)" },
   other: { label: "Other", color: "var(--chart-5)" },
+}
+
+const browserLineConfig = {
+  ...browserConfig,
+  visitors: { label: "Visitors", color: "var(--chart-2)" },
 }
 
 const stackedData = [{ month: "january", mobile: 570, desktop: 1260 }]
@@ -184,6 +211,49 @@ const totalDonut = donutData.reduce((sum, d) => sum + d.visitors, 0)
 const totalStacked = stackedData[0].desktop + stackedData[0].mobile
 
 const monthTick = (value) => value.slice(0, 3)
+const browserTick = (value) => browserConfig[value]?.label
+const percentTick = (value) => `${Math.round(value * 100)}%`
+
+const dashedBar = (props) => (
+  <Rectangle {...props} fillOpacity={0.8} stroke={props.payload.fill} strokeDasharray={4} strokeDashoffset={4} />
+)
+
+const triangleBar = ({ x, y, width, height, fill }) => (
+  <path d={`M ${x} ${y + height} L ${x + width / 2} ${y} L ${x + width} ${y + height} Z`} fill={fill} />
+)
+
+const valueBadge = ({ x, y, width, value }) => (
+  <g>
+    <rect x={x + width / 2 - 20} y={y - 26} width={40} height={20} rx={6} fill="var(--muted)" />
+    <text x={x + width / 2} y={y - 16} textAnchor="middle" dominantBaseline="middle" fill="var(--foreground)">
+      {value}
+    </text>
+  </g>
+)
+
+const commitDot = ({ cx, cy }) => (
+  <svg x={cx - 12} y={cy - 12} width={24} height={24} viewBox="0 0 24 24" fill="var(--background)" stroke="var(--color-desktop)" strokeWidth={2} strokeLinecap="round">
+    <path d="M12 3v6" />
+    <circle cx="12" cy="12" r="3" />
+    <path d="M12 15v6" />
+  </svg>
+)
+
+const browserDot = ({ payload, cx, cy }) => <Dot r={5} cx={cx} cy={cy} fill={payload.fill} stroke={payload.fill} />
+
+const valueOverMonth = ({ x, y, textAnchor, index }) => {
+  const row = chartData[index]
+  return (
+    <text x={x} y={index === 0 ? y - 10 : y} textAnchor={textAnchor} fontSize={13} fontWeight={500}>
+      <tspan style={{ fill: "var(--foreground)" }}>{row.desktop}</tspan>
+      <tspan>/</tspan>
+      <tspan style={{ fill: "var(--foreground)" }}>{row.mobile}</tspan>
+      <tspan x={x} dy="1rem" fontSize={12} fontWeight={400}>
+        {row.month}
+      </tspan>
+    </text>
+  )
+}
 
 const centreText = (lines) => ({ viewBox }) => (
   <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
@@ -414,6 +484,38 @@ const chartConfig = {
       </section>
 
       <section className="pg-section">
+        <h3>Stacked to 100%</h3>
+        <p>
+          <code>stackOffset="expand"</code> on the chart scales every stack to the same height, so each bar shows its
+          share of the month. The value axis runs from 0 to 1, read here as percentages through{" "}
+          <code>tickFormatter</code>; the tooltip still shows the counts.
+        </p>
+        <ComponentPreview code={`<BarChart data={chartData} stackOffset="expand">
+  <CartesianGrid vertical={false} />
+  <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={(v) => v.slice(0, 3)} />
+  <YAxis tickLine={false} axisLine={false} width={40} tickFormatter={(v) => \`\${Math.round(v * 100)}%\`} />
+  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+  <Bar dataKey="desktop" stackId="a" fill="var(--color-desktop)" />
+  <Bar dataKey="mobile" stackId="a" fill="var(--color-mobile)" />
+  <Bar dataKey="other" stackId="a" fill="var(--color-other)" />
+</BarChart>`}>
+          <Frame pg="chart-bar-expand">
+            <ChartContainer config={expandConfig}>
+              <BarChart data={expandData} stackOffset="expand">
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={monthTick} />
+                <YAxis tickLine={false} axisLine={false} width={40} tickFormatter={percentTick} />
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                <Bar dataKey="desktop" stackId="a" fill="var(--color-desktop)" />
+                <Bar dataKey="mobile" stackId="a" fill="var(--color-mobile)" />
+                <Bar dataKey="other" stackId="a" fill="var(--color-other)" />
+              </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Horizontal</h3>
         <p>
           Recharts' naming: <code>layout="vertical"</code> runs the bars across. The category axis is then the{" "}
@@ -443,14 +545,16 @@ const chartConfig = {
         <h3>Negative values</h3>
         <p>
           The default value domain is <code>[0, "auto"]</code>: zero is always in range and the ends round onto the
-          tick grid, so negatives extend below the baseline rather than clipping.
+          tick grid, so negatives extend below the baseline rather than clipping. A <code>radius</code> list
+          names the corners of an upright bar and flips with a negative one, so <code>[4, 4, 0, 0]</code> rounds
+          every bar at its value end.
         </p>
         <ComponentPreview code={`<BarChart data={negativeData}>
   <CartesianGrid vertical={false} />
   <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={(v) => v.slice(0, 3)} />
   <YAxis tickLine={false} axisLine={false} width={40} />
   <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-  <Bar dataKey="visitors" fill="var(--color-visitors)" />
+  <Bar dataKey="visitors" fill="var(--color-visitors)" radius={[4, 4, 0, 0]} />
 </BarChart>`}>
           <Frame pg="chart-negative">
             <ChartContainer config={negativeConfig}>
@@ -459,7 +563,7 @@ const chartConfig = {
                 <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={monthTick} />
                 <YAxis tickLine={false} axisLine={false} width={40} />
                 <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                <Bar dataKey="visitors" fill="var(--color-visitors)" />
+                <Bar dataKey="visitors" fill="var(--color-visitors)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ChartContainer>
           </Frame>
@@ -490,6 +594,204 @@ const chartConfig = {
                 <Bar dataKey="desktop" fill="var(--color-desktop)" radius={8}>
                   <LabelList position="top" offset={12} />
                 </Bar>
+              </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Labels inside bars</h3>
+        <p>
+          Two <code>LabelList</code>s on one bar: the month inside its start, the value past its end. A{" "}
+          <code>LabelList</code> with a <code>dataKey</code> labels with that field instead of the bar's value, and{" "}
+          <code>fill</code> colours its text.
+        </p>
+        <ComponentPreview code={`<BarChart data={chartData} layout="vertical" margin={{ right: 16 }}>
+  <CartesianGrid horizontal={false} />
+  <YAxis dataKey="month" type="category" hide />
+  <XAxis dataKey="desktop" type="number" hide />
+  <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+  <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4}>
+    <LabelList dataKey="month" position="insideLeft" offset={8} fill="var(--color-label)" />
+    <LabelList dataKey="desktop" position="right" offset={8} />
+  </Bar>
+</BarChart>`}>
+          <Frame pg="chart-bar-label-custom">
+            <ChartContainer config={labelConfig}>
+              <BarChart data={chartData} layout="vertical" margin={{ right: 16 }}>
+                <CartesianGrid horizontal={false} />
+                <YAxis dataKey="month" type="category" hide />
+                <XAxis dataKey="desktop" type="number" hide />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+                <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4}>
+                  <LabelList dataKey="month" position="insideLeft" offset={8} fill="var(--color-label)" />
+                  <LabelList dataKey="desktop" position="right" offset={8} />
+                </Bar>
+              </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Label content</h3>
+        <p>
+          <code>content</code> draws each label yourself: an element, or a function of the bar's box (
+          <code>x</code>, <code>y</code>, <code>width</code>, <code>height</code>) with its <code>value</code> and{" "}
+          <code>index</code>. On a line or area the box is the point, with no size.
+        </p>
+        <ComponentPreview code={`const valueBadge = ({ x, y, width, value }) => (
+  <g>
+    <rect x={x + width / 2 - 20} y={y - 26} width={40} height={20} rx={6} fill="var(--muted)" />
+    <text x={x + width / 2} y={y - 16} textAnchor="middle" dominantBaseline="middle" fill="var(--foreground)">
+      {value}
+    </text>
+  </g>
+)
+
+<BarChart data={chartData} margin={{ top: 30 }}>
+  <CartesianGrid vertical={false} />
+  <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={(v) => v.slice(0, 3)} />
+  <Bar dataKey="desktop" fill="var(--color-desktop)" radius={8}>
+    <LabelList content={valueBadge} />
+  </Bar>
+</BarChart>`}>
+          <Frame pg="chart-label-content">
+            <ChartContainer config={chartConfig}>
+              <BarChart data={chartData} margin={{ top: 30 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={monthTick} />
+                <Bar dataKey="desktop" fill="var(--color-desktop)" radius={8}>
+                  <LabelList content={valueBadge} />
+                </Bar>
+              </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Negative bars with labels</h3>
+        <p>
+          A <code>Cell</code> per row colours that bar, here by sign. Labels follow the bar's direction:{" "}
+          <code>position="top"</code> sits past the value end, so a negative bar's label hangs below it.
+        </p>
+        <ComponentPreview code={`<BarChart data={negativeData}>
+  <CartesianGrid vertical={false} />
+  <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel hideIndicator />} />
+  <Bar dataKey="visitors">
+    <LabelList position="top" dataKey="month" />
+    {negativeData.map((item) => (
+      <Cell key={item.month} fill={item.visitors > 0 ? "var(--chart-1)" : "var(--chart-2)"} />
+    ))}
+  </Bar>
+</BarChart>`}>
+          <Frame pg="chart-bar-negative">
+            <ChartContainer config={negativeConfig}>
+              <BarChart data={negativeData}>
+                <CartesianGrid vertical={false} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel hideIndicator />} />
+                <Bar dataKey="visitors">
+                  <LabelList position="top" dataKey="month" />
+                  {negativeData.map((item) => (
+                    <Cell key={item.month} fill={item.visitors > 0 ? "var(--chart-1)" : "var(--chart-2)"} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>A colour per bar</h3>
+        <p>
+          A bar takes the <code>fill</code> of its row when the row has one. A <code>Cell</code> beats the row, and
+          the row beats the series <code>fill</code>.
+        </p>
+        <ComponentPreview code={`const chartData = [
+  { browser: "chrome", visitors: 275, fill: "var(--color-chrome)" },
+  { browser: "safari", visitors: 200, fill: "var(--color-safari)" },
+  …
+]
+
+<BarChart data={chartData} layout="vertical" margin={{ left: 0 }}>
+  <YAxis dataKey="browser" type="category" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={(v) => chartConfig[v]?.label} />
+  <XAxis dataKey="visitors" type="number" hide />
+  <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+  <Bar dataKey="visitors" layout="vertical" radius={5} />
+</BarChart>`}>
+          <Frame pg="chart-bar-mixed">
+            <ChartContainer config={browserConfig}>
+              <BarChart data={browserData} layout="vertical" margin={{ left: 0 }}>
+                <YAxis dataKey="browser" type="category" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={browserTick} />
+                <XAxis dataKey="visitors" type="number" hide />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <Bar dataKey="visitors" layout="vertical" radius={5} />
+              </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Active bar</h3>
+        <p>
+          <code>activeBar</code> redraws the active bar: an object of props laid over it, an element, or a function
+          of the bar. <code>activeIndex</code> pins which bar is active; without it the bar under the pointer is.{" "}
+          <code>Rectangle</code> is the plain bar to build on.
+        </p>
+        <ComponentPreview code={`<BarChart data={chartData}>
+  <CartesianGrid vertical={false} />
+  <XAxis dataKey="browser" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={(v) => chartConfig[v]?.label} />
+  <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+  <Bar
+    dataKey="visitors"
+    strokeWidth={2}
+    radius={8}
+    activeIndex={2}
+    activeBar={(props) => (
+      <Rectangle {...props} fillOpacity={0.8} stroke={props.payload.fill} strokeDasharray={4} strokeDashoffset={4} />
+    )}
+  />
+</BarChart>`}>
+          <Frame pg="chart-bar-active">
+            <ChartContainer config={browserConfig}>
+              <BarChart data={browserData}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="browser" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={browserTick} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <Bar dataKey="visitors" strokeWidth={2} radius={8} activeIndex={2} activeBar={dashedBar} />
+              </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Bar shape</h3>
+        <p>
+          <code>shape</code> draws every bar: a function of the bar's box, colour, row and value, or an element
+          cloned over them.
+        </p>
+        <ComponentPreview code={`const triangleBar = ({ x, y, width, height, fill }) => (
+  <path d={\`M \${x} \${y + height} L \${x + width / 2} \${y} L \${x + width} \${y + height} Z\`} fill={fill} />
+)
+
+<BarChart data={chartData}>
+  <CartesianGrid vertical={false} />
+  <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={(v) => v.slice(0, 3)} />
+  <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+  <Bar dataKey="desktop" fill="var(--color-desktop)" shape={triangleBar} />
+</BarChart>`}>
+          <Frame pg="chart-bar-shape">
+            <ChartContainer config={chartConfig}>
+              <BarChart data={chartData}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={monthTick} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <Bar dataKey="desktop" fill="var(--color-desktop)" shape={triangleBar} />
               </BarChart>
             </ChartContainer>
           </Frame>
@@ -584,6 +886,101 @@ const chartConfig = {
       </section>
 
       <section className="pg-section">
+        <h3>Custom dots</h3>
+        <p>
+          <code>dot</code> and <code>activeDot</code> also take an element or a function of the point:{" "}
+          <code>cx</code>, <code>cy</code>, <code>r</code>, <code>index</code>, <code>value</code> and the row as{" "}
+          <code>payload</code>. Here each point is a commit marker.
+        </p>
+        <ComponentPreview code={`<Line
+  dataKey="desktop"
+  type="natural"
+  stroke="var(--color-desktop)"
+  strokeWidth={2}
+  dot={({ cx, cy }) => (
+    <svg x={cx - 12} y={cy - 12} width={24} height={24} viewBox="0 0 24 24" fill="var(--background)" stroke="var(--color-desktop)" strokeWidth={2} strokeLinecap="round">
+      <path d="M12 3v6" />
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 15v6" />
+    </svg>
+  )}
+/>`}>
+          <Frame pg="chart-line-dots-custom">
+            <ChartContainer config={chartConfig}>
+              <LineChart data={chartData} margin={{ left: 12, right: 12 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={monthTick} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <Line dataKey="desktop" type="natural" stroke="var(--color-desktop)" strokeWidth={2} dot={commitDot} />
+              </LineChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Dot colours</h3>
+        <p>
+          <code>Dot</code> is the plain marker. A <code>dot</code> function can colour each one from its row.
+        </p>
+        <ComponentPreview code={`<LineChart data={chartData} margin={{ top: 24, left: 24, right: 24 }}>
+  <CartesianGrid vertical={false} />
+  <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" nameKey="visitors" hideLabel />} />
+  <Line
+    dataKey="visitors"
+    type="natural"
+    stroke="var(--color-visitors)"
+    strokeWidth={2}
+    dot={({ payload, cx, cy }) => <Dot r={5} cx={cx} cy={cy} fill={payload.fill} stroke={payload.fill} />}
+  />
+</LineChart>`}>
+          <Frame pg="chart-line-dots-colors">
+            <ChartContainer config={browserLineConfig}>
+              <LineChart data={browserData} margin={{ top: 24, left: 24, right: 24 }}>
+                <CartesianGrid vertical={false} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" nameKey="visitors" hideLabel />} />
+                <Line dataKey="visitors" type="natural" stroke="var(--color-visitors)" strokeWidth={2} dot={browserDot} />
+              </LineChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Line labels</h3>
+        <p>
+          A <code>LabelList</code> on a line labels each point. Here it reads the browser field and{" "}
+          <code>formatter</code> turns it into the configured name.
+        </p>
+        <ComponentPreview code={`<LineChart data={chartData} margin={{ top: 24, left: 24, right: 24 }}>
+  <CartesianGrid vertical={false} />
+  <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" nameKey="visitors" hideLabel />} />
+  <Line dataKey="visitors" type="natural" stroke="var(--color-visitors)" strokeWidth={2} dot={{ fill: "var(--color-visitors)" }} activeDot={{ r: 6 }}>
+    <LabelList position="top" offset={12} dataKey="browser" formatter={(value) => chartConfig[value]?.label} />
+  </Line>
+</LineChart>`}>
+          <Frame pg="chart-line-label-custom">
+            <ChartContainer config={browserLineConfig}>
+              <LineChart data={browserData} margin={{ top: 24, left: 24, right: 24 }}>
+                <CartesianGrid vertical={false} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" nameKey="visitors" hideLabel />} />
+                <Line
+                  dataKey="visitors"
+                  type="natural"
+                  stroke="var(--color-visitors)"
+                  strokeWidth={2}
+                  dot={{ fill: "var(--color-visitors)" }}
+                  activeDot={{ r: 6 }}
+                >
+                  <LabelList position="top" offset={12} dataKey="browser" formatter={browserTick} />
+                </Line>
+              </LineChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Area</h3>
         <p>
           Host SVG elements pass through into the surface, so a <code>&lt;defs&gt;</code> gradient resolves by id.
@@ -630,6 +1027,35 @@ const chartConfig = {
                 <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
                 <Area dataKey="mobile" fill="var(--color-mobile)" fillOpacity={0.4} stroke="var(--color-mobile)" stackId="a" />
                 <Area dataKey="desktop" fill="var(--color-desktop)" fillOpacity={0.4} stroke="var(--color-desktop)" stackId="a" />
+              </AreaChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Stacked area to 100%</h3>
+        <p>
+          With <code>stackOffset="expand"</code> each month's stack fills the plot, so the bands show shares rather
+          than totals. The tooltip still shows the counts.
+        </p>
+        <ComponentPreview code={`<AreaChart data={chartData} margin={{ left: 12, right: 12, top: 12 }} stackOffset="expand">
+  <CartesianGrid vertical={false} />
+  <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(v) => v.slice(0, 3)} />
+  <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+  <Area dataKey="other" type="natural" fill="var(--color-other)" fillOpacity={0.1} stroke="var(--color-other)" stackId="a" />
+  <Area dataKey="mobile" type="natural" fill="var(--color-mobile)" fillOpacity={0.4} stroke="var(--color-mobile)" stackId="a" />
+  <Area dataKey="desktop" type="natural" fill="var(--color-desktop)" fillOpacity={0.4} stroke="var(--color-desktop)" stackId="a" />
+</AreaChart>`}>
+          <Frame pg="chart-area-expand">
+            <ChartContainer config={expandConfig}>
+              <AreaChart data={expandData} margin={{ left: 12, right: 12, top: 12 }} stackOffset="expand">
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={monthTick} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+                <Area dataKey="other" type="natural" fill="var(--color-other)" fillOpacity={0.1} stroke="var(--color-other)" stackId="a" />
+                <Area dataKey="mobile" type="natural" fill="var(--color-mobile)" fillOpacity={0.4} stroke="var(--color-mobile)" stackId="a" />
+                <Area dataKey="desktop" type="natural" fill="var(--color-desktop)" fillOpacity={0.4} stroke="var(--color-desktop)" stackId="a" />
               </AreaChart>
             </ChartContainer>
           </Frame>
@@ -1132,6 +1558,95 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
       </section>
 
       <section className="pg-section">
+        <h3>Radar ticks</h3>
+        <p>
+          <code>tick</code> on <code>PolarAngleAxis</code> also takes an element or a function of the tick:{" "}
+          <code>x</code>, <code>y</code>, <code>textAnchor</code>, <code>index</code>, and{" "}
+          <code>payload.value</code> for the label. Here each spoke shows both values over its month. Text the tick
+          leaves uncoloured takes the tick colour.
+        </p>
+        <ComponentPreview code={`<RadarChart data={chartData} margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+  <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+  <PolarAngleAxis
+    dataKey="month"
+    tick={({ x, y, textAnchor, index }) => {
+      const row = chartData[index]
+      return (
+        <text x={x} y={index === 0 ? y - 10 : y} textAnchor={textAnchor} fontSize={13} fontWeight={500}>
+          <tspan style={{ fill: "var(--foreground)" }}>{row.desktop}</tspan>
+          <tspan>/</tspan>
+          <tspan style={{ fill: "var(--foreground)" }}>{row.mobile}</tspan>
+          <tspan x={x} dy="1rem" fontSize={12} fontWeight={400}>{row.month}</tspan>
+        </text>
+      )
+    }}
+  />
+  <PolarGrid />
+  <Radar dataKey="desktop" fill="var(--color-desktop)" fillOpacity={0.6} />
+  <Radar dataKey="mobile" fill="var(--color-mobile)" />
+</RadarChart>`}>
+          <Frame pg="chart-radar-label-custom" square>
+            <ChartContainer config={chartConfig} style={{ aspectRatio: "1" }}>
+              <RadarChart data={chartData} margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+                <PolarAngleAxis dataKey="month" tick={valueOverMonth} />
+                <PolarGrid />
+                <Radar dataKey="desktop" fill="var(--color-desktop)" fillOpacity={0.6} />
+                <Radar dataKey="mobile" fill="var(--color-mobile)" />
+              </RadarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Filled grid</h3>
+        <p>
+          <code>fill</code> and <code>fillOpacity</code> on <code>PolarGrid</code> fill each ring. The rings overlap,
+          so the tint deepens toward the centre.
+        </p>
+        <ComponentPreview code={`<RadarChart data={chartData}>
+  <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+  <PolarGrid fill="var(--color-desktop)" fillOpacity={0.2} />
+  <PolarAngleAxis dataKey="month" />
+  <Radar dataKey="desktop" fill="var(--color-desktop)" fillOpacity={0.5} />
+</RadarChart>`}>
+          <Frame pg="chart-radar-grid-fill" square>
+            <ChartContainer config={chartConfig} style={{ aspectRatio: "1" }}>
+              <RadarChart data={chartData}>
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <PolarGrid fill="var(--color-desktop)" fillOpacity={0.2} />
+                <PolarAngleAxis dataKey="month" />
+                <Radar dataKey="desktop" fill="var(--color-desktop)" fillOpacity={0.5} />
+              </RadarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Filled circle grid</h3>
+        <p>The same fill on round rings.</p>
+        <ComponentPreview code={`<RadarChart data={chartData}>
+  <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+  <PolarGrid gridType="circle" fill="var(--color-desktop)" fillOpacity={0.2} />
+  <PolarAngleAxis dataKey="month" />
+  <Radar dataKey="desktop" fill="var(--color-desktop)" fillOpacity={0.5} />
+</RadarChart>`}>
+          <Frame pg="chart-radar-grid-circle-fill" square>
+            <ChartContainer config={chartConfig} style={{ aspectRatio: "1" }}>
+              <RadarChart data={chartData}>
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <PolarGrid gridType="circle" fill="var(--color-desktop)" fillOpacity={0.2} />
+                <PolarAngleAxis dataKey="month" />
+                <Radar dataKey="desktop" fill="var(--color-desktop)" fillOpacity={0.5} />
+              </RadarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Radial bar</h3>
         <p>
           A <code>RadialBarChart</code> draws one ring per row between <code>innerRadius</code> and{" "}
@@ -1202,6 +1717,7 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "margin", type: "{ top, right, bottom, left }", default: "5 each", description: "Space around the plot, inside the surface" },
         { name: "barCategoryGap", type: "string | number", default: '"10%"', description: "Gap either side of a band, as a fraction of the band or in px" },
         { name: "barGap", type: "number", default: "4", description: "Gap between bars in one band, px" },
+        { name: "stackOffset", type: '"none" | "expand"', default: '"none"', description: "expand scales every stack to span 0 to 1; the tooltip keeps the raw values" },
         { name: "accessibilityLayer", type: "boolean", default: "false", description: "Focusable surface with keyboard navigation" },
         { name: "aria-label", type: "string", description: "Names the surface; gives role=img without accessibilityLayer" },
       ]} />
@@ -1214,9 +1730,12 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "radius", type: "number | [tl, tr, br, bl]", default: "0", description: "Bar corner radius" },
         { name: "stackId", type: "string", description: "Bars or areas sharing one stack" },
         { name: "barSize / maxBarSize", type: "number", description: "Bar width, fixed or capped, px" },
+        { name: "shape", type: "(bar) => node | element", description: "Bar: draws every bar from { x, y, width, height, radius, fill, index, value, payload }" },
+        { name: "activeBar", type: "boolean | object | (bar) => node | element", default: "false", description: "Bar: redraws the active bar; an object is laid over its props" },
+        { name: "activeIndex", type: "number", description: "Bar: pins the active bar instead of following the pointer" },
         { name: "type", type: '"linear" | "monotone" | "step" | …', default: '"linear"', description: "Curve: linear, monotone, step, stepBefore, stepAfter; natural and basis alias monotone" },
         { name: "strokeWidth", type: "number", description: "Line 2, Area 1.5" },
-        { name: "dot / activeDot", type: "boolean | { r, fill, stroke }", description: "Point markers; the active one follows the tooltip" },
+        { name: "dot / activeDot", type: "boolean | { r, fill, stroke } | (point) => node | element", description: "Point markers; the active one follows the tooltip. point is { cx, cy, r, index, value, payload }" },
         { name: "connectNulls", type: "boolean", default: "false", description: "Bridge null values instead of breaking the line" },
       ]} />
 
@@ -1233,6 +1752,8 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "horizontal / vertical", type: "boolean", default: "true", description: "CartesianGrid line sets" },
         { name: "position", type: "string", default: '"top"', description: "LabelList placement: top, bottom, left, right, inside*, center" },
         { name: "offset / formatter", type: "number / fn", default: "5", description: "LabelList distance from the datum and text shaping" },
+        { name: "content", type: "(label) => node | element", description: "LabelList: draws each label from { x, y, width, height, value, index, offset, position }" },
+        { name: "fill", type: "string", description: "LabelList text colour" },
       ]} />
 
       <ApiReference title="ScatterChart / Scatter / ZAxis" props={[
@@ -1274,17 +1795,26 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "dot", type: "boolean | { r, fill, fillOpacity, stroke }", default: "false", description: "Radar point markers" },
       ]} />
 
+      <ApiReference title="Rectangle / Dot" props={[
+        { name: "x / y / width / height", type: "number", description: "Rectangle: the bar's box, signed from the value end toward the base" },
+        { name: "radius", type: "number | [tl, tr, br, bl]", default: "0", description: "Rectangle: corner radius; flips with a negative box so it stays on the value end" },
+        { name: "cx / cy / r", type: "number", description: "Dot: centre and radius" },
+        { name: "…", type: "SVG attributes", description: "Land on the path or circle" },
+      ]} />
+
       <ApiReference title="PolarGrid / PolarAngleAxis / PolarRadiusAxis / Label / Cell / Sector" props={[
         { name: "gridType", type: '"polygon" | "circle"', default: '"polygon"', description: "Ring shape" },
         { name: "radialLines", type: "boolean", default: "true", description: "Spokes from the centre" },
+        { name: "fill / fillOpacity", type: "string / number", description: "PolarGrid: fills each ring; nested rings deepen the tint" },
         { name: "polarRadius / polarAngles", type: "number[]", description: "Explicit ring radii and spoke angles" },
         { name: "dataKey", type: "string", description: "Angle axis: spoke labels (radar); radius axis: ring labels (radial)" },
         { name: "domain / ticks / tickCount", type: "[lo, hi] / number[] / number", default: '[0, "auto"] / — / 5', description: "The value axis: radius for radar, angle for radial" },
         { name: "tick / tickLine / axisLine", type: "boolean", default: "true", description: "Labels, tick marks and the axis line" },
+        { name: "tick", type: "(tick) => node | element", description: "PolarAngleAxis: draws each label from { x, y, textAnchor, dominantBaseline, index, payload: { value, coordinate } }" },
         { name: "angle / orientation", type: 'number / "left" | "right" | "middle"', default: '0 / "right"', description: "Radius axis direction and label side" },
         { name: "content", type: "({ viewBox }) => node", description: "Label: viewBox is { cx, cy, innerRadius, outerRadius, startAngle, endAngle }" },
         { name: "value", type: "string", description: "Label: plain text at the centre" },
-        { name: "fill", type: "string", description: "Cell: colour of the slice or ring at its index" },
+        { name: "fill", type: "string", description: "Cell: colour of the bar, slice or ring at its index" },
         { name: "cx / cy / innerRadius / outerRadius / startAngle / endAngle", type: "number", description: "Sector: one sector's geometry; other props land on the path" },
       ]} />
 

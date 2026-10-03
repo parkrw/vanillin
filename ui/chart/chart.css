@@ -65,6 +65,13 @@
   font-size: 0.75rem;
 }
 
+/* A custom tick draws its own text; whatever it leaves unset inherits the
+ * built-in tick's colour and size. */
+.chart-tick-shape {
+  fill: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
 .chart-line {
   fill: none;
   stroke-linejoin: round;

@@ -37,6 +37,41 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await page.mouse.move(plotLeft + step * (index + 0.5), box.y + box.height * 0.5)
   }
   const tooltip = (name) => page.locator(`${pg(name)} .chart-tooltip`)
+  // Boxes and label attributes in svg units, so they compare exactly with
+  // the attributes the chart wrote.
+  const bboxes = (selector) =>
+    page.locator(selector).evaluateAll((els) =>
+      els.map((el) => {
+        const b = el.getBBox()
+        return { x: b.x, y: b.y, width: b.width, height: b.height, right: b.x + b.width, bottom: b.y + b.height }
+      }),
+    )
+  const labelsOf = (locator) =>
+    locator.evaluateAll((els) =>
+      els.map((el) => {
+        const glyphs = el.getBoundingClientRect()
+        const svg = el.ownerSVGElement.getBoundingClientRect()
+        return {
+          text: el.textContent,
+          x: Number(el.getAttribute("x")),
+          y: Number(el.getAttribute("y")),
+          anchor: el.getAttribute("text-anchor"),
+          baseline: el.getAttribute("dominant-baseline"),
+          fill: getComputedStyle(el).fill,
+          top: glyphs.y - svg.y,
+          bottom: glyphs.bottom - svg.y,
+        }
+      }),
+    )
+  const fillsOf = (selector) => page.locator(selector).evaluateAll((els) => els.map((el) => getComputedStyle(el).fill))
+  const tooltipValues = async (name, index, count) => {
+    await hoverBand(name, index, count)
+    await tooltip(name).waitFor()
+    const values = await page.locator(`${pg(name)} .chart-tooltip-value`).allTextContents()
+    await page.mouse.move(0, 0)
+    await tooltip(name).waitFor({ state: "detached" })
+    return values
+  }
 
   // ── Bars ──
 
@@ -90,6 +125,157 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(bars[2].bottom > zero + 20, true, "negative bar extends below")
   })
 
+  await test("bars: a radius list flips with a negative bar, so the value end stays rounded", async () => {
+    const bars = await page.locator(`${pg("chart-negative")} .chart-bar`).evaluateAll((els) =>
+      els.map((el) => {
+        const b = el.getBBox()
+        const ends = [...el.getAttribute("d").matchAll(/A [\d.]+ [\d.]+ 0 0 1 [-\d.]+ ([-\d.]+)/g)].map((m) => Number(m[1]))
+        return { top: b.y, bottom: b.y + b.height, ends }
+      }),
+    )
+    for (const i of [0, 2]) eq(bars[i].ends.length, 2, `bar ${i} has two rounded corners`)
+    for (const y of bars[0].ends) eq(y <= bars[0].top + 4.01, true, `positive bar: corner at ${y} is on its top ${bars[0].top}`)
+    for (const y of bars[2].ends) eq(y >= bars[2].bottom - 4.01, true, `negative bar: corner at ${y} is on its bottom ${bars[2].bottom}`)
+  })
+
+  await test('bars: stackOffset="expand" stacks every month to the full value axis; the tooltip keeps the counts', async () => {
+    const name = "chart-bar-expand"
+    const series = async (chart, key) => bboxes(`${pg(chart)} .chart-series[data-key="${key}"] .chart-bar`)
+    const [desktop, other] = [await series(name, "desktop"), await series(name, "other")]
+    const ticks = await page.locator(`${pg(name)} .chart-axis[data-axis="y"] .chart-tick-text`).evaluateAll((els) =>
+      els.map((el) => ({ text: el.textContent, y: Number(el.getAttribute("y")) })),
+    )
+    eq(ticks.map((t) => t.text).join(","), "0%,20%,40%,60%,80%,100%")
+    const zero = ticks[0].y
+    const one = ticks.at(-1).y
+    for (let i = 0; i < 6; i++) {
+      near(desktop[i].bottom, zero, 0.01, `month ${i} starts at 0%`)
+      near(other[i].y, one, 0.01, `month ${i} tops out at 100%`)
+    }
+    near(desktop[0].height / (zero - one), 186 / 311, 0.001, "January's desktop share")
+    const plain = await series("chart-stacked", "mobile")
+    eq(new Set(plain.map((b) => Math.round(b.y))).size > 1, true, "without expand the stacks differ in height")
+    const values = await tooltipValues(name, 0)
+    for (const v of ["186", "80", "45"]) eq(values.includes(v), true, `tooltip shows ${v}, got ${values}`)
+  })
+
+  await test("bars: a Cell per row colours that bar; a negative bar's top label hangs below it", async () => {
+    const name = "chart-bar-negative"
+    const bars = await bboxes(`${pg(name)} .chart-bar`)
+    const [one, two] = [await tokenColour(name, "--chart-1"), await tokenColour(name, "--chart-2")]
+    eq((await fillsOf(`${pg(name)} .chart-bar`)).join(" | "), [one, one, two, one, two, one].join(" | "), "fill by sign")
+    const labels = await labelsOf(page.locator(`${pg(name)} .chart-label`))
+    eq(labels.map((l) => l.text).join(","), "January,February,March,April,May,June", "labelled by month, not by value")
+    for (const [i, l] of labels.entries()) {
+      const b = bars[i]
+      near(l.x, b.x + b.width / 2, 0.01, `label ${i} centred on its bar`)
+      eq(l.anchor, "middle")
+      if (i === 2 || i === 4) {
+        near(l.y, b.bottom + 5, 0.01, `negative label ${i} is 5px past the value end`)
+        eq(l.baseline, "hanging")
+        eq(l.top >= b.bottom, true, `negative label ${i} glyphs sit below the bar`)
+      } else {
+        near(l.y, b.y - 5, 0.01, `positive label ${i} is 5px past the value end`)
+        eq(l.baseline, "auto")
+        eq(l.bottom <= b.y + 1, true, `positive label ${i} glyphs sit above the bar`)
+      }
+    }
+  })
+
+  await test("bars: each bar takes its row's fill", async () => {
+    const name = "chart-bar-mixed"
+    const fills = await fillsOf(`${pg(name)} .chart-bar`)
+    for (let n = 1; n <= 5; n++) eq(fills[n - 1], await tokenColour(name, `--chart-${n}`), `bar ${n}`)
+    eq(new Set(fills).size, 5, "five distinct colours")
+    const bars = await bboxes(`${pg(name)} .chart-bar`)
+    near(bars[1].width / bars[0].width, 200 / 275, 0.001, "lengths follow the values")
+  })
+
+  await test("bars: activeBar redraws the pinned bar through Rectangle, and the pointer does not move it", async () => {
+    const name = "chart-bar-active"
+    const shaped = page.locator(`${pg(name)} .chart-bar-shape`)
+    eq(await shaped.count(), 1, "only the active bar is redrawn")
+    eq(await shaped.getAttribute("data-index"), "2")
+    const style = (locator) =>
+      locator.evaluate((el) => {
+        const cs = getComputedStyle(el)
+        return { fill: cs.fill, fillOpacity: cs.fillOpacity, stroke: cs.stroke, dash: cs.strokeDasharray, width: cs.strokeWidth }
+      })
+    const active = await style(shaped.locator(".chart-bar"))
+    const firefox = await tokenColour(name, "--chart-3")
+    eq(active.fill, firefox, "fill from the row")
+    eq(active.stroke, firefox, "stroke from the row through payload")
+    eq(active.dash, "4px")
+    eq(active.fillOpacity, "0.8")
+    eq(active.width, "2px", "the Bar's strokeWidth reaches the shape")
+    const plain = await style(page.locator(`${pg(name)} .chart-series > .chart-bar`).first())
+    eq(plain.stroke, "none", "a plain bar has no outline")
+    eq(plain.fillOpacity, "1")
+    const bars = await bboxes(`${pg(name)} .chart-bar`)
+    eq(bars.length, 5)
+    for (const b of bars) near(b.bottom, bars[0].bottom, 0.01, "the redrawn bar keeps the plain bar's box")
+    await hoverBand(name, 0, 5)
+    await tooltip(name).waitFor()
+    eq(await shaped.getAttribute("data-index"), "2", "activeIndex wins over the pointer")
+    await page.mouse.move(0, 0)
+    await tooltip(name).waitFor({ state: "detached" })
+  })
+
+  await test("bars: shape draws every bar from its box and colour", async () => {
+    const name = "chart-bar-shape"
+    eq(await page.locator(`${pg(name)} .chart-bar`).count(), 0, "the shape replaces the plain bar")
+    const shapes = await page.locator(`${pg(name)} .chart-bar-shape path`).evaluateAll((els) =>
+      els.map((el) => {
+        const b = el.getBBox()
+        return { vertices: (el.getAttribute("d").match(/ L /g) || []).length + 1, height: b.height, bottom: b.y + b.height, fill: getComputedStyle(el).fill }
+      }),
+    )
+    eq(shapes.length, 6)
+    for (const t of shapes) {
+      eq(t.vertices, 3, "a triangle")
+      near(t.bottom, shapes[0].bottom, 0.01, "standing on the baseline")
+    }
+    near(shapes[1].height / shapes[0].height, 305 / 186, 0.001, "heights follow the values")
+    eq(shapes[0].fill, await tokenColour(name, "--chart-1"))
+  })
+
+  await test("labels: two LabelLists on a vertical bar, the month inside its start in the label colour, the value past its end", async () => {
+    const name = "chart-bar-label-custom"
+    const bars = await bboxes(`${pg(name)} .chart-bar`)
+    const groups = page.locator(`${pg(name)} .chart-labels`)
+    const months = await labelsOf(groups.nth(0).locator(".chart-label"))
+    const values = await labelsOf(groups.nth(1).locator(".chart-label"))
+    eq(months.map((l) => l.text).join(","), "January,February,March,April,May,June")
+    eq(values.map((l) => l.text).join(","), "186,305,237,73,209,214")
+    for (const [i, b] of bars.entries()) {
+      near(months[i].x, b.x + 8, 0.01, `month ${i} is 8px inside the bar's start`)
+      near(values[i].x, b.right + 8, 0.01, `value ${i} is 8px past the bar's end`)
+      near(months[i].y, b.y + b.height / 2, 0.01, `month ${i} centred across the bar`)
+      eq(months[i].anchor, "start")
+      eq(values[i].anchor, "start")
+    }
+    eq(months[0].fill, await tokenColour(name, "--background"), "fill colours the month")
+    eq(values[0].fill, await tokenColour(name, "--foreground"), "the value keeps the label colour")
+  })
+
+  await test("labels: content draws each label from the bar's box and value", async () => {
+    const name = "chart-label-content"
+    eq(await page.locator(`${pg(name)} .chart-labels .chart-label`).count(), 0, "content replaces the built-in text")
+    const bars = await bboxes(`${pg(name)} .chart-bar`)
+    const badges = await page.locator(`${pg(name)} .chart-label-shape`).evaluateAll((els) =>
+      els.map((el) => {
+        const r = el.querySelector("rect")
+        return { index: Number(el.dataset.index), text: el.textContent, x: Number(r.getAttribute("x")), y: Number(r.getAttribute("y")) }
+      }),
+    )
+    eq(badges.map((b) => b.text).join(","), "186,305,237,73,209,214")
+    for (const [i, b] of bars.entries()) {
+      eq(badges[i].index, i)
+      near(badges[i].x + 20, b.x + b.width / 2, 0.01, `badge ${i} centred on its bar`)
+      near(badges[i].y, b.y - 26, 0.01, `badge ${i} sits on the bar's top`)
+    }
+  })
+
   // ── Axes ──
 
   await test("axis: tick text is the tickFormatter output at 12px; hide drops the axis", async () => {
@@ -133,6 +319,65 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(await page.locator(`${pg("chart-area")} linearGradient#${m[1]}`).count(), 1, "gradient present")
     const stacked = await page.locator(`${pg("chart-area-stacked")} .chart-area`).count()
     eq(stacked, 2)
+  })
+
+  await test("line: a dot function draws each marker at its point instead of the built-in circle", async () => {
+    const name = "chart-line-dots-custom"
+    eq(await page.locator(`${pg(name)} .chart-dot`).count(), 0, "no built-in dots")
+    const marks = await page.locator(`${pg(name)} .chart-dot-shape > svg`).evaluateAll((els) =>
+      els.map((el) => [Number(el.getAttribute("x")) + 12, Number(el.getAttribute("y")) + 12]),
+    )
+    eq(marks.length, 6)
+    const numbers = (await page.locator(`${pg(name)} .chart-line`).getAttribute("d")).match(/-?[\d.]+/g).map(Number)
+    near(marks[0][0], numbers[0], 0.01, "first marker on the first point")
+    near(marks[0][1], numbers[1], 0.01)
+    near(marks[5][0], numbers.at(-2), 0.01, "last marker on the last point")
+    near(marks[5][1], numbers.at(-1), 0.01)
+    eq(marks[1][1] < marks[0][1], true, "February (305) above January (186)")
+  })
+
+  await test("line: Dot from a dot function takes each row's colour", async () => {
+    const name = "chart-line-dots-colors"
+    const dots = await page.locator(`${pg(name)} .chart-dot-shape .chart-dot`).evaluateAll((els) =>
+      els.map((el) => ({ r: el.getAttribute("r"), fill: getComputedStyle(el).fill, stroke: getComputedStyle(el).stroke })),
+    )
+    eq(dots.length, 5)
+    for (const [i, d] of dots.entries()) {
+      const colour = await tokenColour(name, `--chart-${i + 1}`)
+      eq(d.fill, colour, `dot ${i} fill`)
+      eq(d.stroke, colour, `dot ${i} stroke`)
+      eq(d.r, "5")
+    }
+    eq(await page.locator(`${pg(name)} .chart-line`).evaluate((el) => getComputedStyle(el).stroke), await tokenColour(name, "--chart-2"), "the line keeps the series colour")
+  })
+
+  await test("line: a LabelList reads another field through formatter, 12px above each point", async () => {
+    const name = "chart-line-label-custom"
+    const labels = await labelsOf(page.locator(`${pg(name)} .chart-label`))
+    eq(labels.map((l) => l.text).join(","), "Chrome,Safari,Firefox,Edge,Other")
+    const dots = await page.locator(`${pg(name)} .chart-dot:not(.chart-dot--active)`).evaluateAll((els) =>
+      els.map((el) => [Number(el.getAttribute("cx")), Number(el.getAttribute("cy"))]),
+    )
+    eq(dots.length, 5)
+    for (const [i, [cx, cy]] of dots.entries()) {
+      near(labels[i].x, cx, 0.01, `label ${i} over its point`)
+      near(labels[i].y, cy - 12, 0.01, `label ${i} 12px up`)
+      eq(labels[i].anchor, "middle")
+    }
+  })
+
+  await test('area: stackOffset="expand" fills the plot with every stack; the tooltip keeps the counts', async () => {
+    const name = "chart-area-expand"
+    const grid = (await bboxes(`${pg(name)} .chart-grid line`)).map((b) => b.y).sort((a, b) => a - b)
+    const [top] = await bboxes(`${pg(name)} .chart-series[data-key="desktop"] .chart-line`)
+    near(top.height, 0, 0.01, "the top edge is flat")
+    near(top.y, grid[0], 0.01, "at the top of the value axis")
+    const [floor] = await bboxes(`${pg(name)} .chart-series[data-key="other"] .chart-area`)
+    near(floor.bottom, grid.at(-1), 0.01, "the bottom band starts at 0")
+    const [plain] = await bboxes(`${pg("chart-area-stacked")} .chart-series[data-key="desktop"] .chart-line`)
+    eq(plain.height > 10, true, "without expand the top edge follows the totals")
+    const values = await tooltipValues(name, 0)
+    for (const v of ["186", "80", "45"]) eq(values.includes(v), true, `tooltip shows ${v}, got ${values}`)
   })
 
   await test("composed: a line's points sit on the bar band centres and one tooltip names both", async () => {
@@ -524,6 +769,46 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(await page.locator(`${pg("chart-radar")} .chart-tooltip-value`).textContent(), "237")
     await page.mouse.move(0, 0)
     await tooltip("chart-radar").waitFor({ state: "detached" })
+  })
+
+  await test("radar: a tick function draws each spoke's label; text it leaves uncoloured takes the tick colour", async () => {
+    const name = "chart-radar-label-custom"
+    eq(await page.locator(`${pg(name)} .chart-axis[data-axis="angle"] .chart-tick-text`).count(), 0, "the function replaces the built-in text")
+    const ticks = await page.locator(`${pg(name)} .chart-tick-shape text`).evaluateAll((els) =>
+      els.map((el) => ({
+        text: el.textContent,
+        x: Number(el.getAttribute("x")),
+        anchor: el.getAttribute("text-anchor"),
+        value: getComputedStyle(el.children[0]).fill,
+        slash: getComputedStyle(el.children[1]).fill,
+      })),
+    )
+    eq(ticks.map((t) => t.text).join(","), "186/80January,305/200February,237/120March,73/190April,209/130May,214/140June")
+    eq(ticks.map((t) => t.anchor).join(","), "middle,start,start,middle,end,end", "anchors read outward")
+    const cx = await page.locator(`${pg(name)} .chart-polar-grid line`).first().evaluate((el) => Number(el.getAttribute("x1")))
+    near(ticks[0].x, cx, 0.01, "January above the centre")
+    near(ticks[3].x, cx, 0.01, "April below it")
+    eq(ticks[0].value, await tokenColour(name, "--foreground"), "a coloured tspan keeps its colour")
+    eq(ticks[0].slash, await tokenColour(name, "--muted-foreground"), "an uncoloured one inherits the tick colour")
+  })
+
+  await test("radar: PolarGrid fill and fillOpacity fill every polygon or circle ring", async () => {
+    for (const [name, round] of [
+      ["chart-radar-grid-fill", false],
+      ["chart-radar-grid-circle-fill", true],
+    ]) {
+      const rings = await page.locator(`${pg(name)} .chart-polar-ring`).evaluateAll((els) =>
+        els.map((el) => ({ fill: getComputedStyle(el).fill, opacity: getComputedStyle(el).fillOpacity, d: el.getAttribute("d") })),
+      )
+      eq(rings.length >= 3, true, `${name}: rings`)
+      const colour = await tokenColour(name, "--chart-1")
+      for (const r of rings) {
+        eq(r.fill, colour, `${name}: ring fill`)
+        eq(r.opacity, "0.2", `${name}: ring fill opacity`)
+        eq(r.d.includes(" A "), round, `${name}: ${round ? "circle" : "polygon"} ring`)
+      }
+    }
+    eq(await page.locator(`${pg("chart-radar")} .chart-polar-ring`).first().evaluate((el) => getComputedStyle(el).fill), "none", "an unfilled grid stays unfilled")
   })
 
   await test("radial: one ring per row, innermost first, angle proportional to value, a muted track behind each", async () => {
