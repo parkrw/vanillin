@@ -13,6 +13,9 @@ import "../api-reference.css"
 const requests = [12, 18, 9, 24, 20, 35, 27, 31]
 const latency = [42, 38, 45, 40, 36, 39, 33, 35]
 const cpu = [61, 64, 58, 70, 66, 72, 69, 74]
+const inbound = [30, 34, 28, 41, 38, 45, 40, 48]
+const outbound = [12, 15, 11, 18, 22, 19, 25, 21]
+const blue = { light: "oklch(0.55 0.2 250)", dark: "oklch(0.78 0.14 250)" }
 
 /* Deterministic wander around a base, as on the Live Value page: the demo reads as a metric, not noise. */
 const drift = (base, spread) => (tick) =>
@@ -55,7 +58,8 @@ export default function SparklinePage() {
         </ComponentPreview>
         <p className="pg-desc">
           The y axis runs from <code>min</code> (default 0) to <code>max</code> (default the data's maximum).
-          The stroke is <code>currentColor</code>, so the line takes the colour of the text around it.
+          The stroke is <code>currentColor</code>, so the line takes the colour of the text around it
+          unless <code>color</code> sets one.
         </p>
       </section>
 
@@ -116,6 +120,86 @@ import "./ui/sparkline/sparkline.css"
             </Card>
           </div>
         </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Color</h3>
+        <ComponentPreview code={`<Sparkline points={requests} color="var(--chart-1)" />
+<Sparkline points={requests} color="var(--chart-2)" />
+<Sparkline points={requests} color="var(--chart-3)" />
+<Sparkline points={requests} color="var(--chart-4)" />
+<Sparkline points={requests} color="var(--chart-5)" />
+<Sparkline points={requests} color="var(--chart-3)" dotColor="var(--chart-1)" />`}>
+          <div className="pg-row" data-pg="spark-colors">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <Sparkline key={n} points={requests} color={`var(--chart-${n})`} />
+            ))}
+            <Sparkline points={requests} color="var(--chart-3)" dotColor="var(--chart-1)" />
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          <code>color</code> takes any CSS colour and tints the line, the wash and the dot.{" "}
+          <code>dotColor</code> marks the latest point in a second colour.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Light and dark</h3>
+        <ComponentPreview code={`<Sparkline
+  points={requests}
+  theme={{ light: "oklch(0.55 0.2 250)", dark: "oklch(0.78 0.14 250)" }}
+/>`}>
+          <div className="pg-row" data-pg="spark-theme">
+            <Sparkline points={requests} theme={blue} />
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          <code>theme</code> takes the same <code>{"{ light, dark }"}</code> pair as a chart series and
+          switches with the colour scheme. The <code>--chart-*</code> tokens already switch on their own.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Area color</h3>
+        <ComponentPreview code={`<Sparkline points={requests} color="var(--chart-2)" areaOpacity={0.3} />
+<Sparkline points={requests} color="var(--chart-3)" areaColor="var(--chart-4)" areaOpacity={0.4} />`}>
+          <div className="pg-row" data-pg="spark-wash">
+            <Sparkline points={requests} color="var(--chart-2)" areaOpacity={0.3} />
+            <Sparkline points={requests} color="var(--chart-3)" areaColor="var(--chart-4)" areaOpacity={0.4} />
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          The wash is the line colour at 12% by default. <code>areaColor</code> gives it its own colour
+          and <code>areaOpacity</code> its own strength, from 0 to 1.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Multiple series</h3>
+        <ComponentPreview code={`<Sparkline series={[{ points: inbound }, { points: outbound }]} />
+<Sparkline
+  series={[
+    { points: inbound, color: "var(--chart-3)" },
+    { points: outbound, color: "var(--chart-5)", dotColor: "var(--chart-1)" },
+  ]}
+  area={false}
+/>`}>
+          <div className="pg-row" data-pg="spark-series">
+            <Sparkline series={[{ points: inbound }, { points: outbound }]} />
+            <Sparkline
+              series={[
+                { points: inbound, color: "var(--chart-3)" },
+                { points: outbound, color: "var(--chart-5)", dotColor: "var(--chart-1)" },
+              ]}
+              area={false}
+            />
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          <code>series</code> draws several lines on one shared scale, the first at the back. Each item
+          takes <code>points</code> and the same colour props as the component. An item without a colour
+          takes the chart palette in order, <code>--chart-1</code> first.
+        </p>
       </section>
 
       <section className="pg-section">
@@ -199,6 +283,12 @@ function CpuTrend() {
 
       <ApiReference title="Sparkline" props={[
         { name: "points", type: "number[]", default: "[]", description: "The series, oldest first" },
+        { name: "series", type: "{ points, color, theme, dotColor, areaColor, areaOpacity }[]", description: "Several series on one scale, first at the back. Replaces points, color and theme. An item without color or theme takes --chart-1…5 in order" },
+        { name: "color", type: "string", default: "currentColor", description: "Colour of the line, and of the wash and dot unless they are set" },
+        { name: "theme", type: "{ light, dark }", description: "A colour per scheme, in place of color" },
+        { name: "dotColor", type: "string", default: "the line colour", description: "Colour of the latest-point dot" },
+        { name: "areaColor", type: "string", default: "the line colour", description: "Colour of the wash" },
+        { name: "areaOpacity", type: "number", default: "0.12", description: "Opacity of the wash, 0 to 1" },
         { name: "min", type: "number", default: "0", description: "Bottom of the y axis" },
         { name: "max", type: "number", description: "Top of the y axis; defaults to the largest value in points" },
         { name: "area", type: "boolean", default: "true", description: "Fill under the line with a wash of the stroke colour" },
@@ -211,6 +301,8 @@ function CpuTrend() {
 
       <ApiReference title="Custom properties" props={[
         { name: "--sparkline-dot", type: "<color>", default: "currentColor", description: "Fill of the latest-point dot. Set it on any ancestor" },
+        { name: "--sparkline-area", type: "<color>", default: "currentColor", description: "Fill of the wash. Set it on any ancestor" },
+        { name: "--sparkline-area-opacity", type: "<number>", default: "0.12", description: "Opacity of the wash. Set it on any ancestor" },
       ]} />
     </>
   )
