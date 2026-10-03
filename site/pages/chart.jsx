@@ -704,6 +704,27 @@ const chartConfig = {
       </section>
 
       <section className="pg-section">
+        <h3>Tooltip on click</h3>
+        <ComponentPreview code={`<ChartTooltip trigger="click" content={<ChartTooltipContent />} />`}>
+          <Frame pg="chart-tooltip-click">
+            <ChartContainer config={chartConfig}>
+              <BarChart data={chartData}>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={monthTick} />
+                <ChartTooltip trigger="click" content={<ChartTooltipContent />} />
+                <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
+                <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
+              </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <p className="pg-desc">
+          <code>trigger="click"</code> opens the tooltip on a press instead of the pointer passing over: the same
+          band again closes it, another band moves it, a press outside the chart dismisses it. Hover alone shows
+          nothing. Pie, radar and radial charts take it the same way.
+        </p>
+      </section>
+
+      <section className="pg-section">
         <h3>Theme config</h3>
         <p>
           A series can carry <code>theme: {"{ light, dark }"}</code> instead of <code>color</code>. It is emitted as
@@ -1165,6 +1186,7 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "content", type: "ReactElement", description: "Cloned with { active, payload, label }; defaults to ChartTooltipContent / ChartLegendContent" },
         { name: "cursor", type: "boolean", default: "true", description: "Band highlight (bars) or vertical line under the pointer; polar charts draw none" },
         { name: "defaultIndex", type: "number", description: "Category shown before any interaction" },
+        { name: "trigger", type: '"hover" | "click"', default: '"hover"', description: "Open as the pointer passes, or on a press; a press outside dismisses" },
         { name: "verticalAlign", type: '"top" | "bottom"', default: '"bottom"', description: "Legend placement" },
         { name: "indicator", type: '"dot" | "line" | "dashed"', default: '"dot"', description: "ChartTooltipContent swatch shape" },
         { name: "hideLabel / hideIndicator", type: "boolean", default: "false", description: "Tooltip content switches; hideIcon for the legend" },
