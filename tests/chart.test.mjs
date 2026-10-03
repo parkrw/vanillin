@@ -457,7 +457,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(bars.length, 5)
     near(sweep(bars[0]) / sweep(bars[1]), 275 / 200, 0.01, "chrome/safari = 275/200")
     eq(bars.every((b) => b.start === 0), true, "all start at 0°")
-    eq(sweep(bars[0]) < 360, true, "the largest value is short of the full circle (nice domain)")
+    near(sweep(bars[0]), 360, 0.01, "no angle axis: the largest value closes the circle")
     const radii = await page.locator(`${pg("chart-radial")} .chart-sector:not(.chart-sector--background)`).evaluateAll((els) => els.map((el) => el.getBBox().width))
     eq(radii[0] < radii[1], true, "chrome is the inner ring")
     const tracks = page.locator(`${pg("chart-radial")} .chart-sector--background`)
@@ -490,7 +490,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     const [desktop] = await sectors("chart-radial-stacked", "desktop")
     eq(mobile.start, 0, "mobile starts at 0°")
     near(desktop.start, mobile.end, 0.01, "desktop starts where mobile ends")
-    eq(desktop.end <= 180, true, `stack ends inside the 180° sweep, got ${desktop.end}`)
+    near(desktop.end, 180, 0.01, "no angle axis: the stacked total fills the 180° sweep")
     near(sweep(desktop) / sweep(mobile), 1260 / 570, 0.01, "desktop/mobile = 1260/570")
     eq((mobile.d.match(/ A /g) || []).length, 6, "cornerRadius rounds all four corners")
     // Every point a path names lies between the ring's radii, so the farthest
