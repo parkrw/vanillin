@@ -1042,8 +1042,10 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         <p>
           A <code>RadialBarChart</code> draws one ring per row between <code>innerRadius</code> and{" "}
           <code>outerRadius</code>, innermost first; the value is the angle, over the sweep from{" "}
-          <code>startAngle</code> to <code>endAngle</code> (0° to 360° by default). <code>background</code> paints
-          the full sweep behind each bar. Rings colour like slices: <code>Cell</code>, the row's <code>fill</code>,
+          <code>startAngle</code> to <code>endAngle</code> (0° to 360° by default). With no{" "}
+          <code>PolarAngleAxis</code> the sweep spans the data exactly, so the largest ring closes the circle and a
+          stacked total fills a gauge; a <code>PolarAngleAxis</code> rounds the domain to its ticks instead.{" "}
+          <code>background</code> paints the full sweep behind each bar. Rings colour like slices: <code>Cell</code>, the row's <code>fill</code>,
           the series <code>fill</code>, the palette. The tooltip's <code>nameKey</code> names a ring from its row.
         </p>
         <ComponentPreview code={`<RadialBarChart data={chartData} innerRadius={30} outerRadius={110}>

@@ -874,3 +874,7 @@ Branch `feat/chart-tooltip-click-3`, #90. `ChartTooltip` takes Recharts' `trigge
 ## ui/sparkline — a Live series section on the page (2026-10-02)
 
 Branch `docs/sparkline-live-series`. The page said how the box is scaled but not that the component is a pure function of `points`, so a reader of the console could take the movement for the sparkline's own. A "Live series" section between Beside a figure and Without area now says it holds no state and samples nothing, shows the consumer wiring (last 24 readings kept in state, `max` pinned), and previews a 24-point window sliding on the shared `useTicker` beat with the figure beside it. The test pins the vertex count across a tick and that the figure equals the value under the dot.
+
+## ui/chart — radial sweep spans the data (2026-10-02)
+
+Branch `fix/chart-radial-domain-3`. A `RadialBarChart` without a `PolarAngleAxis` had its angle domain rounded to nice ticks, so the stacked gauge on the page stopped at 164.7° of its 180° (1,830 of a rounded 2,000). Recharts rounds only through an axis element with a `tickCount`; the implicit angle axis spans the data exactly. `radialLayout` now does the same: no axis, exact extent (zero included), nice ticks kept within it for the grid; with a `PolarAngleAxis`, the rounded domain as before. The largest ring of the basic radial chart now closes the circle, as in Recharts.

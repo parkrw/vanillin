@@ -787,6 +787,14 @@ function polarFrame({ margin, width, height, cx, cy, innerRadius, outerRadius })
   }
 }
 
+// Recharts rounds a value domain to nice ticks only through an axis element.
+// With no PolarAngleAxis the sweep spans the data exactly, so the largest
+// ring, or a stacked total, fills it; the ticks still land on round values.
+function exactDomain(columns) {
+  const [lo, hi] = extent(columns, true)
+  return { domain: [lo, hi], ticks: niceTicks(lo, hi, 5).filter((t) => t >= lo && t <= hi), clamp: (v) => Math.min(hi, Math.max(lo, v)) }
+}
+
 function valueTicks(axis, columns, fallbackDomain = [0, "auto"]) {
   const tickCount = axis?.props.tickCount ?? 5
   const domain = resolveDomain(axis?.props.domain ?? fallbackDomain, extent(columns), tickCount, axis?.props.allowDataOverflow)
@@ -970,7 +978,7 @@ function radialLayout(ctx, series) {
   const columns = entries.flatMap((entry) =>
     entry.stackId == null ? [entry.values] : [entry.stack.map((p) => p.y0), entry.stack.map((p) => p.y1)],
   )
-  const { domain, ticks, clamp } = valueTicks(angleAxis, columns)
+  const { domain, ticks, clamp } = angleAxis ? valueTicks(angleAxis, columns) : exactDomain(columns)
   const angleScale = linearScale(domain, [startAngle, endAngle])
   slotEntries(entries, rings.bandwidth, barGap)
   for (const entry of entries) {
