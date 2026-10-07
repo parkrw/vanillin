@@ -454,6 +454,108 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await page.locator("h2").click()
   })
 
+  // ── Interactive ──
+
+  // A natural or monotone path is "M x y C …, …, x y" with one C per segment.
+  const pointCounts = (name) => page.locator(`${pg(name)} .chart-line`).evaluateAll((els) => els.map((el) => el.getAttribute("d").split("C").length))
+  const seriesKeys = (name) => page.locator(`${pg(name)} .chart-series`).evaluateAll((els) => els.map((el) => el.dataset.key))
+  const xTicks = (name) => page.locator(`${pg(name)} .chart-axis[data-axis="x"] .chart-tick-text`).allTextContents()
+
+  await test("interactive area: the range select keeps the last 90, 30 or 7 days; the axis and tooltip write the dates", async () => {
+    const name = "chart-area-interactive"
+    const trigger = page.locator(`${pg(name)} [role="combobox"]`)
+    const choose = async (label, points) => {
+      await trigger.click()
+      await page.locator(`${pg(name)} [role="option"]`, { hasText: label }).click()
+      await page.waitForFunction(
+        ([sel, n]) => document.querySelector(sel).getAttribute("d").split("C").length === n,
+        [`${pg(name)} .chart-line`, points],
+      )
+      eq(await trigger.textContent(), label)
+    }
+    eq(await trigger.textContent(), "Last 3 months")
+    eq((await pointCounts(name)).join(","), "90,90", "both series, 90 days")
+    const all = await xTicks(name)
+    eq(all[0], "Apr 2", "the first of the 90 days")
+    eq(all.at(-1), "Jun 30")
+    eq(all.length > 2 && all.length < 20, true, `minTickGap thins 90 dates, got ${all.join(",")}`)
+    await choose("Last 30 days", 30)
+    eq((await pointCounts(name)).join(","), "30,30")
+    const month = await xTicks(name)
+    eq([month[0], month.at(-1)].join(","), "Jun 1,Jun 30")
+    await choose("Last 7 days", 7)
+    eq((await xTicks(name)).join(","), "Jun 24,Jun 25,Jun 26,Jun 27,Jun 28,Jun 29,Jun 30", "a week has room for every date")
+    await hoverBand(name, 6, 7)
+    await tooltip(name).waitFor()
+    eq(await page.locator(`${pg(name)} .chart-tooltip-label`).textContent(), "Jun 30", "labelFormatter writes the UTC date")
+    eq((await page.locator(`${pg(name)} .chart-tooltip-value`).allTextContents()).sort().join(","), "400,446")
+    await page.mouse.move(0, 0)
+    await tooltip(name).waitFor({ state: "detached" })
+    await choose("Last 3 months", 90)
+  })
+
+  const pressTotal = (name, label) => page.locator(`${pg(name)} .toggle-group-item`, { hasText: label }).click()
+  const pressed = (name) =>
+    page.locator(`${pg(name)} .toggle-group-item[aria-pressed="true"]`).evaluateAll((els) => els.map((el) => el.firstElementChild.textContent))
+
+  await test("interactive bar: the pressed total picks the series the bars draw; the tooltip names page views under the full date", async () => {
+    const name = "chart-bar-interactive"
+    const totals = await page.locator(`${pg(name)} .toggle-group-item`).evaluateAll((els) => els.map((el) => [...el.children].map((s) => s.textContent).join(" ")))
+    eq(totals.join("|"), "Desktop 24,828|Mobile 25,010")
+    const bars = () => page.locator(`${pg(name)} .chart-bar`)
+    const ratio = async () => {
+      const [a, b] = await barRects(name, (await seriesKeys(name))[0])
+      return a.height / b.height
+    }
+    eq((await pressed(name)).join(","), "Desktop")
+    eq((await seriesKeys(name)).join(","), "desktop")
+    eq(await bars().count(), 91)
+    near(await ratio(), 222 / 97, 0.05, "Apr 1 over Apr 2, desktop")
+    eq(await bars().first().evaluate((el) => getComputedStyle(el).fill), await tokenColour(name, "--chart-1"))
+    await pressTotal(name, "Mobile")
+    eq((await pressed(name)).join(","), "Mobile")
+    eq((await seriesKeys(name)).join(","), "mobile", "the desktop bars are gone")
+    eq(await bars().count(), 91)
+    near(await ratio(), 150 / 180, 0.05, "Apr 1 over Apr 2, mobile")
+    eq(await bars().first().evaluate((el) => getComputedStyle(el).fill), await tokenColour(name, "--chart-2"))
+    await pressTotal(name, "Mobile")
+    eq((await pressed(name)).join(","), "Mobile", "pressing the pressed total keeps it")
+    eq((await seriesKeys(name)).join(","), "mobile")
+    await page.locator(`${pg(name)} .chart-surface`).evaluate((el) => el.scrollIntoView({ block: "center" }))
+    const first = await rect(`${pg(name)} .chart-bar`)
+    await page.mouse.move(first.x + first.width / 2, first.y + first.height / 2)
+    await tooltip(name).waitFor()
+    eq(await page.locator(`${pg(name)} .chart-tooltip-label`).textContent(), "Apr 1, 2024")
+    eq(await page.locator(`${pg(name)} .chart-tooltip-name`).textContent(), "Page views")
+    eq(await page.locator(`${pg(name)} .chart-tooltip-value`).textContent(), "150")
+    await page.mouse.move(0, 0)
+    await tooltip(name).waitFor({ state: "detached" })
+    await pressTotal(name, "Desktop")
+    eq((await seriesKeys(name)).join(","), "desktop")
+  })
+
+  await test("interactive line: the pressed total picks the series the line draws", async () => {
+    const name = "chart-line-interactive"
+    const line = page.locator(`${pg(name)} .chart-line`)
+    // Apr 1 then Apr 2: desktop falls 222 → 97, mobile rises 150 → 180.
+    const firstStep = async () => {
+      const n = (await line.getAttribute("d")).match(/-?[\d.]+/g).map(Number)
+      return n[7] - n[1]
+    }
+    eq((await pressed(name)).join(","), "Desktop")
+    eq((await seriesKeys(name)).join(","), "desktop")
+    eq((await pointCounts(name)).join(","), "91")
+    eq((await firstStep()) > 0, true, "desktop falls on Apr 2")
+    eq(await line.evaluate((el) => getComputedStyle(el).stroke), await tokenColour(name, "--chart-1"))
+    await pressTotal(name, "Mobile")
+    eq((await seriesKeys(name)).join(","), "mobile")
+    eq((await pointCounts(name)).join(","), "91")
+    eq((await firstStep()) < 0, true, "mobile rises on Apr 2")
+    eq(await line.evaluate((el) => getComputedStyle(el).stroke), await tokenColour(name, "--chart-2"))
+    await pressTotal(name, "Desktop")
+    eq((await seriesKeys(name)).join(","), "desktop")
+  })
+
   // ── Tooltip ──
 
   await test("tooltip: absent until hover, then names the band and both series", async () => {

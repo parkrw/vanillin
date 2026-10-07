@@ -35,8 +35,15 @@ import {
   Dot,
 } from "../../ui/chart/chart.jsx"
 import { NativeSelect, NativeSelectOption } from "../../ui/native-select/native-select.jsx"
+import { Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent } from "../../ui/card/card.jsx"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../../ui/select/select.jsx"
+import { ToggleGroup, ToggleGroupItem } from "../../ui/toggle-group/toggle-group.jsx"
 import "../../ui/chart/chart.css"
 import "../../ui/native-select/native-select.css"
+import "../../ui/card/card.css"
+import "../../ui/select/select.css"
+import "../../ui/toggle/toggle.css"
+import "../../ui/toggle-group/toggle-group.css"
 import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
@@ -199,6 +206,120 @@ const monthConfig = {
   may: { label: "May", color: "var(--chart-5)" },
 }
 
+const dailyData = [
+  { date: "2024-04-01", desktop: 222, mobile: 150 },
+  { date: "2024-04-02", desktop: 97, mobile: 180 },
+  { date: "2024-04-03", desktop: 167, mobile: 120 },
+  { date: "2024-04-04", desktop: 242, mobile: 260 },
+  { date: "2024-04-05", desktop: 373, mobile: 290 },
+  { date: "2024-04-06", desktop: 301, mobile: 340 },
+  { date: "2024-04-07", desktop: 245, mobile: 180 },
+  { date: "2024-04-08", desktop: 409, mobile: 320 },
+  { date: "2024-04-09", desktop: 59, mobile: 110 },
+  { date: "2024-04-10", desktop: 261, mobile: 190 },
+  { date: "2024-04-11", desktop: 327, mobile: 350 },
+  { date: "2024-04-12", desktop: 292, mobile: 210 },
+  { date: "2024-04-13", desktop: 342, mobile: 380 },
+  { date: "2024-04-14", desktop: 137, mobile: 220 },
+  { date: "2024-04-15", desktop: 120, mobile: 170 },
+  { date: "2024-04-16", desktop: 138, mobile: 190 },
+  { date: "2024-04-17", desktop: 446, mobile: 360 },
+  { date: "2024-04-18", desktop: 364, mobile: 410 },
+  { date: "2024-04-19", desktop: 243, mobile: 180 },
+  { date: "2024-04-20", desktop: 89, mobile: 150 },
+  { date: "2024-04-21", desktop: 137, mobile: 200 },
+  { date: "2024-04-22", desktop: 224, mobile: 170 },
+  { date: "2024-04-23", desktop: 138, mobile: 230 },
+  { date: "2024-04-24", desktop: 387, mobile: 290 },
+  { date: "2024-04-25", desktop: 215, mobile: 250 },
+  { date: "2024-04-26", desktop: 75, mobile: 130 },
+  { date: "2024-04-27", desktop: 383, mobile: 420 },
+  { date: "2024-04-28", desktop: 122, mobile: 180 },
+  { date: "2024-04-29", desktop: 315, mobile: 240 },
+  { date: "2024-04-30", desktop: 454, mobile: 380 },
+  { date: "2024-05-01", desktop: 165, mobile: 220 },
+  { date: "2024-05-02", desktop: 293, mobile: 310 },
+  { date: "2024-05-03", desktop: 247, mobile: 190 },
+  { date: "2024-05-04", desktop: 385, mobile: 420 },
+  { date: "2024-05-05", desktop: 481, mobile: 390 },
+  { date: "2024-05-06", desktop: 498, mobile: 520 },
+  { date: "2024-05-07", desktop: 388, mobile: 300 },
+  { date: "2024-05-08", desktop: 149, mobile: 210 },
+  { date: "2024-05-09", desktop: 227, mobile: 180 },
+  { date: "2024-05-10", desktop: 293, mobile: 330 },
+  { date: "2024-05-11", desktop: 335, mobile: 270 },
+  { date: "2024-05-12", desktop: 197, mobile: 240 },
+  { date: "2024-05-13", desktop: 197, mobile: 160 },
+  { date: "2024-05-14", desktop: 448, mobile: 490 },
+  { date: "2024-05-15", desktop: 473, mobile: 380 },
+  { date: "2024-05-16", desktop: 338, mobile: 400 },
+  { date: "2024-05-17", desktop: 499, mobile: 420 },
+  { date: "2024-05-18", desktop: 315, mobile: 350 },
+  { date: "2024-05-19", desktop: 235, mobile: 180 },
+  { date: "2024-05-20", desktop: 177, mobile: 230 },
+  { date: "2024-05-21", desktop: 82, mobile: 140 },
+  { date: "2024-05-22", desktop: 81, mobile: 120 },
+  { date: "2024-05-23", desktop: 252, mobile: 290 },
+  { date: "2024-05-24", desktop: 294, mobile: 220 },
+  { date: "2024-05-25", desktop: 201, mobile: 250 },
+  { date: "2024-05-26", desktop: 213, mobile: 170 },
+  { date: "2024-05-27", desktop: 420, mobile: 460 },
+  { date: "2024-05-28", desktop: 233, mobile: 190 },
+  { date: "2024-05-29", desktop: 78, mobile: 130 },
+  { date: "2024-05-30", desktop: 340, mobile: 280 },
+  { date: "2024-05-31", desktop: 178, mobile: 230 },
+  { date: "2024-06-01", desktop: 178, mobile: 200 },
+  { date: "2024-06-02", desktop: 470, mobile: 410 },
+  { date: "2024-06-03", desktop: 103, mobile: 160 },
+  { date: "2024-06-04", desktop: 439, mobile: 380 },
+  { date: "2024-06-05", desktop: 88, mobile: 140 },
+  { date: "2024-06-06", desktop: 294, mobile: 250 },
+  { date: "2024-06-07", desktop: 323, mobile: 370 },
+  { date: "2024-06-08", desktop: 385, mobile: 320 },
+  { date: "2024-06-09", desktop: 438, mobile: 480 },
+  { date: "2024-06-10", desktop: 155, mobile: 200 },
+  { date: "2024-06-11", desktop: 92, mobile: 150 },
+  { date: "2024-06-12", desktop: 492, mobile: 420 },
+  { date: "2024-06-13", desktop: 81, mobile: 130 },
+  { date: "2024-06-14", desktop: 426, mobile: 380 },
+  { date: "2024-06-15", desktop: 307, mobile: 350 },
+  { date: "2024-06-16", desktop: 371, mobile: 310 },
+  { date: "2024-06-17", desktop: 475, mobile: 520 },
+  { date: "2024-06-18", desktop: 107, mobile: 170 },
+  { date: "2024-06-19", desktop: 341, mobile: 290 },
+  { date: "2024-06-20", desktop: 408, mobile: 450 },
+  { date: "2024-06-21", desktop: 169, mobile: 210 },
+  { date: "2024-06-22", desktop: 317, mobile: 270 },
+  { date: "2024-06-23", desktop: 480, mobile: 530 },
+  { date: "2024-06-24", desktop: 132, mobile: 180 },
+  { date: "2024-06-25", desktop: 141, mobile: 190 },
+  { date: "2024-06-26", desktop: 434, mobile: 380 },
+  { date: "2024-06-27", desktop: 448, mobile: 490 },
+  { date: "2024-06-28", desktop: 149, mobile: 200 },
+  { date: "2024-06-29", desktop: 103, mobile: 160 },
+  { date: "2024-06-30", desktop: 446, mobile: 400 },
+]
+
+const viewsConfig = {
+  views: { label: "Page views" },
+  ...chartConfig,
+}
+
+const dailyTotals = {
+  desktop: dailyData.reduce((sum, row) => sum + row.desktop, 0),
+  mobile: dailyData.reduce((sum, row) => sum + row.mobile, 0),
+}
+
+const timeRanges = [
+  { value: "90d", label: "Last 3 months", days: 90 },
+  { value: "30d", label: "Last 30 days", days: 30 },
+  { value: "7d", label: "Last 7 days", days: 7 },
+]
+
+// Fixed rather than today, so the demo and its tests never drift.
+const lastDay = Date.parse("2024-06-30")
+const DAY_MS = 86_400_000
+
 // Recharts' interactive pie: the hovered or pinned slice grows an outer ring.
 const raisedSector = ({ outerRadius = 0, ...props }) => (
   <g>
@@ -213,6 +334,13 @@ const totalStacked = stackedData[0].desktop + stackedData[0].mobile
 const monthTick = (value) => value.slice(0, 3)
 const browserTick = (value) => browserConfig[value]?.label
 const percentTick = (value) => `${Math.round(value * 100)}%`
+
+// An ISO date parses as UTC midnight; formatting it in local time shows the
+// day before anywhere west of Greenwich.
+const dayFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
+const fullDayFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })
+const dayTick = (value) => dayFormat.format(new Date(value))
+const fullDay = (value) => fullDayFormat.format(new Date(value))
 
 const dashedBar = (props) => (
   <Rectangle {...props} fillOpacity={0.8} stroke={props.payload.fill} strokeDasharray={4} strokeDashoffset={4} />
@@ -326,6 +454,90 @@ function GradientArea() {
         <Area dataKey="desktop" type="natural" fill={`url(#${desktopId})`} fillOpacity={0.4} stroke="var(--color-desktop)" stackId="a" />
       </AreaChart>
     </ChartContainer>
+  )
+}
+
+function RangeArea() {
+  const [timeRange, setTimeRange] = useState("90d")
+  const id = useId().replace(/[^\w-]/g, "")
+  const desktopId = `range-desktop-${id}`
+  const mobileId = `range-mobile-${id}`
+  const { days } = timeRanges.find((range) => range.value === timeRange)
+  const filteredData = dailyData.filter((row) => lastDay - Date.parse(row.date) < days * DAY_MS)
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Visitors</CardTitle>
+        <CardDescription>Desktop and mobile visitors per day</CardDescription>
+        <CardAction>
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger aria-label="Time range" style={{ width: "10rem" }}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {timeRanges.map((range) => (
+                <SelectItem key={range.value} value={range.value}>
+                  {range.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        <ChartContainer config={chartConfig} style={{ aspectRatio: "auto", height: "250px" }}>
+          <AreaChart data={filteredData}>
+            <defs>
+              <linearGradient id={desktopId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-desktop)" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="var(--color-desktop)" stopOpacity={0.1} />
+              </linearGradient>
+              <linearGradient id={mobileId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-mobile)" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="var(--color-mobile)" stopOpacity={0.1} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tickFormatter={dayTick} />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent labelFormatter={dayTick} indicator="dot" />} />
+            <Area dataKey="mobile" type="natural" fill={`url(#${mobileId})`} stroke="var(--color-mobile)" stackId="a" />
+            <Area dataKey="desktop" type="natural" fill={`url(#${desktopId})`} stroke="var(--color-desktop)" stackId="a" />
+            <ChartLegend content={<ChartLegendContent />} />
+          </AreaChart>
+        </ChartContainer>
+      </CardContent>
+    </Card>
+  )
+}
+
+const totalToggle = { height: "auto", flexDirection: "column", alignItems: "flex-start", gap: "0.25rem", padding: "0.5rem 0.75rem" }
+
+// The plotted series is the pressed total. A single ToggleGroup clears its
+// value when the pressed item is pressed again, so an empty value is ignored.
+function SeriesCard({ children }) {
+  const [activeChart, setActiveChart] = useState("desktop")
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Page views</CardTitle>
+        <CardDescription>Per day, April to June 2024</CardDescription>
+        <CardAction>
+          <ToggleGroup type="single" variant="outline" value={activeChart} onValueChange={(key) => key && setActiveChart(key)} aria-label="Series">
+            {["desktop", "mobile"].map((key) => (
+              <ToggleGroupItem key={key} value={key} style={totalToggle}>
+                <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>{viewsConfig[key].label}</span>
+                <span style={{ fontSize: "1.25rem", fontWeight: 700, lineHeight: 1 }}>{dailyTotals[key].toLocaleString()}</span>
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        <ChartContainer config={viewsConfig} style={{ aspectRatio: "auto", height: "250px" }}>
+          {children(activeChart)}
+        </ChartContainer>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -1058,6 +1270,124 @@ const chartConfig = {
                 <Area dataKey="desktop" type="natural" fill="var(--color-desktop)" fillOpacity={0.4} stroke="var(--color-desktop)" stackId="a" />
               </AreaChart>
             </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Interactive area</h3>
+        <p>
+          A daily series from April to June 2024, filtered by a <code>Select</code> to its last 90, 30 or 7 days
+          before it reaches the chart. The chart draws whatever <code>data</code> it gets, so the filter is plain
+          JavaScript. <code>tickFormatter</code> and the tooltip's <code>labelFormatter</code> write each ISO date
+          as "Jun 30", and <code>minTickGap</code> keeps 32px between the date labels the axis keeps. A date-only
+          ISO string parses as UTC midnight, so both format in UTC; in local time a reader west of Greenwich would
+          see the day before.
+        </p>
+        <ComponentPreview code={`const [timeRange, setTimeRange] = useState("90d")
+const days = { "90d": 90, "30d": 30, "7d": 7 }[timeRange]
+const lastDay = Date.parse("2024-06-30")
+const filteredData = chartData.filter((row) => lastDay - Date.parse(row.date) < days * 86_400_000)
+
+const day = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
+const dayTick = (value) => day.format(new Date(value))
+
+<Select value={timeRange} onValueChange={setTimeRange}>
+  <SelectTrigger aria-label="Time range" style={{ width: "10rem" }}>
+    <SelectValue />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="90d">Last 3 months</SelectItem>
+    <SelectItem value="30d">Last 30 days</SelectItem>
+    <SelectItem value="7d">Last 7 days</SelectItem>
+  </SelectContent>
+</Select>
+<ChartContainer config={chartConfig} style={{ aspectRatio: "auto", height: "250px" }}>
+  <AreaChart data={filteredData}>
+    <defs>…</defs>
+    <CartesianGrid vertical={false} />
+    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tickFormatter={dayTick} />
+    <ChartTooltip cursor={false} content={<ChartTooltipContent labelFormatter={dayTick} indicator="dot" />} />
+    <Area dataKey="mobile" type="natural" fill={\`url(#\${mobileId})\`} stroke="var(--color-mobile)" stackId="a" />
+    <Area dataKey="desktop" type="natural" fill={\`url(#\${desktopId})\`} stroke="var(--color-desktop)" stackId="a" />
+    <ChartLegend content={<ChartLegendContent />} />
+  </AreaChart>
+</ChartContainer>`}>
+          <Frame pg="chart-area-interactive">
+            <RangeArea />
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Interactive bar</h3>
+        <p>
+          The card header shows each series' total for the quarter, and the totals double as the switch: the pressed
+          one names the series the single <code>Bar</code> draws, through its <code>dataKey</code> and{" "}
+          <code>fill</code>. The totals sit in a <code>ToggleGroup</code>, which clears its value when the pressed
+          item is pressed again, so the handler ignores an empty value and one series always shows. The tooltip's{" "}
+          <code>nameKey</code> names the row "Page views" whichever series is drawn, under the full date. Ninety-one
+          bars leave no room for every date, so the axis keeps the first and last and drops whatever would overlap.
+        </p>
+        <ComponentPreview code={`const [activeChart, setActiveChart] = useState("desktop")
+const total = {
+  desktop: chartData.reduce((sum, row) => sum + row.desktop, 0),
+  mobile: chartData.reduce((sum, row) => sum + row.mobile, 0),
+}
+const fullDay = (value) =>
+  new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })
+
+<ToggleGroup type="single" variant="outline" value={activeChart} onValueChange={(key) => key && setActiveChart(key)}>
+  {["desktop", "mobile"].map((key) => (
+    <ToggleGroupItem key={key} value={key}>
+      <span>{chartConfig[key].label}</span>
+      <span>{total[key].toLocaleString()}</span>
+    </ToggleGroupItem>
+  ))}
+</ToggleGroup>
+<ChartContainer config={chartConfig} style={{ aspectRatio: "auto", height: "250px" }}>
+  <BarChart data={chartData} margin={{ left: 12, right: 12 }}>
+    <CartesianGrid vertical={false} />
+    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tickFormatter={dayTick} />
+    <ChartTooltip content={<ChartTooltipContent nameKey="views" labelFormatter={fullDay} />} />
+    <Bar dataKey={activeChart} fill={\`var(--color-\${activeChart})\`} />
+  </BarChart>
+</ChartContainer>`}>
+          <Frame pg="chart-bar-interactive">
+            <SeriesCard>
+              {(activeChart) => (
+                <BarChart data={dailyData} margin={{ left: 12, right: 12 }}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tickFormatter={dayTick} />
+                  <ChartTooltip content={<ChartTooltipContent nameKey="views" labelFormatter={fullDay} />} />
+                  <Bar dataKey={activeChart} fill={`var(--color-${activeChart})`} />
+                </BarChart>
+              )}
+            </SeriesCard>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Interactive line</h3>
+        <p>The same header over a line: pressing the other total redraws the line from that series.</p>
+        <ComponentPreview code={`<LineChart data={chartData} margin={{ left: 12, right: 12 }}>
+  <CartesianGrid vertical={false} />
+  <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tickFormatter={dayTick} />
+  <ChartTooltip content={<ChartTooltipContent nameKey="views" labelFormatter={fullDay} />} />
+  <Line dataKey={activeChart} type="monotone" stroke={\`var(--color-\${activeChart})\`} strokeWidth={2} dot={false} />
+</LineChart>`}>
+          <Frame pg="chart-line-interactive">
+            <SeriesCard>
+              {(activeChart) => (
+                <LineChart data={dailyData} margin={{ left: 12, right: 12 }}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tickFormatter={dayTick} />
+                  <ChartTooltip content={<ChartTooltipContent nameKey="views" labelFormatter={fullDay} />} />
+                  <Line dataKey={activeChart} type="monotone" stroke={`var(--color-${activeChart})`} strokeWidth={2} dot={false} />
+                </LineChart>
+              )}
+            </SeriesCard>
           </Frame>
         </ComponentPreview>
       </section>
