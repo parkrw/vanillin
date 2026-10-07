@@ -464,6 +464,39 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     )
   })
 
+  await test("stat sparklines are meters: banded by 60/80, each dot in its latest point's band", async () => {
+    const cards = await console_.locator(".ck-stat-spark .sparkline").evaluateAll((svgs) => {
+      const probe = document.createElement("span")
+      probe.style.color = "var(--ck-orange)"
+      document.body.appendChild(probe)
+      const orange = getComputedStyle(probe).color
+      probe.remove()
+      // Read every part in one pass so a tick cannot land between the dot and the bands.
+      return svgs.map((svg) => {
+        const dot = svg.querySelector(".sparkline-dot")
+        const bands = Object.fromEntries(
+          [...svg.querySelectorAll(".sparkline-stop")].map((s) => [s.dataset.zone, getComputedStyle(s).stopColor]),
+        )
+        return {
+          stroke: getComputedStyle(svg.querySelector(".sparkline-line")).stroke,
+          // Default 72×24 box, inset 2, max 100: invert the dot's y to the latest value.
+          value: Math.round(((24 - 2 - Number(dot.getAttribute("cy"))) / (24 - 4)) * 100),
+          dot: getComputedStyle(dot).fill,
+          bands,
+          orange,
+        }
+      })
+    })
+    eq(cards.length, 6, "one sparkline per stat card")
+    for (const [i, c] of cards.entries()) {
+      if (!c.stroke.startsWith("url(")) throw new Error(`card ${i}: line is not the meter, ${c.stroke}`)
+      eq(new Set(Object.values(c.bands)).size, 3, `card ${i}: three distinct bands`)
+      eq(c.dot, c.bands[c.value >= 80 ? "critical" : c.value >= 60 ? "warn" : "ok"], `card ${i} dot at ${c.value}`)
+      // Counter-precondition: the card's old ancestor --sparkline-dot no longer wins.
+      if (c.dot === c.orange) throw new Error(`card ${i}: dot is still --ck-orange`)
+    }
+  })
+
   await test("live numbers flash orange on the way up and blue on the way down", async () => {
     const values = console_.locator(".ck-util-val .live-value")
     eq(await values.count(), 4)
