@@ -21,6 +21,9 @@ const blue = { light: "oklch(0.55 0.2 250)", dark: "oklch(0.78 0.14 250)" }
 const drift = (base, spread) => (tick) =>
   Math.round(base + (Math.sin(tick / 2) * 0.6 + Math.sin(tick / 5) * 0.4) * spread)
 const sampleCpu = drift(62, 14)
+const sampleLoad = drift(58, 32)
+/* Each band holds a vertex well clear of both thresholds, and the latest point is amber. */
+const load = [24, 32, 28, 45, 70, 68, 94, 72]
 
 /* The last 24 samples of the shared 2s ticker, so the window slides one step a beat. */
 function LiveSparkline() {
@@ -30,6 +33,17 @@ function LiveSparkline() {
     <>
       <span className="pg-stat-num">{points[points.length - 1]}%</span>
       <Sparkline points={points} max={100} />
+    </>
+  )
+}
+
+function LiveMeter() {
+  const tick = useTicker(2000)
+  const points = Array.from({ length: 24 }, (_, i) => sampleLoad(tick - 23 + i))
+  return (
+    <>
+      <span className="pg-stat-num">{points[points.length - 1]}%</span>
+      <Sparkline points={points} max={100} thresholds={[60, 80]} />
     </>
   )
 }
@@ -236,6 +250,29 @@ function CpuTrend() {
       </section>
 
       <section className="pg-section">
+        <h3>Thresholds</h3>
+        <p>
+          <code>thresholds</code> colours the line like a meter: green below the first value, amber
+          from it, red from the second. Each stretch of line and wash takes the band it sits in, so a
+          spike shows red where it crossed, and the dot takes the band of the latest point.
+        </p>
+        <ComponentPreview code={`<Sparkline points={load} max={100} thresholds={[60, 80]} />`}>
+          <div className="pg-row">
+            <span className="pg-row" data-pg="spark-meter-live"><LiveMeter /></span>
+            <span data-pg="spark-meter">
+              <Sparkline points={load} max={100} thresholds={[60, 80]} width={160} height={40} inset={3} />
+            </span>
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          A value equal to a threshold is in the higher band. The bands replace <code>color</code>;{" "}
+          <code>dotColor</code> and <code>areaColor</code> still win for their parts. Set{" "}
+          <code>--sparkline-ok</code>, <code>--sparkline-warn</code> or <code>--sparkline-critical</code>{" "}
+          on any ancestor to recolour a band.
+        </p>
+      </section>
+
+      <section className="pg-section">
         <h3>Without area</h3>
         <ComponentPreview code={`<Sparkline points={requests} area={false} />
 <Sparkline points={requests} area={false} dot={false} />`}>
@@ -289,6 +326,7 @@ function CpuTrend() {
         { name: "dotColor", type: "string", default: "the line colour", description: "Colour of the latest-point dot" },
         { name: "areaColor", type: "string", default: "the line colour", description: "Colour of the wash" },
         { name: "areaOpacity", type: "number", default: "0.12", description: "Opacity of the wash, 0 to 1" },
+        { name: "thresholds", type: "[number, number]", description: "Colour by band, like a meter: green below the first, amber from it, red from the second. Replaces color and theme" },
         { name: "min", type: "number", default: "0", description: "Bottom of the y axis" },
         { name: "max", type: "number", description: "Top of the y axis; defaults to the largest value in points" },
         { name: "area", type: "boolean", default: "true", description: "Fill under the line with a wash of the stroke colour" },
@@ -303,6 +341,9 @@ function CpuTrend() {
         { name: "--sparkline-dot", type: "<color>", default: "currentColor", description: "Fill of the latest-point dot. Set it on any ancestor" },
         { name: "--sparkline-area", type: "<color>", default: "currentColor", description: "Fill of the wash. Set it on any ancestor" },
         { name: "--sparkline-area-opacity", type: "<number>", default: "0.12", description: "Opacity of the wash. Set it on any ancestor" },
+        { name: "--sparkline-ok", type: "<color>", default: "var(--success)", description: "Below the first threshold" },
+        { name: "--sparkline-warn", type: "<color>", default: "--warning, turned yellow", description: "From the first threshold" },
+        { name: "--sparkline-critical", type: "<color>", default: "var(--destructive)", description: "From the second threshold" },
       ]} />
     </>
   )

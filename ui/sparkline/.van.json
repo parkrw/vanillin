@@ -4,7 +4,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "requires": [],
   "files": {
-    "sparkline.css": "sha256-y8cthlBptNck5zk+4J8e/P0bSQplkmKuQ8amuK9PAlo=",
-    "sparkline.jsx": "sha256-gx0tPU2pkdSfJc0aH3Z+aK5UC/4STedUkW2/q3q2xfQ="
+    "sparkline.css": "sha256-TGe/x/mkrnINtOnX2yc+cA2B8NlZmhrRv4eSjGMUGFU=",
+    "sparkline.jsx": "sha256-IZVYGVfAARSucr4aHXjhYekam6XyeGolpSdfKqGzew8="
   }
 }
