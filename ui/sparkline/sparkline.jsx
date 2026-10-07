@@ -1,3 +1,4 @@
+import { useId } from "react"
 import { cn } from "../../lib/cn.js"
 import { areaPath, extent, linePath, linearScale, pointScale } from "../../lib/chart-math.js"
 
@@ -27,6 +28,34 @@ function colourStyle({ color, theme, dotColor, areaColor, areaOpacity }) {
   return style
 }
 
+const zoneOf = (v, [warn, critical]) => (v >= critical ? "critical" : v >= warn ? "warn" : "ok")
+
+/*
+ * One band per zone, with hard stops at each threshold's height, top down.
+ * userSpaceOnUse: a bounding-box gradient on a flat line has zero height and
+ * paints nothing. On a flat domain every value sits on one row, so a
+ * threshold is wholly above it or wholly below.
+ */
+function MeterGradient({ id, y, height, thresholds: [warn, critical] }) {
+  const [d0, d1] = y.domain
+  const at = (t) => (d0 === d1 ? (t > d0 ? 0 : 1) : Math.min(1, Math.max(0, y(t) / height)))
+  const bands = [
+    ["critical", 0, at(critical)],
+    ["warn", at(critical), at(warn)],
+    ["ok", at(warn), 1],
+  ]
+  return (
+    <defs>
+      <linearGradient id={id} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={height}>
+        {bands.flatMap(([zone, from, to]) => [
+          <stop key={`${zone}-from`} className="sparkline-stop" data-zone={zone} offset={from} />,
+          <stop key={`${zone}-to`} className="sparkline-stop" data-zone={zone} offset={to} />,
+        ])}
+      </linearGradient>
+    </defs>
+  )
+}
+
 /**
  * Sparkline — an inline trend line for the figure beside it.
  *
@@ -49,6 +78,12 @@ function colourStyle({ color, theme, dotColor, areaColor, areaOpacity }) {
  * item without `color` or `theme` takes the chart palette (`--chart-1…5`) by
  * position. Given `series`, `points`, `color` and `theme` are ignored.
  *
+ * `thresholds={[warn, critical]}` colours it like a meter: green below
+ * `warn`, amber from it, red from `critical`. Each stretch of line and wash
+ * takes the band it sits in, and the dot the band of the latest point, in
+ * place of `color`/`theme`; `dotColor` and `areaColor` still win. The bands
+ * read `--sparkline-ok`, `--sparkline-warn` and `--sparkline-critical`.
+ *
  * Always `aria-hidden`: the number it illustrates is the accessible content,
  * so the svg has no name to give. `inset` keeps the stroke and the dot inside
  * the box — the dot's radius is the inset, so a dot on the first, last, top
@@ -70,10 +105,12 @@ export function Sparkline({
   dotColor,
   areaColor,
   areaOpacity,
+  thresholds,
   className,
   style,
   ...props
 }) {
+  const meterId = `sparkline-meter-${useId().replace(/[^\w-]/g, "")}`
   const lines = series
     ? series.map((item, i) => ({
         points: item.points ?? [],
@@ -93,16 +130,26 @@ export function Sparkline({
       height={height}
       viewBox={`0 0 ${width} ${height}`}
       aria-hidden="true"
-      style={{ ...colourStyle(shared), ...style }}
+      style={{
+        ...colourStyle(shared),
+        ...(thresholds && { "--sparkline-meter": `url(#${meterId})` }),
+        ...style,
+      }}
       {...props}
     >
+      {thresholds && count > 0 && <MeterGradient id={meterId} y={y} height={height} thresholds={thresholds} />}
       {lines.map((line, i) => {
         const n = line.points.length
         if (!n) return null
         const upper = line.points.map((v, j) => [x.center(j), y(v)])
         const last = upper[n - 1]
         return (
-          <g key={i} className="sparkline-series" style={line.style}>
+          <g
+            key={i}
+            className="sparkline-series"
+            data-zone={thresholds && zoneOf(line.points[n - 1], thresholds)}
+            style={line.style}
+          >
             {area && n > 1 && (
               <path
                 className="sparkline-area"

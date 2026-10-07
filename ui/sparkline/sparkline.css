@@ -16,21 +16,44 @@
 /* Round joins: a miter at an acute peak can poke past the inset. */
 .sparkline-line {
   fill: none;
-  stroke: currentColor;
+  stroke: var(--sparkline-meter, currentColor);
   stroke-width: 1.5;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
 
 .sparkline-area {
-  fill: var(--sparkline-area, currentColor);
+  fill: var(--sparkline-area, var(--sparkline-meter, currentColor));
   fill-opacity: var(--sparkline-area-opacity, 0.12);
   stroke: none;
 }
 
 .sparkline-dot {
-  fill: var(--sparkline-dot, currentColor);
+  fill: var(--sparkline-dot, var(--sparkline-zone, currentColor));
   stroke: none;
+}
+
+/*
+ * thresholds: --sparkline-meter is the gradient whose stops paint the bands,
+ * and a series' data-zone is the band of its latest point, for the dot. The
+ * band colours are read with fallbacks, never declared, as above.
+ */
+.sparkline [data-zone="ok"] {
+  --sparkline-zone: var(--sparkline-ok, var(--success));
+}
+
+/* --warning's own hue reads orange beside the red band at 1.5px; swung to
+ * yellow and lifted, the three bands stay apart at a glance. */
+.sparkline [data-zone="warn"] {
+  --sparkline-zone: var(--sparkline-warn, oklch(from var(--warning) calc(l + 0.1) c 92));
+}
+
+.sparkline [data-zone="critical"] {
+  --sparkline-zone: var(--sparkline-critical, var(--destructive));
+}
+
+.sparkline-stop {
+  stop-color: var(--sparkline-zone);
 }
 
 /* The stroke is the datum: the forced palette would flatten the wash into
@@ -38,7 +61,8 @@
 @media (forced-colors: active) {
   .sparkline-line,
   .sparkline-area,
-  .sparkline-dot {
+  .sparkline-dot,
+  .sparkline-stop {
     forced-color-adjust: none;
   }
 }

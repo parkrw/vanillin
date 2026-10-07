@@ -210,6 +210,112 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(custom.filter((s) => s.area !== undefined).length, 0, "area={false} applies to every series")
   })
 
+  const bandColours = (host) =>
+    page.$eval(`[data-pg="${host}"] .sparkline`, (svg) =>
+      Object.fromEntries([...svg.querySelectorAll(".sparkline-stop")].map((s) => [s.dataset.zone, getComputedStyle(s).stopColor])),
+    )
+
+  await test("thresholds paint each stretch of the line in its band", async () => {
+    // Mirrors the page's `load` fixture and its props.
+    const load = [24, 32, 28, 45, 70, 68, 94, 72]
+    const [w, h, pad] = [160, 40, 3]
+    const bands = await bandColours("spark-meter")
+    const [success, destructive, warning] = await resolve(["var(--success)", "var(--destructive)", "var(--warning)"])
+    eq(bands.ok, success, "ok = --success")
+    eq(bands.critical, destructive, "critical = --destructive")
+
+    const svg = page.locator('[data-pg="spark-meter"] .sparkline')
+    const shot = (await svg.screenshot()).toString("base64")
+    const vertex = (i) => [pad + (i * (w - 2 * pad)) / (load.length - 1), h - pad - (load[i] / 100) * (h - 2 * pad)]
+    const { hues, samples } = await page.evaluate(
+      async ({ b64, refs, points, w }) => {
+        const ctx = document.createElement("canvas").getContext("2d", { willReadFrequently: true })
+        // HSV hue survives anti-aliasing against a neutral backdrop, where an rgb distance does not.
+        const hue = ([r, g, b]) => {
+          const max = Math.max(r, g, b)
+          const d = max - Math.min(r, g, b)
+          if (!d) return NaN
+          const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4
+          return (h * 60 + 360) % 360
+        }
+        const rgbOf = (css) => {
+          ctx.clearRect(0, 0, 1, 1)
+          ctx.fillStyle = css
+          ctx.fillRect(0, 0, 1, 1)
+          return [...ctx.getImageData(0, 0, 1, 1).data.slice(0, 3)]
+        }
+        const hues = Object.fromEntries(Object.entries(refs).map(([k, css]) => [k, hue(rgbOf(css))]))
+        const img = new Image()
+        img.src = `data:image/png;base64,${b64}`
+        await img.decode()
+        ctx.canvas.width = img.width
+        ctx.canvas.height = img.height
+        ctx.drawImage(img, 0, 0)
+        const scale = img.width / w
+        // The most saturated pixel within 2px of the vertex is the stroke, not the 12% wash.
+        const samples = points.map(([x, y]) => {
+          const x0 = Math.round((x - 2) * scale)
+          const y0 = Math.round((y - 2) * scale)
+          const size = Math.round(4 * scale)
+          const { data } = ctx.getImageData(x0, y0, size, size)
+          let best = [0, 0, 0]
+          for (let i = 0; i < data.length; i += 4) {
+            const px = [data[i], data[i + 1], data[i + 2]]
+            if (Math.max(...px) - Math.min(...px) > Math.max(...best) - Math.min(...best)) best = px
+          }
+          return hue(best)
+        })
+        return { hues, samples }
+      },
+      { b64: shot, refs: { ...bands, warning }, points: [1, 4, 6].map(vertex), w },
+    )
+
+    // Precondition: the bands are apart, and the amber is turned toward yellow from --warning.
+    const gap = (a, b) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b))
+    for (const [a, b] of [["ok", "warn"], ["warn", "critical"], ["ok", "critical"]]) {
+      if (!(gap(hues[a], hues[b]) > 20)) throw new Error(`fixture: ${a} and ${b} hues ${hues[a]}, ${hues[b]}`)
+    }
+    if (!(hues.warn - hues.warning >= 8 && hues.warn <= 60)) throw new Error(`warn hue ${hues.warn} vs --warning ${hues.warning}`)
+
+    const nearest = (h) => ["ok", "warn", "critical"].reduce((a, b) => (gap(h, hues[a]) <= gap(h, hues[b]) ? a : b))
+    eq(samples.map(nearest).join(" "), "ok warn critical", `vertex hues ${samples.map(Math.round)}`)
+  })
+
+  await test("the dot takes the band of the latest point; --sparkline-dot and --sparkline-area still win", async () => {
+    const bands = await bandColours("spark-meter")
+    const [[fixture]] = await paint("spark-meter")
+    eq(fixture.dot, bands.warn, "latest 72 is amber")
+
+    // Read the figure and the dot in one evaluate so a tick cannot land between them.
+    const [figure, dot] = await page.$eval('[data-pg="spark-meter-live"]', (host) => [
+      Number(host.querySelector(".pg-stat-num").textContent.replace("%", "")),
+      getComputedStyle(host.querySelector(".sparkline-dot")).fill,
+    ])
+    const live = await bandColours("spark-meter-live")
+    eq(dot, live[figure >= 80 ? "critical" : figure >= 60 ? "warn" : "ok"], `live dot at ${figure}%`)
+
+    const [override] = await resolve(["var(--chart-1)"])
+    const host = page.locator('[data-pg="spark-meter"]')
+    const [[before]] = await paint("spark-meter")
+    if (!before.area.startsWith("url(")) throw new Error(`fixture: wash is not the meter, ${before.area}`)
+    await host.evaluate((el) => {
+      el.style.setProperty("--sparkline-dot", "var(--chart-1)")
+      el.style.setProperty("--sparkline-area", "var(--chart-1)")
+    })
+    try {
+      const [[own]] = await paint("spark-meter")
+      eq(own.dot, override, "ancestor --sparkline-dot")
+      eq(own.area, override, "ancestor --sparkline-area")
+      eq(own.stroke, before.stroke, "line keeps the meter")
+      if (own.dot === bands.warn) throw new Error("fixture: override equals the band")
+    } finally {
+      await host.evaluate((el) => {
+        el.style.removeProperty("--sparkline-dot")
+        el.style.removeProperty("--sparkline-area")
+      })
+    }
+  })
+
   await test("theme switches the line with the colour scheme", async () => {
     const [light, dark] = await resolve(["oklch(0.55 0.2 250)", "oklch(0.78 0.14 250)"])
     // The site seeds its scheme at import time: emulate, then navigate.
