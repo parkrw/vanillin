@@ -33,6 +33,9 @@ import {
   Cell,
   Rectangle,
   Dot,
+  ReferenceLine,
+  ReferenceArea,
+  ReferenceDot,
 } from "../../ui/chart/chart.jsx"
 import { NativeSelect, NativeSelectOption } from "../../ui/native-select/native-select.jsx"
 import { Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent } from "../../ui/card/card.jsx"
@@ -630,11 +633,10 @@ const chartConfig = {
         </ComponentPreview>
         <p className="pg-desc">
           Each <code>config</code> key becomes a <code>--color-&lt;key&gt;</code> custom property scoped to the chart,
-          which <code>fill</code> and <code>stroke</code> read back. Series, axes, grid, tooltip and legend must be
+          which <code>fill</code> and <code>stroke</code> read back. Series, axes, grid, reference marks, tooltip and legend must be
           direct children of the chart or sit in a Fragment: a wrapper component around <code>&lt;Bar&gt;</code> is
           invisible to the chart. Pie, radar and radial charts share this shell and sit on a separate polar root. No
-          entrance animation, no RTL axis mirroring, no <code>ReferenceLine</code>, <code>Brush</code> or{" "}
-          <code>syncId</code>.
+          entrance animation, no RTL axis mirroring, no <code>Brush</code> or <code>syncId</code>.
         </p>
       </section>
 
@@ -1457,6 +1459,139 @@ const fullDay = (value) =>
       </section>
 
       <section className="pg-section">
+        <h3>Reference marks</h3>
+        <p>
+          <code>ReferenceLine</code>, <code>ReferenceArea</code> and <code>ReferenceDot</code> mark values on the axes
+          rather than rows of the data: a goal, a normal range, a point to call out. A number lands on the value axis
+          and a category on its band, so <code>x="February"</code> is the February column.{" "}
+          <code>ReferenceArea</code> spans <code>y1</code> to <code>y2</code>, and a side left out runs to the edge
+          of the plot. Areas shade beneath the series; lines and dots draw over them. <code>label</code> takes text
+          or <code>{"{ value, position }"}</code> with the <code>LabelList</code> positions plus the four inside
+          corners; without a position the text sits centred on the mark.
+        </p>
+        <ComponentPreview code={`<LineChart data={chartData} margin={{ top: 20, left: 12, right: 12 }}>
+  <CartesianGrid vertical={false} />
+  <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(v) => v.slice(0, 3)} />
+  <YAxis tickLine={false} axisLine={false} width={40} />
+  <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+  <ReferenceArea y1={150} y2={250} label={{ value: "Normal", position: "insideTopLeft" }} />
+  <ReferenceLine y={300} strokeDasharray="4 4" label={{ value: "Goal", position: "insideBottomRight" }} />
+  <ReferenceLine x="April" label={{ value: "Outage", position: "insideTopRight" }} />
+  <ReferenceDot x="February" y={305} r={6} stroke="var(--color-desktop)" />
+  <Line dataKey="desktop" type="monotone" stroke="var(--color-desktop)" strokeWidth={2} dot={false} />
+</LineChart>`}>
+          <Frame pg="chart-reference">
+            <ChartContainer config={chartConfig}>
+              <LineChart data={chartData} margin={{ top: 20, left: 12, right: 12 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={monthTick} />
+                <YAxis tickLine={false} axisLine={false} width={40} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <ReferenceArea y1={150} y2={250} label={{ value: "Normal", position: "insideTopLeft" }} />
+                <ReferenceLine y={300} strokeDasharray="4 4" label={{ value: "Goal", position: "insideBottomRight" }} />
+                <ReferenceLine x="April" label={{ value: "Outage", position: "insideTopRight" }} />
+                <ReferenceDot x="February" y={305} r={6} stroke="var(--color-desktop)" />
+                <Line dataKey="desktop" type="monotone" stroke="var(--color-desktop)" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Reference marks across</h3>
+        <p>
+          With <code>layout="vertical"</code> the axes swap jobs, and the marks follow them: <code>x</code> is now a
+          value and <code>y</code> a category. An area between two categories runs from the start of the first band
+          to the end of the second; <code>position</code> puts a line at a band's <code>start</code>,{" "}
+          <code>middle</code> or <code>end</code>.
+        </p>
+        <ComponentPreview code={`<BarChart data={chartData} layout="vertical" margin={{ top: 20, left: -20 }}>
+  <XAxis type="number" dataKey="desktop" hide />
+  <YAxis dataKey="month" type="category" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={(v) => v.slice(0, 3)} />
+  <ReferenceArea y1="March" y2="April" />
+  <ReferenceLine x={200} strokeDasharray="4 4" label={{ value: "200", position: "top" }} />
+  <Bar dataKey="desktop" fill="var(--color-desktop)" radius={5} />
+</BarChart>`}>
+          <Frame pg="chart-reference-vertical">
+            <ChartContainer config={chartConfig}>
+              <BarChart data={chartData} layout="vertical" margin={{ top: 20, left: -20 }}>
+                <XAxis type="number" dataKey="desktop" hide />
+                <YAxis dataKey="month" type="category" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={monthTick} />
+                <ReferenceArea y1="March" y2="April" />
+                <ReferenceLine x={200} strokeDasharray="4 4" label={{ value: "200", position: "top" }} />
+                <Bar dataKey="desktop" fill="var(--color-desktop)" radius={5} />
+              </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Reference marks on a scatter</h3>
+        <p>
+          On a <code>ScatterChart</code> both axes are numbers. <code>segment</code> draws a line between two points
+          instead of across the plot, here a trend through School A; an area with no <code>y1</code> or{" "}
+          <code>y2</code> runs the full height. A dot draws over the series, so <code>fill="none"</code> rings the
+          point under it rather than hiding it.
+        </p>
+        <ComponentPreview code={`<ScatterChart margin={{ top: 10 }}>
+  <CartesianGrid />
+  <XAxis type="number" dataKey="x" name="stature" unit="cm" />
+  <YAxis type="number" dataKey="y" name="weight" unit="kg" />
+  <ReferenceArea x1={180} x2={250} label={{ value: "School B", position: "insideTop" }} />
+  <ReferenceLine segment={[{ x: 100, y: 150 }, { x: 170, y: 350 }]} stroke="var(--color-a)" strokeDasharray="4 4" />
+  <ReferenceDot x={150} y={400} r={8} fill="none" stroke="var(--color-a)" />
+  <Scatter name="a" data={schoolA} fill="var(--color-a)" />
+  <Scatter name="b" data={schoolB} fill="var(--color-b)" />
+</ScatterChart>`}>
+          <Frame pg="chart-reference-scatter">
+            <ChartContainer config={schoolConfig}>
+              <ScatterChart margin={{ top: 10 }}>
+                <CartesianGrid />
+                <XAxis type="number" dataKey="x" name="stature" unit="cm" />
+                <YAxis type="number" dataKey="y" name="weight" unit="kg" />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ReferenceArea x1={180} x2={250} label={{ value: "School B", position: "insideTop" }} />
+                <ReferenceLine segment={[{ x: 100, y: 150 }, { x: 170, y: 350 }]} stroke="var(--color-a)" strokeDasharray="4 4" />
+                <ReferenceDot x={150} y={400} r={8} fill="none" stroke="var(--color-a)" />
+                <Scatter name="a" data={schoolA} fill="var(--color-a)" />
+                <Scatter name="b" data={schoolB} fill="var(--color-b)" />
+              </ScatterChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Marks off the axis</h3>
+        <p>
+          A goal of 400 is above every month, so it is off the value axis. By default (
+          <code>ifOverflow="discard"</code>) the mark is dropped and the axis keeps fitting the data, on the left;
+          a category the data lacks is dropped the same way. <code>ifOverflow="extendDomain"</code> widens the axis
+          to take the value instead, on the right.
+        </p>
+        <ComponentPreview code={`<ReferenceLine y={400} label={{ value: "Goal", position: "insideTopRight" }} />
+<ReferenceLine y={400} label={{ value: "Goal", position: "insideTopRight" }} ifOverflow="extendDomain" />`}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", width: "100%", maxWidth: "40rem" }}>
+            {["discard", "extendDomain"].map((ifOverflow) => (
+              <div key={ifOverflow} data-pg={`chart-reference-${ifOverflow === "discard" ? "discard" : "extend"}`} style={{ flex: "1 1 14rem" }}>
+                <ChartContainer config={chartConfig} style={{ aspectRatio: "4 / 3" }}>
+                  <BarChart data={chartData} margin={{ top: 10 }}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={monthTick} />
+                    <YAxis tickLine={false} axisLine={false} width={32} />
+                    <ReferenceLine y={400} ifOverflow={ifOverflow} strokeDasharray="4 4" label={{ value: "Goal", position: "insideTopRight" }} />
+                    <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
+                  </BarChart>
+                </ChartContainer>
+              </div>
+            ))}
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Tooltip indicator</h3>
         <p>
           <code>indicator</code> is <code>dot</code>, <code>line</code> or <code>dashed</code>. The tooltip is
@@ -2123,6 +2258,18 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "background", type: "boolean | { fill }", default: "false", description: "RadialBar: a track over the full sweep" },
         { name: "stackId", type: "string", description: "RadialBar: bars sharing one ring" },
         { name: "dot", type: "boolean | { r, fill, fillOpacity, stroke }", default: "false", description: "Radar point markers" },
+      ]} />
+
+      <ApiReference title="ReferenceLine / ReferenceArea / ReferenceDot" props={[
+        { name: "x / y", type: "number | string", description: "A value on that axis: a number on a value axis, a category on a category axis. Line: y draws across, else x draws down" },
+        { name: "segment", type: "[{ x, y }, { x, y }]", description: "Line: from one point to the other instead of across the plot" },
+        { name: "position", type: '"start" | "middle" | "end"', default: '"middle"', description: "Line: where in a category's band the line sits" },
+        { name: "x1 / x2 / y1 / y2", type: "number | string", description: "Area: its sides; a category side takes its band's outer edge, a side left out runs to the plot edge" },
+        { name: "r", type: "number", default: "10", description: "Dot radius, px" },
+        { name: "ifOverflow", type: '"discard" | "extendDomain"', default: '"discard"', description: "Off the axis: drop the mark, or widen the value domain to take it" },
+        { name: "label", type: "string | { value, position, offset, fill } | element | ({ viewBox }) => node", description: "Text on the mark, centred unless position says otherwise" },
+        { name: "stroke / strokeWidth / strokeDasharray", type: "string / number / string", default: "muted-foreground / 1", description: "Line and dot edge" },
+        { name: "fill / fillOpacity", type: "string / number", default: "muted-foreground / 0.15", description: "Area fill; a dot's fill defaults to the background" },
       ]} />
 
       <ApiReference title="Rectangle / Dot" props={[

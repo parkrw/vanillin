@@ -454,6 +454,110 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await page.locator("h2").click()
   })
 
+  // ── Reference marks ──
+
+  const attrs = (selector, names) =>
+    page.locator(selector).evaluateAll((els, names) => els.map((el) => Object.fromEntries(names.map((n) => [n, el.getAttribute(n)]))), names)
+  const shape = async (selector, names) =>
+    (await attrs(selector, names)).map((row) => Object.fromEntries(Object.entries(row).map(([k, v]) => [k, Number(v)])))
+  // The axis's own value → px map, read off its first and last numeric ticks.
+  const valueScale = async (name, axis) => {
+    const ticks = await page
+      .locator(`${pg(name)} .chart-axis[data-axis="${axis}"] .chart-tick-text`)
+      .evaluateAll((els, axis) => els.map((el) => [Number(el.textContent.replace(/,/g, "")), Number(el.getAttribute(axis))]), axis)
+    const [[v0, p0], [v1, p1]] = [ticks[0], ticks.at(-1)]
+    return (v) => p0 + ((v - v0) * (p1 - p0)) / (v1 - v0)
+  }
+  const tickAt = (name, axis, text) =>
+    page.locator(`${pg(name)} .chart-axis[data-axis="${axis}"] .chart-tick-text`, { hasText: text }).evaluate((el) => Number(el.getAttribute("x")))
+  const referenceLabels = (name) => attrs(`${pg(name)} .chart-reference .chart-label`, ["x", "y", "text-anchor", "dominant-baseline"])
+
+  await test("reference: an area, two lines and a dot land on the value scale and the category points", async () => {
+    const name = "chart-reference"
+    const y = await valueScale(name, "y")
+    const [grid] = await shape(`${pg(name)} .chart-grid line`, ["x1", "x2"])
+    const [area] = await shape(`${pg(name)} .chart-reference-area`, ["x", "y", "width", "height"])
+    near(area.y, y(250), 0.01, "area top at y2")
+    near(area.y + area.height, y(150), 0.01, "area bottom at y1")
+    near(area.x, grid.x1, 0.01, "no x1: from the plot's left edge")
+    near(area.x + area.width, grid.x2, 0.01, "no x2: to its right edge")
+    const [goal, outage] = await shape(`${pg(name)} .chart-reference-line`, ["x1", "x2", "y1", "y2"])
+    near(goal.y1, y(300), 0.01, "y={300} across the plot")
+    near(goal.y2, goal.y1, 0.001)
+    near(goal.x1, grid.x1, 0.01)
+    near(goal.x2, grid.x2, 0.01)
+    const april = await tickAt(name, "x", "Apr")
+    near(outage.x1, april, 0.01, 'x="April" on the April point')
+    near(outage.x2, april, 0.01)
+    near(outage.y2 - outage.y1, y(0) - y(350), 0.01, "down the full plot")
+    const [dot] = await shape(`${pg(name)} .chart-reference-dot`, ["cx", "cy", "r"])
+    near(dot.cx, await tickAt(name, "x", "Feb"), 0.01)
+    near(dot.cy, y(305), 0.01)
+    eq(dot.r, 6)
+    const order = await page
+      .locator(`${pg(name)} .chart-surface`)
+      .evaluate((svg) => [...svg.querySelectorAll(".chart-reference-area, .chart-line, .chart-reference-line, .chart-reference-dot")].map((el) => el.classList[0]))
+    eq(order.join(","), "chart-reference-area,chart-line,chart-reference-line,chart-reference-line,chart-reference-dot", "the area beneath the series, lines and dot over it")
+    const [normal, goalLabel] = await referenceLabels(name)
+    near(Number(normal.x), area.x + 5, 0.01, "insideTopLeft: 5px in from the left")
+    near(Number(normal.y), area.y + 5, 0.01, "and down from the top")
+    eq(`${normal["text-anchor"]} ${normal["dominant-baseline"]}`, "start hanging")
+    near(Number(goalLabel.x), grid.x2 - 5, 0.01, "insideBottomRight: 5px in from the right")
+    near(Number(goalLabel.y), goal.y1 - 5, 0.01, "and above the line")
+    eq(`${goalLabel["text-anchor"]} ${goalLabel["dominant-baseline"]}`, "end auto")
+  })
+
+  await test("reference: on vertical bars x is a value and y a category band", async () => {
+    const name = "chart-reference-vertical"
+    const bars = await bboxes(`${pg(name)} .chart-bar`)
+    eq(bars.length, 6)
+    const [area] = await shape(`${pg(name)} .chart-reference-area`, ["x", "y", "width", "height"])
+    near(area.y, bars[2].y, 0.01, "from the start of the March band")
+    near(area.y + area.height, bars[3].bottom, 0.01, "to the end of the April band")
+    near(area.x, bars[0].x, 0.01, "no x1: from the value axis's zero")
+    eq(area.x + area.width > bars[1].right, true, "no x2: past the longest bar to the plot's end")
+    const [line] = await shape(`${pg(name)} .chart-reference-line`, ["x1", "x2", "y1", "y2"])
+    near(line.x1, bars[0].x + (200 * bars[0].width) / 186, 0.01, "x={200} on the value scale the bars use")
+    near(line.x2, line.x1, 0.001, "drawn down, not across")
+    eq(line.y1 <= bars[0].y && line.y2 >= bars[5].bottom, true, "over every band")
+    const [label] = await referenceLabels(name)
+    near(Number(label.x), line.x1, 0.01, "top: centred on the line")
+    near(Number(label.y), line.y1 - 5, 0.01, "5px above its top end")
+  })
+
+  await test("reference: on a scatter a segment joins two value points, an area spans the height, and a dot rings a datum", async () => {
+    const name = "chart-reference-scatter"
+    const dots = await shape(`${pg(name)} .chart-series[data-key="a"] .chart-dot`, ["cx", "cy"])
+    // School A's rows 0 and 2 are (100, 200) and (170, 300).
+    const px = (v) => dots[0].cx + ((v - 100) * (dots[2].cx - dots[0].cx)) / 70
+    const py = (v) => dots[0].cy + ((v - 200) * (dots[2].cy - dots[0].cy)) / 100
+    const [segment] = await shape(`${pg(name)} .chart-reference-line`, ["x1", "y1", "x2", "y2"])
+    near(segment.x1, px(100), 0.01)
+    near(segment.y1, py(150), 0.01)
+    near(segment.x2, px(170), 0.01)
+    near(segment.y2, py(350), 0.01)
+    const [area] = await shape(`${pg(name)} .chart-reference-area`, ["x", "y", "width", "height"])
+    near(area.x, px(180), 0.01)
+    near(area.x + area.width, px(250), 0.01)
+    near(area.y, py(400), 0.01, "no y2: from the top of the value axis")
+    near(area.y + area.height, py(0), 0.01, "no y1: to its bottom")
+    const [ring] = await shape(`${pg(name)} .chart-reference-dot`, ["cx", "cy"])
+    near(ring.cx, dots[4].cx, 0.01, "on School A's (150, 400)")
+    near(ring.cy, dots[4].cy, 0.01)
+    eq(await page.locator(`${pg(name)} .chart-reference-dot`).getAttribute("fill"), "none")
+  })
+
+  await test('reference: a value off the axis drops the mark, unless ifOverflow="extendDomain" widens the axis to it', async () => {
+    const ticksOf = (name) => page.locator(`${pg(name)} .chart-axis[data-axis="y"] .chart-tick-text`).allTextContents()
+    eq(await page.locator(`${pg("chart-reference-discard")} .chart-reference`).count(), 0, "discard: no mark")
+    eq((await ticksOf("chart-reference-discard")).at(-1), "350", "and the axis still fits the data")
+    eq(await page.locator(`${pg("chart-reference-extend")} .chart-reference`).count(), 1, "extendDomain: the mark is drawn")
+    eq((await ticksOf("chart-reference-extend")).at(-1), "400", "on an axis that now reaches it")
+    const y = await valueScale("chart-reference-extend", "y")
+    const [line] = await shape(`${pg("chart-reference-extend")} .chart-reference-line`, ["y1"])
+    near(line.y1, y(400), 0.01)
+  })
+
   // ── Interactive ──
 
   // A natural or monotone path is "M x y C …, …, x y" with one C per segment.
