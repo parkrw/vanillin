@@ -1,7 +1,8 @@
 // Sparkline: the x scale spans inset → width - inset, the y scale puts the
-// last value where the dot sits, one point is a dot alone, the svg is always
-// hidden from the accessibility tree, and the colour props reach the part
-// each one names.
+// last value where the dot sits, a non-finite sample is a gap, the domain
+// folds in zero and pegs what overshoots, one point is a dot alone, the svg
+// is always hidden from the accessibility tree, and the colour props reach
+// the part each one names.
 
 export default async function run({ page, baseUrl, test, eq, near }) {
   await page.goto(`${baseUrl}/#sparkline`)
@@ -58,6 +59,71 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(await svgs.nth(0).locator(".sparkline-dot").count(), 1, "dot kept")
     eq(await svgs.nth(1).locator(".sparkline-dot").count(), 0, "no dot")
     eq(await svgs.nth(1).locator(".sparkline-line").count(), 1, "line kept")
+  })
+
+  // chart-math's path number format.
+  const fmt = (v) => Number(v.toFixed(2)).toString()
+  const verts = (d) => [...d.matchAll(/[ML] (-?[\d.]+) (-?[\d.]+)/g)].map((m) => [Number(m[1]), Number(m[2])])
+  const parts = (host) =>
+    page.$$eval(`[data-pg="${host}"] .sparkline`, (svgs) =>
+      svgs.map((svg) => ({
+        line: svg.querySelector(".sparkline-line")?.getAttribute("d"),
+        area: svg.querySelector(".sparkline-area")?.getAttribute("d"),
+        cx: Number(svg.querySelector(".sparkline-dot")?.getAttribute("cx")),
+        cy: Number(svg.querySelector(".sparkline-dot")?.getAttribute("cy")),
+      })),
+    )
+
+  await test("a non-finite sample is a gap: line and wash break there, the dot keeps the latest reading", async () => {
+    const gappy = [12, 18, null, 24, 20, null, 27, 31]
+    const stale = [12, 18, 9, 24, 20, 35, 27, null]
+    const step = (width - 2 * inset) / (gappy.length - 1)
+    const [gap, tail] = await parts("spark-gaps")
+    for (const d of [gap.line, gap.area, tail.line, tail.area]) {
+      if (!d || /NaN/.test(d)) throw new Error(`bad path: ${d}`)
+    }
+    const gv = verts(gap.line)
+    eq((gap.line.match(/M /g) || []).length, 3, "three runs")
+    eq((gap.area.match(/Z/g) || []).length, 3, "three washes")
+    eq(gv.map(([x]) => fmt(x)).join(" "), [0, 1, 3, 4, 6, 7].map((j) => fmt(inset + j * step)).join(" "), "a vertex per reading, in its own slot")
+    // Counter-precondition: a null drawn as a value would land on the baseline.
+    for (const [, yv] of gv) if (Math.abs(yv - (height - inset)) < 0.01) throw new Error("a gap was drawn at zero")
+    eq(gap.cx, width - inset, "dot on the latest reading")
+    near(gap.cy, height - inset - (31 / 31) * (height - 2 * inset), 0.01, "latest 31 is the max")
+
+    const tv = verts(tail.line)
+    eq(tv.length, 7, "one run of seven")
+    eq((tail.line.match(/M /g) || []).length, 1)
+    near(tail.cx, inset + 6 * step, 0.01, "dot stays on the last reading, short of the right edge")
+    near(tail.cy, height - inset - (27 / 35) * (height - 2 * inset), 0.01, "max is 35, taken from the readings")
+    near(tv[6][1], tail.cy, 0.01, "line ends at the dot")
+  })
+
+  await test("the baseline folds in zero, and a value past the scale pegs to its edge", async () => {
+    const delta = [3, -2, 5, -4, 1, 2]
+    const spiky = [40, 60, 130, 90, 70]
+    const [d, s] = await parts("spark-range")
+    const dv = verts(d.line)
+    eq(dv.length, delta.length)
+    for (const [, yv] of dv) {
+      if (yv < inset - 0.01 || yv > height - inset + 0.01) throw new Error(`vertex outside the inset: ${yv}`)
+    }
+    // Domain [-4, 5]: the extremes sit on the insets, zero inside the box.
+    const yAt = (v) => height - inset - ((v + 4) / 9) * (height - 2 * inset)
+    near(dv[2][1], inset, 0.01, "5 at the top")
+    near(dv[3][1], height - inset, 0.01, "-4 at the bottom")
+    near(dv[0][1], yAt(3), 0.01, "3 on the shared scale")
+    const zero = yAt(0)
+    if (!(zero > inset + 1 && zero < height - inset - 1)) throw new Error(`fixture: zero line ${zero} is at an edge`)
+    eq(d.area.endsWith(` L ${fmt(width - inset)} ${fmt(zero)} L ${fmt(inset)} ${fmt(zero)} Z`), true, `wash closes on the zero line: ${d.area}`)
+    // Counter-precondition: on the old [0, max] domain -4 sat below the box.
+    if (!(height - inset - (-4 / 5) * (height - 2 * inset) > height)) throw new Error("fixture: -4 would not have left the box")
+
+    const sv = verts(s.line)
+    eq(sv.length, spiky.length)
+    near(sv[2][1], inset, 0.01, "130 pegs to the top inset")
+    near(sv[1][1], height - inset - 0.6 * (height - 2 * inset), 0.01, "60 keeps its place: max={100} did not stretch")
+    near(s.cy, height - inset - 0.7 * (height - 2 * inset), 0.01, "dot on 70")
   })
 
   await test("a single point renders one centred dot and no path", async () => {
@@ -314,6 +380,30 @@ export default async function run({ page, baseUrl, test, eq, near }) {
         el.style.removeProperty("--sparkline-area")
       })
     }
+  })
+
+  await test("descending thresholds read lower-is-worse: the bands flip and the dot takes the latest reading's", async () => {
+    const [h, pad] = [40, 3]
+    const stops = (host) =>
+      page.$eval(`[data-pg="${host}"] .sparkline`, (svg) =>
+        [...svg.querySelectorAll(".sparkline-stop")].map((s) => [s.dataset.zone, Number(s.getAttribute("offset"))]),
+      )
+    const at = (t) => (h - pad - (t / 100) * (h - 2 * pad)) / h
+    const down = await stops("spark-meter-down")
+    eq(down.map(([z]) => z).join(" "), "ok ok warn warn critical critical", "ok on top, critical at the bottom")
+    near(down[1][1], at(40), 1e-6, "ok ends at 40")
+    near(down[3][1], at(20), 1e-6, "warn ends at 20")
+    eq(down[5][1], 1, "critical runs to the floor")
+    // Counter-precondition: the ascending fixture stacks the other way.
+    const up = await stops("spark-meter")
+    eq(up.map(([z]) => z).join(" "), "critical critical warn warn ok ok")
+    near(up[1][1], at(80), 1e-6, "critical ends at 80")
+
+    const bands = await bandColours("spark-meter-down")
+    const [[fixture]] = await paint("spark-meter-down")
+    eq(bands.ok, (await bandColours("spark-meter")).ok, "same tokens as the ascending meter")
+    eq(fixture.dot, bands.critical, "latest 15 is past 20: red")
+    if (fixture.dot === bands.ok) throw new Error("read as higher-is-worse")
   })
 
   await test("theme switches the line with the colour scheme", async () => {

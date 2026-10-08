@@ -24,6 +24,13 @@ const sampleCpu = drift(62, 14)
 const sampleLoad = drift(58, 32)
 /* Each band holds a vertex well clear of both thresholds, and the latest point is amber. */
 const load = [24, 32, 28, 45, 70, 68, 94, 72]
+/* Free space draining: lower is worse, and the latest point is past the second threshold. */
+const free = [85, 80, 72, 60, 45, 30, 25, 15]
+/* A failed poll in the middle, and one at the end. */
+const gappy = [12, 18, null, 24, 20, null, 27, 31]
+const stale = [12, 18, 9, 24, 20, 35, 27, null]
+const delta = [3, -2, 5, -4, 1, 2]
+const spiky = [40, 60, 130, 90, 70]
 
 /* The last 24 samples of the shared 2s ticker, so the window slides one step a beat. */
 function LiveSparkline() {
@@ -71,8 +78,9 @@ export default function SparklinePage() {
           </div>
         </ComponentPreview>
         <p className="pg-desc">
-          The y axis runs from <code>min</code> (default 0) to <code>max</code> (default the data's maximum).
-          The stroke is <code>currentColor</code>, so the line takes the colour of the text around it
+          The y axis runs from <code>min</code> to <code>max</code>, each defaulting to the data's end
+          folded with 0, so a positive series rises from a zero baseline. The stroke is{" "}
+          <code>currentColor</code>, so the line takes the colour of the text around it
           unless <code>color</code> sets one.
         </p>
       </section>
@@ -250,25 +258,66 @@ function CpuTrend() {
       </section>
 
       <section className="pg-section">
+        <h3>Gaps</h3>
+        <p>
+          A sample that is not a finite number, such as a poll that failed, is a gap: the line and
+          the wash break there rather than dropping to zero, and the dot stays on the latest reading.
+        </p>
+        <ComponentPreview code={`<Sparkline points={[12, 18, null, 24, 20, null, 27, 31]} />
+<Sparkline points={[12, 18, 9, 24, 20, 35, 27, null]} />`}>
+          <div className="pg-row" data-pg="spark-gaps">
+            <Sparkline points={gappy} />
+            <Sparkline points={stale} />
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          A reading with a gap on both sides draws nothing. Keep the window the same length and
+          push a <code>null</code> for a missed beat, so the x positions stay honest.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Range</h3>
+        <ComponentPreview code={`<Sparkline points={[3, -2, 5, -4, 1, 2]} />
+<Sparkline points={[40, 60, 130, 90, 70]} max={100} />`}>
+          <div className="pg-row" data-pg="spark-range">
+            <Sparkline points={delta} />
+            <Sparkline points={spiky} max={100} />
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          A series that crosses zero keeps its baseline inside the box, with the wash filling to
+          the zero line on either side. A value past <code>min</code> or <code>max</code> pegs to
+          that edge, as a gauge needle does, so a spike over a pinned scale neither clips nor
+          rescales the line.
+        </p>
+      </section>
+
+      <section className="pg-section">
         <h3>Thresholds</h3>
         <p>
           <code>thresholds</code> colours the line like a meter: green below the first value, amber
           from it, red from the second. Each stretch of line and wash takes the band it sits in, so a
           spike shows red where it crossed, and the dot takes the band of the latest point.
         </p>
-        <ComponentPreview code={`<Sparkline points={load} max={100} thresholds={[60, 80]} />`}>
+        <ComponentPreview code={`<Sparkline points={load} max={100} thresholds={[60, 80]} />
+<Sparkline points={free} max={100} thresholds={[40, 20]} />`}>
           <div className="pg-row">
             <span className="pg-row" data-pg="spark-meter-live"><LiveMeter /></span>
             <span data-pg="spark-meter">
               <Sparkline points={load} max={100} thresholds={[60, 80]} width={160} height={40} inset={3} />
             </span>
+            <span data-pg="spark-meter-down">
+              <Sparkline points={free} max={100} thresholds={[40, 20]} width={160} height={40} inset={3} />
+            </span>
           </div>
         </ComponentPreview>
         <p className="pg-desc">
-          A value equal to a threshold is in the higher band. The bands replace <code>color</code>;{" "}
-          <code>dotColor</code> and <code>areaColor</code> still win for their parts. Set{" "}
-          <code>--sparkline-ok</code>, <code>--sparkline-warn</code> or <code>--sparkline-critical</code>{" "}
-          on any ancestor to recolour a band.
+          Descending thresholds read lower-is-worse: free space at <code>{"[40, 20]"}</code> turns amber
+          at 40 and red at 20. A value equal to a threshold is in the worse band. The bands replace{" "}
+          <code>color</code>; <code>dotColor</code> and <code>areaColor</code> still win for their parts.
+          Set <code>--sparkline-ok</code>, <code>--sparkline-warn</code> or{" "}
+          <code>--sparkline-critical</code> on any ancestor to recolour a band.
         </p>
       </section>
 
@@ -319,16 +368,16 @@ function CpuTrend() {
       </section>
 
       <ApiReference title="Sparkline" props={[
-        { name: "points", type: "number[]", default: "[]", description: "The series, oldest first" },
+        { name: "points", type: "(number | null)[]", default: "[]", description: "The series, oldest first. Anything but a finite number is a gap" },
         { name: "series", type: "{ points, color, theme, dotColor, areaColor, areaOpacity }[]", description: "Several series on one scale, first at the back. Replaces points, color and theme. An item without color or theme takes --chart-1…5 in order" },
         { name: "color", type: "string", default: "currentColor", description: "Colour of the line, and of the wash and dot unless they are set" },
         { name: "theme", type: "{ light, dark }", description: "A colour per scheme, in place of color" },
         { name: "dotColor", type: "string", default: "the line colour", description: "Colour of the latest-point dot" },
         { name: "areaColor", type: "string", default: "the line colour", description: "Colour of the wash" },
         { name: "areaOpacity", type: "number", default: "0.12", description: "Opacity of the wash, 0 to 1" },
-        { name: "thresholds", type: "[number, number]", description: "Colour by band, like a meter: green below the first, amber from it, red from the second. Replaces color and theme" },
-        { name: "min", type: "number", default: "0", description: "Bottom of the y axis" },
-        { name: "max", type: "number", description: "Top of the y axis; defaults to the largest value in points" },
+        { name: "thresholds", type: "[warn, critical]", description: "Colour by band, like a meter: green, amber from warn, red from critical. Ascending is higher-is-worse, descending lower-is-worse. Replaces color and theme" },
+        { name: "min", type: "number", default: "the smaller of 0 and the data's minimum", description: "Bottom of the y axis; a value below it pegs to the edge" },
+        { name: "max", type: "number", default: "the larger of 0 and the data's maximum", description: "Top of the y axis; a value above it pegs to the edge" },
         { name: "area", type: "boolean", default: "true", description: "Fill under the line with a wash of the stroke colour" },
         { name: "dot", type: "boolean", default: "true", description: "Mark the latest point" },
         { name: "width", type: "number", default: "72", description: "Box width in px" },
@@ -341,9 +390,9 @@ function CpuTrend() {
         { name: "--sparkline-dot", type: "<color>", default: "currentColor", description: "Fill of the latest-point dot. Set it on any ancestor" },
         { name: "--sparkline-area", type: "<color>", default: "currentColor", description: "Fill of the wash. Set it on any ancestor" },
         { name: "--sparkline-area-opacity", type: "<number>", default: "0.12", description: "Opacity of the wash. Set it on any ancestor" },
-        { name: "--sparkline-ok", type: "<color>", default: "var(--success)", description: "Below the first threshold" },
-        { name: "--sparkline-warn", type: "<color>", default: "--warning, turned yellow", description: "From the first threshold" },
-        { name: "--sparkline-critical", type: "<color>", default: "var(--destructive)", description: "From the second threshold" },
+        { name: "--sparkline-ok", type: "<color>", default: "var(--success)", description: "Before the first threshold" },
+        { name: "--sparkline-warn", type: "<color>", default: "--warning, turned yellow", description: "Between the thresholds" },
+        { name: "--sparkline-critical", type: "<color>", default: "var(--destructive)", description: "Past the second threshold" },
       ]} />
     </>
   )
