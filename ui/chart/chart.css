@@ -243,6 +243,29 @@
   border-radius: 2px;
 }
 
+/* <ChartLegendContent toggle />: each item a button that hides its series. */
+button.chart-legend-item {
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: color var(--motion-fast) var(--motion-ease);
+}
+
+/* A hidden series: struck through, so the state does not rest on colour, and
+ * a hollow swatch in place of its fill. */
+.chart-legend-item[data-inactive] {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+}
+
+.chart-legend-item[data-inactive] .chart-legend-swatch {
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
 /* Series colour is the datum: each fill is a different series, so the
  * forced palette would merge them. Keep the fills and outline bars in
  * CanvasText so every bar still has an edge against Canvas. */

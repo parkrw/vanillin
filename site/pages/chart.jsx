@@ -636,7 +636,7 @@ const chartConfig = {
           which <code>fill</code> and <code>stroke</code> read back. Series, axes, grid, reference marks, tooltip and legend must be
           direct children of the chart or sit in a Fragment: a wrapper component around <code>&lt;Bar&gt;</code> is
           invisible to the chart. Pie, radar and radial charts share this shell and sit on a separate polar root. No
-          entrance animation, no RTL axis mirroring, no <code>Brush</code> or <code>syncId</code>.
+          entrance animation, no RTL axis mirroring, no <code>Brush</code>.
         </p>
       </section>
 
@@ -1459,6 +1459,89 @@ const fullDay = (value) =>
       </section>
 
       <section className="pg-section">
+        <h3>Hiding a series</h3>
+        <p>
+          <code>hide</code> on a <code>Bar</code>, <code>Line</code>, <code>Area</code> or <code>Scatter</code> takes
+          it out of the drawing, the value axis, the stack and the tooltip, and keeps its legend entry, struck through.{" "}
+          <code>toggle</code> on <code>ChartLegendContent</code> makes each entry a button that hides or shows its
+          series, by click or by Space and Enter; <code>aria-pressed</code> says whether the series is shown, and a
+          toggle wins over the series' own <code>hide</code>. Here Mobile starts hidden, so the axis fits Desktop
+          alone until it is shown.
+        </p>
+        <ComponentPreview code={`<BarChart data={chartData}>
+  <CartesianGrid vertical={false} />
+  <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={(v) => v.slice(0, 3)} />
+  <YAxis tickLine={false} axisLine={false} width={40} />
+  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+  <ChartLegend content={<ChartLegendContent toggle />} />
+  <Bar dataKey="desktop" stackId="a" fill="var(--color-desktop)" />
+  <Bar dataKey="mobile" stackId="a" fill="var(--color-mobile)" hide />
+</BarChart>`}>
+          <Frame pg="chart-hide">
+            <ChartContainer config={chartConfig}>
+              <BarChart data={chartData}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={monthTick} />
+                <YAxis tickLine={false} axisLine={false} width={40} />
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                <ChartLegend content={<ChartLegendContent toggle />} />
+                <Bar dataKey="desktop" stackId="a" fill="var(--color-desktop)" />
+                <Bar dataKey="mobile" stackId="a" fill="var(--color-mobile)" hide />
+              </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Synced charts</h3>
+        <p>
+          Charts with the same <code>syncId</code> share the active category: pointing at or stepping through one
+          shows the tooltip and cursor on every other at the same position in its data, as Recharts'{" "}
+          <code>syncMethod="index"</code> does. Each tooltip sits on its own chart's category.
+        </p>
+        <ComponentPreview code={`<ChartContainer config={chartConfig}>
+  <BarChart data={chartData} syncId="visitors">
+    <CartesianGrid vertical={false} />
+    <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={(v) => v.slice(0, 3)} />
+    <ChartTooltip content={<ChartTooltipContent />} />
+    <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
+  </BarChart>
+</ChartContainer>
+<ChartContainer config={chartConfig}>
+  <LineChart data={chartData} syncId="visitors">
+    <CartesianGrid vertical={false} />
+    <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={(v) => v.slice(0, 3)} />
+    <ChartTooltip content={<ChartTooltipContent />} />
+    <Line dataKey="mobile" stroke="var(--color-mobile)" type="monotone" />
+  </LineChart>
+</ChartContainer>`}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", width: "100%", maxWidth: "40rem" }}>
+            <div data-pg="chart-sync-bar" style={{ flex: "1 1 14rem" }}>
+              <ChartContainer config={chartConfig} style={{ aspectRatio: "4 / 3" }}>
+                <BarChart data={chartData} syncId="visitors" accessibilityLayer aria-label="Desktop visitors by month">
+                  <CartesianGrid vertical={false} />
+                  <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={monthTick} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
+                </BarChart>
+              </ChartContainer>
+            </div>
+            <div data-pg="chart-sync-line" style={{ flex: "1 1 14rem" }}>
+              <ChartContainer config={chartConfig} style={{ aspectRatio: "4 / 3" }}>
+                <LineChart data={chartData} syncId="visitors" accessibilityLayer aria-label="Mobile visitors by month">
+                  <CartesianGrid vertical={false} />
+                  <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={monthTick} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Line dataKey="mobile" stroke="var(--color-mobile)" type="monotone" />
+                </LineChart>
+              </ChartContainer>
+            </div>
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Reference marks</h3>
         <p>
           <code>ReferenceLine</code>, <code>ReferenceArea</code> and <code>ReferenceDot</code> mark values on the axes
@@ -2183,6 +2266,7 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "barCategoryGap", type: "string | number", default: '"10%"', description: "Gap either side of a band, as a fraction of the band or in px" },
         { name: "barGap", type: "number", default: "4", description: "Gap between bars in one band, px" },
         { name: "stackOffset", type: '"none" | "expand"', default: '"none"', description: "expand scales every stack to span 0 to 1; the tooltip keeps the raw values" },
+        { name: "syncId", type: "string", description: "Charts sharing it share the active category, by position in the data" },
         { name: "accessibilityLayer", type: "boolean", default: "false", description: "Focusable surface with keyboard navigation" },
         { name: "aria-label", type: "string", description: "Names the surface; gives role=img without accessibilityLayer" },
       ]} />
@@ -2202,6 +2286,7 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "strokeWidth", type: "number", description: "Line 2, Area 1.5" },
         { name: "dot / activeDot", type: "boolean | { r, fill, stroke } | (point) => node | element", description: "Point markers; the active one follows the tooltip. point is { cx, cy, r, index, value, payload }" },
         { name: "connectNulls", type: "boolean", default: "false", description: "Bridge null values instead of breaking the line" },
+        { name: "hide", type: "boolean", default: "false", description: "Draw nothing and leave the value axis, stack and tooltip; the legend entry stays, inactive. Scatter too" },
       ]} />
 
       <ApiReference title="XAxis / YAxis / CartesianGrid / LabelList" props={[
@@ -2306,6 +2391,7 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "labelFormatter", type: "(value, payload) => node", description: "Tooltip heading" },
         { name: "formatter", type: "fn", description: "(value, name, item, index, payload) => node; replaces the row" },
         { name: "nameKey / labelKey", type: "string", description: "Look up config by another field of the payload" },
+        { name: "toggle", type: "boolean", default: "false", description: "ChartLegendContent: each entry a button (aria-pressed) that hides or shows its series; cartesian charts" },
       ]} />
     </>
   )

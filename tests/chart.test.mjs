@@ -1286,6 +1286,114 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await open()
   })
 
+  // ── Hide and sync ──
+
+  const yTop = async (name) => Number((await page.locator(`${pg(name)} .chart-axis[data-axis="y"] .chart-tick-text`).allTextContents()).at(-1).replace(/,/g, ""))
+  const legendItem = (name, label) => page.locator(`${pg(name)} .chart-legend-item`, { hasText: label })
+  const shown = (name, label) => legendItem(name, label).getAttribute("aria-pressed")
+  const waitForSeries = (name, keys) =>
+    page.waitForFunction(
+      ([sel, keys]) => [...document.querySelectorAll(sel)].map((el) => el.dataset.key).join() === keys,
+      [`${pg(name)} .chart-series`, keys],
+    )
+  const hoverBar = async (name, key, index) => {
+    await page.locator(`${pg(name)} .chart-surface`).evaluate((el) => el.scrollIntoView({ block: "center" }))
+    const r = (await barRects(name, key))[index]
+    await page.mouse.move(r.x + r.width / 2, r.y + r.height / 2)
+  }
+
+  await test("hide: a hidden series leaves the drawing, the domain, the stack and the tooltip; a legend click brings it back", async () => {
+    const name = "chart-hide"
+    eq(await page.locator(`${pg(name)} button.chart-legend-item`).count(), 2, "toggle: each entry is a button")
+    eq(await shown(name, "Mobile"), "false", 'hide: Mobile starts hidden, its entry kept')
+    eq(await shown(name, "Desktop"), "true")
+    eq(await legendItem(name, "Mobile").evaluate((el) => getComputedStyle(el).textDecorationLine), "line-through")
+    eq(await legendItem(name, "Desktop").evaluate((el) => getComputedStyle(el).textDecorationLine), "none")
+    eq((await seriesKeys(name)).join(), "desktop", "nothing drawn for Mobile")
+    const before = await yTop(name)
+    eq(before >= 305 && before < 505, true, `the axis fits Desktop alone (305), not the stack (505): top tick ${before}`)
+    await hoverBar(name, "desktop", 1)
+    await tooltip(name).waitFor()
+    eq((await tooltip(name).locator(".chart-tooltip-name").allTextContents()).join(), "Desktop", "no tooltip row for a hidden series")
+    await page.mouse.move(0, 0)
+    await tooltip(name).waitFor({ state: "detached" })
+
+    await legendItem(name, "Mobile").click()
+    await waitForSeries(name, "desktop,mobile")
+    eq(await shown(name, "Mobile"), "true")
+    const after = await yTop(name)
+    eq(after >= 505, true, `shown, the stack reaches 505: top tick ${after}`)
+    const y = await valueScale(name, "y")
+    const [, feb] = await bboxes(`${pg(name)} .chart-series[data-key="mobile"] .chart-bar`)
+    near(feb.y, y(505), 0.01, "February's Mobile stacks on Desktop's 305")
+    near(feb.bottom, y(305), 0.01)
+
+    await legendItem(name, "Mobile").click()
+    await waitForSeries(name, "desktop")
+    eq(await yTop(name), before, "hidden again, the axis returns")
+  })
+
+  await test("hide: Space and Enter on a legend entry toggle its series; the default legend stays plain items", async () => {
+    const name = "chart-hide"
+    await legendItem(name, "Mobile").click()
+    await waitForSeries(name, "desktop,mobile")
+    await legendItem(name, "Desktop").focus()
+    await page.keyboard.press("Space")
+    await waitForSeries(name, "mobile")
+    eq(await shown(name, "Desktop"), "false")
+    const top = await yTop(name)
+    eq(top >= 200 && top < 305, true, `the axis fits Mobile alone (200): top tick ${top}`)
+    const y = await valueScale(name, "y")
+    const [, feb] = await bboxes(`${pg(name)} .chart-series[data-key="mobile"] .chart-bar`)
+    near(feb.bottom, y(0), 0.01, "with Desktop out of the stack, Mobile stands on zero")
+    near(feb.y, y(200), 0.01)
+    await page.keyboard.press("Enter")
+    await waitForSeries(name, "desktop,mobile")
+    eq(await shown(name, "Desktop"), "true")
+    await legendItem(name, "Mobile").click()
+    await waitForSeries(name, "desktop")
+
+    const plain = page.locator(`${pg("chart-stacked")} .chart-legend-item`)
+    eq(await plain.count(), 2, "precondition: the stacked demo has a legend")
+    eq((await plain.evaluateAll((els) => els.map((el) => `${el.tagName}:${el.hasAttribute("aria-pressed")}:${el.hasAttribute("data-inactive")}`))).join(), "DIV:false:false,DIV:false:false")
+  })
+
+  await test("syncId: pointing at one chart shows the tooltip and cursor on the other at the same index, anchored on its own layout", async () => {
+    const [bar, line] = ["chart-sync-bar", "chart-sync-line"]
+    eq(await tooltip(bar).count(), 0, "precondition: no tooltips")
+    eq(await tooltip(line).count(), 0)
+    await hoverBar(bar, "desktop", 2)
+    await tooltip(bar).waitFor()
+    await tooltip(line).waitFor()
+    eq((await tooltip(bar).locator(".chart-tooltip-value").allTextContents()).join(), "237")
+    eq((await tooltip(line).locator(".chart-tooltip-value").allTextContents()).join(), "120", "March in the line chart's own data")
+    eq(await tooltip(line).locator(".chart-tooltip-label").textContent(), "March")
+    const [cursor] = await shape(`${pg(line)} .chart-cursor`, ["x1"])
+    near(cursor.x1, await tickAt(line, "x", "Mar"), 0.01, "the synced cursor on March")
+    // The pointer's point is in the bar chart's coordinates, mid-bar; a synced
+    // tooltip anchors at the top of its own plot instead (margin 5 + gap 12).
+    const ty = (name) => page.locator(`${pg(name)} .chart-tooltip-anchor`).evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).f)
+    near(await ty(line), 17, 0.5)
+    eq((await ty(bar)) > 40, true, "the hovered chart still follows the pointer")
+    eq(await tooltip("chart-composed").count(), 0, "counter-precondition: a chart without the syncId is untouched")
+    await page.mouse.move(0, 0)
+    await tooltip(bar).waitFor({ state: "detached" })
+    await tooltip(line).waitFor({ state: "detached" })
+  })
+
+  await test("syncId: stepping one chart by keyboard steps the other, and leaving clears both", async () => {
+    const [bar, line] = ["chart-sync-bar", "chart-sync-line"]
+    await page.locator(`${pg(line)} .chart-surface`).focus()
+    await tooltip(bar).waitFor()
+    eq((await tooltip(bar).locator(".chart-tooltip-value").allTextContents()).join(), "186", "focus lands on January in both")
+    await page.keyboard.press("End")
+    await page.waitForFunction((sel) => document.querySelector(sel)?.textContent === "214", `${pg(bar)} .chart-tooltip-value`)
+    eq((await tooltip(line).locator(".chart-tooltip-value").allTextContents()).join(), "140")
+    await page.locator("h2").click()
+    await tooltip(bar).waitFor({ state: "detached" })
+    await tooltip(line).waitFor({ state: "detached" })
+  })
+
   // ── Forced colours ──
 
   await test("forced-colors: series fills survive, tick text does not opt out", async () => {

@@ -63,6 +63,7 @@ const LayoutContext = createContext(null)
 const ActiveIndexContext = createContext(null)
 const PointerContext = createContext(null)
 const SeriesContext = createContext(null)
+const VisibilityContext = createContext(null)
 
 function useChart() {
   const context = useContext(ChartContext)
@@ -204,10 +205,14 @@ export function ChartTooltipContent({
   )
 }
 
-export function ChartLegendContent({ className, hideIcon = false, payload, verticalAlign = "bottom", nameKey, ...props }) {
+export function ChartLegendContent({ className, hideIcon = false, payload, verticalAlign = "bottom", nameKey, toggle = false, ...props }) {
   const { config } = useChart()
+  const visibility = useContext(VisibilityContext)
 
   if (!payload?.length) return null
+
+  // Opt-in, so the default legend stays upstream's markup: plain items.
+  const Item = toggle && visibility ? "button" : "div"
 
   return (
     <div className={cn("chart-legend", `chart-legend--${verticalAlign}`, className)} {...props}>
@@ -218,15 +223,20 @@ export function ChartLegendContent({ className, hideIcon = false, payload, verti
           const itemConfig = getPayloadConfigFromPayload(config, item, key)
           const Icon = itemConfig?.icon
 
+          const toggleProps =
+            Item === "button"
+              ? { type: "button", "aria-pressed": !item.inactive, onClick: () => visibility.toggle(item.dataKey, !item.inactive) }
+              : null
+
           return (
-            <div key={index} className="chart-legend-item">
+            <Item key={index} className="chart-legend-item" data-inactive={item.inactive || undefined} {...toggleProps}>
               {Icon && !hideIcon ? (
                 <Icon />
               ) : (
-                <div className="chart-legend-swatch" style={{ backgroundColor: item.color }} />
+                <div className="chart-legend-swatch" style={item.inactive ? undefined : { backgroundColor: item.color }} />
               )}
               {itemConfig?.label}
-            </div>
+            </Item>
           )
         })}
     </div>
@@ -430,7 +440,15 @@ function referenceExtents(references) {
   return extents
 }
 
-function computeLayout({ data, vertical, margin, width, height, barCategoryGap, barGap, stackOffset, series, xaxis, yaxis, extents }) {
+/*
+ * A series is hidden by its `hide` prop or by a legend toggle, which `hidden`
+ * carries keyed by the legend's dataKey and which wins over the prop. A hidden
+ * series keeps its legend entry (inactive) and leaves the domain, the stack,
+ * the bar slots and the tooltip.
+ */
+const isHidden = (hidden, key, props) => hidden.get(key) ?? Boolean(props.hide)
+
+function computeLayout({ data, vertical, margin, width, height, barCategoryGap, barGap, stackOffset, series, xaxis, yaxis, extents, hidden }) {
   const space = (el, dim, fallback) => (el && !el.props.hide ? (el.props[dim] ?? fallback) : 0)
   const left = space(yaxis, "width", 60)
   const bottom = space(xaxis, "height", 30)
@@ -462,14 +480,16 @@ function computeLayout({ data, vertical, margin, width, height, barCategoryGap, 
       values,
       color: seriesColor(role, el.props, index),
       props: el.props,
+      hidden: isHidden(hidden, dataKey, el.props),
       stack: null,
       slot: null,
     }
   })
+  const shown = entries.filter((entry) => !entry.hidden)
 
-  stackEntries(entries, (entry) => entry.role !== "line", stackOffset)
+  stackEntries(entries, (entry) => entry.role !== "line" && !entry.hidden, stackOffset)
 
-  const columns = entries.flatMap((entry) =>
+  const columns = shown.flatMap((entry) =>
     entry.role === "line" || entry.stackId == null
       ? [entry.values]
       : [entry.stack.map((p) => p.y0), entry.stack.map((p) => p.y1)],
@@ -488,7 +508,7 @@ function computeLayout({ data, vertical, margin, width, height, barCategoryGap, 
   const valueScale = linearScale(domain, vertical ? [plot.x, plot.x + plot.width] : [plot.y + plot.height, plot.y])
 
   slotEntries(
-    entries.filter((entry) => entry.role === "bar"),
+    shown.filter((entry) => entry.role === "bar"),
     categoryScale.bandwidth,
     barGap,
   )
@@ -513,9 +533,10 @@ function computeLayout({ data, vertical, margin, width, height, barCategoryGap, 
     value: entry.name,
     color: entry.color,
     type: "rect",
+    inactive: entry.hidden,
   }))
   const payloadAt = (i) =>
-    entries.map((entry) => ({
+    shown.map((entry) => ({
       dataKey: entry.dataKey,
       name: entry.name,
       value: entry.values[i],
@@ -563,7 +584,7 @@ function numericAxis(axis, columns, range) {
  * point of one series: the pointer takes the nearest dot across series and
  * `focus(k)` turns the tooltip view onto that series; the keys step the first.
  */
-function computeScatterLayout({ margin, width, height, series, xaxis, yaxis, zaxis, extents }) {
+function computeScatterLayout({ margin, width, height, series, xaxis, yaxis, zaxis, extents, hidden }) {
   const space = (el, dim, fallback) => (el && !el.props.hide ? (el.props[dim] ?? fallback) : 0)
   const left = space(yaxis, "width", 60)
   const bottom = space(xaxis, "height", 30)
@@ -593,12 +614,16 @@ function computeScatterLayout({ margin, width, height, series, xaxis, yaxis, zax
       colors: rows.map((d, i) => cells[i] ?? d?.fill ?? el.props.fill ?? paletteColor(index)),
       color: el.props.fill ?? paletteColor(index),
       props: el.props,
+      hidden: isHidden(hidden, name, el.props),
     }
   })
-  const x = numericAxis(xaxis, [...entries.map((entry) => entry.xs), extents.x], [plot.x, plot.x + plot.width])
-  const y = numericAxis(yaxis, [...entries.map((entry) => entry.values), extents.y], [plot.y + plot.height, plot.y])
+  const shown = entries.filter((entry) => !entry.hidden)
+  // The keyboard steps the first series still drawn.
+  const lead = entries.indexOf(shown[0])
+  const x = numericAxis(xaxis, [...shown.map((entry) => entry.xs), extents.x], [plot.x, plot.x + plot.width])
+  const y = numericAxis(yaxis, [...shown.map((entry) => entry.values), extents.y], [plot.y + plot.height, plot.y])
   const zRange = zaxis?.props.range ?? [64, 64]
-  const zScale = linearScale(extent(entries.map((entry) => entry.zs)), zRange)
+  const zScale = linearScale(extent(shown.map((entry) => entry.zs)), zRange)
   const radius = (z) => Math.sqrt(Math.max(0, z == null ? zRange[0] : zScale(z)) / Math.PI)
   for (const entry of entries) {
     entry.points = entry.xs.map((vx, i) => (vx == null || entry.values[i] == null ? null : [x.scale(vx), y.scale(entry.values[i]), radius(entry.zs[i])]))
@@ -606,6 +631,7 @@ function computeScatterLayout({ margin, width, height, series, xaxis, yaxis, zax
   const nearest = (point) => {
     let best = null
     entries.forEach((entry, k) => {
+      if (entry.hidden) return
       entry.points.forEach((p, i) => {
         if (!p) return
         const d = Math.hypot(p[0] - point.x, p[1] - point.y)
@@ -638,7 +664,7 @@ function computeScatterLayout({ margin, width, height, series, xaxis, yaxis, zax
     category: { labels: [], count: 0 },
     anchorAt: () => [plot.x, plot.y],
     payloadAt: () => [],
-    ...views[0],
+    ...views[lead],
     x,
     y,
     value: y,
@@ -646,9 +672,9 @@ function computeScatterLayout({ margin, width, height, series, xaxis, yaxis, zax
     series: entries,
     ...indexEntries(entries),
     indexAt: (point) => nearest(point)?.i ?? -1,
-    seriesAt: (point) => (point ? (nearest(point)?.k ?? -1) : 0),
+    seriesAt: (point) => (point ? (nearest(point)?.k ?? -1) : lead),
     clampValue: (v) => Math.min(y.domain[1], Math.max(y.domain[0], v)),
-    legendPayload: entries.map((entry) => ({ dataKey: entry.name, value: entry.name, color: entry.color, type: "circle" })),
+    legendPayload: entries.map((entry) => ({ dataKey: entry.name, value: entry.name, color: entry.color, type: "circle", inactive: entry.hidden })),
   }
   const focused = [layout]
   layout.focus = (k) => {
@@ -660,8 +686,17 @@ function computeScatterLayout({ margin, width, height, series, xaxis, yaxis, zax
 }
 
 const AXIS_SIG_KEYS = ["dataKey", "hide", "width", "height", "domain", "ticks", "tickCount", "allowDataOverflow"]
-const SERIES_SIG_KEYS = ["dataKey", "stackId", "name", "barSize", "maxBarSize", "fill", "stroke"]
+const SERIES_SIG_KEYS = ["dataKey", "stackId", "name", "barSize", "maxBarSize", "fill", "stroke", "hide"]
 const pick = (props, keys) => keys.map((key) => props?.[key])
+
+/* syncId → the charts sharing it, each a function taking the active index or null. */
+const syncChannels = new Map()
+
+function broadcast(syncId, from, index) {
+  for (const listener of syncChannels.get(syncId) ?? []) {
+    if (listener !== from) listener(index)
+  }
+}
 
 /*
  * The active category: set by the pointer (the surface's own coordinates
@@ -669,20 +704,49 @@ const pick = (props, keys) => keys.map((key) => props?.[key])
  * tooltip's defaultIndex. A touch tooltip has no leave event: it stays
  * until a press lands outside the chart. trigger="click" treats every
  * pointer the same way: a press toggles, movement is ignored.
+ *
+ * Charts sharing a syncId share the index, by position as Recharts'
+ * syncMethod="index" does. A synced chart takes the index with no point:
+ * the point is in the other chart's coordinates, so its tooltip anchors on
+ * its own layout. It clears only an index it was handed, never its own.
  */
-function useActiveIndex({ count, defaultIndex, indexAt, trigger = "hover" }) {
+function useActiveIndex({ count, defaultIndex, indexAt, trigger = "hover", syncId }) {
   const [activeIndex, setActiveIndex] = useState(() => (Number.isInteger(defaultIndex) ? defaultIndex : null))
   const [pointer, setPointer] = useState({ source: "default", point: null })
   const layoutRef = useRef(null)
+  // Read by document and sync listeners, which outlive the render they closed over.
+  const sourceRef = useRef(pointer.source)
+  const listenerRef = useRef(null)
 
-  const activate = (index, source, point = null) => {
+  const set = (index, source, point) => {
+    sourceRef.current = source
     setActiveIndex(index)
-    setPointer({ source, point })
+    setPointer((prev) => (prev.source === source && prev.point === point ? prev : { source, point }))
+  }
+  const activate = (index, source, point = null) => {
+    set(index, source, point)
+    if (syncId != null) broadcast(syncId, listenerRef.current, index)
   }
   const clear = () => {
-    setActiveIndex(null)
-    setPointer((prev) => (prev.source === "default" && prev.point === null ? prev : { source: "default", point: null }))
+    set(null, "default", null)
+    if (syncId != null) broadcast(syncId, listenerRef.current, null)
   }
+
+  useEffect(() => {
+    if (syncId == null) return
+    const listener = (index) => {
+      if (index != null) set(index, "sync", null)
+      else if (sourceRef.current === "sync") set(null, "default", null)
+    }
+    listenerRef.current = listener
+    if (!syncChannels.has(syncId)) syncChannels.set(syncId, new Set())
+    const channel = syncChannels.get(syncId)
+    channel.add(listener)
+    return () => {
+      channel.delete(listener)
+      if (!channel.size) syncChannels.delete(syncId)
+    }
+  }, [syncId])
 
   const hit = (event) => {
     const rect = event.currentTarget.getBoundingClientRect()
@@ -707,7 +771,7 @@ function useActiveIndex({ count, defaultIndex, indexAt, trigger = "hover" }) {
   useEffect(() => {
     if (activeIndex == null || pointer.source !== "pointer") return
     const onDown = (event) => {
-      if (!layoutRef.current?.contains(event.target)) clear()
+      if (sourceRef.current === "pointer" && !layoutRef.current?.contains(event.target)) clear()
     }
     document.addEventListener("pointerdown", onDown)
     return () => document.removeEventListener("pointerdown", onDown)
@@ -771,6 +835,7 @@ function CartesianChart({
   barCategoryGap = "10%",
   barGap,
   stackOffset = "none",
+  syncId,
   accessibilityLayer = false,
   className,
   children,
@@ -790,6 +855,8 @@ function CartesianChart({
   const foreign = parts.series.filter((el) => (el.type.chartRole === "scatter") !== scatter)
   const { xaxis, yaxis, zaxis } = parts
   const fullMargin = { ...DEFAULT_MARGIN, ...margin }
+  const [hidden, setHidden] = useState(() => new Map())
+  const visibility = useMemo(() => ({ toggle: (key, hide) => setHidden((prev) => new Map(prev).set(key, hide)) }), [])
 
   // Keyed on what the geometry reads, never on children identity: a parent
   // re-render hands down fresh elements every time.
@@ -807,12 +874,13 @@ function CartesianChart({
     yaxis: yaxis && pick(yaxis.props, AXIS_SIG_KEYS),
     zaxis: zaxis && pick(zaxis.props, ["dataKey", "range"]),
     extents,
+    hidden: [...hidden],
   })
   const computed = useMemo(
     () =>
       scatter
-        ? computeScatterLayout({ margin: fullMargin, width, height, series, xaxis, yaxis, zaxis, extents })
-        : computeLayout({ data, vertical, margin: fullMargin, width, height, barCategoryGap, barGap, stackOffset, series, xaxis, yaxis, extents }),
+        ? computeScatterLayout({ margin: fullMargin, width, height, series, xaxis, yaxis, zaxis, extents, hidden })
+        : computeLayout({ data, vertical, margin: fullMargin, width, height, barCategoryGap, barGap, stackOffset, series, xaxis, yaxis, extents, hidden }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [data, seriesData, width, height, signature],
   )
@@ -847,6 +915,7 @@ function CartesianChart({
     defaultIndex: tooltipEl?.props.defaultIndex,
     trigger: tooltipEl?.props.trigger,
     indexAt: computed.indexAt,
+    syncId,
   })
   const hostLayout = computed.focus ? computed.focus(computed.seriesAt(pointer.point)) : computed
 
@@ -884,32 +953,34 @@ function CartesianChart({
     <LayoutContext.Provider value={hostLayout}>
       <ActiveIndexContext.Provider value={activeIndex}>
         <PointerContext.Provider value={pointer}>
-          <div ref={layoutRef} className={cn("chart-layout", className)} data-layout={scatter ? "scatter" : layout} {...props}>
-            {legendTop ? legendEl : null}
-            <div className="chart-plot" ref={plotRef}>
-              <svg
-                className="chart-surface"
-                width={width}
-                height={height}
-                aria-label={ariaLabel}
-                aria-labelledby={ariaLabelledBy}
-                aria-describedby={ariaDescribedBy}
-                {...surface}
-                {...a11y}
-              >
-                {parts.passthrough}
-                {parts.grid}
-                {areas}
-                {cursor}
-                {series}
-                {marks}
-                {xaxis}
-                {yaxis}
-              </svg>
-              {tooltipEl}
+          <VisibilityContext.Provider value={visibility}>
+            <div ref={layoutRef} className={cn("chart-layout", className)} data-layout={scatter ? "scatter" : layout} {...props}>
+              {legendTop ? legendEl : null}
+              <div className="chart-plot" ref={plotRef}>
+                <svg
+                  className="chart-surface"
+                  width={width}
+                  height={height}
+                  aria-label={ariaLabel}
+                  aria-labelledby={ariaLabelledBy}
+                  aria-describedby={ariaDescribedBy}
+                  {...surface}
+                  {...a11y}
+                >
+                  {parts.passthrough}
+                  {parts.grid}
+                  {areas}
+                  {cursor}
+                  {series}
+                  {marks}
+                  {xaxis}
+                  {yaxis}
+                </svg>
+                {tooltipEl}
+              </div>
+              {legendEl && !legendTop ? legendEl : null}
             </div>
-            {legendEl && !legendTop ? legendEl : null}
-          </div>
+          </VisibilityContext.Provider>
         </PointerContext.Provider>
       </ActiveIndexContext.Provider>
     </LayoutContext.Provider>
@@ -1472,6 +1543,7 @@ export function Bar({
   shape,
   activeBar = false,
   activeIndex,
+  hide,
   // The chart's layout decides; a Bar takes the prop only so Recharts snippets paste in.
   layout: _layout,
   className,
@@ -1481,7 +1553,7 @@ export function Bar({
   const layout = useContext(LayoutContext)
   const hovered = useContext(ActiveIndexContext)
   const entry = layout?.byKey.get(`bar:${dataKey}`)
-  if (!layout || !entry || !entry.slot) return null
+  if (!layout || !entry || entry.hidden || !entry.slot) return null
   const { category, value, vertical, data } = layout
   const cells = Children.toArray(children).filter(isCell)
   // A controlled activeIndex wins over the pointer, as in Recharts.
@@ -1578,6 +1650,7 @@ export function Line({
   dot = true,
   activeDot = true,
   connectNulls = false,
+  hide,
   className,
   children,
   ...props
@@ -1585,7 +1658,7 @@ export function Line({
   const layout = useContext(LayoutContext)
   const active = useContext(ActiveIndexContext)
   const entry = layout?.byKey.get(`line:${dataKey}`)
-  if (!layout || !entry) return null
+  if (!layout || !entry || entry.hidden) return null
   const color = stroke ?? entry.color
   const points = entry.values.map((v, i) => (v == null ? null : layout.pointAt(i, v)))
   return (
@@ -1617,6 +1690,7 @@ export function Area({
   dot = false,
   activeDot = true,
   connectNulls = false,
+  hide,
   className,
   children,
   ...props
@@ -1624,7 +1698,7 @@ export function Area({
   const layout = useContext(LayoutContext)
   const active = useContext(ActiveIndexContext)
   const entry = layout?.byKey.get(`area:${dataKey}`)
-  if (!layout || !entry) return null
+  if (!layout || !entry || entry.hidden) return null
   const color = stroke ?? entry.color
   const upper = entry.stack.map((p, i) => (entry.values[i] == null ? null : layout.pointAt(i, p.y1)))
   const lower = entry.stack.map((p, i) => (entry.values[i] == null ? null : layout.pointAt(i, layout.clampValue(p.y0))))
@@ -1664,11 +1738,11 @@ export function Area({
 }
 Area.chartRole = "area"
 
-export function Scatter({ data, dataKey, name, fill, fillOpacity, stroke, strokeWidth, line = false, shape, className, children, ...props }) {
+export function Scatter({ data, dataKey, name, fill, fillOpacity, stroke, strokeWidth, line = false, shape, hide, className, children, ...props }) {
   const layout = useContext(LayoutContext)
   const active = useContext(ActiveIndexContext)
   const entry = layout?.series?.find((e) => e.role === "scatter" && e.props.data === data && e.name === (name ?? dataKey ?? e.name))
-  if (!layout || !entry) return null
+  if (!layout || !entry || entry.hidden) return null
   const activeAt = layout.activeSeries === entry.index ? active : null
   const lineProps = typeof line === "object" && line ? line : {}
   const dots = entry.points.map((p, i) => {
