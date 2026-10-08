@@ -259,6 +259,7 @@ function getPayloadConfigFromPayload(config, payload, key) {
 // take the first occurrence. Anything else is passthrough SVG or a warning.
 const CARTESIAN_PARTS = {
   series: new Set(["bar", "line", "area", "scatter"]),
+  references: new Set(["referencearea", "referenceline", "referencedot"]),
   unique: ["xaxis", "yaxis", "zaxis"],
   first: ["grid", "tooltip", "legend"],
 }
@@ -268,7 +269,7 @@ const POLAR_PARTS = {
   first: ["polargrid", "tooltip", "legend"],
 }
 
-function collect(children, parts, out = { series: [], passthrough: [], unknown: [], stray: [], duplicates: [] }) {
+function collect(children, parts, out = { series: [], references: [], passthrough: [], unknown: [], stray: [], duplicates: [] }) {
   for (const child of Children.toArray(children)) {
     if (!isValidElement(child)) continue
     if (child.type === Fragment) {
@@ -277,6 +278,7 @@ function collect(children, parts, out = { series: [], passthrough: [], unknown: 
     }
     const role = child.type?.chartRole
     if (parts.series.has(role)) out.series.push(child)
+    else if (parts.references?.has(role)) out.references.push(child)
     else if (parts.unique.includes(role)) {
       if (out[role]) out.duplicates.push(child)
       else out[role] = child
@@ -386,7 +388,49 @@ function seriesColor(role, props, index) {
   return explicit ?? `var(--chart-${(index % PALETTE_SIZE) + 1})`
 }
 
-function computeLayout({ data, vertical, margin, width, height, barCategoryGap, barGap, stackOffset, series, xaxis, yaxis }) {
+/*
+ * Where a reference value lands on one axis: a category at its band's start,
+ * middle or end, a number through the value scale. Null when the value is off
+ * the axis (a category the data lacks, a number outside the domain), which is
+ * ifOverflow="discard". `edges` are the pixels of the first category or lowest
+ * value and of the last or highest, for a ReferenceArea side left out.
+ */
+function axisLocator(axis) {
+  const at = axis.labels
+    ? (v, where = "middle") => {
+        const i = axis.labels.indexOf(v)
+        if (i < 0) return null
+        if (where === "start") return axis.scale.start(i)
+        if (where === "end") return axis.scale.start(i) + axis.scale.bandwidth
+        return axis.scale.center(i)
+      }
+    : (v) => {
+        const n = finite(v)
+        return n == null || n < axis.domain[0] || n > axis.domain[1] ? null : axis.scale(n)
+      }
+  return { at, edges: axis.scale.range }
+}
+
+/* Numbers that ifOverflow="extendDomain" references fold into each axis's domain. */
+function referenceExtents(references) {
+  const extents = { x: [], y: [] }
+  for (const el of references) {
+    const { ifOverflow, segment } = el.props
+    if (ifOverflow !== "extendDomain") continue
+    const points = [el.props, ...(Array.isArray(segment) ? segment : [])]
+    for (const axis of ["x", "y"]) {
+      for (const point of points) {
+        for (const key of [axis, `${axis}1`, `${axis}2`]) {
+          const v = finite(point?.[key])
+          if (v != null) extents[axis].push(v)
+        }
+      }
+    }
+  }
+  return extents
+}
+
+function computeLayout({ data, vertical, margin, width, height, barCategoryGap, barGap, stackOffset, series, xaxis, yaxis, extents }) {
   const space = (el, dim, fallback) => (el && !el.props.hide ? (el.props[dim] ?? fallback) : 0)
   const left = space(yaxis, "width", 60)
   const bottom = space(xaxis, "height", 30)
@@ -430,6 +474,7 @@ function computeLayout({ data, vertical, margin, width, height, barCategoryGap, 
       ? [entry.values]
       : [entry.stack.map((p) => p.y0), entry.stack.map((p) => p.y1)],
   )
+  columns.push(extents[vertical ? "x" : "y"])
   const valueAxis = vertical ? xaxis : yaxis
   const tickCount = valueAxis?.props.tickCount ?? 5
   const domain = resolveDomain(
@@ -479,6 +524,9 @@ function computeLayout({ data, vertical, margin, width, height, barCategoryGap, 
       payload: data[i],
     }))
 
+  const category = { axis: vertical ? "y" : "x", dataKey: categoryKey, scale: categoryScale, labels, count, centers }
+  const value = { axis: vertical ? "x" : "y", domain, scale: valueScale, ticks }
+
   return {
     data,
     vertical,
@@ -486,8 +534,9 @@ function computeLayout({ data, vertical, margin, width, height, barCategoryGap, 
     height,
     plot,
     hasBar,
-    category: { axis: vertical ? "y" : "x", dataKey: categoryKey, scale: categoryScale, labels, count, centers },
-    value: { axis: vertical ? "x" : "y", domain, scale: valueScale, ticks },
+    category,
+    value,
+    locate: vertical ? { x: axisLocator(value), y: axisLocator(category) } : { x: axisLocator(category), y: axisLocator(value) },
     series: entries,
     byKey,
     duplicateKeys,
@@ -514,7 +563,7 @@ function numericAxis(axis, columns, range) {
  * point of one series: the pointer takes the nearest dot across series and
  * `focus(k)` turns the tooltip view onto that series; the keys step the first.
  */
-function computeScatterLayout({ margin, width, height, series, xaxis, yaxis, zaxis }) {
+function computeScatterLayout({ margin, width, height, series, xaxis, yaxis, zaxis, extents }) {
   const space = (el, dim, fallback) => (el && !el.props.hide ? (el.props[dim] ?? fallback) : 0)
   const left = space(yaxis, "width", 60)
   const bottom = space(xaxis, "height", 30)
@@ -546,8 +595,8 @@ function computeScatterLayout({ margin, width, height, series, xaxis, yaxis, zax
       props: el.props,
     }
   })
-  const x = numericAxis(xaxis, entries.map((entry) => entry.xs), [plot.x, plot.x + plot.width])
-  const y = numericAxis(yaxis, entries.map((entry) => entry.values), [plot.y + plot.height, plot.y])
+  const x = numericAxis(xaxis, [...entries.map((entry) => entry.xs), extents.x], [plot.x, plot.x + plot.width])
+  const y = numericAxis(yaxis, [...entries.map((entry) => entry.values), extents.y], [plot.y + plot.height, plot.y])
   const zRange = zaxis?.props.range ?? [64, 64]
   const zScale = linearScale(extent(entries.map((entry) => entry.zs)), zRange)
   const radius = (z) => Math.sqrt(Math.max(0, z == null ? zRange[0] : zScale(z)) / Math.PI)
@@ -593,6 +642,7 @@ function computeScatterLayout({ margin, width, height, series, xaxis, yaxis, zax
     x,
     y,
     value: y,
+    locate: { x: axisLocator(x), y: axisLocator(y) },
     series: entries,
     ...indexEntries(entries),
     indexAt: (point) => nearest(point)?.i ?? -1,
@@ -744,6 +794,7 @@ function CartesianChart({
   // Keyed on what the geometry reads, never on children identity: a parent
   // re-render hands down fresh elements every time.
   const seriesData = useSameList(series.map((el) => el.props.data))
+  const extents = referenceExtents(parts.references)
   const signature = JSON.stringify({
     kind,
     vertical,
@@ -755,12 +806,13 @@ function CartesianChart({
     xaxis: xaxis && pick(xaxis.props, AXIS_SIG_KEYS),
     yaxis: yaxis && pick(yaxis.props, AXIS_SIG_KEYS),
     zaxis: zaxis && pick(zaxis.props, ["dataKey", "range"]),
+    extents,
   })
   const computed = useMemo(
     () =>
       scatter
-        ? computeScatterLayout({ margin: fullMargin, width, height, series, xaxis, yaxis, zaxis })
-        : computeLayout({ data, vertical, margin: fullMargin, width, height, barCategoryGap, barGap, stackOffset, series, xaxis, yaxis }),
+        ? computeScatterLayout({ margin: fullMargin, width, height, series, xaxis, yaxis, zaxis, extents })
+        : computeLayout({ data, vertical, margin: fullMargin, width, height, barCategoryGap, barGap, stackOffset, series, xaxis, yaxis, extents }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [data, seriesData, width, height, signature],
   )
@@ -820,6 +872,10 @@ function CartesianChart({
     }
   }
 
+  // Bands shade beneath the series; lines and dots mark over them.
+  const areas = parts.references.filter((el) => el.type.chartRole === "referencearea")
+  const marks = parts.references.filter((el) => el.type.chartRole !== "referencearea")
+
   const legendEl = parts.legend
   const legendTop = legendEl && legendEl.props.verticalAlign === "top"
   const a11y = surfaceA11y(accessibilityLayer, ariaLabel != null || ariaLabelledBy != null, keyboard)
@@ -843,8 +899,10 @@ function CartesianChart({
               >
                 {parts.passthrough}
                 {parts.grid}
+                {areas}
                 {cursor}
                 {series}
+                {marks}
                 {xaxis}
                 {yaxis}
               </svg>
@@ -1688,6 +1746,14 @@ function cartesianLabelAt({ x, y, width = 0, height = 0 }, position, offset) {
       return { x: x + h * offset, y: midY, anchor: after, baseline: "middle" }
     case "insideRight":
       return { x: x + width - h * offset, y: midY, anchor: before, baseline: "middle" }
+    case "insideTopLeft":
+      return { x: x + h * offset, y: y + v * offset, anchor: after, baseline: below }
+    case "insideTopRight":
+      return { x: x + width - h * offset, y: y + v * offset, anchor: before, baseline: below }
+    case "insideBottomLeft":
+      return { x: x + h * offset, y: y + height - v * offset, anchor: after, baseline: above }
+    case "insideBottomRight":
+      return { x: x + width - h * offset, y: y + height - v * offset, anchor: before, baseline: above }
     case "inside":
     case "center":
       return { x: midX, y: midY, anchor: "middle", baseline: "middle" }
@@ -1753,6 +1819,129 @@ export function LabelList({ dataKey, position = "top", offset = 5, formatter, co
   )
 }
 LabelList.chartRole = "label"
+
+// ── Reference marks ─────────────────────────────────────────────────
+
+/*
+ * A reference label: text placed on the mark's box by the LabelList rules,
+ * centred when no position is given, or an element or function handed
+ * { viewBox: { x, y, width, height } }.
+ */
+function referenceLabel(label, viewBox) {
+  if (label == null || label === false) return null
+  if (isValidElement(label)) return cloneElement(label, { viewBox })
+  if (typeof label === "function") return label({ viewBox }) ?? null
+  const { value, position = "center", offset = 5, fill, className, ...props } = typeof label === "object" ? label : { value: label }
+  if (value == null) return null
+  const at = cartesianLabelAt(viewBox, position, offset)
+  return (
+    <text
+      className={cn("chart-label", className)}
+      x={at.x}
+      y={at.y}
+      textAnchor={at.anchor}
+      dominantBaseline={at.baseline}
+      style={fill ? { fill } : undefined}
+      {...props}
+    >
+      {value}
+    </text>
+  )
+}
+
+const boxOf = ([x1, y1], [x2, y2]) => ({ x: Math.min(x1, x2), y: Math.min(y1, y2), width: Math.abs(x2 - x1), height: Math.abs(y2 - y1) })
+
+export function ReferenceLine({
+  x,
+  y,
+  segment,
+  position = "middle",
+  ifOverflow,
+  label,
+  stroke = "var(--muted-foreground)",
+  strokeWidth = 1,
+  className,
+  ...props
+}) {
+  const layout = useContext(LayoutContext)
+  if (!layout?.locate) return null
+  const { plot, locate } = layout
+  let ends = null
+  if (y != null) {
+    const at = locate.y.at(y, position)
+    if (at != null) ends = [[plot.x, at], [plot.x + plot.width, at]]
+  } else if (x != null) {
+    const at = locate.x.at(x, position)
+    if (at != null) ends = [[at, plot.y], [at, plot.y + plot.height]]
+  } else if (Array.isArray(segment) && segment.length === 2) {
+    const points = segment.map((point) => [locate.x.at(point?.x, position), locate.y.at(point?.y, position)])
+    if (points.flat().every((v) => v != null)) ends = points
+  }
+  if (!ends) return null
+  const [[x1, y1], [x2, y2]] = ends
+  return (
+    <g className={cn("chart-reference", className)} data-kind="line">
+      <line className="chart-reference-line" x1={x1} y1={y1} x2={x2} y2={y2} stroke={stroke} strokeWidth={strokeWidth} {...props} />
+      {referenceLabel(label, boxOf(...ends))}
+    </g>
+  )
+}
+ReferenceLine.chartRole = "referenceline"
+
+export function ReferenceArea({
+  x1,
+  x2,
+  y1,
+  y2,
+  ifOverflow,
+  label,
+  fill = "var(--muted-foreground)",
+  fillOpacity = 0.15,
+  className,
+  ...props
+}) {
+  const layout = useContext(LayoutContext)
+  if (!layout?.locate) return null
+  const { x, y } = layout.locate
+  const side = (axis, v, where, edge) => (v == null ? axis.edges[edge] : axis.at(v, where))
+  const from = [side(x, x1, "start", 0), side(y, y1, "start", 0)]
+  const to = [side(x, x2, "end", 1), side(y, y2, "end", 1)]
+  if ([...from, ...to].some((v) => v == null)) return null
+  const box = boxOf(from, to)
+  return (
+    <g className={cn("chart-reference", className)} data-kind="area">
+      <rect className="chart-reference-area" {...box} fill={fill} fillOpacity={fillOpacity} {...props} />
+      {referenceLabel(label, box)}
+    </g>
+  )
+}
+ReferenceArea.chartRole = "referencearea"
+
+export function ReferenceDot({
+  x,
+  y,
+  r = 10,
+  ifOverflow,
+  label,
+  fill = "var(--background)",
+  stroke = "var(--muted-foreground)",
+  strokeWidth = 1,
+  className,
+  ...props
+}) {
+  const layout = useContext(LayoutContext)
+  if (!layout?.locate) return null
+  const cx = layout.locate.x.at(x)
+  const cy = layout.locate.y.at(y)
+  if (cx == null || cy == null) return null
+  return (
+    <g className={cn("chart-reference", className)} data-kind="dot">
+      <circle className="chart-reference-dot" cx={cx} cy={cy} r={r} fill={fill} stroke={stroke} strokeWidth={strokeWidth} {...props} />
+      {referenceLabel(label, { x: cx - r, y: cy - r, width: 2 * r, height: 2 * r })}
+    </g>
+  )
+}
+ReferenceDot.chartRole = "referencedot"
 
 // ── Axes and grid ───────────────────────────────────────────────────
 
