@@ -13,13 +13,15 @@
   vertical-align: middle;
 }
 
-/* Round joins: a miter at an acute peak can poke past the inset. */
+/* Round joins: a miter at an acute peak can poke past the inset. The hairline
+ * stays 1.5px when CSS resizes the box, where the viewBox would scale it. */
 .sparkline-line {
   fill: none;
   stroke: var(--sparkline-meter, currentColor);
   stroke-width: 1.5;
   stroke-linejoin: round;
   stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
 }
 
 .sparkline-area {
@@ -42,10 +44,15 @@
   --sparkline-zone: var(--sparkline-ok, var(--success));
 }
 
-/* --warning's own hue reads orange beside the red band at 1.5px; swung to
- * yellow and lifted, the three bands stay apart at a glance. */
+/* --warning's own hue reads orange beside the red band at 1.5px, so both arms
+ * swing it to yellow. Light darkens it to L 0.62: lifted, the stroke was 1.58:1
+ * on a white card, under 1.4.11's 3:1, and the band is the information. Dark
+ * lifts it, where the raw token already clears 10:1. */
 .sparkline [data-zone="warn"] {
-  --sparkline-zone: var(--sparkline-warn, oklch(from var(--warning) calc(l + 0.1) c 92));
+  --sparkline-zone: var(
+    --sparkline-warn,
+    light-dark(oklch(from var(--warning) 0.62 c 92), oklch(from var(--warning) calc(l + 0.1) c 92))
+  );
 }
 
 .sparkline [data-zone="critical"] {
