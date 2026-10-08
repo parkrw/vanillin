@@ -4,7 +4,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "requires": [],
   "files": {
-    "chart.css": "sha256-bei6pi8eHvWgxbhtmHkr+W0sNtTtgFMp+7hbKGUpIgM=",
-    "chart.jsx": "sha256-0IkNB5cBEvSD36JQOzkNVxXsRne3pJLuhLgQbihhN9w="
+    "chart.css": "sha256-M145DL+8LHoRaeyADlIcz6Uxob6DT3Re2yyXaU13y68=",
+    "chart.jsx": "sha256-ZC/3KHAFkXKbmHTmCM8gqKUfpQ61Z2NruftZ8pmXepQ="
   }
 }
