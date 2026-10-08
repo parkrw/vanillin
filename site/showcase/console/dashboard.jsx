@@ -23,6 +23,7 @@ import "../../../ui/status-dot/status-dot.css"
 
 const SPARK = Object.fromEntries(STATS.map((s, i) => [s.label, drift(`spark:${s.label}`, 40 + i * 8, { spread: 18 })]))
 const RUNNING = drift("stat:running", 38, { spread: 1, min: 37, max: 39 })
+const SPARK_THRESHOLDS = [60, 80]
 
 export function StatCards() {
   const tick = useTicker(TICK_MS)
@@ -43,7 +44,7 @@ export function StatCards() {
                 )}
               </div>
               <div className="ck-stat-spark">
-                <Sparkline points={history(SPARK[s.label], tick)} max={100} />
+                <Sparkline points={history(SPARK[s.label], tick)} max={100} thresholds={SPARK_THRESHOLDS} />
               </div>
             </CardContent>
           </HoverCardTrigger>
