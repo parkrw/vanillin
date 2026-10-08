@@ -71,6 +71,10 @@ const probes = [
   ["chart", '[data-pg="chart-contrast"] .chart-series[data-key="s4"] .chart-bar', ["fill"], "chart series 4", { exempt: "upstream palette, --chart-4 light 1.72:1; series are also named by legend and tooltip text" }],
   ["chart", '[data-pg="chart-contrast"] .chart-series[data-key="s5"] .chart-bar', ["fill"], "chart series 5", { exempt: "upstream palette, --chart-5 light 2.13:1; series are also named by legend and tooltip text" }],
   ["status-dot", '.status-dot[data-status="success"], .status-dot[data-status="warning"], .status-dot[data-status="error"], .status-dot[data-status="info"]', ["backgroundColor"], "status dot"],
+  // The meter's amber band, read off the dot: the fixture's latest point is in
+  // it, and a <stop> has no client rect for the probe to accept. Green and red
+  // are the status dot's tokens, probed above.
+  ["sparkline", '[data-pg="spark-meter"] .sparkline-dot', ["fill"], "sparkline amber band"],
   ["progress", ".progress", ["backgroundColor"], "progress track", { exempt: "inactive track; the indicator carries the state and passes (17.93:1 light / 15.72:1 dark), as D5 checkbox fill" }],
   ["progress", ".progress-indicator", ["backgroundColor"], "progress indicator"],
   ["slider", ".slider-track", ["backgroundColor"], "slider rail", { exempt: "inactive rail; the range carries the state and passes (16.44:1 light / 12.01:1 dark), as D5 checkbox fill" }],
