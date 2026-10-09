@@ -1,9 +1,9 @@
 // Sparkline: the x scale spans inset → width - inset, the y scale puts the
 // last value where the dot sits, type="monotone" keeps the vertices and the
-// inset, a non-finite sample is a gap, the domain
-// folds in zero and pegs what overshoots, one point is a dot alone, the svg
-// is always hidden from the accessibility tree, and the colour props reach
-// the part each one names.
+// inset, a non-finite sample is a gap, times place readings on x, the domain
+// folds in zero and pegs what overshoots, sqrt and log reshape y, one point
+// is a dot alone, the svg is always hidden from the accessibility tree, and
+// the colour props reach the part each one names.
 
 export default async function run({ page, baseUrl, test, eq, near }) {
   await page.goto(`${baseUrl}/#sparkline`)
@@ -126,6 +126,34 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     near(tv[6][1], tail.cy, 0.01, "line ends at the dot")
   })
 
+  await test("times place each reading by its timestamp; a series item takes its own or the shared one", async () => {
+    const minutes = [0, 1, 2, 3, 10, 11, 12, 13]
+    const polledMinutes = [0, 4, 8, 13]
+    const xAt = (m) => inset + (m / 13) * (width - 2 * inset)
+    const [[even], [timed], multi] = await page.$$eval('[data-pg="spark-time"] .sparkline', (svgs) =>
+      svgs.map((svg) => [...svg.querySelectorAll(".sparkline-line")].map((l) => l.getAttribute("d"))),
+    )
+    const ev = verts(even)
+    const tv = verts(timed)
+    // Precondition: by index the slots are even, so the missed minutes take a single step.
+    const step = (width - 2 * inset) / (points.length - 1)
+    eq(ev.length, points.length)
+    ev.forEach(([xv], i) => near(xv, inset + i * step, 0.01, `slot ${i}`))
+    eq(tv.length, points.length)
+    tv.forEach(([xv, yv], i) => {
+      near(xv, xAt(minutes[i]), 0.01, `minute ${minutes[i]}`)
+      near(yv, ev[i][1], 0.01, `reading ${i} keeps its height`)
+    })
+    near(tv[4][0] - tv[3][0], 7 * (tv[1][0] - tv[0][0]), 0.03, "the missed stretch spans seven minutes")
+
+    eq(multi.length, 2, "two series")
+    const [shared, own] = multi.map(verts)
+    eq(shared.length, minutes.length)
+    shared.forEach(([xv], i) => near(xv, xAt(minutes[i]), 0.01, `shared times ${i}`))
+    eq(own.length, polledMinutes.length)
+    own.forEach(([xv], i) => near(xv, xAt(polledMinutes[i]), 0.01, `own times ${i}`))
+  })
+
   await test("the baseline folds in zero, and a value past the scale pegs to its edge", async () => {
     const delta = [3, -2, 5, -4, 1, 2]
     const spiky = [40, 60, 130, 90, 70]
@@ -151,6 +179,38 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     near(sv[2][1], inset, 0.01, "130 pegs to the top inset")
     near(sv[1][1], height - inset - 0.6 * (height - 2 * inset), 0.01, "60 keeps its place: max={100} did not stretch")
     near(s.cy, height - inset - 0.7 * (height - 2 * inset), 0.01, "dot on 70")
+  })
+
+  await test('scale="sqrt" and "log" give small readings room under a burst; log puts zero on the floor', async () => {
+    // Mirrors the page's `errors` fixture and its box.
+    const errors = [2, 0, 5, 3, 140, 12, 4, 6]
+    const [w, h, pad] = [160, 40, 3]
+    const toY = (f) => (v) => h - pad - f(v) * (h - 2 * pad)
+    const expected = [
+      errors.map(toY((v) => v / 140)),
+      errors.map(toY((v) => Math.sqrt(v) / Math.sqrt(140))),
+      // Domain [2, 140]: the smallest positive reading to the largest.
+      errors.map(toY((v) => (v > 0 ? Math.log(v / 2) / Math.log(140 / 2) : 0))),
+    ]
+    const drawn = await parts("spark-scale")
+    eq(drawn.length, 3)
+    drawn.forEach(({ line, area, cy }, k) => {
+      for (const d of [line, area]) if (!d || /NaN|Infinity/.test(d)) throw new Error(`bad path ${k}: ${d}`)
+      const v = verts(line)
+      eq(v.length, errors.length, `scale ${k} vertices`)
+      v.forEach(([, yv], i) => near(yv, expected[k][i], 0.01, `scale ${k}, reading ${errors[i]}`))
+      near(cy, expected[k][7], 0.01, `scale ${k} dot on 6`)
+    })
+    // Counter-precondition: 12 climbs linear → sqrt → log, so a scale that fell back to linear fails.
+    const twelve = drawn.map(({ line }) => verts(line)[5][1])
+    if (!(twelve[0] - twelve[1] > 3 && twelve[1] - twelve[2] > 3)) throw new Error(`12 at ${twelve}`)
+
+    const [, , log] = drawn
+    const lv = verts(log.line)
+    near(lv[1][1], h - pad, 0.01, "0 on the floor")
+    near(lv[0][1], h - pad, 0.01, "2, the smallest positive reading, on the floor")
+    near(lv[4][1], pad, 0.01, "140 at the top")
+    eq(log.area.endsWith(` L ${w - pad} ${h} L ${pad} ${h} Z`), true, `log wash closes on the box edge: ${log.area}`)
   })
 
   await test("a single point renders one centred dot and no path", async () => {

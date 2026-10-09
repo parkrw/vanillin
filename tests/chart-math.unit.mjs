@@ -4,6 +4,8 @@ import {
   niceDomain,
   resolveDomain,
   linearScale,
+  logScale,
+  sqrtScale,
   bandScale,
   pointScale,
   barSlots,
@@ -123,6 +125,48 @@ test("linearScale.invert round-trips", () => {
 test("linearScale on a flat domain sits mid-range", () => {
   const s = linearScale([5, 5], [0, 100])
   assert.equal(s(5), 50)
+})
+
+// --- logScale / sqrtScale ---
+
+test("logScale puts each power of ten an equal step apart", () => {
+  const s = logScale([1, 1000], [300, 0])
+  assert.equal(s(1), 300)
+  assert.equal(s(1000), 0)
+  assert.ok(Math.abs(s(10) - 200) < 1e-9, `10 at ${s(10)}`)
+  assert.ok(Math.abs(s(100) - 100) < 1e-9, `100 at ${s(100)}`)
+})
+
+test("logScale maps zero and below as the lower domain end", () => {
+  const s = logScale([2, 200], [100, 0])
+  assert.equal(s(0), 100)
+  assert.equal(s(-5), 100)
+  // Counter-precondition: a positive value under the domain still extrapolates.
+  assert.ok(s(1) > 100, `1 at ${s(1)}`)
+  const reversed = logScale([200, 2], [0, 100])
+  assert.equal(reversed(0), 100, "the lower end, not the first")
+})
+
+test("logScale.invert round-trips, and a flat domain sits mid-range", () => {
+  const s = logScale([3, 900], [0, 400])
+  assert.ok(Math.abs(s.invert(s(42)) - 42) < 1e-9)
+  assert.equal(logScale([5, 5], [0, 100])(5), 50)
+})
+
+test("sqrtScale puts a quarter of the domain halfway up", () => {
+  const s = sqrtScale([0, 100], [200, 0])
+  assert.equal(s(0), 200)
+  assert.equal(s(100), 0)
+  assert.equal(s(25), 100)
+})
+
+test("sqrtScale mirrors negatives and invert round-trips", () => {
+  const s = sqrtScale([-100, 100], [0, 200])
+  assert.equal(s(0), 100)
+  assert.equal(s(-25), 50)
+  assert.equal(s(25), 150)
+  assert.ok(Math.abs(s.invert(s(-37)) + 37) < 1e-9)
+  assert.ok(Math.abs(s.invert(s(64)) - 64) < 1e-9)
 })
 
 // --- bandScale / pointScale ---

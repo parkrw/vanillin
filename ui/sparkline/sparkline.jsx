@@ -1,12 +1,36 @@
 import { useId } from "react"
 import { cn } from "../../lib/cn.js"
-import { areaPath, extent, linePath, linearScale, pointScale, splitRuns } from "../../lib/chart-math.js"
+import {
+  areaPath,
+  extent,
+  linePath,
+  linearScale,
+  logScale,
+  pointScale,
+  splitRuns,
+  sqrtScale,
+} from "../../lib/chart-math.js"
 
 // The chart's default series palette, so a series gets the same colour at either size.
 const PALETTE_SIZE = 5
 const paletteColor = (i) => `var(--chart-${(i % PALETTE_SIZE) + 1})`
 
 const isNum = (v) => typeof v === "number" && Number.isFinite(v)
+const toTime = (t) => (t instanceof Date ? t.getTime() : t)
+
+const SCALES = { linear: linearScale, log: logScale, sqrt: sqrtScale }
+
+/*
+ * A log axis has no zero: each unset or non-positive end falls back to the
+ * smallest or largest positive reading, then to the other end, then to 1.
+ */
+function logDomain(columns, min, max) {
+  const positive = columns.map((c) => c.filter((v) => isNum(v) && v > 0))
+  const [posMin, posMax] = positive.some((c) => c.length) ? extent(positive) : []
+  const lo = min > 0 ? min : posMin
+  const hi = max > 0 ? max : posMax
+  return [lo ?? hi ?? 1, hi ?? lo ?? 1]
+}
 
 /* `theme` mirrors a chart config item: one value, or a light-dark() pair. */
 function themed(color, theme) {
@@ -93,15 +117,28 @@ function MeterGradient({ id, y, height, thresholds }) {
  * `"stepBefore"` or `"stepAfter"` holds a reading until the next. The wash
  * follows the same shape.
  *
+ * `scale` is the y mapping: `"linear"` by default; `"sqrt"` plots the square
+ * root, so a spike squashes the small readings less and zero stays on the
+ * floor; `"log"` plots the logarithm, so each step up the box is the same
+ * ratio. A log axis has no zero: `min` and `max` must be positive, an unset
+ * end is the smallest or largest positive reading, and a reading at or below
+ * zero sits on the floor.
+ *
+ * `times` places each reading on x by its timestamp (ms or `Date`), index
+ * for index with `points`, instead of evenly by index, so a stretch the
+ * poller missed reads as a long segment. Readings go in time order. Given
+ * `times`, a reading without a finite time is a gap.
+ *
  * Colour: `color` (or a `theme` light/dark pair) sets the stroke, and with it
  * the wash and dot; `dotColor`, `areaColor` and `areaOpacity` override those
  * parts. Each is optional, and the matching CSS (`color`, `--sparkline-dot`,
  * `--sparkline-area`, `--sparkline-area-opacity`) set on an ancestor works too.
  *
  * `series` draws several lines on one shared x and y scale, index for index,
- * first at the back. An item takes `points` and the same colour props; an
- * item without `color` or `theme` takes the chart palette (`--chart-1…5`) by
- * position. Given `series`, `points`, `color` and `theme` are ignored.
+ * first at the back. An item takes `points`, its own `times` in place of the
+ * shared one, and the same colour props; an item without `color` or `theme`
+ * takes the chart palette (`--chart-1…5`) by position. Given `series`,
+ * `points`, `color` and `theme` are ignored.
  *
  * `thresholds={[warn, critical]}` colours it like a meter: green, then amber
  * from `warn`, then red from `critical`. Ascending reads higher-is-worse,
@@ -128,6 +165,8 @@ export function Sparkline({
   area = true,
   dot = true,
   type = "linear",
+  scale = "linear",
+  times,
   color,
   theme,
   dotColor,
@@ -139,18 +178,25 @@ export function Sparkline({
   ...props
 }) {
   const meterId = `sparkline-meter-${useId().replace(/[^\w-]/g, "")}`
-  const lines = series
-    ? series.map((item, i) => ({
-        points: item.points ?? [],
-        style: colourStyle({ ...item, color: item.color ?? (item.theme ? undefined : paletteColor(i)) }),
-      }))
-    : [{ points }]
+  const timed = Boolean(times || series?.some((item) => item.times))
+  const lines = (series ?? [{ points }]).map((item, i) => {
+    const at = timed ? (item.times ?? times ?? []).map(toTime) : null
+    return {
+      points: (item.points ?? []).map((v, j) => (at && !isNum(at[j]) ? null : v)),
+      at,
+      style: series && colourStyle({ ...item, color: item.color ?? (item.theme ? undefined : paletteColor(i)) }),
+    }
+  })
   const shared = series ? { dotColor, areaColor, areaOpacity } : { color, theme, dotColor, areaColor, areaOpacity }
 
   const count = Math.max(0, ...lines.map((l) => l.points.length))
-  const x = pointScale(count, [inset, width - inset])
-  const [dataMin, dataMax] = extent(lines.map((l) => l.points), true)
-  const y = linearScale([min ?? dataMin, max ?? dataMax], [height - inset, inset])
+  const slots = pointScale(count, [inset, width - inset])
+  const clock = timed && linearScale(extent(lines.map((l) => l.at)), [inset, width - inset])
+  const xOf = (line, j) => (clock ? clock(line.at[j]) : slots.center(j))
+  const columns = lines.map((l) => l.points)
+  const [dataMin, dataMax] = extent(columns, true)
+  const domain = scale === "log" ? logDomain(columns, min, max) : [min ?? dataMin, max ?? dataMax]
+  const y = (SCALES[scale] ?? linearScale)(domain, [height - inset, inset])
   const lo = Math.min(...y.domain)
   const hi = Math.max(...y.domain)
   const peg = (v) => Math.min(hi, Math.max(lo, v))
@@ -175,7 +221,7 @@ export function Sparkline({
       {lines.map((line, i) => {
         const latest = line.points.findLastIndex(isNum)
         if (latest < 0) return null
-        const upper = line.points.map((v, j) => (isNum(v) ? [x.center(j), y(peg(v))] : null))
+        const upper = line.points.map((v, j) => (isNum(v) ? [xOf(line, j), y(peg(v))] : null))
         const spans = splitRuns(upper).filter((run) => run.length > 1)
         const [cx, cy] = upper[latest]
         return (
