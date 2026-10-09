@@ -1912,7 +1912,7 @@ const fullDay = (value) =>
 <BarChart accessibilityLayer aria-describedby="visitors-note" data={chartData}>
   <XAxis dataKey="month" />
   <ChartTooltip
-    content={<ChartTooltipContent formatter={(value, name) => <span>{name}: {value} visitors</span>} labelFormatter={(label) => label + " 2024"} />}
+    content={<ChartTooltipContent formatter={(value, name) => <span>{name}: {value} visitors</span>} labelFormatter={(_, payload) => payload[0].payload.month + " 2024"} />}
   />
   <Bar dataKey="desktop" fill="var(--color-desktop)" />
   <ChartDataTable open />
@@ -1932,7 +1932,7 @@ const fullDay = (value) =>
                           {name}: {value} visitors
                         </span>
                       )}
-                      labelFormatter={(label) => `${label} 2024`}
+                      labelFormatter={(_, payload) => `${payload[0].payload.month} 2024`}
                     />
                   }
                 />
@@ -1958,7 +1958,9 @@ const fullDay = (value) =>
         <ComponentPreview code={`<ScatterChart>
   <XAxis type="number" dataKey="x" name="stature" unit="cm" />
   <YAxis type="number" dataKey="y" name="weight" unit="kg" />
+  <ChartTooltip content={<ChartTooltipContent formatter={(value, name, item, index) => <span>{index}: {value}</span>} />} />
   <Scatter name="a" data={schoolA} fill="var(--color-a)" />
+  <Scatter name="b" data={schoolB} fill="var(--color-b)" />
   <ChartDataTable open caption="Stature against weight" />
 </ScatterChart>`}>
           <Frame pg="chart-table-scatter">
@@ -1966,7 +1968,19 @@ const fullDay = (value) =>
               <ScatterChart>
                 <XAxis type="number" dataKey="x" name="stature" unit="cm" />
                 <YAxis type="number" dataKey="y" name="weight" unit="kg" />
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      formatter={(value, name, item, index) => (
+                        <span>
+                          {index}: {value}
+                        </span>
+                      )}
+                    />
+                  }
+                />
                 <Scatter name="a" data={schoolA} fill="var(--color-a)" />
+                <Scatter name="b" data={schoolB} fill="var(--color-b)" />
                 <ChartDataTable open caption="Stature against weight" />
               </ScatterChart>
             </ChartContainer>
@@ -1984,6 +1998,36 @@ const fullDay = (value) =>
                 <Radar dataKey="desktop" fill="var(--color-desktop)" />
                 <ChartDataTable open caption="Desktop visitors by month" />
               </RadarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<RadialBarChart data={browserData} innerRadius={30} outerRadius={110}>
+  <PolarRadiusAxis dataKey="browser" tick={false} axisLine={false} />
+  <RadialBar dataKey="visitors" background />
+  <ChartDataTable open caption="Visitors by browser" />
+</RadialBarChart>`}>
+          <Frame pg="chart-table-radial" square>
+            <ChartContainer config={browserConfig} style={{ aspectRatio: "1" }}>
+              <RadialBarChart data={browserData} innerRadius={30} outerRadius={110}>
+                <PolarRadiusAxis dataKey="browser" tick={false} axisLine={false} />
+                <RadialBar dataKey="visitors" background />
+                <ChartDataTable open caption="Visitors by browser" />
+              </RadialBarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<PieChart>
+  <Pie data={browserData} dataKey="visitors" nameKey="browser" outerRadius={60} />
+  <Pie data={chartData} dataKey="desktop" nameKey="month" innerRadius={70} outerRadius={100} />
+  <ChartDataTable open caption="Two pies" />
+</PieChart>`}>
+          <Frame pg="chart-table-pies" square>
+            <ChartContainer config={{ ...browserConfig, ...chartConfig }} style={{ aspectRatio: "1" }}>
+              <PieChart>
+                <Pie data={browserData} dataKey="visitors" nameKey="browser" outerRadius={60} />
+                <Pie data={chartData} dataKey="desktop" nameKey="month" innerRadius={70} outerRadius={100} />
+                <ChartDataTable open caption="Two pies" />
+              </PieChart>
             </ChartContainer>
           </Frame>
         </ComponentPreview>

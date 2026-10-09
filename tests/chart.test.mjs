@@ -866,11 +866,27 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(JSON.stringify(rows[4]), JSON.stringify(["Other", "90"]))
   })
 
-  await test("table: scatter rows are the points, headers the axis names", async () => {
+  await test("table: scatter with several series adds a Series column, and the formatter gets each item's own index", async () => {
     const { headers, rows } = await tableText("chart-table-scatter")
-    eq(JSON.stringify(headers), JSON.stringify(["Stature", "Weight"]))
-    eq(rows.length, 6)
-    eq(JSON.stringify(rows[0]), JSON.stringify(["100", "200"]))
+    eq(JSON.stringify(headers), JSON.stringify(["Series", "Stature", "Weight"]))
+    eq(rows.length, 12)
+    eq(JSON.stringify(rows[0]), JSON.stringify(["School A", "0: 100", "1: 200"]), "x is item 0, y is item 1, not the cell position")
+    eq(JSON.stringify(rows[6]), JSON.stringify(["School B", "0: 200", "1: 260"]))
+  })
+
+  await test("table: several pies add a Series column beside Name and Value", async () => {
+    const { headers, rows } = await tableText("chart-table-pies")
+    eq(JSON.stringify(headers), JSON.stringify(["browser", "Series", "Value"]))
+    eq(rows.length, 11)
+    eq(JSON.stringify(rows[0]), JSON.stringify(["Chrome", "Visitors", "275"]))
+    eq(JSON.stringify(rows[5]), JSON.stringify(["January", "Desktop", "186"]))
+  })
+
+  await test("table: radial rows are the rings, headed by the radius axis key and named by config label", async () => {
+    const { headers, rows } = await tableText("chart-table-radial")
+    eq(JSON.stringify(headers), JSON.stringify(["browser", "Visitors"]))
+    eq(rows.length, 5)
+    eq(JSON.stringify(rows[0]), JSON.stringify(["Chrome", "275"]))
   })
 
   await test("table: radar rows follow the angle axis", async () => {

@@ -266,9 +266,6 @@ button.chart-legend-item {
   box-shadow: inset 0 0 0 1px currentColor;
 }
 
-/* Series colour is the datum: each fill is a different series, so the
- * forced palette would merge them. Keep the fills and outline bars in
- * CanvasText so every bar still has an edge against Canvas. */
 /* Read by a screen reader, never painted: the generated summary, and the data
  * table until it is opened. The kit has no shared utility for this, so each
  * component carries its own. */
@@ -329,6 +326,9 @@ button.chart-legend-item {
   font-weight: 400;
 }
 
+/* Series colour is the datum: each fill is a different series, so the
+ * forced palette would merge them. Keep the fills and outline bars in
+ * CanvasText so every bar still has an edge against Canvas. */
 @media (forced-colors: active) {
   .chart-bar,
   .chart-sector,
