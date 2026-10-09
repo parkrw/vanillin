@@ -41,7 +41,11 @@ const keyOf = (col, row) => `${col}:${row}`
 function makeScale(values, domain, stepsProp) {
   const steps = Math.max(2, Math.floor(finite(stepsProp) ?? DEFAULT_STEPS))
   const known = values.filter((v) => v != null)
-  const [lo, hi] = Array.isArray(domain) ? domain : known.length ? [Math.min(...known), Math.max(...known)] : [0, 1]
+  const [dataLo, dataHi] = known.length ? [Math.min(...known), Math.max(...known)] : [0, 1]
+  // Each end falls back on its own, so [0, max] with max still loading draws from the data rather than NaN.
+  const ends = Array.isArray(domain) ? domain : []
+  const lo = finite(ends[0]) ?? dataLo
+  const hi = finite(ends[1]) ?? dataHi
   const binOf = (v) => {
     if (v >= hi) return steps - 1
     if (v <= lo) return 0
@@ -250,6 +254,7 @@ function GridChart({
   build,
   data,
   signature,
+  name,
   syncId,
   accessibilityLayer = false,
   className,
@@ -267,7 +272,7 @@ function GridChart({
   const model = useMemo(
     () => build(width, height),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, width, height, signature],
+    [data, width, height, signature, name],
   )
 
   if (process.env.NODE_ENV !== "production") {
@@ -397,9 +402,10 @@ export function HeatmapChart({
   const { config } = useChart()
   const name = config?.[valueKey]?.label ?? valueKey
   const fullMargin = { ...DEFAULT_MARGIN, ...margin }
-  const options = { xKey, yKey, valueKey, xDomain, yDomain, domain, steps, cellGap, margin: fullMargin, yAxisWidth, xAxisHeight, name }
+  const options = { xKey, yKey, valueKey, xDomain, yDomain, domain, steps, cellGap, margin: fullMargin, yAxisWidth, xAxisHeight }
+  // name stays out of the serialised key: a config label may be a React element, which does not serialise.
   const signature = json(options)
-  return <GridChart variant="heatmap" data={data} signature={signature} build={(width, height) => heatmapModel({ ...options, data, width, height })} {...props} />
+  return <GridChart variant="heatmap" data={data} signature={signature} name={name} build={(width, height) => heatmapModel({ ...options, name, data, width, height })} {...props} />
 }
 
 export function CalendarHeatmap({
@@ -423,9 +429,9 @@ export function CalendarHeatmap({
   const parsedYear = wholeNumber(yearProp)
   const year = parsedYear >= 100 && parsedYear <= 9999 ? parsedYear : new Date().getFullYear()
   const weekStart = (((wholeNumber(weekStartProp) ?? 0) % 7) + 7) % 7
-  const options = { year, dateKey, valueKey, weekStart, domain, steps, cellGap, locale, margin: fullMargin, yAxisWidth, xAxisHeight, name }
+  const options = { year, dateKey, valueKey, weekStart, domain, steps, cellGap, locale, margin: fullMargin, yAxisWidth, xAxisHeight }
   const signature = json(options)
-  return <GridChart variant="calendar" data={data} signature={signature} build={(width, height) => calendarModel({ ...options, data, width, height })} {...props} />
+  return <GridChart variant="calendar" data={data} signature={signature} name={name} build={(width, height) => calendarModel({ ...options, name, data, width, height })} {...props} />
 }
 
 // ── Legend ──────────────────────────────────────────────────────────

@@ -362,4 +362,17 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
       page.off("pageerror", onError)
     }
   })
+
+  await test("heatmap: new data redraws the grid; a null domain end comes from the data", async () => {
+    const live = "heatmap-live"
+    eq([(await cellInfo(live, 0)).step, (await cellInfo(live, 39)).step], ["0", "4"], "Mon 09 is lowest and Fri 16 highest before the swap")
+    eq(await page.locator(`${pg(live)} .chart-heatmap-legend-label`).allTextContents(), ["0", "39"], "the legend's high end is the data's maximum, not null")
+    eq(await page.locator(`${pg(live)} .chart-heatmap-cell[data-step="NaN"]`).count(), 0, "no cell is binned NaN")
+    await page.locator(`${pg(live)} button`).click()
+    await page.waitForFunction(() => document.querySelector('[data-pg="heatmap-live"] .chart-heatmap-cell[data-index="0"]')?.dataset.step === "4")
+    eq([(await cellInfo(live, 0)).step, (await cellInfo(live, 39)).step], ["4", "0"], "the mirrored readings repaint both corners")
+    eq(await page.locator(`${pg(live)} .chart-heatmap-legend-label`).allTextContents(), ["0", "39"], "the scale still spans the data")
+    await page.locator(`${pg(live)} button`).click()
+    await page.waitForFunction(() => document.querySelector('[data-pg="heatmap-live"] .chart-heatmap-cell[data-index="0"]')?.dataset.step === "0")
+  })
 }

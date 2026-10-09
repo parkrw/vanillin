@@ -1,7 +1,10 @@
+import { useState } from "react"
+import { Button } from "../../ui/button/button.jsx"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../../ui/chart/chart.jsx"
 import { HeatmapChart, CalendarHeatmap, HeatmapLegend } from "../../ui/chart-heatmap/chart-heatmap.jsx"
 import "../../ui/chart/chart.css"
 import "../../ui/chart-heatmap/chart-heatmap.css"
+import "../../ui/button/button.css"
 import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
@@ -57,6 +60,25 @@ const commitDates = [
 ]
 
 const calendarShape = { aspectRatio: "4.5 / 1" }
+
+/* The same readings mirrored, so the top-left cell goes from lowest to highest. */
+const mirroredTraffic = trafficData.map((d) => ({ ...d, visits: 39 - d.visits }))
+
+function LiveHeatmap() {
+  const [mirrored, setMirrored] = useState(false)
+  return (
+    <Frame pg="heatmap-live">
+      <Button size="sm" variant="outline" onClick={() => setMirrored((m) => !m)}>
+        {mirrored ? "Original readings" : "Mirror readings"}
+      </Button>
+      <ChartContainer config={trafficConfig}>
+        <HeatmapChart data={mirrored ? mirroredTraffic : trafficData} xKey="hour" yKey="day" valueKey="visits" domain={[0, null]}>
+          <HeatmapLegend />
+        </HeatmapChart>
+      </ChartContainer>
+    </Frame>
+  )
+}
 
 export default function ChartHeatmapPage() {
   return (
@@ -187,7 +209,8 @@ export default function ChartHeatmapPage() {
         <p>
           Charts sharing a <code>syncId</code> share the active cell by position, even when the grids differ in size.
           <code>year</code> and <code>weekStart</code> also take numeric strings, and a datum's date may be a{" "}
-          <code>Date</code>, read in UTC.
+          <code>Date</code>, read in UTC. New <code>data</code> redraws the grid, and a <code>domain</code> end left
+          unset or <code>null</code> comes from the data.
         </p>
         <ComponentPreview code={`<HeatmapChart syncId="heat" … />
 <CalendarHeatmap syncId="heat" year="2024" weekStart="1" data={[{ date: new Date(Date.UTC(2024, 2, 5)), count: 7 }]} … />`}>
@@ -205,6 +228,7 @@ export default function ChartHeatmapPage() {
               </CalendarHeatmap>
             </ChartContainer>
           </Frame>
+          <LiveHeatmap />
           <Frame pg="heatmap-dates" wide>
             <ChartContainer config={commitConfig} style={calendarShape}>
               <CalendarHeatmap data={commitDates} year="2024" weekStart="1" dateKey="date" valueKey="count" locale="en-US">
@@ -219,7 +243,7 @@ export default function ChartHeatmapPage() {
         { name: "data", type: "object[]", description: "One datum per cell: a column, a row and a value. A pair with no datum is an outline" },
         { name: "xKey / yKey / valueKey", type: "string", default: '"x" / "y" / "value"', description: "Fields holding the column, the row and the number" },
         { name: "xDomain / yDomain", type: "any[]", description: "Column and row order; defaults to the order each first appears in data" },
-        { name: "domain", type: "[lo, hi]", description: "The ends of the colour scale; defaults to the lowest and highest value" },
+        { name: "domain", type: "[lo, hi]", description: "The ends of the colour scale; an end left unset or null is the lowest or highest value" },
         { name: "steps", type: "number", default: "5", description: "Shades between the two ends, at least 2" },
         { name: "cellGap", type: "number", default: "0.1", description: "Gap between cells as a fraction of a cell's pitch" },
         { name: "yAxisWidth / xAxisHeight", type: "number", default: "48 / 24", description: "Room for the row and column labels, px; 0 leaves that axis's labels out" },
