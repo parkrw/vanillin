@@ -87,6 +87,12 @@ function MeterGradient({ id, y, height, thresholds }) {
  * there, and the dot marks the latest reading. A reading with a gap on both
  * sides draws nothing.
  *
+ * `type` is the line's shape, as `Line`/`Area` on the chart take it:
+ * `"linear"` segments by default; `"monotone"` a curve through every reading
+ * that never overshoots one, so it stays inside the inset; `"step"`,
+ * `"stepBefore"` or `"stepAfter"` holds a reading until the next. The wash
+ * follows the same shape.
+ *
  * Colour: `color` (or a `theme` light/dark pair) sets the stroke, and with it
  * the wash and dot; `dotColor`, `areaColor` and `areaOpacity` override those
  * parts. Each is optional, and the matching CSS (`color`, `--sparkline-dot`,
@@ -121,6 +127,7 @@ export function Sparkline({
   max,
   area = true,
   dot = true,
+  type = "linear",
   color,
   theme,
   dotColor,
@@ -181,10 +188,10 @@ export function Sparkline({
             {area && spans.length > 0 && (
               <path
                 className="sparkline-area"
-                d={spans.map((run) => areaPath(run, [[run[0][0], floor], [run[run.length - 1][0], floor]])).join(" ")}
+                d={spans.map((run) => areaPath(run, [[run[0][0], floor], [run[run.length - 1][0], floor]], type)).join(" ")}
               />
             )}
-            {spans.length > 0 && <path className="sparkline-line" d={spans.map((run) => linePath(run)).join(" ")} />}
+            {spans.length > 0 && <path className="sparkline-line" d={spans.map((run) => linePath(run, type)).join(" ")} />}
             {dot && <circle className="sparkline-dot" cx={cx} cy={cy} r={inset} />}
           </g>
         )
