@@ -213,6 +213,56 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(log.area.endsWith(` L ${w - pad} ${h} L ${pad} ${h} Z`), true, `log wash closes on the box edge: ${log.area}`)
   })
 
+  await test("a range menu beside the sparkline swaps its window and keeps the latest reading", async () => {
+    const host = page.locator('[data-pg="spark-picker-vertical"]')
+    const trigger = host.getByRole("button")
+    const read = () =>
+      host.evaluate((el) => ({
+        figure: el.querySelector(".pg-stat-num").textContent,
+        label: el.querySelector(".pg-stat-label").textContent,
+        line: el.querySelector(".sparkline-line").getAttribute("d"),
+      }))
+    // Precondition: the trigger is outside the hidden svg and names the current range.
+    eq(await trigger.getAttribute("aria-label"), "Time range: 6 hours")
+    eq(await trigger.evaluate((el) => el.closest("[aria-hidden='true']")), null, "trigger not hidden")
+    const before = await read()
+    eq(before.label, "Last 6 hours")
+    // The menu neither shrinks nor flips to fit, so give it the viewport below
+    // the card, clear of the sticky header.
+    await host.evaluate((el) => window.scrollBy(0, el.getBoundingClientRect().top - 120))
+    eq(verts(before.line).length, 48, "48 readings")
+
+    await trigger.click()
+    const items = page.getByRole("menuitemradio")
+    eq(
+      (await items.allTextContents()).join(", "),
+      "1 hour, 6 hours, 12 hours, 1 day, 3 days, 5 days, 7 days, 15 days, 1 month, 3 months, 6 months, 1 year",
+      "the twelve ranges in order",
+    )
+    eq(await page.getByRole("menuitemradio", { checked: true }).textContent(), "6 hours", "6 hours checked")
+    try {
+      await page.getByRole("menuitemradio", { name: "7 days" }).click()
+      await page.waitForFunction(
+        (sel) => document.querySelector(sel).textContent.endsWith("7 days"),
+        '[data-pg="spark-picker-vertical"] .pg-stat-label',
+      )
+      const after = await read()
+      eq(await trigger.getAttribute("aria-label"), "Time range: 7 days")
+      eq(after.figure, before.figure, "the window ends on the same latest reading")
+      const av = verts(after.line)
+      eq(av.length, 48, "still 48 readings")
+      if (after.line === before.line) throw new Error("the line did not change")
+      eq(av[0][0], inset, "first x")
+      eq(av.at(-1)[0], width - inset, "last x")
+      // Counter-precondition: the horizontal card holds its own range.
+      eq(await page.locator('[data-pg="spark-picker-horizontal"] .pg-stat-label').textContent(), "Last 6 hours")
+    } finally {
+      await page.keyboard.press("Escape")
+      await trigger.click()
+      await page.getByRole("menuitemradio", { name: "6 hours" }).click()
+    }
+  })
+
   await test("a single point renders one centred dot and no path", async () => {
     const svg = page.locator('[data-pg="spark-single"] .sparkline')
     eq(await svg.locator("path").count(), 0, "no path")
