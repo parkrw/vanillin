@@ -13,9 +13,6 @@ export default async function run({ page, baseUrl, test }) {
   // Pre-existing console output, each tracked by an issue. A snippet, not a
   // blanket pass, so a different warning cannot hide behind one of these.
   const KNOWN_OTHER_WARNINGS = [
-    // #76. No `route`: the TOC re-derives on the way out of #use-form, so one
-    // echo arrives tagged with the next route.
-    { snippet: "usefieldarray" },
     // #77: /favicon.ico, requested on the first full load.
     { route: "home", snippet: "Failed to load resource" },
   ]
