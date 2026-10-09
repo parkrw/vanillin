@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
 } from "react"
 import { cn } from "../../lib/cn.js"
@@ -167,13 +168,13 @@ export function TooltipContent({
 }) {
   const { open, triggerRef, contentRef, contentId } = useContext(TooltipContext)
 
-  useAnchorPosition(open, triggerRef, contentRef, { side, align, sideOffset })
-
   // showingRef guards against redundant showPopover/hidePopover calls.
   const showingRef = useRef(false)
 
-  // Sync React state -> native popover show/hide (popover="manual").
-  useEffect(() => {
+  // Sync React state -> native popover show/hide (popover="manual"). A layout
+  // effect declared before useAnchorPosition: shown first, or the first
+  // position measures a display:none 0×0 box and paints a frame misplaced.
+  useLayoutEffect(() => {
     const el = contentRef.current
     if (!el) return
     if (open && !showingRef.current) {
@@ -184,6 +185,8 @@ export function TooltipContent({
       showingRef.current = false
     }
   }, [open, contentRef])
+
+  useAnchorPosition(open, triggerRef, contentRef, { side, align, sideOffset })
 
   return (
     <div
