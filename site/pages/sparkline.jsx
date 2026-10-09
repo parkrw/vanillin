@@ -31,6 +31,14 @@ const gappy = [12, 18, null, 24, 20, null, 27, 31]
 const stale = [12, 18, 9, 24, 20, 35, 27, null]
 const delta = [3, -2, 5, -4, 1, 2]
 const spiky = [40, 60, 130, 90, 70]
+/* Errors a minute: one burst flattens the rest on a linear axis, and a quiet minute is zero. */
+const errors = [2, 0, 5, 3, 140, 12, 4, 6]
+/* Requests sampled each minute, with minutes 4 to 9 missed, and a second source polled on its own clock. */
+const start = Date.UTC(2026, 9, 9, 12, 0)
+const at = (minutes) => minutes.map((m) => new Date(start + m * 60_000))
+const sampledAt = at([0, 1, 2, 3, 10, 11, 12, 13])
+const polledAt = at([0, 4, 8, 13])
+const polled = [12, 18, 22, 21]
 
 /* The last 24 samples of the shared 2s ticker, so the window slides one step a beat. */
 function LiveSparkline() {
@@ -298,6 +306,33 @@ function CpuTrend() {
       </section>
 
       <section className="pg-section">
+        <h3>Time</h3>
+        <p>
+          By default the readings sit evenly across the box, one slot each. <code>times</code> places
+          each one by its timestamp instead, so a stretch the poller missed reads as a long segment
+          rather than vanishing.
+        </p>
+        <ComponentPreview code={`<Sparkline points={requests} />
+<Sparkline points={requests} times={sampledAt} />
+<Sparkline
+  times={sampledAt}
+  series={[{ points: requests }, { points: polled, times: polledAt }]}
+/>`}>
+          <div className="pg-row" data-pg="spark-time">
+            <Sparkline points={requests} />
+            <Sparkline points={requests} times={sampledAt} />
+            <Sparkline times={sampledAt} series={[{ points: requests }, { points: polled, times: polledAt }]} />
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          <code>times</code> takes milliseconds or <code>Date</code>s, one per reading, oldest first.
+          A series item takes its own <code>times</code> or shares the component's, so sources polled on
+          different clocks still line up. A reading without a time is a gap. To break the line across
+          a missed stretch rather than bridge it, push a <code>null</code> reading for it.
+        </p>
+      </section>
+
+      <section className="pg-section">
         <h3>Range</h3>
         <ComponentPreview code={`<Sparkline points={[3, -2, 5, -4, 1, 2]} />
 <Sparkline points={[40, 60, 130, 90, 70]} max={100} />`}>
@@ -311,6 +346,31 @@ function CpuTrend() {
           the zero line on either side. A value past <code>min</code> or <code>max</code> pegs to
           that edge, as a gauge needle does, so a spike over a pinned scale neither clips nor
           rescales the line.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Scale</h3>
+        <p>
+          <code>scale</code> sets how values map to height. On the default linear scale one burst
+          flattens everything else onto the floor. <code>"sqrt"</code> plots the square root: the burst
+          still tops the box, the quiet minutes get room to show their shape, and zero stays on the
+          floor. <code>"log"</code> plots the logarithm, so each step up the box is the same ratio and
+          2 to 20 rises as far as 20 to 200.
+        </p>
+        <ComponentPreview code={`<Sparkline points={errors} />
+<Sparkline points={errors} scale="sqrt" />
+<Sparkline points={errors} scale="log" />`}>
+          <div className="pg-row" data-pg="spark-scale">
+            <Sparkline points={errors} width={160} height={40} inset={3} />
+            <Sparkline points={errors} scale="sqrt" width={160} height={40} inset={3} />
+            <Sparkline points={errors} scale="log" width={160} height={40} inset={3} />
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          A log scale has no zero. <code>min</code> and <code>max</code> must be positive, an unset
+          end is the smallest or largest positive reading, and a reading of zero or below sits on the
+          floor, as the quiet minute does here.
         </p>
       </section>
 
@@ -390,7 +450,9 @@ function CpuTrend() {
 
       <ApiReference title="Sparkline" props={[
         { name: "points", type: "(number | null)[]", default: "[]", description: "The series, oldest first. Anything but a finite number is a gap" },
-        { name: "series", type: "{ points, color, theme, dotColor, areaColor, areaOpacity }[]", description: "Several series on one scale, first at the back. Replaces points, color and theme. An item without color or theme takes --chart-1…5 in order" },
+        { name: "series", type: "{ points, times, color, theme, dotColor, areaColor, areaOpacity }[]", description: "Several series on one scale, first at the back. Replaces points, color and theme. An item without color or theme takes --chart-1…5 in order, and one without times shares the component's" },
+        { name: "times", type: "(number | Date)[]", description: "A timestamp per reading. Places each one on x by time instead of evenly by index; a reading without a time is a gap" },
+        { name: "scale", type: '"linear" | "sqrt" | "log"', default: '"linear"', description: "How values map to height. sqrt and log give small readings room beside a spike; log needs positive min and max, and puts a reading at or below zero on the floor" },
         { name: "color", type: "string", default: "currentColor", description: "Colour of the line, and of the wash and dot unless they are set" },
         { name: "theme", type: "{ light, dark }", description: "A colour per scheme, in place of color" },
         { name: "dotColor", type: "string", default: "the line colour", description: "Colour of the latest-point dot" },
