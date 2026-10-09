@@ -102,6 +102,27 @@ import "./ui/sparkline/sparkline.css"
       </section>
 
       <section className="pg-section">
+        <h3>Smooth line</h3>
+        <ComponentPreview code={`<Sparkline points={requests} />
+<Sparkline points={requests} type="monotone" />
+<Sparkline points={requests} width={160} height={40} inset={3} />
+<Sparkline points={requests} type="monotone" width={160} height={40} inset={3} />`}>
+          <div className="pg-row" data-pg="spark-curve">
+            <Sparkline points={requests} />
+            <Sparkline points={requests} type="monotone" />
+            <Sparkline points={requests} width={160} height={40} inset={3} />
+            <Sparkline points={requests} type="monotone" width={160} height={40} inset={3} />
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          The line is straight between readings by default. <code>type="monotone"</code> rounds it into
+          a curve that still passes through every reading and never overshoots one, so a peak stays a
+          peak and the line stays inside the box. <code>type="step"</code> holds each reading until
+          the next. The wash follows the same shape.
+        </p>
+      </section>
+
+      <section className="pg-section">
         <h3>Beside a figure</h3>
         <p>
           The sparkline is always <code>aria-hidden</code>: the number is the accessible content,
@@ -380,6 +401,7 @@ function CpuTrend() {
         { name: "max", type: "number", default: "the larger of 0 and the data's maximum", description: "Top of the y axis; a value above it pegs to the edge" },
         { name: "area", type: "boolean", default: "true", description: "Fill under the line with a wash of the stroke colour" },
         { name: "dot", type: "boolean", default: "true", description: "Mark the latest point" },
+        { name: "type", type: '"linear" | "monotone" | "step" | …', default: '"linear"', description: "Line shape: straight segments, a curve through every reading that never overshoots, or steps (step, stepBefore, stepAfter)" },
         { name: "width", type: "number", default: "72", description: "Box width in px" },
         { name: "height", type: "number", default: "24", description: "Box height in px" },
         { name: "inset", type: "number", default: "2", description: "Margin from the box edges, and the dot's radius" },

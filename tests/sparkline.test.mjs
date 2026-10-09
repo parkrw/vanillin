@@ -1,5 +1,6 @@
 // Sparkline: the x scale spans inset → width - inset, the y scale puts the
-// last value where the dot sits, a non-finite sample is a gap, the domain
+// last value where the dot sits, type="monotone" keeps the vertices and the
+// inset, a non-finite sample is a gap, the domain
 // folds in zero and pegs what overshoots, one point is a dot alone, the svg
 // is always hidden from the accessibility tree, and the colour props reach
 // the part each one names.
@@ -73,6 +74,32 @@ export default async function run({ page, baseUrl, test, eq, near }) {
         cy: Number(svg.querySelector(".sparkline-dot")?.getAttribute("cy")),
       })),
     )
+
+  await test('type="monotone" curves through the straight line\'s vertices and stays inside the inset', async () => {
+    const pairs = (d) => [...d.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map((m) => [Number(m[1]), Number(m[2])])
+    const [straight, smooth] = await parts("spark-curve")
+    // Precondition: the default is straight, so a type that fell back to linear fails below.
+    eq(/C/.test(straight.line), false, "linear has no cubic")
+    eq((straight.line.match(/ L /g) || []).length, points.length - 1, "one segment per step")
+    eq((smooth.line.match(/ C /g) || []).length, points.length - 1, "one cubic per step")
+    eq(/ L /.test(smooth.line), false, "no straight segment")
+    // M, then three pairs per cubic with the knot last.
+    const knots = pairs(smooth.line).filter((_, i) => i % 3 === 0)
+    const sv = verts(straight.line)
+    eq(knots.length, sv.length, "a knot per reading")
+    knots.forEach(([kx, ky], i) => {
+      near(kx, sv[i][0], 0.01, `knot ${i} x`)
+      near(ky, sv[i][1], 0.01, `knot ${i} y`)
+    })
+    near(knots.at(-1)[1], smooth.cy, 0.01, "curve ends at the dot")
+    // Control points too: a curve that overshot the peak would poke past the inset.
+    for (const [px, py] of pairs(smooth.line)) {
+      if (px < inset - 0.01 || px > width - inset + 0.01) throw new Error(`control x outside the inset: ${px}`)
+      if (py < inset - 0.01 || py > height - inset + 0.01) throw new Error(`control y outside the inset: ${py}`)
+    }
+    eq(smooth.area.startsWith(smooth.line), true, `wash follows the curve: ${smooth.area}`)
+    eq(straight.area.startsWith(straight.line), true, "straight wash follows the straight line")
+  })
 
   await test("a non-finite sample is a gap: line and wash break there, the dot keeps the latest reading", async () => {
     const gappy = [12, 18, null, 24, 20, null, 27, 31]
