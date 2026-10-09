@@ -283,4 +283,83 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
     eq(await page.locator(`${pg(name)} .chart-tooltip-label`).textContent(), "Dec 24, 2024", "tooltip follows")
     await page.locator(`${pg(name)} .chart-surface`).evaluate((el) => el.blur())
   })
+
+  // ── Domains, formatters, axis sizes ──
+
+  await test("heatmap: xDomain and yDomain set the order and drop data they do not name", async () => {
+    const name = "heatmap-order"
+    eq(await page.locator(`${pg(name)} .chart-heatmap-cell`).count(), 24, "8 columns by 3 rows; the Saturday datum has no row")
+    eq(await page.locator(`${pg(name)} .chart-heatmap-cell[data-value="99"]`).count(), 0, "the unnamed row's value is not drawn")
+    const xs = await page.locator(`${pg(name)} [data-axis="x"] text`).allTextContents()
+    eq(xs.join(","), "16,15,14,13,12,11,10,09", "columns reversed")
+    const ys = await page.locator(`${pg(name)} [data-axis="y"] text`).allTextContents()
+    eq(ys.join(","), "Fri,Wed,Mon", "rows in the order given, Tue and Thu left out")
+    eq((await cellInfo(name, 0)).value, "39", "Friday 16 is the top-left cell")
+    eq((await cellInfo(name, 7)).value, "32", "Friday 09 is the top-right cell")
+    eq((await cellInfo(name, 16)).value, "7", "Monday 16 is on the bottom row")
+    eq((await cellInfo(name, 12)).empty, true, "Wednesday 12 moved with its column")
+    eq((await cellInfo("heatmap-default", 12)).empty, false, "the default order has a reading there")
+  })
+
+  await test("heatmap: the legend and tooltip formatters shape their text", async () => {
+    const name = "heatmap-order"
+    eq((await page.locator(`${pg(name)} .chart-heatmap-legend-label`).allTextContents()).join("|"), "0 visits|39 visits", "legend ends")
+    eq((await page.locator("[data-pg=\"heatmap-default\"] .chart-heatmap-legend-label").allTextContents()).join("|"), "0|39", "the default legend is plain")
+    await hover(name, 0)
+    await tooltip(name).waitFor()
+    eq((await tooltip(name).textContent()).includes("39 visits"), true, "tooltip row")
+    await page.mouse.move(0, 0)
+  })
+
+  await test("heatmap: an axis size of 0 leaves that axis's labels out and gives the grid the room", async () => {
+    const bare = "heatmap-bare"
+    eq(await page.locator(`${pg(bare)} [data-axis] text`).count(), 0, "no tick text on either axis")
+    eq(await page.locator(`${pg("heatmap-default")} [data-axis] text`).count() > 0, true, "the default draws them")
+    const { width } = await svgSize(bare)
+    const first = await cellInfo(bare, 0)
+    near(first.x, 5 + (width - 10) / 8 * 0.05, 0.01, "grid starts at the margin")
+  })
+
+  // ── Loose props, Date data, linked charts ──
+
+  await test("calendar: year and weekStart as strings behave as numbers; a Date is read in UTC", async () => {
+    const name = "heatmap-dates"
+    eq(await page.locator(`${pg(name)} .chart-heatmap-cell`).count(), 366, "year=\"2024\" is 366 days, not a concatenated year")
+    const first = await cellInfo(name, 0)
+    eq([first.col, first.row], [0, 0], "weekStart=\"1\" puts the Monday on the top row")
+    eq((await page.locator(`${pg(name)} [data-axis="y"] text`).allTextContents()).join(","), "Tue,Thu,Sat", "labels follow the Monday start")
+    eq(await page.locator(`${pg(name)} .chart-heatmap-cell:not([data-empty])`).count(), 2, "two Date data placed")
+    eq((await cellInfo(name, 64)).value, "7", "5 March 2024 is day 64")
+    eq((await cellInfo(name, 65)).value, "2", "6 March 2024 is day 65")
+    eq((await cellInfo(name, 63)).empty, true, "4 March has no datum")
+    await hover(name, 64)
+    await tooltip(name).waitFor()
+    eq(await page.locator(`${pg(name)} .chart-tooltip-label`).textContent(), "Mar 5, 2024", "tooltip date")
+    eq(await page.locator(`${pg(name)} .chart-tooltip-value`).textContent(), "7", "tooltip value")
+    await page.mouse.move(0, 0)
+    eq(await page.locator(`${pg("heatmap-sync-calendar")} .chart-heatmap-cell`).count(), 366, "the same string props on the linked calendar")
+  })
+
+  await test("linked charts: an index past this grid's end does not break the arrow keys", async () => {
+    const errors = []
+    const onError = (error) => errors.push(error.message)
+    page.on("pageerror", onError)
+    try {
+      const grid = "heatmap-sync-grid"
+      const calendar = "heatmap-sync-calendar"
+      await hover(calendar, 200)
+      await page.waitForFunction(() => document.querySelector('[data-pg="heatmap-sync-calendar"] .chart-heatmap-cell[data-active]')?.dataset.index === "200")
+      eq(await activeIndex(calendar), [200], "the calendar holds day 200, a cell the 40-cell grid lacks")
+      await surface(grid).evaluate((el) => el.focus({ preventScroll: true }))
+      eq(await activeIndex(grid), [], "focus finds the synced index already set, so it activates nothing")
+      eq(await press(grid, "ArrowRight"), [0], "an arrow from an index past the end lands on a real cell")
+      eq(await press(grid, "ArrowDown"), [8], "and walks from there")
+      eq(await page.locator(`${pg(grid)} .chart-heatmap-cell`).count(), 40, "the grid is still drawn")
+      eq(errors, [], "no error thrown")
+      await surface(grid).evaluate((el) => el.blur())
+      await page.mouse.move(0, 0)
+    } finally {
+      page.off("pageerror", onError)
+    }
+  })
 }

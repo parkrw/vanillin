@@ -32,6 +32,8 @@ const DAY_MS = 86_400_000
 const PARTS = { series: new Set(), unique: [], first: ["tooltip", "legend"] }
 
 const finite = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null)
+// A string prop (year="2024") must not reach arithmetic, where `+` would concatenate.
+const wholeNumber = (v) => (v === "" || v == null || !Number.isInteger(Number(v)) ? null : Number(v))
 const keyOf = (col, row) => `${col}:${row}`
 
 // ── Scale ───────────────────────────────────────────────────────────
@@ -51,8 +53,7 @@ function makeScale(values, domain, stepsProp) {
     const pct = Math.round((bin / (steps - 1)) * 100_000) / 1000
     return `color-mix(in oklab, var(--color-high, var(--chart-1)) ${pct}%, var(--color-low, var(--muted)))`
   }
-  const bounds = (bin) => [lo + ((hi - lo) * bin) / steps, lo + ((hi - lo) * (bin + 1)) / steps]
-  return { lo, hi, steps, binOf, colorOfBin, bounds }
+  return { lo, hi, steps, binOf, colorOfBin }
 }
 
 function paint(cells, scale) {
@@ -147,8 +148,8 @@ function heatmapModel({ data, xKey, yKey, valueKey, xDomain, yDomain, domain, st
   const plot = gridPlot(width, height, margin, yAxisWidth, 0, xAxisHeight)
   const xScale = bandScale(xs.length, [plot.x, plot.x + plot.width], { categoryGap: cellGap })
   const yScale = bandScale(ys.length, [plot.y, plot.y + plot.height], { categoryGap: cellGap })
-  const xTicks = thinned(xs.map((label, i) => ({ pos: xScale.center(i), label: String(label) })), (t) => t.length * TEXT_WIDTH_PER_CHAR)
-  const yTicks = thinned(ys.map((label, i) => ({ pos: yScale.center(i), label: String(label) })), () => TEXT_HEIGHT)
+  const xTicks = xAxisHeight <= 0 ? [] : thinned(xs.map((label, i) => ({ pos: xScale.center(i), label: String(label) })), (t) => t.length * TEXT_WIDTH_PER_CHAR)
+  const yTicks = yAxisWidth <= 0 ? [] : thinned(ys.map((label, i) => ({ pos: yScale.center(i), label: String(label) })), () => TEXT_HEIGHT)
   return finishModel({
     cells,
     cols: xs.length,
@@ -208,7 +209,7 @@ function calendarModel({ data, year, dateKey, valueKey, weekStart, domain, steps
 
   const monthName = new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC" })
   const weekdayName = new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" })
-  const xTicks = thinned(
+  const xTicks = xAxisHeight <= 0 ? [] : thinned(
     Array.from({ length: 12 }, (_, m) => {
       const start = Date.UTC(year, m, 1) / DAY_MS - first
       return { pos: xScale.center(Math.floor((lead + start) / 7)), label: monthName.format(new Date(Date.UTC(year, m, 1))) }
@@ -216,10 +217,13 @@ function calendarModel({ data, year, dateKey, valueKey, weekStart, domain, steps
     (t) => t.length * TEXT_WIDTH_PER_CHAR,
   )
   // 2023-01-01 is a Sunday, so day n of January 2023 is weekday n - 1.
-  const yTicks = [1, 3, 5].map((r) => ({
-    pos: yScale.center(r),
-    label: weekdayName.format(new Date(Date.UTC(2023, 0, 1 + ((weekStart + r) % 7)))),
-  }))
+  const yTicks =
+    yAxisWidth <= 0
+      ? []
+      : [1, 3, 5].map((r) => ({
+          pos: yScale.center(r),
+          label: weekdayName.format(new Date(Date.UTC(2023, 0, 1 + ((weekStart + r) % 7)))),
+        }))
   return finishModel({
     cells,
     cols,
@@ -244,6 +248,7 @@ const ARROWS = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], Arrow
 function GridChart({
   variant,
   build,
+  data,
   signature,
   syncId,
   accessibilityLayer = false,
@@ -262,7 +267,7 @@ function GridChart({
   const model = useMemo(
     () => build(width, height),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [width, height, signature],
+    [data, width, height, signature],
   )
 
   if (process.env.NODE_ENV !== "production") {
@@ -290,8 +295,10 @@ function GridChart({
     const step = ARROWS[event.key]
     if (!step || !model.cells.length) return keyboard.onKeyDown(event)
     event.preventDefault()
-    const from = model.cells[activeIndex ?? 0]
-    const to = activeIndex == null ? from : model.at.get(keyOf(from.col + step[0], from.row + step[1])) ?? from
+    // A synced chart can hand over an index this grid does not have, and data can shrink under a live one.
+    const current = model.cells[activeIndex]
+    const from = current ?? model.cells[0]
+    const to = current ? model.at.get(keyOf(from.col + step[0], from.row + step[1])) ?? from : from
     activate(to.index, "keyboard")
   }
   const a11y = surfaceA11y(accessibilityLayer, ariaLabel != null || ariaLabelledBy != null, { ...keyboard, onKeyDown })
@@ -391,16 +398,16 @@ export function HeatmapChart({
   const name = config?.[valueKey]?.label ?? valueKey
   const fullMargin = { ...DEFAULT_MARGIN, ...margin }
   const options = { xKey, yKey, valueKey, xDomain, yDomain, domain, steps, cellGap, margin: fullMargin, yAxisWidth, xAxisHeight, name }
-  const signature = json([options, data])
-  return <GridChart variant="heatmap" signature={signature} build={(width, height) => heatmapModel({ ...options, data, width, height })} {...props} />
+  const signature = json(options)
+  return <GridChart variant="heatmap" data={data} signature={signature} build={(width, height) => heatmapModel({ ...options, data, width, height })} {...props} />
 }
 
 export function CalendarHeatmap({
   data = [],
-  year = new Date().getFullYear(),
+  year: yearProp,
   dateKey = "date",
   valueKey = "value",
-  weekStart = 0,
+  weekStart: weekStartProp = 0,
   domain,
   steps,
   cellGap = 0.15,
@@ -413,9 +420,12 @@ export function CalendarHeatmap({
   const { config } = useChart()
   const name = config?.[valueKey]?.label ?? valueKey
   const fullMargin = { ...DEFAULT_MARGIN, ...margin }
+  const parsedYear = wholeNumber(yearProp)
+  const year = parsedYear >= 100 && parsedYear <= 9999 ? parsedYear : new Date().getFullYear()
+  const weekStart = (((wholeNumber(weekStartProp) ?? 0) % 7) + 7) % 7
   const options = { year, dateKey, valueKey, weekStart, domain, steps, cellGap, locale, margin: fullMargin, yAxisWidth, xAxisHeight, name }
-  const signature = json([options, data])
-  return <GridChart variant="calendar" signature={signature} build={(width, height) => calendarModel({ ...options, data, width, height })} {...props} />
+  const signature = json(options)
+  return <GridChart variant="calendar" data={data} signature={signature} build={(width, height) => calendarModel({ ...options, data, width, height })} {...props} />
 }
 
 // ── Legend ──────────────────────────────────────────────────────────

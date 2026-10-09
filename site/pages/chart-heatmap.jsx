@@ -45,6 +45,17 @@ function Frame({ pg, wide = false, children }) {
   )
 }
 
+/* The same readings with the columns reversed, a row left out of the order, and a datum for a row the order does not name. */
+const hoursReversed = [...hours].reverse()
+const daysOrdered = ["Fri", "Wed", "Mon"]
+const orderData = [...trafficData, { hour: "09", day: "Sat", visits: 99 }]
+
+/* Dates as Date objects, in UTC: 5 March 2024 is a 7, 6 March a 2. */
+const commitDates = [
+  { date: new Date(Date.UTC(2024, 2, 5)), count: 7 },
+  { date: new Date(Date.UTC(2024, 2, 6)), count: 2 },
+]
+
 const calendarShape = { aspectRatio: "4.5 / 1" }
 
 export default function ChartHeatmapPage() {
@@ -144,6 +155,66 @@ export default function ChartHeatmapPage() {
         </ComponentPreview>
       </section>
 
+      <section className="pg-section">
+        <h3>Order, formatting and bare axes</h3>
+        <p>
+          <code>xDomain</code> and <code>yDomain</code> set the order of columns and rows and drop any datum they do not
+          name. The legend takes a <code>formatter</code> for its end labels, and the tooltip takes the usual one. An axis
+          size of 0 leaves that axis's labels out.
+        </p>
+        <ComponentPreview code={`<HeatmapChart data={trafficData} xKey="hour" yKey="day" valueKey="visits" xDomain={hoursReversed} yDomain={["Fri", "Wed", "Mon"]}>
+  <ChartTooltip content={<ChartTooltipContent formatter={(value) => \`\${value} visits\`} />} />
+  <HeatmapLegend formatter={(v) => \`\${v} visits\`} />
+</HeatmapChart>`}>
+          <Frame pg="heatmap-order">
+            <ChartContainer config={trafficConfig}>
+              <HeatmapChart data={orderData} xKey="hour" yKey="day" valueKey="visits" xDomain={hoursReversed} yDomain={daysOrdered}>
+                <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${value} visits`} />} />
+                <HeatmapLegend formatter={(v) => `${v} visits`} />
+              </HeatmapChart>
+            </ChartContainer>
+          </Frame>
+          <Frame pg="heatmap-bare">
+            <ChartContainer config={trafficConfig}>
+              <HeatmapChart data={trafficData} xKey="hour" yKey="day" valueKey="visits" yAxisWidth={0} xAxisHeight={0} />
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Linked charts and loose props</h3>
+        <p>
+          Charts sharing a <code>syncId</code> share the active cell by position, even when the grids differ in size.
+          <code>year</code> and <code>weekStart</code> also take numeric strings, and a datum's date may be a{" "}
+          <code>Date</code>, read in UTC.
+        </p>
+        <ComponentPreview code={`<HeatmapChart syncId="heat" … />
+<CalendarHeatmap syncId="heat" year="2024" weekStart="1" data={[{ date: new Date(Date.UTC(2024, 2, 5)), count: 7 }]} … />`}>
+          <Frame pg="heatmap-sync-grid">
+            <ChartContainer config={trafficConfig}>
+              <HeatmapChart data={trafficData} xKey="hour" yKey="day" valueKey="visits" syncId="heat" accessibilityLayer aria-label="Visits by day and hour, linked">
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </HeatmapChart>
+            </ChartContainer>
+          </Frame>
+          <Frame pg="heatmap-sync-calendar" wide>
+            <ChartContainer config={commitConfig} style={calendarShape}>
+              <CalendarHeatmap data={commits2024} year="2024" weekStart="1" dateKey="date" valueKey="count" locale="en-US" syncId="heat">
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </CalendarHeatmap>
+            </ChartContainer>
+          </Frame>
+          <Frame pg="heatmap-dates" wide>
+            <ChartContainer config={commitConfig} style={calendarShape}>
+              <CalendarHeatmap data={commitDates} year="2024" weekStart="1" dateKey="date" valueKey="count" locale="en-US">
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </CalendarHeatmap>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
       <ApiReference title="HeatmapChart" props={[
         { name: "data", type: "object[]", description: "One datum per cell: a column, a row and a value. A pair with no datum is an outline" },
         { name: "xKey / yKey / valueKey", type: "string", default: '"x" / "y" / "value"', description: "Fields holding the column, the row and the number" },
@@ -151,7 +222,7 @@ export default function ChartHeatmapPage() {
         { name: "domain", type: "[lo, hi]", description: "The ends of the colour scale; defaults to the lowest and highest value" },
         { name: "steps", type: "number", default: "5", description: "Shades between the two ends, at least 2" },
         { name: "cellGap", type: "number", default: "0.1", description: "Gap between cells as a fraction of a cell's pitch" },
-        { name: "yAxisWidth / xAxisHeight", type: "number", default: "48 / 24", description: "Room for the row and column labels, px; 0 hides them" },
+        { name: "yAxisWidth / xAxisHeight", type: "number", default: "48 / 24", description: "Room for the row and column labels, px; 0 leaves that axis's labels out" },
         { name: "margin", type: "{ top, right, bottom, left }", default: "5 each", description: "Space around the grid, px" },
         { name: "syncId", type: "string", description: "Charts sharing an id share the active cell, by index" },
         { name: "accessibilityLayer", type: "boolean", default: "false", description: "Focusable; arrows move one cell up, down, left or right, Home and End jump to the first and last, Escape dismisses" },
