@@ -4,6 +4,14 @@ const RAIL_MIN = 160
 const RAIL_MAX = 360
 const RAIL_DEFAULT = 220
 
+function slugify(text) {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+}
+
 function useHeadings(route) {
   const [headings, setHeadings] = useState([])
 
@@ -11,14 +19,17 @@ function useHeadings(route) {
     const derive = () => {
       const nodes = document.querySelectorAll(".pg-section > h3")
       const list = []
+      // The id is the anchor, the observer target and the React key, so a
+      // repeated heading text takes -2, -3… in document order.
+      const used = new Set()
       for (const node of nodes) {
-        if (!node.id) {
-          node.id = node.textContent
-            .trim()
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-|-$/g, "")
+        if (!node.id || used.has(node.id)) {
+          const base = slugify(node.textContent)
+          let id = base
+          for (let n = 2; used.has(id); n++) id = `${base}-${n}`
+          node.id = id
         }
+        used.add(node.id)
         list.push({ id: node.id, text: node.textContent.trim() })
       }
       setHeadings((prev) => {
