@@ -213,6 +213,61 @@ export default async function run({ page, baseUrl, test, eq }) {
     )
   })
 
+  await test("repeated heading text gets a suffixed id, and its rail link scrolls to it", async () => {
+    await page.goto(`${baseUrl}/#use-form`)
+    await page.waitForSelector('.pg-main > h2:text-is("useForm")')
+    await page.waitForFunction(
+      () => [...document.querySelectorAll(".pg-rail-link")].filter((a) => a.textContent === "useFieldArray").length === 2
+    )
+    const all = await page.evaluate(() =>
+      [...document.querySelectorAll(".pg-section > h3")].map((h) => ({ id: h.id, text: h.textContent.trim() }))
+    )
+    const repeated = all.filter((h) => h.text === "useFieldArray")
+    eq(repeated.length, 2, "precondition: #use-form has two useFieldArray headings")
+    eq(new Set(all.map((h) => h.id)).size, all.length, `duplicate ids: ${all.map((h) => h.id).join(" ")}`)
+    eq(repeated.map((h) => h.id).join(" "), "usefieldarray usefieldarray-2")
+
+    const links = page.locator(".pg-rail-link", { hasText: "useFieldArray" })
+    eq(await links.count(), 2)
+    eq(await links.nth(1).getAttribute("href"), `#${repeated[1].id}`)
+
+    const tops = () =>
+      page.evaluate(
+        (ids) => ids.map((id) => document.getElementById(id).getBoundingClientRect().top),
+        repeated.map((h) => h.id)
+      )
+    await page.evaluate(() => window.scrollTo(0, 0))
+    const [, secondBefore] = await tops()
+    const viewport = await page.evaluate(() => window.innerHeight)
+    eq(secondBefore > viewport, true, `precondition: second section already in view, top ${secondBefore}`)
+
+    await links.nth(1).click()
+    await page.waitForFunction(
+      (id) => {
+        const top = document.getElementById(id).getBoundingClientRect().top
+        return top >= 0 && top < window.innerHeight / 3
+      },
+      repeated[1].id,
+      { timeout: 5000 }
+    )
+    const [first] = await tops()
+    eq(first < 0, true, `expected the first useFieldArray section scrolled past, top ${first}`)
+  })
+
+  await test("unique heading text keeps its plain slug", async () => {
+    await page.goto(`${baseUrl}/#checkbox`)
+    await page.waitForSelector('.pg-main > h2:text-is("Checkbox")')
+    await page.waitForSelector('[data-pg="rail"]')
+    const all = await page.evaluate(() =>
+      [...document.querySelectorAll(".pg-section > h3")].map((h) => ({ id: h.id, text: h.textContent.trim() }))
+    )
+    eq(new Set(all.map((h) => h.text)).size, all.length, "precondition: #checkbox heading texts are unique")
+    for (const { id, text } of all) {
+      const slug = text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+      eq(id, slug, `"${text}"`)
+    }
+  })
+
   await test("rail resizes by dragging the handle", async () => {
     await page.goto(`${baseUrl}/#checkbox`)
     await page.waitForSelector(".pg-section > h3")
