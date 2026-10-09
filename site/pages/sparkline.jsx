@@ -1,8 +1,21 @@
+import { useState } from "react"
 import { useTicker } from "../../lib/use-ticker.js"
 import { Sparkline } from "../../ui/sparkline/sparkline.jsx"
 import { Card, CardContent } from "../../ui/card/card.jsx"
+import { Button } from "../../ui/button/button.jsx"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../../ui/dropdown-menu/dropdown-menu.jsx"
 import "../../ui/sparkline/sparkline.css"
 import "../../ui/card/card.css"
+import "../../ui/button/button.css"
+import "../../ui/dropdown-menu/dropdown-menu.css"
 import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
@@ -39,6 +52,86 @@ const at = (minutes) => minutes.map((m) => new Date(start + m * 60_000))
 const sampledAt = at([0, 1, 2, 3, 10, 11, 12, 13])
 const polledAt = at([0, 4, 8, 13])
 const polled = [12, 18, 22, 21]
+
+const HOUR = 3_600_000
+const DAY = 24 * HOUR
+const RANGES = [
+  ["1h", "1 hour", HOUR],
+  ["6h", "6 hours", 6 * HOUR],
+  ["12h", "12 hours", 12 * HOUR],
+  ["1d", "1 day", DAY],
+  ["3d", "3 days", 3 * DAY],
+  ["5d", "5 days", 5 * DAY],
+  ["7d", "7 days", 7 * DAY],
+  ["15d", "15 days", 15 * DAY],
+  ["1mo", "1 month", 30 * DAY],
+  ["3mo", "3 months", 91 * DAY],
+  ["6mo", "6 months", 182 * DAY],
+  ["1y", "1 year", 365 * DAY],
+]
+const rangeLabel = Object.fromEntries(RANGES.map(([value, label]) => [value, label]))
+const rangeSpan = Object.fromEntries(RANGES.map(([value, , ms]) => [value, ms]))
+
+/*
+ * Stands in for a metrics query: one signal with hourly, daily, weekly and
+ * seasonal swings, rolled up into 48 buckets across the window, so an hour
+ * and a year both draw at the sparkline's resolution and end on the same
+ * instant. A bucket's reading is the signal's mean over it, sin(πx)/(πx) of
+ * each swing, so a year does not alias the daily cycle into noise.
+ */
+const now = Date.UTC(2026, 9, 9, 12, 0)
+const SWINGS = [[8, 1.5 * HOUR], [22, DAY], [10, 7 * DAY], [15, 120 * DAY]]
+const sinc = (x) => (x === 0 ? 1 : Math.sin(Math.PI * x) / (Math.PI * x))
+const rollup = (t, bucket) =>
+  Math.round(SWINGS.reduce((v, [amp, period]) => v + amp * sinc(bucket / period) * Math.sin((2 * Math.PI * t) / period), 60))
+function queryRequests(range) {
+  const bucket = rangeSpan[range] / 48
+  const times = Array.from({ length: 48 }, (_, i) => now - (47 - i) * bucket)
+  return { times, points: times.map((t) => rollup(t, bucket)) }
+}
+
+const ellipsis = {
+  horizontal: [[5, 12], [12, 12], [19, 12]],
+  vertical: [[12, 5], [12, 12], [12, 19]],
+}
+
+function RangeMenu({ value, onValueChange, orientation = "horizontal" }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger as={Button} variant="ghost" size="icon" aria-label={`Time range: ${rangeLabel[value]}`}>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          {ellipsis[orientation].map(([cx, cy]) => <circle key={cy * 100 + cx} cx={cx} cy={cy} r="1" />)}
+        </svg>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Time range</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>
+          {RANGES.map(([v, label]) => (
+            <DropdownMenuRadioItem key={v} value={v}>{label}</DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function RangeCard({ orientation }) {
+  const [range, setRange] = useState("6h")
+  const { points, times } = queryRequests(range)
+  return (
+    <Card style={{ width: "17rem" }} data-pg={`spark-picker-${orientation}`}>
+      <CardContent style={statCard}>
+        <div>
+          <div className="pg-stat-num">{points[points.length - 1]} req/s</div>
+          <div className="pg-stat-label">Last {rangeLabel[range]}</div>
+        </div>
+        <Sparkline points={points} times={times} />
+        <RangeMenu value={range} onValueChange={setRange} orientation={orientation} />
+      </CardContent>
+    </Card>
+  )
+}
 
 /* The last 24 samples of the shared 2s ticker, so the window slides one step a beat. */
 function LiveSparkline() {
@@ -329,6 +422,54 @@ function CpuTrend() {
           A series item takes its own <code>times</code> or shares the component's, so sources polled on
           different clocks still line up. A reading without a time is a gap. To break the line across
           a missed stretch rather than bridge it, push a <code>null</code> reading for it.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Time range</h3>
+        <p>
+          The sparkline holds no state and is hidden from assistive technology, so a range picker
+          sits beside it rather than inside it. Keep the range in state, let the menu set it, and
+          fetch the readings for that window at a resolution the box can show: 48 readings draw an
+          hour and a year equally well, where a year of per-minute samples is half a million points
+          for 70 pixels.
+        </p>
+        <ComponentPreview code={`const [range, setRange] = useState("6h")
+const { points, times } = useRequests(range) // your query, ~48 readings across the window
+
+<Card>
+  <CardContent style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <div>
+      <div className="stat-num">{points.at(-1)} req/s</div>
+      <div className="stat-label">Last {label[range]}</div>
+    </div>
+    <Sparkline points={points} times={times} />
+    <DropdownMenu>
+      <DropdownMenuTrigger as={Button} variant="ghost" size="icon" aria-label={\`Time range: \${label[range]}\`}>
+        <EllipsisIcon />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Time range</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuRadioGroup value={range} onValueChange={setRange}>
+          <DropdownMenuRadioItem value="1h">1 hour</DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="6h">6 hours</DropdownMenuRadioItem>
+          {/* 12h, 1d, 3d, 5d, 7d, 15d, 1mo, 3mo, 6mo */}
+          <DropdownMenuRadioItem value="1y">1 year</DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  </CardContent>
+</Card>`}>
+          <div className="pg-row">
+            <RangeCard orientation="horizontal" />
+            <RangeCard orientation="vertical" />
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          The trigger's name carries the current range, so a screen reader hears what it changes and
+          what it is set to. The menu spells each range out, since <code>1m</code> could be a minute or
+          a month. Draw the dots across or down to suit the card.
         </p>
       </section>
 
