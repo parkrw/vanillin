@@ -253,7 +253,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     const [first] = await tops()
     eq(first < 0, true, `expected the first useFieldArray section scrolled past, top ${first}`)
 
-    // One shared id lit both links, and the observer only ever saw the first section.
+    // A shared id lights both links and leaves the second section unobserved.
     await page.waitForFunction(
       () =>
         [...document.querySelectorAll(".pg-rail-link")].filter((a) => a.textContent === "useFieldArray")[1]
