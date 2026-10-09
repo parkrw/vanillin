@@ -191,7 +191,7 @@ export function ChartTooltipContent({
                       </div>
                       {item.value != null && (
                         <span className="chart-tooltip-value">
-                          {typeof item.value === "number" ? item.value.toLocaleString() : String(item.value)}
+                          {formatChartValue(item.value)}
                         </span>
                       )}
                     </div>
@@ -243,6 +243,8 @@ export function ChartLegendContent({ className, hideIcon = false, payload, verti
   )
 }
 
+const formatChartValue = (v) => (typeof v === "number" ? v.toLocaleString() : String(v))
+
 // Helper to extract item config from a payload.
 function getPayloadConfigFromPayload(config, payload, key) {
   if (typeof payload !== "object" || payload === null) return undefined
@@ -271,12 +273,12 @@ const CARTESIAN_PARTS = {
   series: new Set(["bar", "line", "area", "scatter"]),
   references: new Set(["referencearea", "referenceline", "referencedot"]),
   unique: ["xaxis", "yaxis", "zaxis"],
-  first: ["grid", "tooltip", "legend"],
+  first: ["grid", "tooltip", "legend", "datatable"],
 }
 const POLAR_PARTS = {
   series: new Set(["pie", "radar", "radialbar"]),
   unique: ["polarangleaxis", "polarradiusaxis"],
-  first: ["polargrid", "tooltip", "legend"],
+  first: ["polargrid", "tooltip", "legend", "datatable"],
 }
 
 function collect(children, parts, out = { series: [], references: [], passthrough: [], unknown: [], stray: [], duplicates: [] }) {
@@ -827,6 +829,156 @@ function surfaceA11y(accessibilityLayer, labelled, keyboard) {
   return labelled ? { role: "img" } : {}
 }
 
+/*
+ * The text a screen reader gets for a chart it cannot see: one sentence per
+ * series, built from the data alone so the same data always reads the same.
+ * Ties for lowest and peak go to the earlier category.
+ */
+function seriesStats(values, labels) {
+  let stats = null
+  values.forEach((v, i) => {
+    if (v == null) return
+    if (!stats) stats = { min: v, max: v, minAt: labels[i], maxAt: labels[i], first: v, last: v, firstAt: labels[i], lastAt: labels[i] }
+    if (v < stats.min) [stats.min, stats.minAt] = [v, labels[i]]
+    if (v > stats.max) [stats.max, stats.maxAt] = [v, labels[i]]
+    stats.last = v
+    stats.lastAt = labels[i]
+  })
+  return stats
+}
+
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
+
+function describeChange(first, last) {
+  const delta = Number((last - first).toPrecision(12))
+  if (delta > 0) return `up ${formatChartValue(delta)}`
+  if (delta < 0) return `down ${formatChartValue(-delta)}`
+  return "unchanged"
+}
+
+function describeChart(layout, config) {
+  const label = (key, fallback) => config?.[key]?.label ?? fallback
+  const { series } = layout
+  const fmt = formatChartValue
+  if (!series.length) return "Chart with no data."
+
+  if (layout.kind === "scatter") {
+    const sentences = series.map((entry) => {
+      const points = entry.xs.map((x, i) => [x, entry.values[i]]).filter(([x, y]) => x != null && y != null)
+      const name = label(entry.name, entry.name)
+      if (!points.length) return `${name}: no points.`
+      const span = (axis, fallback, list) => `${label(axis.name, axis.name ?? axis.dataKey ?? fallback)} ${fmt(Math.min(...list))} to ${fmt(Math.max(...list))}`
+      return `${name}: ${plural(points.length, "point", "points")}, ${span(layout.x, "x", points.map((p) => p[0]))}, ${span(layout.y, "y", points.map((p) => p[1]))}.`
+    })
+    return sentences.join(" ")
+  }
+
+  if (series[0].role === "pie") {
+    return series
+      .map((pie) => {
+        const names = pie.names.map((n) => label(n, String(n)))
+        const stats = seriesStats(pie.values, names)
+        const name = label(pie.dataKey, pie.name)
+        if (!stats) return `${name}: no slices.`
+        const total = pie.values.reduce((sum, v) => sum + (v ?? 0), 0)
+        return `${name}: ${plural(pie.values.filter((v) => v != null).length, "slice", "slices")}, range ${fmt(stats.min)} to ${fmt(stats.max)}, lowest ${stats.minAt}, peak ${stats.maxAt}, total ${fmt(Number(total.toPrecision(12)))}.`
+      })
+      .join(" ")
+  }
+
+  const { category } = layout
+  const labels = category.labels.map(String)
+  const lead = `Chart with ${plural(series.length, "series", "series")} over ${plural(category.count, "category", "categories")}${category.count ? `, ${labels[0]} to ${labels[labels.length - 1]}` : ""}.`
+  const sentences = series.map((entry) => {
+    const name = label(entry.name, entry.name)
+    const stats = seriesStats(entry.values, labels)
+    if (!stats) return `${name}: no data.`
+    return `${name}: range ${fmt(stats.min)} to ${fmt(stats.max)}, lowest in ${stats.minAt}, peak in ${stats.maxAt}, from ${fmt(stats.first)} to ${fmt(stats.last)} (${describeChange(stats.first, stats.last)}).`
+  })
+  return [lead, ...sentences].join(" ")
+}
+
+/*
+ * The chart's rows as table cells. A cell is { text }, { head } (a category
+ * label, run through labelFormatter) or { value, item } (run through the
+ * formatter), so the component below only decides markup.
+ */
+function tableModel(layout, config) {
+  const label = (key, fallback) => config?.[key]?.label ?? fallback
+  const { series } = layout
+  const many = series.length > 1
+  if (!series.length) return null
+
+  if (layout.kind === "scatter") {
+    const rows = []
+    series.forEach((entry, k) => {
+      const view = layout.focus(k)
+      entry.data.forEach((_, i) => {
+        const items = view.payloadAt(i)
+        rows.push({ key: `${k}:${i}`, cells: [...(many ? [{ text: label(entry.name, entry.name) }] : []), ...items.map((item) => ({ item, value: item.value }))] })
+      })
+    })
+    if (!rows.length) return null
+    const items = layout.focus(series.findIndex((entry) => entry.data.length)).payloadAt(0)
+    return { headers: [...(many ? ["Series"] : []), ...items.map((item) => label(item.name, item.name))], rows }
+  }
+
+  if (series[0].role === "pie") {
+    const rows = []
+    series.forEach((pie, k) => {
+      const view = layout.focus(k)
+      pie.data.forEach((_, i) => {
+        const [item] = view.payloadAt(i)
+        rows.push({ key: `${k}:${i}`, head: { text: label(pie.names[i], String(pie.names[i])) }, cells: [...(many ? [{ text: label(pie.dataKey, pie.name) }] : []), { item, value: item.value }] })
+      })
+    })
+    if (!rows.length) return null
+    const [lead] = series
+    return { headers: [lead.nameKey != null ? label(lead.nameKey, String(lead.nameKey)) : "Name", ...(many ? ["Series", "Value"] : [label(lead.dataKey, lead.name)])], rows }
+  }
+
+  const { category } = layout
+  if (!category.count) return null
+  const rows = category.labels.map((value, i) => ({
+    key: i,
+    head: { head: { label: value, payload: layout.data?.[i] } },
+    cells: series.map((entry) => ({
+      value: entry.values[i],
+      item: { dataKey: entry.dataKey, name: entry.name, value: entry.values[i], color: entry.colors?.[i] ?? entry.color, payload: layout.data?.[i] },
+    })),
+  }))
+  const lead = category.dataKey != null ? label(category.dataKey, String(category.dataKey)) : "Category"
+  return { headers: [lead, ...series.map((entry) => label(entry.name, entry.name))], rows }
+}
+
+// An author's aria-describedby names their own description; the generated one
+// stays out of the way rather than being appended to it.
+function useChartSummary(layout, accessibilityLayer, ariaDescribedBy) {
+  const chart = useChart()
+  const wanted = accessibilityLayer && ariaDescribedBy == null
+  const text = useMemo(() => (wanted ? describeChart(layout, chart.config) : null), [wanted, layout, chart.config])
+  if (!wanted) return { describedBy: ariaDescribedBy, summary: null }
+  const id = `${chart.id}-summary`
+  return {
+    describedBy: id,
+    summary: (
+      <p id={id} className="chart-summary">
+        {text}
+      </p>
+    ),
+  }
+}
+
+function withTooltipFormatters(table, tooltip) {
+  if (!table) return null
+  const content = isValidElement(tooltip?.props.content) ? tooltip.props.content.props : null
+  if (!content) return table
+  return cloneElement(table, {
+    formatter: table.props.formatter ?? content.formatter,
+    labelFormatter: table.props.labelFormatter ?? content.labelFormatter,
+  })
+}
+
 function CartesianChart({
   kind = "category",
   data = [],
@@ -948,6 +1100,7 @@ function CartesianChart({
   const legendEl = parts.legend
   const legendTop = legendEl && legendEl.props.verticalAlign === "top"
   const a11y = surfaceA11y(accessibilityLayer, ariaLabel != null || ariaLabelledBy != null, keyboard)
+  const { describedBy, summary } = useChartSummary(computed, accessibilityLayer, ariaDescribedBy)
 
   return (
     <LayoutContext.Provider value={hostLayout}>
@@ -963,7 +1116,7 @@ function CartesianChart({
                   height={height}
                   aria-label={ariaLabel}
                   aria-labelledby={ariaLabelledBy}
-                  aria-describedby={ariaDescribedBy}
+                  aria-describedby={describedBy}
                   {...surface}
                   {...a11y}
                 >
@@ -979,6 +1132,8 @@ function CartesianChart({
                 {tooltipEl}
               </div>
               {legendEl && !legendTop ? legendEl : null}
+              {summary}
+              {withTooltipFormatters(parts.datatable, tooltipEl)}
             </div>
           </VisibilityContext.Provider>
         </PointerContext.Provider>
@@ -1203,7 +1358,7 @@ function radarLayout(ctx, series) {
   const radiusAt = (i) => Math.max(frame.outerRadius / 2, ...entries.map((entry) => (entry.values[i] == null ? 0 : valueScale(clamp(entry.values[i])))))
   return {
     ...ctx.base,
-    category: { labels, count, angles },
+    category: { labels, count, angles, dataKey: key },
     value: { domain, ticks, scale: valueScale },
     series: entries,
     ...indexEntries(entries),
@@ -1277,7 +1432,7 @@ function radialLayout(ctx, series) {
   const labels = data.map((d, i) => (key != null ? d?.[key] : i))
   return {
     ...ctx.base,
-    category: { labels, count },
+    category: { labels, count, dataKey: key },
     value: { domain, ticks, scale: angleScale },
     series: entries,
     ...indexEntries(entries),
@@ -1416,6 +1571,7 @@ function PolarChart({
   const legendTop = legendEl && legendEl.props.verticalAlign === "top"
   const a11y = surfaceA11y(accessibilityLayer, ariaLabel != null || ariaLabelledBy != null, keyboard)
   const { viewBox } = computed
+  const { describedBy, summary } = useChartSummary(computed, accessibilityLayer, ariaDescribedBy)
   const hostLayout = computed.focus ? computed.focus(computed.seriesAt(pointer.point)) : computed
 
   return (
@@ -1432,7 +1588,7 @@ function PolarChart({
                   height={height}
                   aria-label={ariaLabel}
                   aria-labelledby={ariaLabelledBy}
-                  aria-describedby={ariaDescribedBy}
+                  aria-describedby={describedBy}
                   {...surface}
                   {...a11y}
                 >
@@ -1458,6 +1614,8 @@ function PolarChart({
                 {tooltipEl}
               </div>
               {legendEl && !legendTop ? legendEl : null}
+              {summary}
+              {withTooltipFormatters(parts.datatable, tooltipEl)}
             </div>
           </PolarViewBoxContext.Provider>
         </PointerContext.Provider>
@@ -2718,3 +2876,52 @@ export function ChartLegend({ content, verticalAlign = "bottom", ...props }) {
   return cloneElement(node, { payload: layout.legendPayload, verticalAlign, ...props })
 }
 ChartLegend.chartRole = "legend"
+
+/*
+ * The chart's data as a real table. It is always in the DOM so a screen
+ * reader can reach it; `open` only decides whether it is also painted, over
+ * the chart's own box. The consumer owns the control that flips it. Cells
+ * go through the formatters ChartTooltipContent takes (same signatures), and
+ * a ChartTooltip's content element lends its own when none is passed here.
+ */
+export function ChartDataTable({ open = false, caption = "Chart data", formatter, labelFormatter, className, ...props }) {
+  const layout = useContext(LayoutContext)
+  const { config } = useChart()
+  const model = useMemo(() => (layout ? tableModel(layout, config) : null), [layout, config])
+  if (!model) return null
+
+  const cell = ({ text, head, item, value }, index) => {
+    if (text !== undefined) return text
+    if (head) return labelFormatter ? labelFormatter(head.label, head.payload ? [head.payload] : []) : (config?.[head.label]?.label ?? head.label)
+    if (value == null) return null
+    return formatter && item.name ? formatter(value, item.name, item, index, item.payload) : formatChartValue(value)
+  }
+
+  return (
+    <div className={cn("chart-data", className)} data-state={open ? "open" : "closed"} tabIndex={open ? 0 : undefined} {...props}>
+      <table className="chart-data-table">
+        <caption>{caption}</caption>
+        <thead>
+          <tr>
+            {model.headers.map((header, i) => (
+              <th key={i} scope="col">
+                {header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {model.rows.map((row) => (
+            <tr key={row.key}>
+              {row.head ? <th scope="row">{cell(row.head, 0)}</th> : null}
+              {row.cells.map((c, i) => (
+                <td key={i}>{cell(c, i)}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+ChartDataTable.chartRole = "datatable"

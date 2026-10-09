@@ -1,10 +1,11 @@
-import { useId, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
+  ChartDataTable,
   BarChart,
   LineChart,
   AreaChart,
@@ -41,6 +42,7 @@ import { NativeSelect, NativeSelectOption } from "../../ui/native-select/native-
 import { Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent } from "../../ui/card/card.jsx"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../../ui/select/select.jsx"
 import { ToggleGroup, ToggleGroupItem } from "../../ui/toggle-group/toggle-group.jsx"
+import { Toggle } from "../../ui/toggle/toggle.jsx"
 import "../../ui/chart/chart.css"
 import "../../ui/native-select/native-select.css"
 import "../../ui/card/card.css"
@@ -405,6 +407,39 @@ function Frame({ pg, square = false, children }) {
   return (
     <div data-pg={pg} style={{ width: "100%", maxWidth: square ? "16rem" : "40rem" }}>
       {children}
+    </div>
+  )
+}
+
+// The summary is a paragraph a screen reader finds through aria-describedby; it
+// is read back out of the DOM here so the page shows exactly what is announced.
+function TableDemo() {
+  const [open, setOpen] = useState(false)
+  const [summary, setSummary] = useState("")
+  const host = useRef(null)
+  useEffect(() => {
+    setSummary(host.current?.querySelector(".chart-summary")?.textContent ?? "")
+  }, [])
+  return (
+    <div ref={host}>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.5rem" }}>
+        <Toggle variant="outline" size="sm" pressed={open} onPressedChange={setOpen}>
+          Show data table
+        </Toggle>
+      </div>
+      <ChartContainer config={chartConfig}>
+        <BarChart accessibilityLayer data={chartData} aria-label="Visitors by month">
+          <CartesianGrid vertical={false} />
+          <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={monthTick} />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
+          <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
+          <ChartDataTable open={open} caption="Visitors by month" />
+        </BarChart>
+      </ChartContainer>
+      <p data-pg="chart-summary-text" style={{ marginBlockStart: "0.75rem", fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+        {summary}
+      </p>
     </div>
   )
 }
@@ -1845,6 +1880,116 @@ const fullDay = (value) =>
       </section>
 
       <section className="pg-section">
+        <h3>Summary and data table</h3>
+        <p>
+          With <code>accessibilityLayer</code> a chart also writes a short description of its data: for each series the
+          range, the lowest and peak categories, and the change from first to last. It is hidden from view and wired to
+          the surface as <code>aria-describedby</code>, so a screen reader announces it on focus; the sentence below is
+          that text. Pass your own <code>aria-describedby</code> and the generated one is left out.
+        </p>
+        <p>
+          <code>ChartDataTable</code> puts the same data in a real table. It is always in the page for assistive
+          technology; <code>open</code> also paints it over the chart, and you supply the control. Headers come from the{" "}
+          <code>config</code> labels, and cells use the <code>formatter</code> and <code>labelFormatter</code> of the
+          chart's tooltip unless you pass your own. It works in bar, line, area, scatter, pie, radar and radial charts.
+        </p>
+        <ComponentPreview code={`const [open, setOpen] = useState(false)
+
+<Toggle pressed={open} onPressedChange={setOpen}>Show data table</Toggle>
+<ChartContainer config={chartConfig}>
+  <BarChart accessibilityLayer data={chartData} aria-label="Visitors by month">
+    <XAxis dataKey="month" />
+    <Bar dataKey="desktop" fill="var(--color-desktop)" />
+    <Bar dataKey="mobile" fill="var(--color-mobile)" />
+    <ChartDataTable open={open} caption="Visitors by month" />
+  </BarChart>
+</ChartContainer>`}>
+          <Frame pg="chart-table">
+            <TableDemo />
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<p id="visitors-note">Visitors in thousands.</p>
+<BarChart accessibilityLayer aria-describedby="visitors-note" data={chartData}>
+  <XAxis dataKey="month" />
+  <ChartTooltip
+    content={<ChartTooltipContent formatter={(value, name) => <span>{name}: {value} visitors</span>} labelFormatter={(label) => label + " 2024"} />}
+  />
+  <Bar dataKey="desktop" fill="var(--color-desktop)" />
+  <ChartDataTable open />
+</BarChart>`}>
+          <Frame pg="chart-table-custom">
+            <p id="chart-table-note" style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+              Your own description replaces the generated one.
+            </p>
+            <ChartContainer config={chartConfig}>
+              <BarChart accessibilityLayer aria-describedby="chart-table-note" data={chartData}>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={monthTick} />
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      formatter={(value, name) => (
+                        <span>
+                          {name}: {value} visitors
+                        </span>
+                      )}
+                      labelFormatter={(label) => `${label} 2024`}
+                    />
+                  }
+                />
+                <Bar dataKey="desktop" fill="var(--color-desktop)" />
+                <ChartDataTable open />
+              </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<PieChart>
+  <Pie data={browserData} dataKey="visitors" nameKey="browser" />
+  <ChartDataTable open caption="Visitors by browser" />
+</PieChart>`}>
+          <Frame pg="chart-table-pie" square>
+            <ChartContainer config={browserConfig} style={{ aspectRatio: "1" }}>
+              <PieChart>
+                <Pie data={browserData} dataKey="visitors" nameKey="browser" />
+                <ChartDataTable open caption="Visitors by browser" />
+              </PieChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<ScatterChart>
+  <XAxis type="number" dataKey="x" name="stature" unit="cm" />
+  <YAxis type="number" dataKey="y" name="weight" unit="kg" />
+  <Scatter name="a" data={schoolA} fill="var(--color-a)" />
+  <ChartDataTable open caption="Stature against weight" />
+</ScatterChart>`}>
+          <Frame pg="chart-table-scatter">
+            <ChartContainer config={schoolConfig}>
+              <ScatterChart>
+                <XAxis type="number" dataKey="x" name="stature" unit="cm" />
+                <YAxis type="number" dataKey="y" name="weight" unit="kg" />
+                <Scatter name="a" data={schoolA} fill="var(--color-a)" />
+                <ChartDataTable open caption="Stature against weight" />
+              </ScatterChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<RadarChart data={chartData}>
+  <PolarAngleAxis dataKey="month" />
+  <Radar dataKey="desktop" fill="var(--color-desktop)" />
+  <ChartDataTable open caption="Desktop visitors by month" />
+</RadarChart>`}>
+          <Frame pg="chart-table-radar" square>
+            <ChartContainer config={chartConfig} style={{ aspectRatio: "1" }}>
+              <RadarChart data={chartData}>
+                <PolarAngleAxis dataKey="month" />
+                <Radar dataKey="desktop" fill="var(--color-desktop)" />
+                <ChartDataTable open caption="Desktop visitors by month" />
+              </RadarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Palette</h3>
         <p>
           The five <code>--chart-n</code> tokens, light and dark. A series with no <code>fill</code> or{" "}
@@ -2269,6 +2414,7 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "syncId", type: "string", description: "Charts sharing it share the active category, by position in the data" },
         { name: "accessibilityLayer", type: "boolean", default: "false", description: "Focusable surface with keyboard navigation" },
         { name: "aria-label", type: "string", description: "Names the surface; gives role=img without accessibilityLayer" },
+        { name: "aria-describedby", type: "string", description: "Your own description; with accessibilityLayer and none given, the generated summary is used" },
       ]} />
 
       <ApiReference title="Bar / Line / Area" props={[
@@ -2378,6 +2524,13 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "value", type: "string", description: "Label: plain text at the centre" },
         { name: "fill", type: "string", description: "Cell: colour of the bar, slice or ring at its index" },
         { name: "cx / cy / innerRadius / outerRadius / startAngle / endAngle", type: "number", description: "Sector: one sector's geometry; other props land on the path" },
+      ]} />
+
+      <ApiReference title="ChartDataTable" props={[
+        { name: "open", type: "boolean", default: "false", description: "Paint the table over the chart; closed, it stays in the page for assistive technology" },
+        { name: "caption", type: "string", default: '"Chart data"', description: "Names the table" },
+        { name: "formatter", type: "fn", description: "(value, name, item, index, payload) => node; defaults to the chart tooltip's" },
+        { name: "labelFormatter", type: "(value, payload) => node", description: "Row heading; defaults to the chart tooltip's" },
       ]} />
 
       <ApiReference title="ChartTooltip / ChartLegend" props={[

@@ -269,6 +269,66 @@ button.chart-legend-item {
 /* Series colour is the datum: each fill is a different series, so the
  * forced palette would merge them. Keep the fills and outline bars in
  * CanvasText so every bar still has an edge against Canvas. */
+/* Read by a screen reader, never painted: the generated summary, and the data
+ * table until it is opened. The kit has no shared utility for this, so each
+ * component carries its own. */
+.chart-summary,
+.chart-data[data-state="closed"] {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Opened, the table takes the chart's own box so the plot beneath keeps its geometry. */
+.chart-data[data-state="open"] {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: auto;
+  background: var(--background);
+}
+
+.chart-data[data-state="open"]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.chart-data-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+}
+
+.chart-data-table caption {
+  padding: var(--space-1-5) var(--space-2-5);
+  text-align: start;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.chart-data-table th,
+.chart-data-table td {
+  padding: var(--space-1-5) var(--space-2-5);
+  text-align: start;
+  border-block-end: 1px solid var(--border);
+}
+
+.chart-data-table thead th {
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
+.chart-data-table tbody th {
+  font-weight: 400;
+}
+
 @media (forced-colors: active) {
   .chart-bar,
   .chart-sector,
