@@ -1,0 +1,177 @@
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../../ui/chart/chart.jsx"
+import { HeatmapChart, CalendarHeatmap, HeatmapLegend } from "../../ui/chart-heatmap/chart-heatmap.jsx"
+import "../../ui/chart/chart.css"
+import "../../ui/chart-heatmap/chart-heatmap.css"
+import { ComponentPreview } from "../code-example.jsx"
+import { InstallSnippet } from "../install-snippet.jsx"
+import { ApiReference } from "../api-reference.jsx"
+import "../code-example.css"
+import "../install-snippet.css"
+import "../api-reference.css"
+
+// ── Sample data ──────────────────────────────────────────────────────
+
+const days = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+const hours = ["09", "10", "11", "12", "13", "14", "15", "16"]
+
+/* Value is row * 8 + column, so the lowest cell is top left and the highest bottom right; Wednesday at 12 has no reading. */
+const trafficData = days.flatMap((day, row) =>
+  hours.flatMap((hour, col) => (row === 2 && col === 3 ? [] : [{ hour, day, visits: row * 8 + col }])),
+)
+
+const trafficConfig = {
+  visits: { label: "Visits" },
+  low: { color: "color-mix(in oklab, var(--chart-1) 12%, var(--background))" },
+  high: { color: "var(--chart-1)" },
+}
+
+/* 2024 is a leap year that starts on a Monday. Every ninth day has no reading. */
+const commits2024 = Array.from({ length: 366 }, (_, i) => ({
+  date: new Date(Date.UTC(2024, 0, 1 + i)).toISOString().slice(0, 10),
+  count: (i * 37) % 10,
+})).filter((_, i) => i % 9 !== 0)
+
+const commitConfig = {
+  count: { label: "Commits" },
+  low: { color: "color-mix(in oklab, var(--chart-2) 12%, var(--background))" },
+  high: { color: "var(--chart-2)" },
+}
+
+function Frame({ pg, wide = false, children }) {
+  return (
+    <div data-pg={pg} style={{ width: "100%", maxWidth: wide ? "56rem" : "40rem" }}>
+      {children}
+    </div>
+  )
+}
+
+const calendarShape = { aspectRatio: "4.5 / 1" }
+
+export default function ChartHeatmapPage() {
+  return (
+    <>
+      <h2>Chart Heatmap</h2>
+      <p>
+        A grid of cells shaded on a stepped colour scale. <code>HeatmapChart</code> lays out one cell per pair of
+        categories; <code>CalendarHeatmap</code> lays out a year of days as week columns by weekday rows. Both sit
+        inside the Chart shell, so the tooltip, the keyboard and <code>syncId</code> work as they do on any chart.
+      </p>
+
+      <InstallSnippet slug="chart-heatmap" />
+
+      <section className="pg-section">
+        <h3>Default</h3>
+        <p>
+          Each datum names its column, its row and a value. The scale runs from the lowest value to the highest in
+          five steps between the <code>low</code> and <code>high</code> entries of the config. A pair with no datum
+          is drawn as an outline. Focus the chart and use the arrow keys to move between cells.
+        </p>
+        <ComponentPreview code={`<ChartContainer config={trafficConfig}>
+  <HeatmapChart data={trafficData} xKey="hour" yKey="day" valueKey="visits" accessibilityLayer aria-label="Visits by day and hour">
+    <ChartTooltip content={<ChartTooltipContent />} />
+    <HeatmapLegend />
+  </HeatmapChart>
+</ChartContainer>`}>
+          <Frame pg="heatmap-default">
+            <ChartContainer config={trafficConfig}>
+              <HeatmapChart data={trafficData} xKey="hour" yKey="day" valueKey="visits" accessibilityLayer aria-label="Visits by day and hour">
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <HeatmapLegend />
+              </HeatmapChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Fixed domain and steps</h3>
+        <p>
+          <code>domain</code> pins the ends of the scale, so two charts shade alike; a value past an end takes the end
+          colour. <code>steps</code> sets how many shades there are, and the legend follows.
+        </p>
+        <ComponentPreview code={`<HeatmapChart data={trafficData} xKey="hour" yKey="day" valueKey="visits" domain={[0, 80]} steps={8} cellGap={0.2}>
+  <ChartTooltip content={<ChartTooltipContent />} />
+  <HeatmapLegend verticalAlign="top" />
+</HeatmapChart>`}>
+          <Frame pg="heatmap-domain">
+            <ChartContainer config={trafficConfig}>
+              <HeatmapChart data={trafficData} xKey="hour" yKey="day" valueKey="visits" domain={[0, 80]} steps={8} cellGap={0.2}>
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <HeatmapLegend verticalAlign="top" />
+              </HeatmapChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Calendar</h3>
+        <p>
+          One cell per day of <code>year</code>, a column per week and a row per weekday, with the month named above
+          the week that holds its first day. Days with no datum are outlines.
+        </p>
+        <ComponentPreview code={`<ChartContainer config={commitConfig} style={{ aspectRatio: "4.5 / 1" }}>
+  <CalendarHeatmap data={commits} year={2024} dateKey="date" valueKey="count" locale="en-US" accessibilityLayer aria-label="Commits in 2024">
+    <ChartTooltip content={<ChartTooltipContent />} />
+    <HeatmapLegend />
+  </CalendarHeatmap>
+</ChartContainer>`}>
+          <Frame pg="heatmap-calendar" wide>
+            <ChartContainer config={commitConfig} style={calendarShape}>
+              <CalendarHeatmap data={commits2024} year={2024} dateKey="date" valueKey="count" locale="en-US" accessibilityLayer aria-label="Commits in 2024">
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <HeatmapLegend />
+              </CalendarHeatmap>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Week starts on Monday</h3>
+        <p>
+          <code>weekStart</code> picks the top row: 0 for Sunday, 1 for Monday. 2024 begins on a Monday, so with a Monday
+          start its first day sits in the top row of the first column.
+        </p>
+        <ComponentPreview code={`<CalendarHeatmap data={commits} year={2024} weekStart={1} dateKey="date" valueKey="count" locale="en-US" />`}>
+          <Frame pg="heatmap-calendar-monday" wide>
+            <ChartContainer config={commitConfig} style={calendarShape}>
+              <CalendarHeatmap data={commits2024} year={2024} weekStart={1} dateKey="date" valueKey="count" locale="en-US" accessibilityLayer aria-label="Commits in 2024, weeks from Monday">
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </CalendarHeatmap>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <ApiReference title="HeatmapChart" props={[
+        { name: "data", type: "object[]", description: "One datum per cell: a column, a row and a value. A pair with no datum is an outline" },
+        { name: "xKey / yKey / valueKey", type: "string", default: '"x" / "y" / "value"', description: "Fields holding the column, the row and the number" },
+        { name: "xDomain / yDomain", type: "any[]", description: "Column and row order; defaults to the order each first appears in data" },
+        { name: "domain", type: "[lo, hi]", description: "The ends of the colour scale; defaults to the lowest and highest value" },
+        { name: "steps", type: "number", default: "5", description: "Shades between the two ends, at least 2" },
+        { name: "cellGap", type: "number", default: "0.1", description: "Gap between cells as a fraction of a cell's pitch" },
+        { name: "yAxisWidth / xAxisHeight", type: "number", default: "48 / 24", description: "Room for the row and column labels, px; 0 hides them" },
+        { name: "margin", type: "{ top, right, bottom, left }", default: "5 each", description: "Space around the grid, px" },
+        { name: "syncId", type: "string", description: "Charts sharing an id share the active cell, by index" },
+        { name: "accessibilityLayer", type: "boolean", default: "false", description: "Focusable; arrows move one cell up, down, left or right, Home and End jump to the first and last, Escape dismisses" },
+        { name: "config", type: "ChartContainer prop", description: "low and high set the ends of the scale (colour or light and dark theme); the valueKey entry's label names the value in the tooltip" },
+      ]} />
+
+      <ApiReference title="CalendarHeatmap" props={[
+        { name: "data", type: "object[]", description: "One datum per day; a day with none is an outline" },
+        { name: "year", type: "number", default: "current year", description: "The year drawn, one cell per day" },
+        { name: "dateKey / valueKey", type: "string", default: '"date" / "value"', description: 'Fields holding the day ("YYYY-MM-DD", or a Date read in UTC) and the number' },
+        { name: "weekStart", type: "0 | 1 | …", default: "0", description: "Weekday of the top row, 0 for Sunday" },
+        { name: "locale", type: "string", description: "Month, weekday and tooltip date names; defaults to the browser's" },
+        { name: "domain / steps / cellGap", type: "as HeatmapChart", default: "— / 5 / 0.15", description: "Scale ends, shades and gap. Cells are square, sized to the narrower of the width and the height" },
+        { name: "yAxisWidth / xAxisHeight / margin / syncId / accessibilityLayer", type: "as HeatmapChart", default: "36 / 20", description: "Weekday label room, month label room and the rest. Up and down move a day, left and right a week" },
+      ]} />
+
+      <ApiReference title="HeatmapLegend" props={[
+        { name: "formatter", type: "(value) => node", description: "Text for the two ends of the scale" },
+        { name: "verticalAlign", type: '"top" | "bottom"', default: '"bottom"', description: "Placement; one swatch per step between the end labels" },
+      ]} />
+    </>
+  )
+}

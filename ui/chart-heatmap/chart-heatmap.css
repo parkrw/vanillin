@@ -1,0 +1,61 @@
+/* Shell, axes, tooltip and legend rows come from chart.css; only the grid
+ * cells and the stepped legend are drawn here. */
+.chart-heatmap {
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-heatmap-cell {
+  stroke: none;
+  rx: 2px;
+}
+
+/* A day or cell with no reading is an outline, distinct from a reading at the
+ * low end of the scale. */
+.chart-heatmap-cell[data-empty] {
+  fill: transparent;
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.chart-heatmap-cell[data-active] {
+  stroke: var(--foreground);
+  stroke-width: 2;
+}
+
+.chart-heatmap-legend {
+  gap: var(--space-2);
+}
+
+.chart-heatmap-legend-steps {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.chart-heatmap-legend-step {
+  inline-size: 1rem;
+  block-size: 0.75rem;
+  border-radius: 2px;
+}
+
+.chart-heatmap-legend-label {
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The scale is the datum: keep each cell's fill and give it an edge. */
+@media (forced-colors: active) {
+  .chart-heatmap-cell,
+  .chart-heatmap-legend-step {
+    forced-color-adjust: none;
+  }
+
+  .chart-heatmap-cell:not([data-empty]) {
+    stroke: CanvasText;
+    stroke-width: 1;
+  }
+
+  .chart-heatmap-cell[data-active] {
+    stroke: Highlight;
+    stroke-width: 2;
+  }
+}
