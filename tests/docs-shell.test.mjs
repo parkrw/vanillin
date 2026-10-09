@@ -252,6 +252,48 @@ export default async function run({ page, baseUrl, test, eq }) {
     )
     const [first] = await tops()
     eq(first < 0, true, `expected the first useFieldArray section scrolled past, top ${first}`)
+
+    // One shared id lit both links, and the observer only ever saw the first section.
+    await page.waitForFunction(
+      () =>
+        [...document.querySelectorAll(".pg-rail-link")].filter((a) => a.textContent === "useFieldArray")[1]
+          ?.dataset.active === "true"
+    )
+    eq(await links.nth(0).getAttribute("data-active"), "false", "the first useFieldArray link is not active")
+  })
+
+  await test("a heading whose id repeats an earlier heading's is renamed on the next derive", async () => {
+    await page.goto(`${baseUrl}/#use-form`)
+    await page.waitForSelector('.pg-main > h2:text-is("useForm")')
+    const ids = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll(".pg-section > h3")]
+          .filter((h) => h.textContent.trim() === "useFieldArray")
+          .map((h) => h.id)
+          .join(" ")
+      )
+    await page.waitForFunction(
+      () => document.querySelector('.pg-section > h3[id="usefieldarray-2"]') !== null
+    )
+    eq(await ids(), "usefieldarray usefieldarray-2", "precondition: derived ids")
+
+    await page.evaluate(() => {
+      const [, second] = [...document.querySelectorAll(".pg-section > h3")].filter(
+        (h) => h.textContent.trim() === "useFieldArray"
+      )
+      second.id = "usefieldarray"
+    })
+    eq(await ids(), "usefieldarray usefieldarray", "precondition: the second heading now repeats the first id")
+
+    // An id change is an attribute mutation, which the derive's observer ignores; a child change re-runs it.
+    await page.evaluate(() => {
+      const probe = document.querySelector(".pg-main").appendChild(document.createElement("div"))
+      probe.remove()
+    })
+    await page.waitForFunction(
+      () => document.querySelector('.pg-section > h3[id="usefieldarray-2"]') !== null
+    )
+    eq(await ids(), "usefieldarray usefieldarray-2")
   })
 
   await test("unique heading text keeps its plain slug", async () => {
