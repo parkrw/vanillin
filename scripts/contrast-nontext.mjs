@@ -61,15 +61,11 @@ const probes = [
   // Graphical objects (1.4.11's second clause): the status dot, and each
   // series fill of ui/chart against the card it sits in. The probe reads
   // getComputedStyle(el)[prop], so "fill" works like any colour property.
-  // --chart-1 dark (2.90:1), --chart-4 light (1.72:1) and --chart-5 light
-  // (2.13:1) are upstream's palette as shipped. Exempt rather than retuned:
-  // a token change is its own task, and a series is also named by its legend
-  // swatch label and tooltip text, so colour is never the only cue.
-  ["chart", '[data-pg="chart-contrast"] .chart-series[data-key="s1"] .chart-bar', ["fill"], "chart series 1", { exempt: "upstream palette, --chart-1 dark 2.90:1; series are also named by legend and tooltip text" }],
+  ["chart", '[data-pg="chart-contrast"] .chart-series[data-key="s1"] .chart-bar', ["fill"], "chart series 1"],
   ["chart", '[data-pg="chart-contrast"] .chart-series[data-key="s2"] .chart-bar', ["fill"], "chart series 2"],
   ["chart", '[data-pg="chart-contrast"] .chart-series[data-key="s3"] .chart-bar', ["fill"], "chart series 3"],
-  ["chart", '[data-pg="chart-contrast"] .chart-series[data-key="s4"] .chart-bar', ["fill"], "chart series 4", { exempt: "upstream palette, --chart-4 light 1.72:1; series are also named by legend and tooltip text" }],
-  ["chart", '[data-pg="chart-contrast"] .chart-series[data-key="s5"] .chart-bar', ["fill"], "chart series 5", { exempt: "upstream palette, --chart-5 light 2.13:1; series are also named by legend and tooltip text" }],
+  ["chart", '[data-pg="chart-contrast"] .chart-series[data-key="s4"] .chart-bar', ["fill"], "chart series 4"],
+  ["chart", '[data-pg="chart-contrast"] .chart-series[data-key="s5"] .chart-bar', ["fill"], "chart series 5"],
   ["status-dot", '.status-dot[data-status="success"], .status-dot[data-status="warning"], .status-dot[data-status="error"], .status-dot[data-status="info"]', ["backgroundColor"], "status dot"],
   // The meter's amber band, read off the dot: the fixture's latest point is in
   // it, and a <stop> has no client rect for the probe to accept. Green and red
