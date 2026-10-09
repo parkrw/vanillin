@@ -49,12 +49,12 @@ export function InstanceSheet({ instance, onOpenChange }) {
               <div className="ck-util">
                 <div className="ck-util-row">
                   <span className="ck-util-label">CPU</span>
-                  <Progress value={instance.cpu} className="ck-util-bar" data-tone={instance.cpu >= 85 ? "warning" : "success"} />
+                  <Progress value={instance.cpu} className="ck-util-bar" tone={instance.cpu >= 85 ? "warning" : "success"} />
                   <span className="ck-util-val">{instance.cpu}%</span>
                 </div>
                 <div className="ck-util-row">
                   <span className="ck-util-label">Memory</span>
-                  <Progress value={instance.mem} className="ck-util-bar" data-tone={instance.mem >= 85 ? "warning" : "success"} />
+                  <Progress value={instance.mem} className="ck-util-bar" tone={instance.mem >= 85 ? "warning" : "success"} />
                   <span className="ck-util-val">{instance.mem}%</span>
                 </div>
               </div>

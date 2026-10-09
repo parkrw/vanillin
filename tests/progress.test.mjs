@@ -293,6 +293,50 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(geometry((await frameAt(bar, 0.5)).shadow), " 0px 0px 0px 4px", "peak: one crisp 4px ring")
   })
 
+  // Computed colour of `var(--token)` resolved at the demo, so light and dark
+  // pick the same arm the bar does.
+  const tokenColour = (token) =>
+    page.evaluate((t) => {
+      const probe = document.createElement("span")
+      probe.style.color = t.startsWith("--") ? `var(${t})` : t
+      document.querySelector('[data-pg="progress-tone"]').appendChild(probe)
+      const c = getComputedStyle(probe).color
+      probe.remove()
+      return c
+    }, token)
+  const paint = (label) =>
+    page.locator(`[data-pg="progress-tone"] .progress[aria-label="${label}"]`).evaluate((el) => ({
+      fill: getComputedStyle(el.querySelector(".progress-indicator")).backgroundColor,
+      track: getComputedStyle(el).backgroundColor,
+      tone: el.getAttribute("data-tone"),
+    }))
+
+  await test("tone: the fill resolves to the status token", async () => {
+    eq((await paint("Healthy")).fill, await tokenColour("--success"))
+    // Light mixes toward --warning-foreground to reach 3:1; dark keeps the raw token.
+    const dark = await page.evaluate(() => document.documentElement.classList.contains("dark"))
+    eq(
+      (await paint("Filling up")).fill,
+      await tokenColour(dark ? "--warning" : "color-mix(in oklab, var(--warning) 78%, var(--warning-foreground) 22%)"),
+    )
+    eq((await paint("Nearly full")).fill, await tokenColour("--destructive"))
+    eq((await paint("Healthy")).tone, "success")
+    eq((await paint("Nearly full")).tone, "error")
+  })
+
+  await test("tone: the track tints with the tone and differs between tones", async () => {
+    const tracks = await Promise.all(["Healthy", "Filling up", "Nearly full", "No tone"].map((l) => paint(l).then((p) => p.track)))
+    eq(new Set(tracks).size, 4, `four distinct tracks (${tracks.join(" / ")})`)
+  })
+
+  await test("tone: unset leaves the default primary paint and no data-tone", async () => {
+    const plain = await paint("No tone")
+    eq(plain.fill, await tokenColour("--primary"))
+    eq(plain.tone, null)
+    const fills = [(await paint("Healthy")).fill, (await paint("Filling up")).fill, (await paint("Nearly full")).fill]
+    eq(fills.includes(plain.fill), false, "no tone borrowed the default colour")
+  })
+
   await test("animated demo settles at 66", async () => {
     await page.waitForFunction(
       () => document.querySelectorAll(".progress")[0]?.getAttribute("aria-valuenow") === "66",

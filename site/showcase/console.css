@@ -1320,18 +1320,6 @@
   flex: 1;
 }
 
-.ck-util-bar[data-tone="warning"] .progress-indicator {
-  background-color: var(--warning);
-}
-
-.ck-util-bar[data-tone="success"] .progress-indicator {
-  background-color: var(--success);
-}
-
-.ck-util-bar[data-tone="error"] .progress-indicator {
-  background-color: var(--destructive);
-}
-
 .ck-util-val {
   inline-size: 10rem;
   flex-shrink: 0;
