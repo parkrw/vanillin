@@ -1581,6 +1581,27 @@ const fullDay = (value) =>
             </div>
           </div>
         </ComponentPreview>
+        <ComponentPreview code={`<LineChart data={chartData} syncId="series" accessibilityLayer aria-label="First chart">
+  <XAxis dataKey="month" />
+  <ChartTooltip content={<ChartTooltipContent />} />
+  <Line dataKey="desktop" stroke="var(--color-desktop)" />
+  <Line dataKey="mobile" stroke="var(--color-mobile)" />
+</LineChart>`}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", width: "100%", maxWidth: "40rem" }}>
+            {["a", "b"].map((id) => (
+              <div key={id} data-pg={`chart-sync-series-${id}`} style={{ flex: "1 1 14rem" }}>
+                <ChartContainer config={chartConfig} style={{ aspectRatio: "4 / 3" }}>
+                  <LineChart data={chartData} syncId="series" accessibilityLayer aria-label={`Visitors by month, chart ${id}`}>
+                    <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={monthTick} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line dataKey="desktop" stroke="var(--color-desktop)" dot={false} />
+                    <Line dataKey="mobile" stroke="var(--color-mobile)" dot={false} />
+                  </LineChart>
+                </ChartContainer>
+              </div>
+            ))}
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
@@ -1866,7 +1887,10 @@ const fullDay = (value) =>
         <p>
           <code>accessibilityLayer</code> makes the surface focusable (<code>role="application"</code>). Focus opens
           the tooltip on the first category; ArrowLeft and ArrowRight step (flipped under <code>dir="rtl"</code>),
-          Home and End jump, Escape closes. Without it an <code>aria-label</code> gives the surface{" "}
+          Home and End jump, Escape closes. ArrowDown and ArrowUp move between series at that category, top of the
+          screen first, and the tooltip row and the dot of the focused series are marked; in a scatter they switch
+          series. A hidden series is skipped. Linked charts follow the category only. Without it an{" "}
+          <code>aria-label</code> gives the surface{" "}
           <code>role="img"</code> and nothing is focusable.
         </p>
         <ComponentPreview code={`<LineChart data={chartData} accessibilityLayer aria-label="Desktop and mobile visitors, January to June">
@@ -1880,6 +1904,19 @@ const fullDay = (value) =>
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Line dataKey="desktop" type="monotone" stroke="var(--color-desktop)" strokeWidth={2} dot={false} />
                 <Line dataKey="mobile" type="monotone" stroke="var(--color-mobile)" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<Line dataKey="desktop" />
+<Line dataKey="mobile" hide />`}>
+          <Frame pg="chart-series-hidden">
+            <ChartContainer config={chartConfig}>
+              <LineChart data={chartData} accessibilityLayer aria-label="Desktop visitors, mobile hidden" margin={{ left: 12, right: 12 }}>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={monthTick} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line dataKey="desktop" type="monotone" stroke="var(--color-desktop)" strokeWidth={2} dot={false} />
+                <Line dataKey="mobile" type="monotone" stroke="var(--color-mobile)" strokeWidth={2} dot={false} hide />
               </LineChart>
             </ChartContainer>
           </Frame>

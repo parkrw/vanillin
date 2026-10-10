@@ -61,6 +61,7 @@ const SAFE_IDENT = /^[\w-]+$/
 const ChartContext = createContext(null)
 const LayoutContext = createContext(null)
 const ActiveIndexContext = createContext(null)
+const ActiveSeriesContext = createContext(null)
 const PointerContext = createContext(null)
 const SeriesContext = createContext(null)
 const VisibilityContext = createContext(null)
@@ -165,7 +166,7 @@ export function ChartTooltipContent({
             const Icon = itemConfig?.icon
 
             return (
-              <div key={index} className="chart-tooltip-item" data-indicator={indicator}>
+              <div key={index} className="chart-tooltip-item" data-indicator={indicator} data-active-series={item.focused || undefined}>
                 {formatter && item?.value !== undefined && item.name ? (
                   formatter(item.value, item.name, item, index, item.payload)
                 ) : (
@@ -691,6 +692,36 @@ const AXIS_SIG_KEYS = ["dataKey", "hide", "width", "height", "domain", "ticks", 
 const SERIES_SIG_KEYS = ["dataKey", "stackId", "name", "barSize", "maxBarSize", "fill", "stroke", "hide"]
 const pick = (props, keys) => keys.map((key) => props?.[key])
 
+/*
+ * What Up and Down walk. Scatters and pies are ordered by draw order, which
+ * is all they have; each has one series acting before any key is pressed
+ * (`implicit`). Everything else is ordered by where the series sits at the
+ * active category, top of the screen first: the top of its stack, else its
+ * value. That is what a sighted reader sees, and it is why the order is a
+ * function of the category and the focus is kept by series, not by position.
+ * A hidden series, or one with no value there, draws nothing to land on.
+ */
+function seriesNav(layout) {
+  const { series } = layout
+  if (layout.kind === "scatter" || series[0]?.role === "pie") {
+    return {
+      implicit: layout.activeSeries,
+      order: () => series.filter((entry) => !entry.hidden).map((entry) => entry.index),
+      countOf: (k) => series[k]?.data.length ?? 0,
+    }
+  }
+  const top = (entry, i) => entry.stack?.[i].y1 ?? entry.values[i]
+  return {
+    implicit: null,
+    order: (i) =>
+      series
+        .filter((entry) => !entry.hidden && entry.values[i] != null)
+        .sort((a, b) => top(b, i) - top(a, i) || a.index - b.index)
+        .map((entry) => entry.index),
+    countOf: () => layout.category.count,
+  }
+}
+
 /* syncId → the charts sharing it, each a function taking the active index or null. */
 const syncChannels = new Map()
 
@@ -712,8 +743,9 @@ function broadcast(syncId, from, index) {
  * the point is in the other chart's coordinates, so its tooltip anchors on
  * its own layout. It clears only an index it was handed, never its own.
  */
-function useActiveIndex({ count, defaultIndex, indexAt, trigger = "hover", syncId }) {
+function useActiveIndex({ count, defaultIndex, indexAt, trigger = "hover", syncId, nav }) {
   const [activeIndex, setActiveIndex] = useState(() => (Number.isInteger(defaultIndex) ? defaultIndex : null))
+  const [activeSeries, setActiveSeries] = useState(null)
   const [pointer, setPointer] = useState({ source: "default", point: null })
   const layoutRef = useRef(null)
   // Read by document and sync listeners, which outlive the render they closed over.
@@ -722,6 +754,8 @@ function useActiveIndex({ count, defaultIndex, indexAt, trigger = "hover", syncI
 
   const set = (index, source, point) => {
     sourceRef.current = source
+    // Only the keyboard picks a series: a pointer or a synced chart moves the category alone.
+    if (source !== "keyboard") setActiveSeries(null)
     setActiveIndex(index)
     setPointer((prev) => (prev.source === source && prev.point === point ? prev : { source, point }))
   }
@@ -780,24 +814,39 @@ function useActiveIndex({ count, defaultIndex, indexAt, trigger = "hover", syncI
   }, [activeIndex, pointer.source])
 
   const onKeyDown = (event) => {
-    if (!count) return
+    const current = activeSeries ?? nav?.implicit
+    const total = nav && current != null ? nav.countOf(current) : count
+    if (!total) return
     const rtl = getComputedStyle(event.currentTarget).direction === "rtl"
     const forward = rtl ? "ArrowLeft" : "ArrowRight"
     const back = rtl ? "ArrowRight" : "ArrowLeft"
     let next
     switch (event.key) {
       case forward:
-        next = Math.min(count - 1, (activeIndex ?? -1) + 1)
+        next = Math.min(total - 1, (activeIndex ?? -1) + 1)
         break
       case back:
-        next = Math.max(0, (activeIndex ?? count) - 1)
+        next = Math.max(0, (activeIndex ?? total) - 1)
         break
       case "Home":
         next = 0
         break
       case "End":
-        next = count - 1
+        next = total - 1
         break
+      case "ArrowUp":
+      case "ArrowDown": {
+        const order = nav ? nav.order(activeIndex ?? 0) : []
+        if (!order.length) return
+        const down = event.key === "ArrowDown"
+        const at = order.indexOf(current)
+        const target = at < 0 ? order[down ? 0 : order.length - 1] : order[Math.max(0, Math.min(order.length - 1, at + (down ? 1 : -1)))]
+        event.preventDefault()
+        setActiveSeries(target)
+        // A scatter's index is a point of its series, so it follows to the new series' length.
+        set(Math.min(activeIndex ?? 0, nav.countOf(target) - 1), "keyboard", null)
+        return
+      }
       case "Escape":
         event.preventDefault()
         clear()
@@ -817,6 +866,7 @@ function useActiveIndex({ count, defaultIndex, indexAt, trigger = "hover", syncI
 
   return {
     activeIndex,
+    activeSeries,
     pointer,
     layoutRef,
     activate,
@@ -1068,14 +1118,15 @@ function CartesianChart({
   }
 
   const tooltipEl = parts.tooltip
-  const { activeIndex, pointer, layoutRef, surface, keyboard } = useActiveIndex({
+  const { activeIndex, activeSeries, pointer, layoutRef, surface, keyboard } = useActiveIndex({
     count: computed.category.count,
     defaultIndex: tooltipEl?.props.defaultIndex,
     trigger: tooltipEl?.props.trigger,
     indexAt: computed.indexAt,
     syncId,
+    nav: seriesNav(computed),
   })
-  const hostLayout = computed.focus ? computed.focus(computed.seriesAt(pointer.point)) : computed
+  const hostLayout = computed.focus ? computed.focus(activeSeries ?? computed.seriesAt(pointer.point)) : computed
 
   const showCursor = !scatter && tooltipEl && tooltipEl.props.cursor !== false && activeIndex != null && activeIndex < computed.category.count
   const { plot, category } = computed
@@ -1114,6 +1165,7 @@ function CartesianChart({
   return (
     <LayoutContext.Provider value={hostLayout}>
       <ActiveIndexContext.Provider value={activeIndex}>
+        <ActiveSeriesContext.Provider value={activeSeries}>
         <PointerContext.Provider value={pointer}>
           <VisibilityContext.Provider value={visibility}>
             <div ref={layoutRef} className={cn("chart-layout", className)} data-layout={scatter ? "scatter" : layout} {...props}>
@@ -1146,6 +1198,7 @@ function CartesianChart({
             </div>
           </VisibilityContext.Provider>
         </PointerContext.Provider>
+        </ActiveSeriesContext.Provider>
       </ActiveIndexContext.Provider>
     </LayoutContext.Provider>
   )
@@ -1570,14 +1623,15 @@ function PolarChart({
   }
 
   const tooltipEl = parts.tooltip
-  const { activeIndex, pointer, layoutRef, surface, keyboard } = useActiveIndex({
+  const { activeIndex, activeSeries, pointer, layoutRef, surface, keyboard } = useActiveIndex({
     count: computed.category.count,
     defaultIndex: tooltipEl?.props.defaultIndex,
     trigger: tooltipEl?.props.trigger,
     indexAt: computed.indexAt,
+    nav: seriesNav(computed),
   })
 
-  const hostLayout = computed.focus ? computed.focus(computed.seriesAt(pointer.point)) : computed
+  const hostLayout = computed.focus ? computed.focus(activeSeries ?? computed.seriesAt(pointer.point)) : computed
   // The open table paints over the plot and legend, so focus must not be able to land beneath it. A table that renders nothing covers nothing.
   const tableOpen = Boolean(parts.datatable?.props.open)
   const covered = useMemo(() => tableOpen && tableModel(hostLayout, chart.config) !== null, [tableOpen, hostLayout, chart.config])
@@ -1590,6 +1644,7 @@ function PolarChart({
   return (
     <LayoutContext.Provider value={hostLayout}>
       <ActiveIndexContext.Provider value={activeIndex}>
+        <ActiveSeriesContext.Provider value={activeSeries}>
         <PointerContext.Provider value={pointer}>
           <PolarViewBoxContext.Provider value={viewBox}>
             <div ref={layoutRef} className={cn("chart-layout", className)} data-layout={kind} {...props}>
@@ -1632,6 +1687,7 @@ function PolarChart({
             </div>
           </PolarViewBoxContext.Provider>
         </PointerContext.Provider>
+        </ActiveSeriesContext.Provider>
       </ActiveIndexContext.Provider>
     </LayoutContext.Provider>
   )
@@ -1798,14 +1854,14 @@ function renderDot(option, props, key) {
   return <Dot key={key} {...props} {...(typeof option === "object" && option ? option : null)} />
 }
 
-function Dots({ points, values, data, dataKey, dot, color, active, activeDot }) {
+function Dots({ points, values, data, dataKey, dot, color, active, activeDot, focused }) {
   const at = (i) => ({ cx: points[i][0], cy: points[i][1], index: i, value: values[i], payload: data[i], dataKey })
   const activePoint = activeDot && active != null && points[active]
   return (
     <>
       {dot ? points.map((p, i) => p && renderDot(dot, { ...at(i), r: 3, stroke: color, strokeWidth: 2, fill: "var(--background)" }, i)) : null}
       {activePoint
-        ? renderDot(activeDot, { ...at(active), className: "chart-dot--active", r: 4, stroke: "var(--background)", strokeWidth: 2, fill: color }, "active")
+        ? renderDot(activeDot, { ...at(active), className: "chart-dot--active", "data-active-series": focused ? dataKey : undefined, r: 4, stroke: "var(--background)", strokeWidth: 2, fill: color }, "active")
         : null}
     </>
   )
@@ -1827,9 +1883,13 @@ export function Line({
   ...props
 }) {
   const layout = useContext(LayoutContext)
-  const active = useContext(ActiveIndexContext)
+  const hovered = useContext(ActiveIndexContext)
+  const focusedSeries = useContext(ActiveSeriesContext)
   const entry = layout?.byKey.get(`line:${dataKey}`)
   if (!layout || !entry || entry.hidden) return null
+  // With a series focused by key, only its marker shows.
+  const focused = focusedSeries === entry.index
+  const active = focusedSeries == null || focused ? hovered : null
   const color = stroke ?? entry.color
   const points = entry.values.map((v, i) => (v == null ? null : layout.pointAt(i, v)))
   return (
@@ -1841,7 +1901,7 @@ export function Line({
         strokeWidth={strokeWidth}
         strokeDasharray={strokeDasharray}
       />
-      <Dots points={points} values={entry.values} data={layout.data} dataKey={dataKey} dot={dot} color={color} active={active} activeDot={activeDot} />
+      <Dots points={points} values={entry.values} data={layout.data} dataKey={dataKey} dot={dot} color={color} active={active} activeDot={activeDot} focused={focused} />
       {children ? <SeriesContext.Provider value={{ entry, points }}>{children}</SeriesContext.Provider> : null}
     </g>
   )
@@ -1867,9 +1927,12 @@ export function Area({
   ...props
 }) {
   const layout = useContext(LayoutContext)
-  const active = useContext(ActiveIndexContext)
+  const hovered = useContext(ActiveIndexContext)
+  const focusedSeries = useContext(ActiveSeriesContext)
   const entry = layout?.byKey.get(`area:${dataKey}`)
   if (!layout || !entry || entry.hidden) return null
+  const focused = focusedSeries === entry.index
+  const active = focusedSeries == null || focused ? hovered : null
   const color = stroke ?? entry.color
   const upper = entry.stack.map((p, i) => (entry.values[i] == null ? null : layout.pointAt(i, p.y1)))
   const lower = entry.stack.map((p, i) => (entry.values[i] == null ? null : layout.pointAt(i, layout.clampValue(p.y0))))
@@ -1902,7 +1965,7 @@ export function Area({
         strokeWidth={strokeWidth}
         strokeDasharray={strokeDasharray}
       />
-      <Dots points={upper} values={entry.values} data={layout.data} dataKey={dataKey} dot={dot} color={color} active={active} activeDot={activeDot} />
+      <Dots points={upper} values={entry.values} data={layout.data} dataKey={dataKey} dot={dot} color={color} active={active} activeDot={activeDot} focused={focused} />
       {children ? <SeriesContext.Provider value={{ entry, points: upper }}>{children}</SeriesContext.Provider> : null}
     </g>
   )
@@ -1912,6 +1975,7 @@ Area.chartRole = "area"
 export function Scatter({ data, dataKey, name, fill, fillOpacity, stroke, strokeWidth, line = false, shape, hide, className, children, ...props }) {
   const layout = useContext(LayoutContext)
   const active = useContext(ActiveIndexContext)
+  const focusedSeries = useContext(ActiveSeriesContext)
   const entry = layout?.series?.find((e) => e.role === "scatter" && e.props.data === data && e.name === (name ?? dataKey ?? e.name))
   if (!layout || !entry || entry.hidden) return null
   const activeAt = layout.activeSeries === entry.index ? active : null
@@ -1932,6 +1996,7 @@ export function Scatter({ data, dataKey, name, fill, fillOpacity, stroke, stroke
         key={i}
         className={cn("chart-dot", isActive && "chart-dot--active")}
         data-index={i}
+        data-active-series={isActive && focusedSeries === entry.index ? entry.name : undefined}
         cx={p[0]}
         cy={p[1]}
         r={isActive ? p[2] + 2 : p[2]}
@@ -2838,6 +2903,13 @@ PolarRadiusAxis.chartRole = "polarradiusaxis"
 
 // ── Tooltip and legend hosts ────────────────────────────────────────
 
+// Scatter and pie tooltips show one series already; only the stacked rows need a mark.
+function markFocused(layout, payload, focusedSeries) {
+  const entry = layout.kind === "scatter" ? null : layout.series[focusedSeries]
+  if (!entry || layout.series[0]?.role === "pie") return payload
+  return payload.map((item) => (item.dataKey === entry.dataKey ? { ...item, focused: true } : item))
+}
+
 /*
  * Positioned absolutely inside .chart-plot from plot-relative pointer
  * coordinates, never through a popover or lib/use-anchor-position: this is
@@ -2847,6 +2919,7 @@ PolarRadiusAxis.chartRole = "polarradiusaxis"
 export function ChartTooltip({ content, cursor = true, defaultIndex, trigger, ...props }) {
   const layout = useContext(LayoutContext)
   const index = useContext(ActiveIndexContext)
+  const focusedSeries = useContext(ActiveSeriesContext)
   const pointer = useContext(PointerContext)
   const ref = useRef(null)
   const [size, setSize] = useState(null)
@@ -2876,7 +2949,7 @@ export function ChartTooltip({ content, cursor = true, defaultIndex, trigger, ..
   const node = isValidElement(content) ? content : <ChartTooltipContent />
   return (
     <div ref={ref} className="chart-tooltip-anchor" style={{ transform: `translate(${x}px, ${y}px)` }}>
-      {cloneElement(node, { active: true, payload: layout.payloadAt(index), label: category.labels[index], ...props })}
+      {cloneElement(node, { active: true, payload: markFocused(layout, layout.payloadAt(index), focusedSeries), label: category.labels[index], ...props })}
     </div>
   )
 }
