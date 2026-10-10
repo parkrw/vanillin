@@ -76,6 +76,16 @@ const probes = [
   ["chart-boxplot", '[data-pg="boxplot-default"] .chart-boxplot-median', ["stroke"], "boxplot median"],
   ["chart-boxplot", '[data-pg="boxplot-default"] .chart-boxplot-outlier', ["stroke"], "boxplot outlier ring"],
   ["chart-boxplot", '[data-pg="boxplot-default"] .chart-boxplot-whisker', ["stroke"], "boxplot whisker"],
+  // chart-gauge. The measure, target and needle are the datum and must pass.
+  // The bands only grade the ranges, ~1.35:1 apart, so each boundary is drawn
+  // as a line that must pass against the page. Its contrast with the adjacent
+  // bands is asserted in tests/chart-gauge.test.mjs.
+  ["chart-gauge", '[data-pg="bullet-horizontal"] .chart-gauge-measure', ["fill"], "bullet measure"],
+  ["chart-gauge", '[data-pg="bullet-horizontal"] .chart-gauge-target', ["fill"], "bullet target"],
+  ["chart-gauge", '[data-pg="bullet-horizontal"] .chart-gauge-boundary', ["stroke"], "bullet band boundary"],
+  ["chart-gauge", '[data-pg="gauge-needle"] .chart-gauge-needle', ["stroke"], "gauge needle"],
+  ["chart-gauge", '[data-pg="gauge-needle"] .chart-gauge-boundary', ["stroke"], "gauge band boundary"],
+  ["chart-gauge", '[data-pg="gauge-fill"] .chart-gauge-fill', ["fill"], "gauge fill, warning tone"],
   ["progress", ".progress", ["backgroundColor"], "progress track", { exempt: "inactive track; the indicator carries the state and passes (17.93:1 light / 15.72:1 dark), as D5 checkbox fill" }],
   ["progress", ".progress-indicator", ["backgroundColor"], "progress indicator"],
   ["progress", '[data-pg="progress-tone"] .progress--success .progress-indicator', ["backgroundColor"], "progress indicator success"],

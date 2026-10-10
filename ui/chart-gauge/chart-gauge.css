@@ -1,0 +1,92 @@
+/* Shell, axis text and the layout box come from chart.css. The band fills are
+ * set inline from the band (graded neutrals unless the consumer names a
+ * colour); the measure defaults to a strong foreground, the fill and needle
+ * to tokens below. */
+.chart-gauge {
+  gap: var(--space-1-5);
+}
+
+.chart-gauge-measure {
+  fill: var(--color-measure, var(--foreground));
+}
+
+/* The target tick stands proud of the measure bar, and the page-coloured edge
+ * keeps it readable where it crosses the measure. */
+.chart-gauge-target {
+  fill: var(--foreground);
+  stroke: var(--background);
+  stroke-width: 1;
+}
+
+/* Neighbouring neutral bands are only ~1.35:1 apart, so each boundary is drawn in the foreground, which clears 3:1 against both bands and the page. */
+.chart-gauge-boundary {
+  stroke: var(--foreground);
+  stroke-width: 1.5;
+}
+
+.chart-gauge-track {
+  fill: var(--muted);
+}
+
+.chart-gauge-fill {
+  fill: var(--color-measure, var(--chart-1));
+}
+
+.chart-gauge-divider {
+  stroke: var(--background);
+  stroke-width: 2;
+}
+
+.chart-gauge-needle {
+  stroke: var(--foreground);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.chart-gauge-hub {
+  fill: var(--foreground);
+}
+
+.chart-gauge-readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.chart-gauge-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-gauge-band-label,
+.chart-gauge-label {
+  color: var(--muted-foreground);
+}
+
+/* The fill is the datum: keep it and give each mark an edge. */
+@media (forced-colors: active) {
+  .chart-gauge-band,
+  .chart-gauge-measure,
+  .chart-gauge-fill,
+  .chart-gauge-track {
+    forced-color-adjust: none;
+    stroke: CanvasText;
+    stroke-width: 1;
+  }
+
+  .chart-gauge-boundary {
+    stroke: CanvasText;
+  }
+
+  .chart-gauge-target,
+  .chart-gauge-needle,
+  .chart-gauge-hub {
+    forced-color-adjust: none;
+    fill: CanvasText;
+    stroke: CanvasText;
+  }
+}

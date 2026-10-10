@@ -1,0 +1,12 @@
+{
+  "name": "chart-gauge",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [
+    "chart"
+  ],
+  "files": {
+    "chart-gauge.css": "sha256-ZnnwWLl5YbJ2SOp61VtlSbiWQyuFKI3U1QCWk5CNeq0=",
+    "chart-gauge.jsx": "sha256-UJIFZ8cvxq3gqeSDr2j2j4zUs9Wa52gY8JtTFARy1ic="
+  }
+}
