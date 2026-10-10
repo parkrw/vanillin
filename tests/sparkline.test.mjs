@@ -2,8 +2,9 @@
 // last value where the dot sits, type="monotone" keeps the vertices and the
 // inset, a non-finite sample is a gap, times place readings on x, the domain
 // folds in zero and pegs what overshoots, sqrt and log reshape y, one point
-// is a dot alone, the svg is always hidden from the accessibility tree, and
-// the colour props reach the part each one names.
+// is a dot alone, a hidden series keeps its colour and its share of the scale,
+// the svg is always hidden from the accessibility tree, and the colour props
+// reach the part each one names.
 
 export default async function run({ page, baseUrl, test, eq, near }) {
   await page.goto(`${baseUrl}/#sparkline`)
@@ -411,6 +412,34 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(custom.map((s) => s.stroke).join(" | "), [palette[2], palette[4]].join(" | "), "item colours")
     eq(custom.map((s) => s.dot).join(" | "), [palette[2], palette[0]].join(" | "), "item dotColor")
     eq(custom.filter((s) => s.area !== undefined).length, 0, "area={false} applies to every series")
+  })
+
+  await test("a hidden series keeps the palette and the scale; rescale fits the rest", async () => {
+    const inbound = [30, 34, 28, 41, 38, 45, 40, 48]
+    const outbound = [12, 15, 11, 18, 22, 19, 25, 21]
+    const yAt = (v, top) => height - inset - (v / top) * (height - 2 * inset)
+    const shared = yAt(outbound.at(-1), Math.max(...inbound, ...outbound))
+    const own = yAt(outbound.at(-1), Math.max(...outbound))
+    const inboundToggle = page.locator('[data-pg="spark-hide"] button', { hasText: "Inbound" })
+
+    const [fixed, rescaled] = await paint("spark-hide")
+    eq(fixed.length, 2, "both drawn before the toggle")
+    eq(rescaled[1].cy, fixed[1].cy, "rescale matches while nothing is hidden")
+    near(fixed[1].cy, shared, 0.01, "outbound on the shared scale")
+
+    await inboundToggle.click()
+    try {
+      eq(await inboundToggle.getAttribute("aria-pressed"), "false", "inbound toggled off")
+      const [fixedOff, rescaledOff] = await paint("spark-hide")
+      eq(fixedOff.length, 1, "inbound not drawn")
+      eq(fixedOff[0].stroke, palette[1], "outbound keeps --chart-2")
+      near(fixedOff[0].cy, shared, 0.01, "outbound stays put")
+      eq(rescaledOff.length, 1, "inbound not drawn under rescale")
+      near(rescaledOff[0].cy, own, 0.01, "rescale fits outbound alone")
+    } finally {
+      await inboundToggle.click()
+    }
+    eq((await paint("spark-hide"))[0].length, 2, "inbound back")
   })
 
   const bandColours = (host) =>
