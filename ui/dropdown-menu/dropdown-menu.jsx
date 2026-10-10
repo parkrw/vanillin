@@ -122,10 +122,6 @@ export function DropdownMenuContent({
   const { open, setOpen, triggerRef, contentRef, contentId, focusLastRef, skipItemFocusRef } =
     useContext(DropdownMenuContext)
 
-  // anchorRef overrides the trigger as the positioning anchor (context-menu
-  // passes a virtual pointer-coord anchor); focus still returns to the trigger.
-  useAnchorPosition(open, anchorRef ?? triggerRef, contentRef, { side, align, sideOffset, alignOffset })
-
   const setOpenRef = useRef(setOpen)
   setOpenRef.current = setOpen
 
@@ -143,8 +139,10 @@ export function DropdownMenuContent({
   // Sync React state -> native popover show/hide, then focus. Gate on the
   // live :popover-open state, not a shadow flag — light dismiss and the
   // context-menu re-show path change it outside this effect, and a stale
-  // flag skips the show/hide and strands the menu.
-  useEffect(() => {
+  // flag skips the show/hide and strands the menu. A layout effect declared
+  // before useAnchorPosition: shown first, or the first position measures a
+  // display:none 0×0 box and paints a frame misplaced.
+  useLayoutEffect(() => {
     const el = contentRef.current
     if (!el) return
     const showing = el.matches(":popover-open")
@@ -181,6 +179,10 @@ export function DropdownMenuContent({
       }
     }
   }, [open, contentRef, focusLastRef, skipItemFocusRef])
+
+  // anchorRef overrides the trigger as the positioning anchor (context-menu
+  // passes a virtual pointer-coord anchor); focus still returns to the trigger.
+  useAnchorPosition(open, anchorRef ?? triggerRef, contentRef, { side, align, sideOffset, alignOffset })
 
   const handleKeyDown = (event) => {
     onKeyDown?.(event)
@@ -562,12 +564,6 @@ export function DropdownMenuSubContent({
   const side = dir === "rtl" ? "left" : "right"
   const closeKey = dir === "rtl" ? "ArrowRight" : "ArrowLeft"
 
-  useAnchorPosition(open, subTriggerRef, subContentRef, {
-    side,
-    align: "start",
-    sideOffset,
-  })
-
   // Safe triangle — each move inside the triangle re-arms the pending close
   // (deferring it), leaving the triangle closes immediately, and reaching
   // the content cancels the close (pointerenter alone isn't enough — see
@@ -595,8 +591,9 @@ export function DropdownMenuSubContent({
     return () => el.removeEventListener("toggle", handler)
   }, [subContentRef])
 
-  // Same live-state gating as DropdownMenuContent (see comment there).
-  useEffect(() => {
+  // Same live-state gating and layout-phase ordering as DropdownMenuContent
+  // (see comment there).
+  useLayoutEffect(() => {
     const el = subContentRef.current
     if (!el) return
     const showing = el.matches(":popover-open")
@@ -623,6 +620,12 @@ export function DropdownMenuSubContent({
     }
     focusOnOpenRef.current = false
   }, [open, subContentRef, focusOnOpenRef])
+
+  useAnchorPosition(open, subTriggerRef, subContentRef, {
+    side,
+    align: "start",
+    sideOffset,
+  })
 
   const handleKeyDown = (event) => {
     onKeyDown?.(event)

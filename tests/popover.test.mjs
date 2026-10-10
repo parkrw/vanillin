@@ -1,5 +1,8 @@
+import { firstFrame } from "./helpers/first-frame.mjs"
+
 export default async function run({ page, baseUrl, test, eq, near, repoRoot }) {
   await page.goto(`${baseUrl}/#popover`)
+  const { armFirstFrame, expectFirstFrameInPlace } = firstFrame({ page, eq, near })
 
   const trigger = page.locator('button:has-text("Open popover")')
 
@@ -319,5 +322,13 @@ export default async function run({ page, baseUrl, test, eq, near, repoRoot }) {
       "aria-labelledby: consumer id wins spread order"
     )
     eq(probes.ariaLabelledby.warned, 0, "aria-labelledby: silent")
+  })
+
+  await test("first frame is already in place: shown before it is positioned", async () => {
+    await armFirstFrame(".popover")
+    await trigger.click()
+    await expectFirstFrameInPlace(".popover")
+    await page.keyboard.press("Escape")
+    await waitClosed()
   })
 }

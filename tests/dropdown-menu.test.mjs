@@ -1,5 +1,8 @@
-export default async function run({ page, baseUrl, test, eq }) {
+import { firstFrame } from "./helpers/first-frame.mjs"
+
+export default async function run({ page, baseUrl, test, eq, near }) {
   await page.goto(`${baseUrl}/#dropdown-menu`)
+  const { armFirstFrame, expectFirstFrameInPlace } = firstFrame({ page, eq, near })
 
   const trigger = page.locator('[data-pg="dropdown-trigger"]')
 
@@ -723,5 +726,110 @@ export default async function run({ page, baseUrl, test, eq }) {
       document.querySelector('.dropdown-menu[role="menu"]:popover-open') !== null
     )
     eq(reopened, false, "menu stays closed after held-press click")
+  })
+
+  await test("first frame is already in place: align end", async () => {
+    await armFirstFrame('.dropdown-menu[role="menu"]')
+    await page.getByRole("button", { name: "Aligned end" }).click()
+    await expectFirstFrameInPlace('.dropdown-menu[role="menu"]')
+    await page.keyboard.press("Escape")
+    await waitClosed()
+  })
+
+  await test("RTL submenu opened during its parent's entry sits against the laid-out trigger", async () => {
+    // A subtree-local 2s entry keeps the parent scaling in from 0.96 while the
+    // submenu opens — the state that anchored it to a shrunken trigger.
+    const rtlTrigger = page.getByRole("button", { name: "RTL menu" })
+    const parentMotion = (value) =>
+      rtlTrigger.evaluate((el, value) => {
+        const menu = document.getElementById(el.getAttribute("aria-controls"))
+        if (value) menu.style.setProperty("--motion-fast", value)
+        else menu.style.removeProperty("--motion-fast")
+      }, value)
+    await parentMotion("2s")
+    try {
+      await rtlTrigger.click()
+      await waitOpen()
+      const subTrigger = page.getByRole("menuitem", { name: "More options" })
+      await subTrigger.focus()
+      await armFirstFrame(".dropdown-menu-sub-content")
+      await page.keyboard.press("ArrowLeft")
+      const steady = await expectFirstFrameInPlace(".dropdown-menu-sub-content")
+      // Layout offsets ignore transforms: the trigger's box once the parent settles.
+      const parent = await subTrigger.evaluate((el) => {
+        const menu = el.closest(".dropdown-menu")
+        const style = getComputedStyle(menu)
+        return {
+          scale: new DOMMatrixReadOnly(style.transform).a,
+          offsetParentIsMenu: el.offsetParent === menu,
+          triggerLeft: parseFloat(style.left) + menu.clientLeft + el.offsetLeft,
+          triggerTop: parseFloat(style.top) + menu.clientTop + el.offsetTop - menu.scrollTop,
+        }
+      })
+      eq(parent.scale < 1, true, `parent still scaling in after the submenu's first frames (${parent.scale})`)
+      eq(parent.offsetParentIsMenu, true, "trigger offsets measured from its menu")
+      eq(steady.side, "left", "RTL submenu opens to the left")
+      near(steady.left + steady.width, parent.triggerLeft, 1, "flush against the trigger's laid-out left")
+      near(steady.top, parent.triggerTop, 1, "aligned with the trigger's laid-out top")
+      await page.keyboard.press("Escape")
+      await page.keyboard.press("Escape")
+      await waitClosed()
+    } finally {
+      await parentMotion(null)
+    }
+  })
+
+  await test("a menu that rests transformed anchors its submenu to the trigger as drawn", async () => {
+    // A consumer's resting transform is where the trigger is drawn; only a
+    // running entry transition is mapped to its end.
+    const rtlTrigger = page.getByRole("button", { name: "RTL menu" })
+    const restShift = (on) =>
+      rtlTrigger.evaluate((el, on) => {
+        const menu = document.getElementById(el.getAttribute("aria-controls"))
+        if (on) {
+          menu.style.setProperty("transform", "translate(12px, 18px)", "important")
+          menu.style.setProperty("transition", "none", "important")
+        } else {
+          menu.style.removeProperty("transform")
+          menu.style.removeProperty("transition")
+        }
+      }, on)
+    await restShift(true)
+    try {
+      await rtlTrigger.click()
+      await waitOpen()
+      const subTrigger = page.getByRole("menuitem", { name: "More options" })
+      const host = await subTrigger.evaluate((el) => {
+        const menu = el.closest(".dropdown-menu")
+        return { transform: getComputedStyle(menu).transform, animations: menu.getAnimations().length }
+      })
+      eq(host.transform, "matrix(1, 0, 0, 1, 12, 18)", "precondition: the menu rests translated")
+      eq(host.animations, 0, "precondition: no entry transition running")
+      await subTrigger.focus()
+      await page.keyboard.press("ArrowLeft")
+      await page.waitForSelector(".dropdown-menu-sub-content:popover-open")
+      const { sub, trigger } = await subTrigger.evaluate(
+        (el) =>
+          new Promise((resolve) =>
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => {
+                const content = document.querySelector(".dropdown-menu-sub-content:popover-open")
+                const style = getComputedStyle(content)
+                resolve({
+                  sub: { left: parseFloat(style.left), top: parseFloat(style.top), width: content.offsetWidth },
+                  trigger: el.getBoundingClientRect().toJSON(),
+                })
+              })
+            )
+          )
+      )
+      near(sub.left + sub.width, trigger.left, 1, "flush against the drawn trigger's left")
+      near(sub.top, trigger.top, 1, "aligned with the drawn trigger's top")
+      await page.keyboard.press("Escape")
+      await page.keyboard.press("Escape")
+      await waitClosed()
+    } finally {
+      await restShift(false)
+    }
   })
 }
