@@ -26,6 +26,7 @@ import {
   DataTableColumnResizer,
   DataTableGroupRow,
   DataTableScroller,
+  DataTablePagination,
   useDataTableHighlight,
 } from "../../ui/data-table/data-table.jsx"
 
@@ -47,22 +48,6 @@ import "../install-snippet.css"
 import "../api-reference.css"
 
 // ── Inline SVG icons (zero-dep, no lucide) ───────────────────────────
-
-function ChevronLeft() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="m15 18-6-6 6-6" />
-    </svg>
-  )
-}
-
-function ChevronRight() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="m9 18 6-6-6-6" />
-    </svg>
-  )
-}
 
 function MoreHorizontal() {
   return (
@@ -471,7 +456,7 @@ function GroupedDemo() {
     initialPageSize: 30,
     initialGrouping: ["status"],
   })
-  const { pagination, grouping } = table.getState()
+  const { grouping } = table.getState()
   const nested = grouping.length > 1
   const visibleColCount = table.getHeaderGroups()[0].headers.length
 
@@ -552,52 +537,7 @@ function GroupedDemo() {
         </TableBody>
       </Table>
 
-      <div className="data-table-pagination">
-        <div className="data-table-selection-count" />
-        <div className="data-table-page-controls">
-          <div className="data-table-page-size">
-            <span>Rows per page</span>
-            <select
-              value={pagination.pageSize}
-              onChange={(e) => table.setPageSize(Number(e.target.value))}
-              data-pg="dt-grouped-page-size"
-            >
-              {[10, 30].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="data-table-page-info" data-pg="dt-grouped-page-info">
-            Page {pagination.pageIndex + 1} of {table.getPageCount()}
-          </div>
-          <div className="data-table-page-nav">
-            <Button
-              variant="outline"
-              size="icon"
-              className="btn--sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              aria-label="Previous page"
-              data-pg="dt-grouped-prev"
-            >
-              <ChevronLeft />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="btn--sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              aria-label="Next page"
-              data-pg="dt-grouped-next"
-            >
-              <ChevronRight />
-            </Button>
-          </div>
-        </div>
-      </div>
+      <DataTablePagination table={table} pageSizeOptions={[10, 30]} data-pg="dt-grouped-pager" />
     </section>
   )
 }
@@ -766,7 +706,6 @@ function ServerSideDemo() {
     onPaginationChange: ({ pageIndex, pageSize }) =>
       setQuery((q) => ({ ...q, pageIndex, pageSize })),
   })
-  const { pagination } = table.getState()
 
   useEffect(() => {
     let cancelled = false
@@ -841,46 +780,13 @@ function ServerSideDemo() {
         </TableBody>
       </Table>
 
-      <div className="data-table-pagination">
-        <div
-          className="data-table-selection-count"
-          data-pg="dt-server-status"
-          data-loading={loading ? "true" : "false"}
-        >
+      <DataTablePagination table={table} pageSizeOptions={[]} data-pg="dt-server-pager">
+        <span data-pg="dt-server-status" data-loading={loading ? "true" : "false"}>
           {loading
             ? "Loading…"
             : `Showing ${rows.length} of ${SERVER_ROWS} orders.`}
-        </div>
-        <div className="data-table-page-controls">
-          <div className="data-table-page-info" data-pg="dt-server-page-info">
-            Page {pagination.pageIndex + 1} of {table.getPageCount()}
-          </div>
-          <div className="data-table-page-nav">
-            <Button
-              variant="outline"
-              size="icon"
-              className="btn--sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              aria-label="Previous page"
-              data-pg="dt-server-prev"
-            >
-              <ChevronLeft />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="btn--sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              aria-label="Next page"
-              data-pg="dt-server-next"
-            >
-              <ChevronRight />
-            </Button>
-          </div>
-        </div>
-      </div>
+        </span>
+      </DataTablePagination>
     </section>
   )
 }
@@ -1104,7 +1010,6 @@ function PaginationDemo() {
     ],
     initialPageSize: 3,
   })
-  const { pagination } = table.getState()
   return (
     <div>
       <Table>
@@ -1131,48 +1036,7 @@ function PaginationDemo() {
           ))}
         </TableBody>
       </Table>
-      <div className="data-table-pagination">
-        <div className="data-table-page-controls">
-          <div className="data-table-page-size">
-            <span>Rows per page</span>
-            <select
-              value={pagination.pageSize}
-              onChange={(e) => table.setPageSize(Number(e.target.value))}
-            >
-              {[3, 5, 8].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="data-table-page-info">
-            Page {pagination.pageIndex + 1} of {table.getPageCount()}
-          </div>
-          <div className="data-table-page-nav">
-            <Button
-              variant="outline"
-              size="icon"
-              className="btn--sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              aria-label="Back"
-            >
-              <ChevronLeft />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="btn--sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              aria-label="Forward"
-            >
-              <ChevronRight />
-            </Button>
-          </div>
-        </div>
-      </div>
+      <DataTablePagination table={table} pageSizeOptions={[3, 5, 8]} showFirstLast data-pg="dt-demo-pager" />
     </div>
   )
 }
@@ -1275,7 +1139,6 @@ function EmptyDemo() {
 
 export default function DataTablePage() {
   const table = useDataTable({ data: payments, columns, initialPageSize: 10 })
-  const { pagination } = table.getState()
   const selectedCount = table.getFilteredSelectedRowModel().rows.length
 
   // Paint the global-filter matches in the rows that survived it.
@@ -1496,28 +1359,18 @@ const table = useDataTable({ data, columns })
       <section className="pg-section">
         <h3>Pagination</h3>
         <ComponentPreview code={`const table = useDataTable({ data, columns, initialPageSize: 3 })
-const { pagination } = table.getState()
-
-<div className="data-table-pagination">
-  <div className="data-table-page-controls">
-    <div className="data-table-page-size">
-      <span>Rows per page</span>
-      <select value={pagination.pageSize} onChange={(e) => table.setPageSize(Number(e.target.value))}>
-        {[3, 5, 8].map(size => <option key={size} value={size}>{size}</option>)}
-      </select>
-    </div>
-    <div className="data-table-page-info">
-      Page {pagination.pageIndex + 1} of {table.getPageCount()}
-    </div>
-    <Button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Prev</Button>
-    <Button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Next</Button>
-  </div>
-</div>`}>
+<DataTablePagination table={table} pageSizeOptions={[3, 5, 8]} showFirstLast />`}>
           <PaginationDemo />
         </ComponentPreview>
         <p>
-          Pass <code>initialPageSize</code> to set the default page size.
-          The engine exposes <code>previousPage()</code>,{" "}
+          <code>DataTablePagination</code> takes the table and renders a
+          rows-per-page select, <code>Page X of Y</code> and previous, next
+          and (with <code>showFirstLast</code>) first and last buttons that
+          disable at the ends. Pass <code>initialPageSize</code> to set the
+          default page size. Under <code>manualPagination</code> the page
+          count comes from <code>rowCount</code>, so the same footer pages
+          server data. Content passed as children fills the leading slot,
+          for a selection count or a loading message. The engine exposes <code>previousPage()</code>,{" "}
           <code>nextPage()</code>, <code>setPageSize(n)</code>,{" "}
           <code>setPageIndex(i)</code>, <code>getCanPreviousPage()</code>,{" "}
           <code>getCanNextPage()</code>, and <code>getPageCount()</code>.
@@ -1699,54 +1552,11 @@ const { pagination } = table.getState()
         </Table>
 
         {/* Pagination */}
-        <div className="data-table-pagination">
-          <div className="data-table-selection-count" data-pg="dt-selection">
+        <DataTablePagination table={table} pageSizeOptions={[5, 10, 20]} data-pg="dt-pager">
+          <span data-pg="dt-selection">
             {selectedCount} of {payments.length} row(s) selected.
-          </div>
-          <div className="data-table-page-controls">
-            <div className="data-table-page-size">
-              <span>Rows per page</span>
-              <select
-                value={pagination.pageSize}
-                onChange={(e) => table.setPageSize(Number(e.target.value))}
-                data-pg="dt-page-size"
-              >
-                {[5, 10, 20].map((size) => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="data-table-page-info" data-pg="dt-page-info">
-              Page {pagination.pageIndex + 1} of {table.getPageCount()}
-            </div>
-            <div className="data-table-page-nav">
-              <Button
-                variant="outline"
-                size="icon"
-                className="btn--sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                aria-label="Previous page"
-                data-pg="dt-prev"
-              >
-                <ChevronLeft />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="btn--sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                aria-label="Next page"
-                data-pg="dt-next"
-              >
-                <ChevronRight />
-              </Button>
-            </div>
-          </div>
-        </div>
+          </span>
+        </DataTablePagination>
       </section>
 
       <SizedPinnedDemo />
@@ -1884,6 +1694,10 @@ const { pagination } = table.getState()
         { name: "DataTableGroupRow: colSpan", type: "number", description: "Number of visible columns (spans the full table width)" },
         { name: "DataTableGroupRow: label", type: "string", description: "Optional display label; defaults to the group value" },
         { name: "DataTableColumnResizer: column", type: "Column", description: "Column proxy; drag resizes, double-click resets, arrows +/- 8px" },
+        { name: "DataTablePagination: table", type: "useDataTable instance", description: "Table the footer reads and drives" },
+        { name: "DataTablePagination: pageSizeOptions", type: "number[]", default: "[10, 20, 30, 40, 50]", description: "Rows-per-page choices; an empty array hides the select" },
+        { name: "DataTablePagination: showFirstLast", type: "boolean", default: "false", description: "Add first-page and last-page buttons" },
+        { name: "DataTablePagination: children", type: "ReactNode", description: "Leading slot, such as a selection count or loading status" },
         { name: "DataTableScroller", type: "component", description: "ScrollArea wrapper that hands horizontal scrolling from ui/table's container to the viewport" },
         { name: "useDataTableHighlight: bodyRef", type: "RefObject", description: "Ref to TableBody; scopes highlights to the body, not headers" },
         { name: "useDataTableHighlight: query", type: "string", description: "Search string to paint via CSS Custom Highlight API" },
