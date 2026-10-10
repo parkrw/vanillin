@@ -19,16 +19,24 @@ import { deriveRequires, deriveLibs, deriveLibDeps, listRegularFiles } from "./m
 export const REGISTRY_FILE = "registry.json"
 
 /**
+ * Components the kit still ships but means to retire, slug -> what to tell a
+ * consumer who has it installed. Kept here rather than in a component's own
+ * files so a retirement is one reviewable line that touches no component, and
+ * the registry stays the only artefact the CLI reads.
+ */
+export const DEPRECATED = {}
+
+/**
  * Build the registry object for a kit checkout.
  *
  * Shape:
- *   { kitVersion, source, components: { slug: { type, files, requires, lib } },
+ *   { kitVersion, source, components: { slug: { type, files, requires, lib, deprecated? } },
  *     lib: { "file.js": [sibling lib files it imports] } }
  *
  * `lib` is a flat file -> deps map rather than a closure per component so the
  * CLI closes it once, the same way it closes `requires`.
  */
-export function buildRegistry(root) {
+export function buildRegistry(root, { deprecated = DEPRECATED } = {}) {
   const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"))
   const kitVersion = pkg.version
   const uiDir = join(root, "ui")
@@ -43,6 +51,7 @@ export function buildRegistry(root) {
       files: listRegularFiles(dir),
       requires: deriveRequires(dir),
       lib: deriveLibs(dir),
+      ...(deprecated[entry.name] && { deprecated: deprecated[entry.name] }),
     }
   }
 
