@@ -16,7 +16,7 @@ export default async function run({ page, baseUrl, test, eq }) {
       return !el || (!el.matches(":popover-open") && el.dataset.state === "closed")
     })
 
-  // All suites share one page: a test that opens from a menu left open by
+  // Tests in this file share one page: a test that opens from a menu left open by
   // the one before measures that leftover, not its own gesture. A leak fails
   // the next test only; closing it first keeps the rest of the file honest.
   const menuTest = (name, fn) =>
