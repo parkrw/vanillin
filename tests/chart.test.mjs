@@ -936,6 +936,37 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(JSON.stringify(rows[6]), JSON.stringify(["School B", "0: 200", "1: 260"]))
   })
 
+  await test("polar summary: a pie and a radar with accessibilityLayer point aria-describedby at their summary", async () => {
+    for (const name of ["chart-pie", "chart-table-radar"]) {
+      const id = await page.locator(`${pg(name)} .chart-surface`).getAttribute("aria-describedby")
+      eq(id.endsWith("-summary"), true, `${name} describedby ${id}`)
+      eq(await page.locator(`${pg(name)} .chart-summary`).getAttribute("id"), id)
+    }
+  })
+
+  await test("polar summary: a consumer aria-describedby wins on a pie and no summary is rendered", async () => {
+    const svg = page.locator(`${pg("chart-table-pie-custom")} .chart-surface`)
+    eq(await svg.getAttribute("tabindex"), "0", "precondition: accessibilityLayer is on")
+    eq(await svg.getAttribute("aria-describedby"), "chart-table-pie-note")
+    eq(await page.locator(`${pg("chart-table-pie-custom")} .chart-summary`).count(), 0)
+  })
+
+  await test("polar table open: the covered plot and legend of a pie are inert", async () => {
+    eq(await page.locator(`${pg("chart-table-pie-custom")} .chart-plot[inert]`).count(), 1)
+    eq(await page.locator(`${pg("chart-table-pie-custom")} .chart-legend[inert]`).count(), 1)
+    eq(await page.locator(`${pg("chart-pie")} [inert]`).count(), 0, "counter-precondition: a pie with no open table is not inert")
+  })
+
+  await test("pie name: an explicit name wins over the config label in the summary and the Series column", async () => {
+    eq(
+      await summaryOf("chart-table-pie-named"),
+      "Mobile share: 5 slices, range 90 to 275, lowest Other, peak Chrome, total 925. Desktop: 6 slices, range 73 to 305, lowest April, peak February, total 1,224.",
+    )
+    const { rows } = await tableText("chart-table-pie-named")
+    eq(rows[0][1], "Mobile share")
+    eq(rows[5][1], "Desktop", "a pie without a name still reads its config label")
+  })
+
   await test("table: several pies add a Series column beside Name and Value", async () => {
     const { headers, rows } = await tableText("chart-table-pies")
     eq(JSON.stringify(headers), JSON.stringify(["Name", "Series", "Value"]), "pies naming slices by different fields share a neutral heading")

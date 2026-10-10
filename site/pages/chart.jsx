@@ -2095,6 +2095,40 @@ const fullDay = (value) =>
             </ChartContainer>
           </Frame>
         </ComponentPreview>
+        <ComponentPreview code={`<PieChart>
+  <Pie data={browserData} dataKey="visitors" name="Mobile share" nameKey="browser" outerRadius={60} />
+  <Pie data={chartData} dataKey="desktop" nameKey="month" innerRadius={70} outerRadius={100} />
+  <ChartDataTable open caption="Named pie" />
+</PieChart>`}>
+          <Frame pg="chart-table-pie-named" square>
+            <ChartContainer config={{ ...browserConfig, ...chartConfig }} style={{ aspectRatio: "1" }}>
+              <PieChart accessibilityLayer>
+                <Pie data={browserData} dataKey="visitors" name="Mobile share" nameKey="browser" outerRadius={60} />
+                <Pie data={chartData} dataKey="desktop" nameKey="month" innerRadius={70} outerRadius={100} />
+                <ChartDataTable open caption="Named pie" />
+              </PieChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<p id="share-note">Browser share of visitors.</p>
+<PieChart accessibilityLayer aria-describedby="share-note">
+  <Pie data={browserData} dataKey="visitors" nameKey="browser" />
+  <ChartLegend content={<ChartLegendContent nameKey="browser" />} />
+  <ChartDataTable open caption="Visitors by browser" />
+</PieChart>`}>
+          <Frame pg="chart-table-pie-custom" square>
+            <p id="chart-table-pie-note" style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
+              Browser share of visitors.
+            </p>
+            <ChartContainer config={browserConfig} style={{ aspectRatio: "1" }}>
+              <PieChart accessibilityLayer aria-describedby="chart-table-pie-note">
+                <Pie data={browserData} dataKey="visitors" nameKey="browser" />
+                <ChartLegend content={<ChartLegendContent nameKey="browser" />} />
+                <ChartDataTable open caption="Visitors by browser" />
+              </PieChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
         <h4>Charts with nothing to draw</h4>
         <p>
           Each of these has a summary of its own, and no table because there are no rows.
@@ -2616,7 +2650,9 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "startAngle / endAngle", type: "number", default: "0 / 360 (radar 90 / -270)", description: "Degrees, 0 at 3 o'clock, counter-clockwise positive" },
         { name: "margin", type: "{ top, right, bottom, left }", default: "5 each", description: "Space around the plot, inside the surface" },
         { name: "barCategoryGap / barGap", type: "string | number / number", default: '"10%" / 4', description: "Radial ring spacing, as for bars" },
-        { name: "accessibilityLayer", type: "boolean", default: "false", description: "Focusable surface; arrows step slices, spokes or rings" },
+        { name: "accessibilityLayer", type: "boolean", default: "false", description: "Focusable surface; arrows step slices, spokes or rings. Also writes a generated summary of the data" },
+        { name: "aria-label", type: "string", description: "Names the surface; gives role=img without accessibilityLayer" },
+        { name: "aria-describedby", type: "string", description: "Your own description; with accessibilityLayer and none given, the generated summary is used" },
       ]} />
 
       <ApiReference title="Pie / Radar / RadialBar" props={[

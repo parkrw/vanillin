@@ -856,6 +856,9 @@ function describeChange(first, last) {
   return "unchanged"
 }
 
+// An explicit name wins, as on the cartesian series; otherwise the config label for the dataKey.
+const pieName = (pie, label) => (pie.named ? pie.name : label(pie.dataKey, pie.name))
+
 function describeChart(layout, config) {
   const label = (key, fallback) => config?.[key]?.label ?? fallback
   const { series } = layout
@@ -878,7 +881,7 @@ function describeChart(layout, config) {
       .map((pie) => {
         const names = pie.names.map((n) => label(n, String(n)))
         const stats = seriesStats(pie.values, names)
-        const name = label(pie.dataKey, pie.name)
+        const name = pieName(pie, label)
         if (!stats) return `${name}: no slices.`
         const total = pie.values.reduce((sum, v) => sum + (v ?? 0), 0)
         return `${name}: ${plural(pie.values.filter((v) => v != null).length, "slice", "slices")}, range ${fmt(stats.min)} to ${fmt(stats.max)}, lowest ${stats.minAt}, peak ${stats.maxAt}, total ${fmt(Number(total.toPrecision(12)))}.`
@@ -929,7 +932,7 @@ function tableModel(layout, config) {
       const view = layout.focus(k)
       pie.data.forEach((_, i) => {
         const [item] = view.payloadAt(i)
-        rows.push({ key: `${k}:${i}`, head: { head: { label: pie.names[i], items: [item] } }, cells: [...(many ? [{ text: label(pie.dataKey, pie.name) }] : []), { item, value: item.value, index: 0 }] })
+        rows.push({ key: `${k}:${i}`, head: { head: { label: pie.names[i], items: [item] } }, cells: [...(many ? [{ text: pieName(pie, label) }] : []), { item, value: item.value, index: 0 }] })
       })
     })
     if (!rows.length) return null
@@ -1263,6 +1266,7 @@ function pieLayout(ctx, series) {
       dataKey,
       nameKey,
       name: el.props.name ?? String(dataKey),
+      named: el.props.name != null,
       index,
       data: rows,
       values,
