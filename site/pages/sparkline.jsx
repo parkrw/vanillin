@@ -3,6 +3,7 @@ import { useTicker } from "../../lib/use-ticker.js"
 import { Sparkline } from "../../ui/sparkline/sparkline.jsx"
 import { Card, CardContent } from "../../ui/card/card.jsx"
 import { Button } from "../../ui/button/button.jsx"
+import { ToggleGroup, ToggleGroupItem } from "../../ui/toggle-group/toggle-group.jsx"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +16,8 @@ import {
 import "../../ui/sparkline/sparkline.css"
 import "../../ui/card/card.css"
 import "../../ui/button/button.css"
+import "../../ui/toggle/toggle.css"
+import "../../ui/toggle-group/toggle-group.css"
 import "../../ui/dropdown-menu/dropdown-menu.css"
 import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
@@ -52,6 +55,8 @@ const at = (minutes) => minutes.map((m) => new Date(start + m * 60_000))
 const sampledAt = at([0, 1, 2, 3, 10, 11, 12, 13])
 const polledAt = at([0, 4, 8, 13])
 const polled = [12, 18, 22, 21]
+/* A source with history from before the window: hidden, it still widens the time axis unless rescale. */
+const backfilledAt = at([-12, -8, -4, 0])
 
 const HOUR = 3_600_000
 const DAY = 24 * HOUR
@@ -130,6 +135,24 @@ function RangeCard({ orientation }) {
         <RangeMenu value={range} onValueChange={setRange} orientation={orientation} />
       </CardContent>
     </Card>
+  )
+}
+
+function SeriesPicker() {
+  const [shown, setShown] = useState(["inbound", "outbound"])
+  const series = [
+    { points: inbound, hide: !shown.includes("inbound") },
+    { points: outbound, hide: !shown.includes("outbound") },
+  ]
+  return (
+    <>
+      <ToggleGroup type="multiple" size="sm" variant="outline" value={shown} onValueChange={setShown} aria-label="Series">
+        <ToggleGroupItem value="inbound">Inbound</ToggleGroupItem>
+        <ToggleGroupItem value="outbound">Outbound</ToggleGroupItem>
+      </ToggleGroup>
+      <Sparkline series={series} />
+      <Sparkline series={series} rescale />
+    </>
   )
 }
 
@@ -343,6 +366,52 @@ import "./ui/sparkline/sparkline.css"
           <code>series</code> draws several lines on one shared scale, the first at the back. Each item
           takes <code>points</code> and the same colour props as the component. An item without a colour
           takes the chart palette in order, <code>--chart-1</code> first.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Showing and hiding series</h3>
+        <p>
+          The sparkline has no legend, so the controls that pick its lines sit beside it. Keep the
+          shown series in state and set <code>hide</code> on the rest.
+        </p>
+        <ComponentPreview code={`const [shown, setShown] = useState(["inbound", "outbound"])
+
+<ToggleGroup type="multiple" size="sm" variant="outline" value={shown} onValueChange={setShown} aria-label="Series">
+  <ToggleGroupItem value="inbound">Inbound</ToggleGroupItem>
+  <ToggleGroupItem value="outbound">Outbound</ToggleGroupItem>
+</ToggleGroup>
+<Sparkline
+  series={[
+    { points: inbound, hide: !shown.includes("inbound") },
+    { points: outbound, hide: !shown.includes("outbound") },
+  ]}
+/>
+<Sparkline rescale series={…} />`}>
+          <div className="pg-row" data-pg="spark-hide">
+            <SeriesPicker />
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          A hidden line keeps its colour and its share of the scale, so switching one off moves
+          nothing else: the first sparkline. <code>rescale</code> fits the scale to the lines still
+          drawn instead, so the rest grow to fill the box: the second.
+        </p>
+        <ComponentPreview code={`<Sparkline series={[{ points: requests, hide: true }, { points: polled }]} />
+<Sparkline rescale series={[{ points: requests, hide: true }, { points: polled }]} />
+<Sparkline times={sampledAt} series={[{ points: requests }, { points: polled, times: backfilledAt, hide: true }]} />
+<Sparkline rescale times={sampledAt} series={[{ points: requests }, { points: polled, times: backfilledAt, hide: true }]} />`}>
+          <div className="pg-row" data-pg="spark-hide-x">
+            <Sparkline series={[{ points: requests, hide: true }, { points: polled }]} />
+            <Sparkline rescale series={[{ points: requests, hide: true }, { points: polled }]} />
+            <Sparkline times={sampledAt} series={[{ points: requests }, { points: polled, times: backfilledAt, hide: true }]} />
+            <Sparkline rescale times={sampledAt} series={[{ points: requests }, { points: polled, times: backfilledAt, hide: true }]} />
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          The x axis follows the same rule. A hidden series with more readings, or with readings from
+          earlier, still sets the width the others are spread over. Under <code>rescale</code> the lines
+          still drawn run edge to edge.
         </p>
       </section>
 
@@ -591,7 +660,7 @@ const { points, times } = useRequests(range) // your query, ~48 readings across 
 
       <ApiReference title="Sparkline" props={[
         { name: "points", type: "(number | null)[]", default: "[]", description: "The series, oldest first. Anything but a finite number is a gap" },
-        { name: "series", type: "{ points, times, color, theme, dotColor, areaColor, areaOpacity }[]", description: "Several series on one scale, first at the back. Replaces points, color and theme. An item without color or theme takes --chart-1…5 in order, and one without times shares the component's" },
+        { name: "series", type: "{ points, times, hide, color, theme, dotColor, areaColor, areaOpacity }[]", description: "Several series on one scale, first at the back. Replaces points, color and theme. An item without color or theme takes --chart-1…5 in order, and one without times shares the component's. An item with hide is not drawn but keeps its colour and its share of the scale" },
         { name: "times", type: "(number | Date)[]", description: "A timestamp per reading. Places each one on x by time instead of evenly by index; a reading without a time is a gap" },
         { name: "scale", type: '"linear" | "sqrt" | "log"', default: '"linear"', description: "How values map to height. sqrt and log give small readings room beside a spike; log needs positive min and max, and puts a reading at or below zero on the floor" },
         { name: "color", type: "string", default: "currentColor", description: "Colour of the line, and of the wash and dot unless they are set" },
@@ -599,6 +668,7 @@ const { points, times } = useRequests(range) // your query, ~48 readings across 
         { name: "dotColor", type: "string", default: "the line colour", description: "Colour of the latest-point dot" },
         { name: "areaColor", type: "string", default: "the line colour", description: "Colour of the wash" },
         { name: "areaOpacity", type: "number", default: "0.12", description: "Opacity of the wash, 0 to 1" },
+        { name: "rescale", type: "boolean", default: "false", description: "Fit the scales to the drawn series only, so the rest fill the box when one is hidden" },
         { name: "thresholds", type: "[warn, critical]", description: "Colour by band, like a meter: green, amber from warn, red from critical. Ascending is higher-is-worse, descending lower-is-worse. Replaces color and theme" },
         { name: "min", type: "number", default: "the smaller of 0 and the data's minimum", description: "Bottom of the y axis; a value below it pegs to the edge" },
         { name: "max", type: "number", default: "the larger of 0 and the data's maximum", description: "Top of the y axis; a value above it pegs to the edge" },

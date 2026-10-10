@@ -2,8 +2,9 @@
 // last value where the dot sits, type="monotone" keeps the vertices and the
 // inset, a non-finite sample is a gap, times place readings on x, the domain
 // folds in zero and pegs what overshoots, sqrt and log reshape y, one point
-// is a dot alone, the svg is always hidden from the accessibility tree, and
-// the colour props reach the part each one names.
+// is a dot alone, a hidden series keeps its colour and its share of the scale,
+// the svg is always hidden from the accessibility tree, and the colour props
+// reach the part each one names.
 
 export default async function run({ page, baseUrl, test, eq, near }) {
   await page.goto(`${baseUrl}/#sparkline`)
@@ -411,6 +412,55 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(custom.map((s) => s.stroke).join(" | "), [palette[2], palette[4]].join(" | "), "item colours")
     eq(custom.map((s) => s.dot).join(" | "), [palette[2], palette[0]].join(" | "), "item dotColor")
     eq(custom.filter((s) => s.area !== undefined).length, 0, "area={false} applies to every series")
+  })
+
+  await test("a hidden series keeps the palette and the scale; rescale fits the rest", async () => {
+    const inbound = [30, 34, 28, 41, 38, 45, 40, 48]
+    const outbound = [12, 15, 11, 18, 22, 19, 25, 21]
+    const yAt = (v, top) => height - inset - (v / top) * (height - 2 * inset)
+    const shared = yAt(outbound.at(-1), Math.max(...inbound, ...outbound))
+    const own = yAt(outbound.at(-1), Math.max(...outbound))
+    const inboundToggle = page.locator('[data-pg="spark-hide"] button', { hasText: "Inbound" })
+
+    const [fixed, rescaled] = await paint("spark-hide")
+    eq(fixed.length, 2, "both drawn before the toggle")
+    eq(rescaled[1].cy, fixed[1].cy, "rescale matches while nothing is hidden")
+    near(fixed[1].cy, shared, 0.01, "outbound on the shared scale")
+
+    await inboundToggle.click()
+    try {
+      eq(await inboundToggle.getAttribute("aria-pressed"), "false", "inbound toggled off")
+      const [fixedOff, rescaledOff] = await paint("spark-hide")
+      eq(fixedOff.length, 1, "inbound not drawn")
+      eq(fixedOff[0].stroke, palette[1], "outbound keeps --chart-2")
+      near(fixedOff[0].cy, shared, 0.01, "outbound stays put")
+      eq(rescaledOff.length, 1, "inbound not drawn under rescale")
+      near(rescaledOff[0].cy, own, 0.01, "rescale fits outbound alone")
+    } finally {
+      await inboundToggle.click()
+    }
+    eq((await paint("spark-hide"))[0].length, 2, "inbound back")
+  })
+
+  await test("a hidden series keeps its share of x; rescale spreads the rest edge to edge", async () => {
+    const span = width - 2 * inset
+    const xs = (n) =>
+      page.$eval(`[data-pg="spark-hide-x"] .sparkline:nth-child(${n}) .sparkline-line`, (el) =>
+        [...el.getAttribute("d").matchAll(/[ML] ([\d.]+) [\d.]+/g)].map((m) => Number(m[1])),
+      )
+    // 4 polled readings beside 8 hidden requests.
+    const [byIndex, byIndexRescaled] = [await xs(1), await xs(2)]
+    eq(byIndex.length, 4, "only polled drawn")
+    near(byIndex.at(-1), inset + (3 / 7) * span, 0.01, "polled keeps 4 of the 8 slots")
+    eq(byIndex[0], inset, "first slot")
+    near(byIndexRescaled.at(-1), width - inset, 0.01, "rescale: polled ends at the right edge")
+
+    // Requests over minutes 0..13 beside a hidden source from minute -12.
+    const [byTime, byTimeRescaled] = [await xs(3), await xs(4)]
+    eq(byTime.length, 8, "only requests drawn")
+    near(byTime[0], inset + (12 / 25) * span, 0.01, "minute 0 sits 12 of 25 minutes in")
+    near(byTime.at(-1), width - inset, 0.01, "minute 13 at the right edge")
+    near(byTimeRescaled[0], inset, 0.01, "rescale: minute 0 at the left edge")
   })
 
   const bandColours = (host) =>
