@@ -1,5 +1,8 @@
-export default async function run({ page, baseUrl, test, eq }) {
+import { firstFrame } from "./helpers/first-frame.mjs"
+
+export default async function run({ page, baseUrl, test, eq, near }) {
   await page.goto(`${baseUrl}/#tooltip`)
+  const { armFirstFrame, expectFirstFrameInPlace } = firstFrame({ page, eq, near })
 
   // Helper: wait for a tooltip to be :popover-open and React-synced.
   const waitOpen = () => page.waitForSelector(".tooltip:popover-open")
@@ -143,5 +146,12 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.mouse.move(0, 0)
     await waitClosed()
     eq(await readout.textContent(), "closed", "state says closed after leave")
+  })
+
+  await test("first frame is already in place: shown before it is positioned", async () => {
+    await armFirstFrame(".tooltip")
+    await trigger.hover()
+    await expectFirstFrameInPlace(".tooltip")
+    await cleanup()
   })
 }

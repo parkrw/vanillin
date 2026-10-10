@@ -1,5 +1,8 @@
-export default async function run({ page, baseUrl, test, eq }) {
+import { firstFrame } from "./helpers/first-frame.mjs"
+
+export default async function run({ page, baseUrl, test, eq, near }) {
   await page.goto(`${baseUrl}/#navigation-menu`)
+  const { armFirstFrame, expectFirstFrameInPlace, nearViewportBottom } = firstFrame({ page, eq, near })
 
   // ----------------------------------------------------------------
   //  Helpers — per-item popover mode (viewport={false}, data-pg="nm")
@@ -506,5 +509,15 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(contentBox.y >= triggerBox.y + triggerBox.height - 2, true, "panel is below the trigger")
     await page.mouse.click(0, 0)
     await page.waitForTimeout(300)
+  })
+
+  await test("first frame is already in place, flipped above when there is no room below", async () => {
+    await nearViewportBottom(learnTrigger, async () => {
+      await armFirstFrame('[data-pg="nm-content-learn"]')
+      await learnTrigger.click()
+      const steady = await expectFirstFrameInPlace('[data-pg="nm-content-learn"]')
+      eq(steady.side, "top", "flipped above the trigger")
+      await cleanup()
+    })
   })
 }

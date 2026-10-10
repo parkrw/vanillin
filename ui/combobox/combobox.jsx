@@ -511,8 +511,6 @@ export function ComboboxContent({
     autoHighlight,
   } = useContext(ComboboxContext)
 
-  useAnchorPosition(open, anchorRef, contentRef, { side, align, sideOffset })
-
   const setOpenRef = useRef(setOpen)
   setOpenRef.current = setOpen
 
@@ -529,8 +527,10 @@ export function ComboboxContent({
 
   // State -> native popover, gated on live :popover-open (task-13 gotcha).
   // Width matches the input group; focus stays in the input — nothing to
-  // focus here (combobox delta vs select).
-  useEffect(() => {
+  // focus here (combobox delta vs select). A layout effect declared before
+  // useAnchorPosition: sized and shown first, or the first position measures
+  // a display:none 0×0 box and paints a frame misplaced.
+  useLayoutEffect(() => {
     const el = contentRef.current
     if (!el) return
     const showing = el.matches(":popover-open")
@@ -544,6 +544,8 @@ export function ComboboxContent({
       try { el.hidePopover() } catch { /* already hidden */ }
     }
   }, [open, contentRef, anchorRef])
+
+  useAnchorPosition(open, anchorRef, contentRef, { side, align, sideOffset })
 
   // Post-render, after items toggled `hidden` for the new query: empty
   // state, stale-highlight cleanup, and autoHighlight of the first match.

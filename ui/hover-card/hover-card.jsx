@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
 } from "react"
 import { cn } from "../../lib/cn.js"
@@ -145,14 +146,14 @@ export function HoverCardContent({
   const { open, triggerRef, contentRef, contentId, scheduleClose, cancelSchedule } =
     useContext(HoverCardContext)
 
-  useAnchorPosition(open, triggerRef, contentRef, { side, align, sideOffset })
-
   // showingRef guards against redundant showPopover/hidePopover calls.
   const showingRef = useRef(false)
 
   // Sync React state -> native popover show/hide. popover="manual" — auto's
-  // light dismiss would fight the hover open/close logic.
-  useEffect(() => {
+  // light dismiss would fight the hover open/close logic. A layout effect
+  // declared before useAnchorPosition: shown first, or the first position
+  // measures a display:none 0×0 box and paints a frame misplaced.
+  useLayoutEffect(() => {
     const el = contentRef.current
     if (!el) return
     if (open && !showingRef.current) {
@@ -163,6 +164,8 @@ export function HoverCardContent({
       showingRef.current = false
     }
   }, [open, contentRef])
+
+  useAnchorPosition(open, triggerRef, contentRef, { side, align, sideOffset })
 
   return (
     <div

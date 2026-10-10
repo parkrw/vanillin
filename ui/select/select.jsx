@@ -309,13 +309,6 @@ export function SelectContent({
   const topSentinelRef = useRef(null)
   const bottomSentinelRef = useRef(null)
 
-  // Popper positioning (disabled in item-aligned mode).
-  useAnchorPosition(open && !alignItemWithTrigger, triggerRef, contentRef, {
-    side,
-    align,
-    sideOffset,
-  })
-
   const setOpenRef = useRef(setOpen)
   setOpenRef.current = setOpen
 
@@ -359,8 +352,11 @@ export function SelectContent({
   }, [open, contentRef])
 
   // State -> native popover, gated on live :popover-open (task-13 gotcha).
-  // On open: match the trigger width, then focus the selected option.
-  useEffect(() => {
+  // On open: match the trigger width, then focus the selected option. A
+  // layout effect declared before useAnchorPosition: sized and shown first,
+  // or the first position measures a display:none 0×0 box and paints a
+  // frame misplaced.
+  useLayoutEffect(() => {
     const el = contentRef.current
     if (!el) return
     const showing = el.matches(":popover-open")
@@ -454,6 +450,13 @@ export function SelectContent({
       try { el.hidePopover() } catch { /* already hidden */ }
     }
   }, [open, contentRef, triggerRef, value, alignItemWithTrigger])
+
+  // Popper positioning (disabled in item-aligned mode).
+  useAnchorPosition(open && !alignItemWithTrigger, triggerRef, contentRef, {
+    side,
+    align,
+    sideOffset,
+  })
 
   const handleKeyDown = (event) => {
     onKeyDown?.(event)
