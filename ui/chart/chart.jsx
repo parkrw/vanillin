@@ -887,7 +887,7 @@ function describeChart(layout, config) {
   }
 
   const { category } = layout
-  const labels = category.labels.map(String)
+  const labels = category.labels.map((value) => label(String(value), String(value)))
   const lead = `Chart with ${plural(series.length, "series", "series")} over ${plural(category.count, "category", "categories")}${category.count ? `, ${labels[0]} to ${labels[labels.length - 1]}` : ""}.`
   const sentences = series.map((entry) => {
     const name = label(entry.name, entry.name)
@@ -1099,7 +1099,9 @@ function CartesianChart({
   const areas = parts.references.filter((el) => el.type.chartRole === "referencearea")
   const marks = parts.references.filter((el) => el.type.chartRole !== "referencearea")
 
-  const legendEl = parts.legend
+  // The open table paints over the plot and legend, so focus must not be able to land beneath it.
+  const covered = Boolean(parts.datatable?.props.open)
+  const legendEl = covered && parts.legend ? cloneElement(parts.legend, { inert: true }) : parts.legend
   const legendTop = legendEl && legendEl.props.verticalAlign === "top"
   const a11y = surfaceA11y(accessibilityLayer, ariaLabel != null || ariaLabelledBy != null, keyboard)
   const { describedBy, summary } = useChartSummary(computed, accessibilityLayer, ariaDescribedBy)
@@ -1111,7 +1113,7 @@ function CartesianChart({
           <VisibilityContext.Provider value={visibility}>
             <div ref={layoutRef} className={cn("chart-layout", className)} data-layout={scatter ? "scatter" : layout} {...props}>
               {legendTop ? legendEl : null}
-              <div className="chart-plot" ref={plotRef}>
+              <div className="chart-plot" ref={plotRef} inert={covered || undefined}>
                 <svg
                   className="chart-surface"
                   width={width}
@@ -1569,7 +1571,9 @@ function PolarChart({
     indexAt: computed.indexAt,
   })
 
-  const legendEl = parts.legend
+  // The open table paints over the plot and legend, so focus must not be able to land beneath it.
+  const covered = Boolean(parts.datatable?.props.open)
+  const legendEl = covered && parts.legend ? cloneElement(parts.legend, { inert: true }) : parts.legend
   const legendTop = legendEl && legendEl.props.verticalAlign === "top"
   const a11y = surfaceA11y(accessibilityLayer, ariaLabel != null || ariaLabelledBy != null, keyboard)
   const { viewBox } = computed
@@ -1583,7 +1587,7 @@ function PolarChart({
           <PolarViewBoxContext.Provider value={viewBox}>
             <div ref={layoutRef} className={cn("chart-layout", className)} data-layout={kind} {...props}>
               {legendTop ? legendEl : null}
-              <div className="chart-plot" ref={plotRef}>
+              <div className="chart-plot" ref={plotRef} inert={covered || undefined}>
                 <svg
                   className="chart-surface"
                   width={width}

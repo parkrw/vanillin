@@ -858,6 +858,68 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(await table.getAttribute("data-state"), "closed")
   })
 
+  await test("table open: the covered plot and legend are inert and out of the tab order; closed, the surface is focusable again", async () => {
+    const name = "chart-table"
+    const surface = page.locator(`${pg(name)} .chart-surface`)
+    const toggle = page.getByRole("button", { name: "Show data table" })
+    const activeIs = (selector) => page.evaluate((sel) => document.activeElement?.matches(sel) ?? false, selector)
+    eq(await page.locator(`${pg(name)} [inert]`).count(), 0, "precondition: nothing is inert while the table is closed")
+    await surface.focus()
+    eq(await activeIs(".chart-surface"), true, "closed: the surface takes focus")
+    await surface.evaluate((el) => el.blur())
+    await toggle.click()
+    eq(await page.locator(`${pg(name)} .chart-plot[inert]`).count(), 1)
+    eq(await page.locator(`${pg(name)} .chart-legend[inert]`).count(), 1)
+    await surface.focus()
+    eq(await activeIs(".chart-surface"), false, "open: an inert surface cannot be focused")
+    await toggle.focus()
+    await page.keyboard.press("Tab")
+    eq(await activeIs(".chart-data"), true, "Tab from the toggle skips the chart and legend buttons and lands on the table")
+    await toggle.click()
+    eq(await page.locator(`${pg(name)} [inert]`).count(), 0)
+    await surface.focus()
+    eq(await activeIs(".chart-surface"), true, "closed again: focusable")
+    await surface.evaluate((el) => el.blur())
+  })
+
+  const summaryOf = (name) => page.locator(`${pg(name)} .chart-summary`).textContent()
+
+  await test("summary: category names resolve through config, as the table's row heads do", async () => {
+    eq(
+      await summaryOf("chart-table-radial"),
+      "Chart with 1 series over 5 categories, Chrome to Other. Visitors: range 90 to 275, lowest in Other, peak in Chrome, from 275 to 90 (down 185).",
+    )
+  })
+
+  await test("summary: a radar reads like the cartesian charts", async () => {
+    eq(
+      await summaryOf("chart-table-radar"),
+      "Chart with 1 series over 6 categories, January to June. Desktop: range 73 to 305, lowest in April, peak in February, from 186 to 214 (up 28).",
+    )
+  })
+
+  await test("summary: empty charts say so, and have no table", async () => {
+    eq(await summaryOf("chart-empty-none"), "Chart with no data.")
+    eq(await summaryOf("chart-empty-series"), "Chart with 1 series over 1 category, January to January. Desktop: no data.")
+    eq(await summaryOf("chart-empty-pie"), "Visitors: no slices.")
+    eq(await summaryOf("chart-empty-scatter"), "School A: no points.")
+    for (const name of ["chart-empty-none", "chart-empty-pie", "chart-empty-scatter"]) {
+      eq(await page.locator(`${pg(name)} .chart-data`).count(), 0, `${name}: nothing to tabulate`)
+    }
+  })
+
+  await test("table: its own formatter and labelFormatter win over the tooltip's", async () => {
+    const { rows } = await tableText("chart-table-own-formatter")
+    eq(rows[0][0], "JANUARY", "the table's labelFormatter, not the tooltip's `January 2024`")
+    eq(rows[0][1], "186 units", "the table's formatter, not the tooltip's `desktop: 186 visitors`")
+  })
+
+  await test("table: with no ChartTooltip at all, the defaults apply", async () => {
+    eq(await page.locator(`${pg("chart-table-radar")} .chart-tooltip`).count(), 0, "precondition: the fixture has no tooltip")
+    const { rows } = await tableText("chart-table-radar")
+    eq(JSON.stringify(rows[1]), JSON.stringify(["February", "305"]))
+  })
+
   await test("table: pie rows are the slices, named by config label", async () => {
     const { headers, rows } = await tableText("chart-table-pie")
     eq(JSON.stringify(headers), JSON.stringify(["browser", "Visitors"]))

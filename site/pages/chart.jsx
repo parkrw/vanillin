@@ -440,6 +440,7 @@ function TableDemo() {
           <ChartTooltip content={<ChartTooltipContent />} />
           <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
           <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
+          <ChartLegend content={<ChartLegendContent toggle />} />
           <ChartDataTable open={open} caption="Visitors by month" />
         </BarChart>
       </ChartContainer>
@@ -1907,6 +1908,7 @@ const fullDay = (value) =>
     <XAxis dataKey="month" />
     <Bar dataKey="desktop" fill="var(--color-desktop)" />
     <Bar dataKey="mobile" fill="var(--color-mobile)" />
+    <ChartLegend content={<ChartLegendContent toggle />} />
     <ChartDataTable open={open} caption="Visitors by month" />
   </BarChart>
 </ChartContainer>`}>
@@ -1999,7 +2001,7 @@ const fullDay = (value) =>
 </RadarChart>`}>
           <Frame pg="chart-table-radar" square>
             <ChartContainer config={chartConfig} style={{ aspectRatio: "1" }}>
-              <RadarChart data={chartData}>
+              <RadarChart data={chartData} accessibilityLayer aria-label="Desktop visitors by month">
                 <PolarAngleAxis dataKey="month" />
                 <Radar dataKey="desktop" fill="var(--color-desktop)" />
                 <ChartDataTable open caption="Desktop visitors by month" />
@@ -2014,7 +2016,7 @@ const fullDay = (value) =>
 </RadialBarChart>`}>
           <Frame pg="chart-table-radial" square>
             <ChartContainer config={browserConfig} style={{ aspectRatio: "1" }}>
-              <RadialBarChart data={browserData} innerRadius={30} outerRadius={110}>
+              <RadialBarChart data={browserData} innerRadius={30} outerRadius={110} accessibilityLayer aria-label="Visitors by browser">
                 <PolarRadiusAxis dataKey="browser" tick={false} axisLine={false} />
                 <RadialBar dataKey="visitors" background />
                 <ChartDataTable open caption="Visitors by browser" />
@@ -2065,6 +2067,19 @@ const fullDay = (value) =>
             </ChartContainer>
           </Frame>
         </ComponentPreview>
+        <ComponentPreview code={`<ChartTooltip content={<ChartTooltipContent formatter={…} />} />
+<ChartDataTable open formatter={(value) => <span>{value} units</span>} labelFormatter={(label) => label.toUpperCase()} />`}>
+          <Frame pg="chart-table-own-formatter">
+            <ChartContainer config={chartConfig}>
+              <BarChart data={chartData}>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={monthTick} />
+                <ChartTooltip content={<ChartTooltipContent formatter={(value, name) => <span>{name}: {value} visitors</span>} labelFormatter={(label) => `${label} 2024`} />} />
+                <Bar dataKey="desktop" fill="var(--color-desktop)" />
+                <ChartDataTable open formatter={(value) => <span>{value} units</span>} labelFormatter={(label) => String(label).toUpperCase()} />
+              </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
         <ComponentPreview code={`<PieChart>
   <Pie data={browserData} dataKey="visitors" nameKey="browser" outerRadius={60} />
   <Pie data={chartData} dataKey="desktop" nameKey="month" innerRadius={70} outerRadius={100} />
@@ -2080,6 +2095,45 @@ const fullDay = (value) =>
             </ChartContainer>
           </Frame>
         </ComponentPreview>
+        <h4>Charts with nothing to draw</h4>
+        <p>
+          Each of these has a summary of its own, and no table because there are no rows.
+        </p>
+        <div style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fit, minmax(12rem, 1fr))", maxWidth: "40rem" }}>
+          <div data-pg="chart-empty-none" style={{ aspectRatio: "2 / 1" }}>
+            <ChartContainer config={chartConfig}>
+              <BarChart data={[]} accessibilityLayer aria-label="No series">
+                <ChartDataTable open />
+              </BarChart>
+            </ChartContainer>
+          </div>
+          <div data-pg="chart-empty-series" style={{ aspectRatio: "2 / 1" }}>
+            <ChartContainer config={chartConfig}>
+              <BarChart data={[{ month: "January" }]} accessibilityLayer aria-label="A series with no values">
+                <XAxis dataKey="month" />
+                <Bar dataKey="desktop" fill="var(--color-desktop)" />
+              </BarChart>
+            </ChartContainer>
+          </div>
+          <div data-pg="chart-empty-pie" style={{ aspectRatio: "2 / 1" }}>
+            <ChartContainer config={browserConfig}>
+              <PieChart accessibilityLayer aria-label="A pie with no slices">
+                <Pie data={[]} dataKey="visitors" nameKey="browser" />
+                <ChartDataTable open />
+              </PieChart>
+            </ChartContainer>
+          </div>
+          <div data-pg="chart-empty-scatter" style={{ aspectRatio: "2 / 1" }}>
+            <ChartContainer config={schoolConfig}>
+              <ScatterChart accessibilityLayer aria-label="A scatter with no points">
+                <XAxis type="number" dataKey="x" name="stature" />
+                <YAxis type="number" dataKey="y" name="weight" />
+                <Scatter name="a" data={[]} fill="var(--color-a)" />
+                <ChartDataTable open />
+              </ScatterChart>
+            </ChartContainer>
+          </div>
+        </div>
       </section>
 
       <section className="pg-section">
