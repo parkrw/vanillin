@@ -44,9 +44,15 @@ function makeScale(values, domain, stepsProp) {
   const [dataLo, dataHi] = known.length ? [Math.min(...known), Math.max(...known)] : [0, 1]
   // Each end falls back on its own, so [0, max] with max still loading draws from the data rather than NaN.
   const ends = Array.isArray(domain) ? domain : []
-  const lo = finite(ends[0]) ?? dataLo
-  const hi = finite(ends[1]) ?? dataHi
+  const pinnedLo = finite(ends[0])
+  const pinnedHi = finite(ends[1])
+  // A fallback end never crosses a pinned one: [50, null] over data that tops out at 39 is all floor.
+  let lo = pinnedLo ?? (pinnedHi != null ? Math.min(dataLo, pinnedHi) : dataLo)
+  let hi = pinnedHi ?? Math.max(dataHi, lo)
+  if (hi < lo) [lo, hi] = [hi, lo]
   const binOf = (v) => {
+    // An empty range has no gradient; a reading on it takes the low end, so an idle year stays pale.
+    if (hi === lo) return v > hi ? steps - 1 : 0
     if (v >= hi) return steps - 1
     if (v <= lo) return 0
     return Math.min(steps - 1, Math.floor(((v - lo) / (hi - lo)) * steps))

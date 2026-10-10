@@ -363,6 +363,62 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
     }
   })
 
+  await test("heatmap: a scale with no range paints every cell the low shade", async () => {
+    const steps = (name) => page.locator(`${pg(name)} .chart-heatmap-cell:not([data-empty])`).evaluateAll((els) => [...new Set(els.map((el) => el.dataset.step))])
+    eq(await steps("heatmap-default"), ["0", "1", "2", "3", "4"], "the default fixture spans every step")
+    eq(await steps("heatmap-flat"), ["0"], "equal readings all take the low end")
+    eq(await page.locator(`${pg("heatmap-flat")} .chart-heatmap-legend-label`).allTextContents(), ["5", "5"])
+    eq(await steps("heatmap-floor"), ["0"], "a pinned floor above every reading leaves all of them at the floor")
+    eq(await page.locator(`${pg("heatmap-floor")} .chart-heatmap-legend-label`).allTextContents(), ["50", "50"], "the fallback ceiling does not cross the pinned floor")
+  })
+
+  await test("heatmap: right to left keeps the columns left to right, and the arrows follow the screen", async () => {
+    const name = "heatmap-rtl"
+    eq(await surface(name).evaluate((el) => getComputedStyle(el).direction), "rtl", "the fixture is right to left")
+    const [first, second] = [await cellInfo(name, 0), await cellInfo(name, 1)]
+    eq(second.x > first.x, true, "the second column is drawn right of the first")
+    await focusSurface(name)
+    eq(await activeIndex(name), [0])
+    eq(await press(name, "ArrowRight"), [1], "ArrowRight moves to the cell on the right")
+    eq(await press(name, "ArrowLeft"), [0], "ArrowLeft moves back")
+    await press(name, "Escape")
+    await surface(name).evaluate((el) => el.blur())
+  })
+
+  await test("forced-colors: cells and legend swatches keep their shades, cells take an edge", async () => {
+    await page.emulateMedia({ forcedColors: "active" })
+    try {
+      const name = "heatmap-default"
+      const high = cell(name, 39)
+      eq(await high.evaluate((el) => getComputedStyle(el).forcedColorAdjust), "none")
+      eq(await high.evaluate((el) => getComputedStyle(el).strokeWidth), "1px", "a filled cell takes a CanvasText edge")
+      const swatches = page.locator(`${pg(name)} .chart-heatmap-legend-step`)
+      eq(await swatches.first().evaluate((el) => getComputedStyle(el).forcedColorAdjust), "none", "legend swatches opt out too")
+      await high.evaluate((el) => el.scrollIntoView({ block: "center" }))
+      const box = await high.boundingBox()
+      const shot = await page.screenshot({ clip: { x: Math.round(box.x + box.width / 2) - 2, y: Math.round(box.y + box.height / 2) - 2, width: 4, height: 4 } })
+      const [r, g, b] = await page.evaluate(async (b64) => {
+        const img = new Image()
+        img.src = `data:image/png;base64,${b64}`
+        await img.decode()
+        const canvas = document.createElement("canvas")
+        canvas.width = img.width
+        canvas.height = img.height
+        const ctx = canvas.getContext("2d")
+        ctx.drawImage(img, 0, 0)
+        const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        let sum = [0, 0, 0]
+        for (let i = 0; i < data.length; i += 4) sum = [sum[0] + data[i], sum[1] + data[i + 1], sum[2] + data[i + 2]]
+        const n = data.length / 4
+        return sum.map((v) => v / n)
+      }, shot.toString("base64"))
+      const chroma = Math.max(r, g, b) - Math.min(r, g, b)
+      eq(chroma > 60, true, `the high cell paints in colour under forced-colors, got rgb(${r},${g},${b})`)
+    } finally {
+      await page.emulateMedia({ forcedColors: null })
+    }
+  })
+
   await test("heatmap: new data redraws the grid; a null domain end comes from the data", async () => {
     const live = "heatmap-live"
     eq([(await cellInfo(live, 0)).step, (await cellInfo(live, 39)).step], ["0", "4"], "Mon 09 is lowest and Fri 16 highest before the swap")

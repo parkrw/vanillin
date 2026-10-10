@@ -40,9 +40,9 @@ const commitConfig = {
   high: { color: "var(--chart-2)" },
 }
 
-function Frame({ pg, wide = false, children }) {
+function Frame({ pg, wide = false, dir, children }) {
   return (
-    <div data-pg={pg} style={{ width: "100%", maxWidth: wide ? "56rem" : "40rem" }}>
+    <div data-pg={pg} dir={dir} style={{ width: "100%", maxWidth: wide ? "56rem" : "40rem" }}>
       {children}
     </div>
   )
@@ -63,6 +63,9 @@ const calendarShape = { aspectRatio: "4.5 / 1" }
 
 /* The same readings mirrored, so the top-left cell goes from lowest to highest. */
 const mirroredTraffic = trafficData.map((d) => ({ ...d, visits: 39 - d.visits }))
+
+/* Every reading equal: the scale has no range. */
+const flatTraffic = trafficData.map((d) => ({ ...d, visits: 5 }))
 
 function LiveHeatmap() {
   const [mirrored, setMirrored] = useState(false)
@@ -199,6 +202,48 @@ export default function ChartHeatmapPage() {
           <Frame pg="heatmap-bare">
             <ChartContainer config={trafficConfig}>
               <HeatmapChart data={trafficData} xKey="hour" yKey="day" valueKey="visits" yAxisWidth={0} xAxisHeight={0} />
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>A scale with no range</h3>
+        <p>
+          When every reading is the same, or a pinned <code>domain</code> end lies past all of the data, the scale has
+          no range. Every cell then takes the low shade, so a quiet stretch reads as quiet rather than as a peak.
+        </p>
+        <ComponentPreview code={`<HeatmapChart data={allFives} … />
+<HeatmapChart data={trafficData} domain={[50, null]} … />`}>
+          <Frame pg="heatmap-flat">
+            <ChartContainer config={trafficConfig}>
+              <HeatmapChart data={flatTraffic} xKey="hour" yKey="day" valueKey="visits">
+                <HeatmapLegend />
+              </HeatmapChart>
+            </ChartContainer>
+          </Frame>
+          <Frame pg="heatmap-floor">
+            <ChartContainer config={trafficConfig}>
+              <HeatmapChart data={trafficData} xKey="hour" yKey="day" valueKey="visits" domain={[50, null]}>
+                <HeatmapLegend />
+              </HeatmapChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Right to left</h3>
+        <p>
+          The grid keeps its order in a right-to-left layout, the first column on the left, so the arrow keys follow
+          the screen: ArrowRight moves one cell to the right.
+        </p>
+        <ComponentPreview code={`<div dir="rtl">
+  <HeatmapChart … accessibilityLayer />
+</div>`}>
+          <Frame pg="heatmap-rtl" dir="rtl">
+            <ChartContainer config={trafficConfig}>
+              <HeatmapChart data={trafficData} xKey="hour" yKey="day" valueKey="visits" accessibilityLayer aria-label="Visits by day and hour, right to left" />
             </ChartContainer>
           </Frame>
         </ComponentPreview>
