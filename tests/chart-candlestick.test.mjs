@@ -121,9 +121,23 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
   await test("candlestick: an open equal to the close is a flat body; a row without prices keeps its slot", async () => {
     const name = "candlestick-default"
     const g = await geometry(name)
-    const flat = await body(name, 4)
-    eq(flat.height, 0, "no body height")
-    near(flat.y, g.y(108), 0.01, "at the price")
+    const flat = await attrs(page.locator(`${mark(name, 4)} .chart-candlestick-body`), ["x1", "x2", "y1", "y2"])
+    near(flat.y1, g.y(108), 0.01, "a line at the price")
+    near(flat.y2, flat.y1, 0.01, "level")
+    near(flat.x1, g.left(4), 0.01, "from the band's left edge")
+    near(flat.x2 - flat.x1, (await body(name, 0)).width, 0.01, "as wide as a body")
+    // Hit testing follows what is painted: a rect of height 0 is never found, a stroked line is.
+    const painted = (selector) =>
+      page.locator(selector).evaluate((el) => {
+        el.style.pointerEvents = "visiblePainted"
+        const b = el.getBoundingClientRect()
+        const hit = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2)
+        el.style.pointerEvents = ""
+        return hit === el
+      })
+    await page.locator(mark(name, 4)).evaluate((el) => el.scrollIntoView({ block: "center" }))
+    eq(await painted(`${mark(name, 4)} .chart-candlestick-body`), true, "the flat body is painted")
+    eq(await painted(`${mark(name, 0)} .chart-candlestick-body`), true, "counter-precondition: so is an ordinary body")
     eq(await page.locator(mark(name, 4)).getAttribute("data-direction"), "flat", "direction attribute")
     const foreground = await resolved(name, "var(--foreground)")
     eq((await paint(`${mark(name, 4)} .chart-candlestick-body`)).stroke, foreground, "drawn in the text colour")
@@ -258,7 +272,7 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
     eq(await direction(pg(name)), "rtl", "precondition: the fixture is right to left")
     eq(await direction(`${pane(name)}`), "rtl", "counter-precondition: the chart's own layout inherits it")
     eq(await direction(`${pane(name)} .chart-surface`), "ltr", "the svg keeps the plot's own direction")
-    const xs = await page.locator(`${pane(name)} .chart-candlestick-body`).evaluateAll((els) => els.map((el) => Number(el.getAttribute("x"))))
+    const xs = await page.locator(`${pane(name)} .chart-candlestick-body`).evaluateAll((els) => els.map((el) => Number(el.getAttribute("x") ?? el.getAttribute("x1"))))
     eq(xs.length, 7, "seven candles")
     eq(xs.every((x, i) => i === 0 || x > xs[i - 1]), true, `x ascends with the data: ${xs}`)
     await focusSurface(name)
@@ -361,7 +375,7 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
         const pick = (selector, names) => [...root.querySelectorAll(selector)].map((el) => names.map((n) => el.getAttribute(n)))
         const texts = (selector) => [...root.querySelectorAll(selector)].map((t) => t.textContent)
         return {
-          bodies: pick(".chart-candlestick-body", ["x", "y", "width", "height"]),
+          bodies: pick(".chart-candlestick-body", ["x", "y", "width", "height", "x1", "x2", "y1", "y2"]),
           wicks: pick(".chart-candlestick-wick", ["x1", "x2", "y1", "y2"]),
           marks: pick(".chart-candlestick-mark", ["data-index", "data-direction"]),
           bars: pick(".chart-candlestick-volume-bar", ["x", "y", "width", "height", "data-direction", "data-value"]),

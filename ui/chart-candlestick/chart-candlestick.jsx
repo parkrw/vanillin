@@ -383,10 +383,16 @@ function Mark({ entry, model, active }) {
       </g>
     )
   }
+  // A rect of height 0 is never painted, stroke included, so an open equal to
+  // the close is drawn as a line across the band.
   return (
     <g {...group}>
       <line className="chart-candlestick-wick" {...wick} />
-      <rect className="chart-candlestick-body" x={band.start(index)} y={Math.min(yOpen, yClose)} width={band.bandwidth} height={Math.abs(yClose - yOpen)} />
+      {yOpen === yClose ? (
+        <line className="chart-candlestick-body" x1={band.start(index)} x2={band.start(index) + band.bandwidth} y1={yOpen} y2={yOpen} />
+      ) : (
+        <rect className="chart-candlestick-body" x={band.start(index)} y={Math.min(yOpen, yClose)} width={band.bandwidth} height={Math.abs(yClose - yOpen)} />
+      )}
     </g>
   )
 }
