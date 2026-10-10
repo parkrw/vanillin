@@ -945,4 +945,4 @@ Branch `feat/lib-layouts`, #117, #118. Two pure layouts for the chart families t
 
 ## ui/progress — tone test follow-ups (2026-10-09)
 
-Branch `test/progress-tone-dark`, #44. Test fixes that missed #151's merge: the fill-token test now runs in light and dark, so the dark `:where(html).dark .progress--warning` rule is pinned, and both mode-switching tests restore the page's mode in a `finally`, so a failure no longer leaks dark mode into later suites.
+Branch `test/progress-tone-dark`, #44. Test fixes that missed #151's merge: the fill-token test now runs in light and dark, so the dark `:where(html).dark .progress--warning` rule is pinned, and both mode-switching tests restore the page's mode in a `finally`, so a failure no longer leaks dark mode into the later progress tests.
