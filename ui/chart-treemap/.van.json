@@ -1,0 +1,12 @@
+{
+  "name": "chart-treemap",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [
+    "chart"
+  ],
+  "files": {
+    "chart-treemap.css": "sha256-n3rjPdjEidAj+NJjyOwEGhJBIHmX/19zh2uAuXNiLEo=",
+    "chart-treemap.jsx": "sha256-k/zLp8jkwj8ZPIM9PZpAjerWaaH4NYQJ8Wd3ujdC24o="
+  }
+}

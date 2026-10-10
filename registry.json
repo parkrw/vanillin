@@ -225,6 +225,20 @@
         "cn.js"
       ]
     },
+    "chart-treemap": {
+      "type": "ui",
+      "files": [
+        "chart-treemap.css",
+        "chart-treemap.jsx"
+      ],
+      "requires": [
+        "chart"
+      ],
+      "lib": [
+        "chart-treemap.js",
+        "cn.js"
+      ]
+    },
     "checkbox": {
       "type": "ui",
       "files": [

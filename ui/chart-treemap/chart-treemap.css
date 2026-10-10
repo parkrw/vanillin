@@ -1,0 +1,67 @@
+/* Shell, tooltip and legend rows come from chart.css; only the tiles, their
+ * labels and the value ramp are drawn here. Fill and edge are set inline from
+ * the tile (a tint of its group's palette colour, or a step on the value
+ * scale), because they depend on the data. */
+.chart-treemap {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The tiles do not mirror in RTL, so their labels must not either. */
+.chart-treemap .chart-surface {
+  direction: ltr;
+}
+
+.chart-treemap-tile {
+  stroke-width: 1;
+}
+
+.chart-treemap-label {
+  fill: var(--foreground);
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+
+.chart-treemap-label[data-part="name"] {
+  font-weight: 500;
+}
+
+.chart-treemap-active {
+  fill: none;
+  stroke: var(--foreground);
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.chart-treemap-legend {
+  gap: var(--space-2);
+}
+
+.chart-treemap-legend-ramp {
+  inline-size: 6rem;
+  block-size: 0.75rem;
+  border-radius: 2px;
+}
+
+.chart-treemap-legend-label {
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The tint is mixed from the page's own theme, not the forced canvas, so a label could vanish on it:
+ * tiles take Canvas and an edge. Colour stays in the legend and tooltip as the group's name and the value. */
+@media (forced-colors: active) {
+  .chart-treemap-tile {
+    forced-color-adjust: none;
+    fill: Canvas !important;
+    stroke: CanvasText !important;
+  }
+
+  .chart-treemap-active {
+    stroke: Highlight;
+  }
+
+  .chart-treemap-legend-ramp {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+}
