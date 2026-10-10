@@ -361,4 +361,15 @@ export default async function run({ page, baseUrl, test, eq }) {
 
     await page.setViewportSize({ width: 1280, height: 720 })
   })
+
+  await test("every site entry declares an icon that the dev server serves", async () => {
+    for (const entry of ["/", "/console.html", "/order.html"]) {
+      const html = await (await page.request.get(`${baseUrl}${entry}`)).text()
+      const href = html.match(/<link rel="icon"[^>]*href="([^"]+)"/)?.[1]
+      eq(typeof href, "string", `${entry} declares an icon`)
+      const icon = await page.request.get(new URL(href, `${baseUrl}${entry}`).href)
+      eq(icon.status(), 200, `${entry} icon ${href} status`)
+      eq(icon.headers()["content-type"]?.startsWith("image/svg+xml"), true, `${entry} icon is an SVG`)
+    }
+  })
 }

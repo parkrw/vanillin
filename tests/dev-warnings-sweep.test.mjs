@@ -12,10 +12,7 @@ export default async function run({ page, baseUrl, test }) {
 
   // Pre-existing console output, each tracked by an issue. A snippet, not a
   // blanket pass, so a different warning cannot hide behind one of these.
-  const KNOWN_OTHER_WARNINGS = [
-    // #77: /favicon.ico, requested on the first full load.
-    { route: "home", snippet: "Failed to load resource" },
-  ]
+  const KNOWN_OTHER_WARNINGS = []
 
   const seen = []
   let currentRoute = null
