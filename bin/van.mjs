@@ -439,6 +439,10 @@ export function planAdd(project, registry, slugs) {
 
 // ── update: base retrieval + 3-way merge ───────────────────────────
 
+// spawnSync's 1 MB default truncates a large file silently, and what it
+// returns is what would be written to the consumer's tree.
+const GIT_MAX_BUFFER = 256 * 1024 * 1024
+
 /**
  * Retrieve a file's content at a recorded kitVersion from git history.
  * Returns null when the tag or file is unavailable.
@@ -448,6 +452,7 @@ export function getBaseContent(project, slug, rel, kitVersion) {
   const r = spawnSync("git", ["show", `${tag}:ui/${slug}/${rel}`], {
     cwd: kitRoot,
     stdio: ["pipe", "pipe", "pipe"],
+    maxBuffer: GIT_MAX_BUFFER,
   })
   if (r.status !== 0 || r.error) return null
   return injectClient(project, r.stdout, rel)
@@ -455,7 +460,8 @@ export function getBaseContent(project, slug, rel, kitVersion) {
 
 /**
  * 3-way merge via git merge-file. Returns { content, clean }.
- * clean=true means no conflicts; clean=false means conflict markers in content.
+ * clean=true means no conflicts; clean=false means conflict markers in content,
+ * or the local bytes untouched when git itself failed.
  */
 export function mergeFile(base, local, upstream) {
   const tmp = mkdtempSync(join(tmpdir(), "van-merge-"))
@@ -468,8 +474,11 @@ export function mergeFile(base, local, upstream) {
     writeFileSync(up, upstream)
     const r = spawnSync("git", ["merge-file", "-p", lp, bp, up], {
       stdio: ["pipe", "pipe", "pipe"],
+      maxBuffer: GIT_MAX_BUFFER,
     })
-    if (r.error) return { content: local, clean: false }
+    // Exit codes 1-127 count conflicts; anything else is git failing, and its
+    // stdout is not a merge result.
+    if (r.error || r.status === null || r.status > 127) return { content: local, clean: false }
     return { content: r.stdout, clean: r.status === 0 }
   } finally {
     rmSync(tmp, { recursive: true, force: true })
@@ -891,12 +900,13 @@ export function diffComponent(project, registry, slug) {
     let state
     if (!local) state = was ? "deleted" : "absent"
     else if (local === kit) state = "current"
+    else if (kit === null && was) state = "removed"
     else if (!was) state = "untracked"
     else if (local === was) state = "upstream-changed"
     else if (kit === was) state = "edited"
     else state = "diverged"
 
-    files.push({ rel, state })
+    files.push(state === "removed" ? { rel, state, edited: local !== was } : { rel, state })
   }
 
   return { slug, kitVersion: manifest?.kitVersion || null, tracked: manifest !== null, files }
@@ -1040,7 +1050,34 @@ function updateSubstrate(project, registry, dirRel, files, contentsFor) {
   return { updated, conflicted }
 }
 
+/**
+ * Installed components the kit no longer ships. Only directories with a sidecar
+ * count: without one there is no sign vanillin put it there, so it is the
+ * consumer's own.
+ */
+export function retiredSlugs(project, registry, installed) {
+  return [...installed]
+    .filter((slug) => !registry.components[slug] && readManifest(join(project.root, project.paths.ui, slug)) !== null)
+    .sort()
+}
+
+function sayRetired(retired) {
+  for (const slug of retired) {
+    say(`${bold(slug)}`)
+    say(`  ${red("!")} no longer in the kit — your copy is kept as is`)
+  }
+}
+
+function sayDeprecated(registry, slugs) {
+  for (const slug of slugs) {
+    const note = registry.components[slug].deprecated
+    if (note) say(`${bold(slug)} ${dim(`— deprecated: ${note}`)}`)
+  }
+}
+
 const DIFF_LABEL = {
+  removed: (f) =>
+    f.edited ? red("removed upstream; your edited copy is kept") : "removed upstream — run `van update` to delete it",
   edited: () => red("edited locally"),
   "upstream-changed": () => "upstream changed — run `van update`",
   diverged: () => red("edited locally, and upstream changed"),
@@ -1071,10 +1108,16 @@ function cmdDiff(project, slugs) {
     targets = slugs
   } else {
     targets = [...installed].filter((slug) => registry.components[slug]).sort()
-    if (!targets.length) fail(`no vanillin components found in ${project.paths.ui}`)
+    if (!targets.length && !retiredSlugs(project, registry, installed).length) {
+      fail(`no vanillin components found in ${project.paths.ui}`)
+    }
   }
 
   let differing = 0
+  const retired = slugs.length ? [] : retiredSlugs(project, registry, installed)
+  sayRetired(retired)
+  differing += retired.length
+  sayDeprecated(registry, targets)
   for (const slug of targets) {
     const result = diffComponent(project, registry, slug)
     const interesting = result.files.filter((f) => f.state !== "current" && f.state !== "absent")
@@ -1084,7 +1127,7 @@ function cmdDiff(project, slugs) {
     const version = result.tracked ? dim(` (installed from v${result.kitVersion})`) : dim(" (no .van.json)")
     say(`${bold(slug)}${version}`)
     for (const f of flags.all ? result.files : interesting) {
-      say(`  ${f.rel} — ${DIFF_LABEL[f.state]()}`)
+      say(`  ${f.rel} — ${DIFF_LABEL[f.state](f)}`)
     }
   }
 
@@ -1131,11 +1174,17 @@ function cmdUpdate(project, slugs) {
     targets = slugs
   } else {
     targets = [...installed].filter((s) => registry.components[s]).sort()
-    if (!targets.length) fail(`no vanillin components found in ${project.paths.ui}`)
+    if (!targets.length && !retiredSlugs(project, registry, installed).length) {
+      fail(`no vanillin components found in ${project.paths.ui}`)
+    }
   }
 
   let updated = 0
   let conflicted = 0
+  let failed = 0
+
+  if (!slugs.length) sayRetired(retiredSlugs(project, registry, installed))
+  sayDeprecated(registry, targets)
 
   for (const slug of targets) {
     const diff = diffComponent(project, registry, slug)
@@ -1149,81 +1198,123 @@ function cmdUpdate(project, slugs) {
     const versionNote = diff.tracked ? dim(` (v${diff.kitVersion} → v${registry.kitVersion})`) : ""
     say(`${bold(slug)}${versionNote}`)
 
-    let clean = true
+    let resolved = true
     const newHashes = {}
+    const dropped = []
 
     for (const f of diff.files) {
-      const contents = kitFileContent(project, slug, f.rel)
+      const path = `${dir}/${f.rel}`
+      const to = join(targetDir, f.rel)
 
-      switch (f.state) {
-        case "current":
-        case "absent":
-          break
+      try {
+        switch (f.state) {
+          case "current":
+          case "absent":
+            break
 
-        case "edited":
-          say(`  ${dim("=")} ${f.rel} ${dim("edited locally, upstream unchanged")}`)
-          break
+          case "edited":
+            say(`  ${dim("=")} ${f.rel} ${dim("edited locally, upstream unchanged")}`)
+            break
 
-        case "upstream-changed": {
-          if (!flags.dryRun) writeFileAtomic(join(targetDir, f.rel), contents)
-          newHashes[f.rel] = hashBytes(contents)
-          say(`  ${green("~")} ${dir}/${f.rel} ${dim("updated")}`)
-          updated++
-          break
-        }
-
-        case "diverged": {
-          if (flags.overwrite) {
-            if (!flags.dryRun) writeFileAtomic(join(targetDir, f.rel), contents)
+          case "upstream-changed": {
+            const contents = kitFileContent(project, slug, f.rel)
+            if (!flags.dryRun) writeFileAtomic(to, contents)
             newHashes[f.rel] = hashBytes(contents)
-            say(`  ${green("~")} ${dir}/${f.rel} ${dim("overwritten")}`)
+            say(`  ${green("~")} ${path} ${dim("updated")}`)
             updated++
             break
           }
-          const base = getBaseContent(project, slug, f.rel, diff.kitVersion)
-          if (!base) {
-            say(`  ${red("!")} ${dir}/${f.rel} ${dim(`diverged — no base at v${diff.kitVersion}, use --overwrite`)}`)
-            clean = false
-            conflicted++
+
+          case "removed":
+            if (f.edited) {
+              say(`  ${dim("=")} ${path} ${dim("removed upstream; your edited copy is kept")}`)
+              break
+            }
+            if (!flags.dryRun) rmSync(to)
+            dropped.push(f.rel)
+            say(`  ${red("-")} ${path} ${dim("removed upstream, deleted")}`)
+            updated++
+            break
+
+          case "diverged": {
+            const contents = kitFileContent(project, slug, f.rel)
+            if (flags.overwrite) {
+              if (!flags.dryRun) writeFileAtomic(to, contents)
+              newHashes[f.rel] = hashBytes(contents)
+              say(`  ${green("~")} ${path} ${dim("overwritten")}`)
+              updated++
+              break
+            }
+            const base = getBaseContent(project, slug, f.rel, diff.kitVersion)
+            if (!base) {
+              say(`  ${red("!")} ${path} ${dim(`diverged — no base at v${diff.kitVersion}, use --overwrite`)}`)
+              resolved = false
+              conflicted++
+              break
+            }
+            // A second pass over a conflicted file would merge markers into
+            // markers and overwrite the only pristine copy with them.
+            const orig = `${to}.orig`
+            if (existsSync(orig)) {
+              say(`  ${red("!")} ${path} ${dim(`unresolved conflict — resolve it, delete ${f.rel}.orig, run again`)}`)
+              resolved = false
+              conflicted++
+              break
+            }
+            const local = readFileSync(to)
+            const merged = mergeFile(base, local, contents)
+            if (merged.clean) {
+              if (!flags.dryRun) writeFileAtomic(to, merged.content)
+              newHashes[f.rel] = hashBytes(merged.content)
+              say(`  ${green("~")} ${path} ${dim("merged")}`)
+              updated++
+            } else {
+              if (!flags.dryRun) {
+                writeFileAtomic(orig, local)
+                writeFileAtomic(to, merged.content)
+              }
+              say(`  ${red("!")} ${path} ${dim(`merged with conflicts — yours saved as ${f.rel}.orig`)}`)
+              resolved = false
+              conflicted++
+            }
             break
           }
-          const local = readFileSync(join(targetDir, f.rel))
-          const merged = mergeFile(base, local, contents)
-          if (!flags.dryRun) writeFileAtomic(join(targetDir, f.rel), merged.content)
-          if (merged.clean) {
-            newHashes[f.rel] = hashBytes(merged.content)
-            say(`  ${green("~")} ${dir}/${f.rel} ${dim("merged")}`)
-            updated++
-          } else {
-            say(`  ${red("!")} ${dir}/${f.rel} ${dim("merged with conflicts")}`)
-            clean = false
-            conflicted++
-          }
-          break
+
+          case "deleted":
+            say(`  ${dim("-")} ${f.rel} ${dim("deleted locally, skipped")}`)
+            break
+
+          case "untracked":
+            say(`  ${dim("?")} ${f.rel} ${dim("not recorded, skipped")}`)
+            break
         }
-
-        case "deleted":
-          say(`  ${dim("-")} ${f.rel} ${dim("deleted locally, skipped")}`)
-          break
-
-        case "untracked":
-          say(`  ${dim("?")} ${f.rel} ${dim("not recorded, skipped")}`)
-          break
+      } catch (err) {
+        say(`  ${red("!")} ${path} ${dim(`failed — ${err.message}`)}`)
+        resolved = false
+        failed++
       }
     }
 
-    if (!flags.dryRun && clean && Object.keys(newHashes).length) {
-      const manifest = readManifest(targetDir) || {}
-      const files = { ...manifest.files }
-      for (const [rel, hash] of Object.entries(newHashes)) files[rel] = hash
-      writeManifest(targetDir, {
-        ...manifest,
-        name: slug,
-        kitVersion: registry.kitVersion,
-        source: registry.source,
-        requires: entry.requires,
-        files,
-      })
+    // Hashes advance per file, so a clean sibling of a conflicted file is not
+    // left on disk at the new version under the old hash. kitVersion moves only
+    // once every file has, because it picks the merge base next time.
+    if (!flags.dryRun && (Object.keys(newHashes).length || dropped.length)) {
+      try {
+        const manifest = readManifest(targetDir) || {}
+        const files = { ...manifest.files, ...newHashes }
+        for (const rel of dropped) delete files[rel]
+        writeManifest(targetDir, {
+          ...manifest,
+          name: slug,
+          kitVersion: resolved ? registry.kitVersion : (manifest.kitVersion ?? registry.kitVersion),
+          source: registry.source,
+          requires: entry.requires,
+          files,
+        })
+      } catch (err) {
+        say(`  ${red("!")} ${dir}/.van.json ${dim(`failed — ${err.message}`)}`)
+        failed++
+      }
     }
   }
 
@@ -1237,7 +1328,7 @@ function cmdUpdate(project, slugs) {
   }
 
   if (flags.dryRun) {
-    if (updated || conflicted) {
+    if (updated || conflicted || failed) {
       say("")
       say(dim("--dry-run: nothing written"))
     } else {
@@ -1246,7 +1337,7 @@ function cmdUpdate(project, slugs) {
     return
   }
 
-  if (!updated && !conflicted) {
+  if (!updated && !conflicted && !failed) {
     say(`${green("✓")} all components up to date`)
     return
   }
@@ -1255,8 +1346,11 @@ function cmdUpdate(project, slugs) {
   if (updated) say(`${green("✓")} ${updated} file${updated === 1 ? "" : "s"} updated`)
   if (conflicted) {
     console.error(`${red(conflicted + " conflict" + (conflicted === 1 ? "" : "s"))} — resolve manually`)
-    process.exit(1)
   }
+  if (failed) {
+    console.error(`${red(failed + " file" + (failed === 1 ? "" : "s") + " failed")} — see above`)
+  }
+  if (conflicted || failed) process.exit(1)
 }
 
 function cmdBuild(project) {

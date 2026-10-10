@@ -9,11 +9,12 @@
 
 import assert from "node:assert/strict"
 import { spawnSync } from "node:child_process"
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, appendFileSync, symlinkSync } from "node:fs"
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, appendFileSync, symlinkSync, cpSync, chmodSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { hashFile, hashBytes, readManifest, STYLESHEETS } from "../scripts/manifest.mjs"
+import { buildRegistry } from "../scripts/build-registry.mjs"
 import { createPickerState, pickerHandleKey, pickerLines, drivePicker, pickerSelection, readKey } from "../bin/van.mjs"
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))
@@ -989,6 +990,283 @@ test("package.json files covers everything the CLI imports and reads", () => {
   for (const rel of ["registry.json", "ui/button/button.jsx", "lib/cn.js", "styles/globals.css"]) {
     assert.ok(covered(rel), `${rel} must be packed — the CLI reads it from the kit`)
   }
+})
+
+// ── update hardening ────────────────────────────────────────────────
+
+let kitCount = 0
+
+/**
+ * A throwaway kit: a copy of the CLI beside a hand-written ui/ tree, a registry
+ * and a git history, so a test can publish a new version, rename or drop a file
+ * and run the CLI against it. `publish` commits and tags each release.
+ */
+function makeKit(version, components, { deprecated = {} } = {}) {
+  const root = join(scratch, `kit-${++kitCount}`)
+  mkdirSync(root, { recursive: true })
+  for (const d of ["bin", "scripts", "styles"]) cpSync(join(repoRoot, d), join(root, d), { recursive: true })
+  mkdirSync(join(root, "lib"), { recursive: true })
+  symlinkSync(join(repoRoot, "node_modules"), join(root, "node_modules"))
+  const git = (...args) => {
+    const r = spawnSync("git", args, { cwd: root, encoding: "utf8" })
+    assert.equal(r.status, 0, r.stderr)
+  }
+  git("init", "-q")
+  git("config", "user.email", "kit@example.com")
+  git("config", "user.name", "kit")
+  git("config", "commit.gpgsign", "false")
+  git("config", "tag.gpgsign", "false")
+
+  const kit = {
+    root,
+    van(dir, ...args) {
+      const r = spawnSync(process.execPath, [join(root, "bin", "van.mjs"), ...args, "--cwd", dir], {
+        encoding: "utf8",
+        env: { ...process.env, NO_COLOR: "1" },
+      })
+      return { code: r.status, out: r.stdout, err: r.stderr, all: r.stdout + r.stderr }
+    },
+    /** Replace the whole ui/ tree and registry with `next`, then commit and tag. */
+    publish(nextVersion, next, opts = {}) {
+      rmSync(join(root, "ui"), { recursive: true, force: true })
+      const entries = {}
+      for (const [slug, files] of Object.entries(next)) {
+        for (const [rel, text] of Object.entries(files)) {
+          mkdirSync(join(root, "ui", slug), { recursive: true })
+          writeFileSync(join(root, "ui", slug, rel), text)
+        }
+        entries[slug] = {
+          type: "ui",
+          files: Object.keys(files).sort(),
+          requires: [],
+          lib: [],
+          ...(opts.deprecated?.[slug] && { deprecated: opts.deprecated[slug] }),
+        }
+      }
+      writeFileSync(join(root, "package.json"), JSON.stringify({ name: "kit", version: nextVersion }) + "\n")
+      writeFileSync(
+        join(root, "registry.json"),
+        JSON.stringify({ kitVersion: nextVersion, source: `kit@v${nextVersion}`, components: entries, lib: {} }, null, 2) + "\n",
+      )
+      git("add", "-A")
+      git("commit", "-q", "-m", `v${nextVersion}`)
+      git("tag", `v${nextVersion}`)
+    },
+  }
+  kit.publish(version, components, { deprecated })
+  return kit
+}
+
+const lines = (n, tag = "line") => Array.from({ length: n }, (_, i) => `${tag} ${i + 1}\n`).join("")
+
+test("update survives a recorded file the kit no longer ships", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n", "widget.css": "a\n" } })
+  project(dir)
+  assert.equal(kit.van(dir, "add", "widget").code, 0)
+  // The sidecar remembers a file the kit has since dropped; the consumer deleted it.
+  const sidecar = join(dir, "ui/widget/.van.json")
+  const rec = JSON.parse(readFileSync(sidecar, "utf8"))
+  rec.files["ghost.css"] = hashBytes(Buffer.from("gone\n"))
+  writeFileSync(sidecar, JSON.stringify(rec, null, 2) + "\n")
+  kit.publish("0.2.0", { widget: { "widget.jsx": "b\n", "widget.css": "a\n" } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.doesNotMatch(r.all, /ENOENT|\n\s+at /, "raw error leaked")
+  assert.equal(readFileSync(join(dir, "ui/widget/widget.jsx"), "utf8"), "b\n", "other files were not updated")
+})
+
+test("update deletes an unedited file the kit removed, and says so", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n", "old.css": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  kit.publish("0.2.0", { widget: { "widget.jsx": "b\n" } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /old\.css.*removed upstream, deleted/)
+  assert.ok(!existsSync(join(dir, "ui/widget/old.css")), "unedited file survived")
+  assert.ok(!("old.css" in readManifest(join(dir, "ui/widget")).files), "sidecar still records the deleted file")
+  assert.equal(readFileSync(join(dir, "ui/widget/widget.jsx"), "utf8"), "b\n")
+})
+
+test("update keeps an edited file the kit removed, and reports it", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n", "old.css": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  appendFileSync(join(dir, "ui/widget/old.css"), "/* mine */\n")
+  kit.publish("0.2.0", { widget: { "widget.jsx": "b\n" } })
+
+  const diff = kit.van(dir, "diff")
+  assert.match(diff.out, /old\.css — removed upstream; your edited copy is kept/)
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /old\.css.*removed upstream; your edited copy is kept/)
+  assert.match(readFileSync(join(dir, "ui/widget/old.css"), "utf8"), /mine/, "edit was deleted")
+})
+
+test("update --dry-run deletes nothing the kit removed", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n", "old.css": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  kit.publish("0.2.0", { widget: { "widget.jsx": "b\n" } })
+
+  const r = kit.van(dir, "update", "--dry-run")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /old\.css.*removed upstream, deleted/)
+  assert.ok(existsSync(join(dir, "ui/widget/old.css")), "--dry-run deleted a file")
+})
+
+test("a file renamed in the kit round-trips through update without a crash", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n", "old.css": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  kit.publish("0.2.0", { widget: { "widget.jsx": "b\n", "new.css": "a\n" } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.doesNotMatch(r.all, /ENOENT|\n\s+at /)
+  assert.ok(!existsSync(join(dir, "ui/widget/old.css")), "the old name survived")
+  assert.equal(kit.van(dir, "update").code, 0, "a second update is not clean")
+})
+
+test("update reports a file that fails to write and still updates other components", (dir) => {
+  if (process.getuid?.() === 0) return // root ignores file modes, so the failure cannot be provoked
+  const kit = makeKit("0.1.0", { gadget: { "gadget.jsx": "a\n" }, widget: { "widget.jsx": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "gadget", "widget")
+  kit.publish("0.2.0", { gadget: { "gadget.jsx": "b\n" }, widget: { "widget.jsx": "b\n" } })
+
+  chmodSync(join(dir, "ui/gadget/gadget.jsx"), 0o444)
+  try {
+    const r = kit.van(dir, "update")
+    assert.equal(r.code, 1, r.all)
+    assert.match(r.all, /gadget\.jsx.*failed/)
+    assert.match(r.all, /1 file failed/)
+    assert.doesNotMatch(r.all, /\n\s+at /, "stack trace leaked")
+    assert.equal(readFileSync(join(dir, "ui/widget/widget.jsx"), "utf8"), "b\n", "the other component was not updated")
+  } finally {
+    chmodSync(join(dir, "ui/gadget/gadget.jsx"), 0o644)
+  }
+})
+
+test("diff and update report an installed component the kit dropped", (dir) => {
+  project(dir)
+  van(dir, "add", "badge")
+  mkdirSync(join(dir, "ui/old-thing"), { recursive: true })
+  writeFileSync(join(dir, "ui/old-thing/old-thing.jsx"), "x\n")
+  writeFileSync(join(dir, "ui/old-thing/.van.json"), JSON.stringify({ name: "old-thing", kitVersion: "0.0.1", files: {} }) + "\n")
+  // The consumer's own directory has no sidecar, so it is not vanillin's to report.
+  mkdirSync(join(dir, "ui/mine"), { recursive: true })
+
+  const d = van(dir, "diff")
+  assert.equal(d.code, 1, d.all)
+  assert.match(d.out, /old-thing\n\s+! no longer in the kit/)
+  assert.doesNotMatch(d.out, /✓/, "diff claimed a match")
+  assert.doesNotMatch(d.out, /mine/)
+
+  const u = van(dir, "update")
+  assert.match(u.out, /old-thing\n\s+! no longer in the kit/)
+  assert.doesNotMatch(u.out, /mine/)
+})
+
+test("a deprecated registry entry is announced for installed components", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  kit.publish("0.2.0", { widget: { "widget.jsx": "a\n" } }, { deprecated: { widget: "use gadget instead" } })
+
+  assert.match(kit.van(dir, "diff").out, /widget — deprecated: use gadget instead/)
+  assert.match(kit.van(dir, "update").out, /widget — deprecated: use gadget instead/)
+})
+
+test("build-registry emits deprecated only for components that carry it", () => {
+  const root = join(scratch, "reg-root")
+  mkdirSync(join(root, "ui/old"), { recursive: true })
+  mkdirSync(join(root, "ui/fresh"), { recursive: true })
+  mkdirSync(join(root, "lib"), { recursive: true })
+  writeFileSync(join(root, "package.json"), JSON.stringify({ version: "1.2.3" }))
+  writeFileSync(join(root, "ui/old/old.jsx"), "export const Old = 1\n")
+  writeFileSync(join(root, "ui/fresh/fresh.jsx"), "export const Fresh = 1\n")
+
+  const registry = buildRegistry(root, { deprecated: { old: "use fresh" } })
+  assert.equal(registry.components.old.deprecated, "use fresh")
+  assert.ok(!("deprecated" in registry.components.fresh))
+  assert.ok(!("deprecated" in buildRegistry(root).components.old), "nothing is deprecated by default")
+})
+
+/** A kit whose widget has two ten-line files, consumer-installed at 0.1.0 with a local edit in each. */
+function divergedKit(dir, { editSecond }) {
+  const base = lines(10)
+  const kit = makeKit("0.1.0", { widget: { "a.jsx": base, "b.jsx": base } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  const first = join(dir, "ui/widget/a.jsx")
+  const second = join(dir, "ui/widget/b.jsx")
+  writeFileSync(first, base.replace("line 1\n", "mine 1\n"))
+  writeFileSync(second, editSecond ? base.replace("line 1\n", "mine 1\n") : base.replace("line 10\n", "mine 10\n"))
+  return { kit, base, first, second }
+}
+
+test("a clean 3-way merge keeps both edits and records the merged hash", (dir) => {
+  const { kit, base, first } = divergedKit(dir, { editSecond: false })
+  kit.publish("0.2.0", { widget: { "a.jsx": base.replace("line 10\n", "kit 10\n"), "b.jsx": base.replace("line 1\n", "kit 1\n") } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /a\.jsx.*merged/)
+  const text = readFileSync(first, "utf8")
+  assert.match(text, /mine 1/)
+  assert.match(text, /kit 10/)
+  assert.doesNotMatch(text, /<<<<<<<|>>>>>>>/)
+  const sidecar = readManifest(join(dir, "ui/widget"))
+  assert.equal(sidecar.files["a.jsx"], hashFile(first))
+  assert.equal(sidecar.kitVersion, "0.2.0")
+  assert.ok(!existsSync(`${first}.orig`), "a clean merge left a backup")
+})
+
+test("a conflicted merge leaves the marked file and a pristine .orig", (dir) => {
+  const { kit, base, first } = divergedKit(dir, { editSecond: true })
+  const mine = readFileSync(first, "utf8")
+  kit.publish("0.2.0", { widget: { "a.jsx": base.replace("line 1\n", "kit 1\n"), "b.jsx": base } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 1, r.all)
+  assert.match(r.all, /a\.jsx.*merged with conflicts — yours saved as a\.jsx\.orig/)
+  assert.match(readFileSync(first, "utf8"), /<<<<<<<[\s\S]*mine 1[\s\S]*kit 1[\s\S]*>>>>>>>/)
+  assert.equal(readFileSync(`${first}.orig`, "utf8"), mine, ".orig is not the pre-merge content")
+})
+
+test("a second update does not overwrite the .orig of an unresolved conflict", (dir) => {
+  const { kit, base, first } = divergedKit(dir, { editSecond: true })
+  const mine = readFileSync(first, "utf8")
+  kit.publish("0.2.0", { widget: { "a.jsx": base.replace("line 1\n", "kit 1\n"), "b.jsx": base } })
+  kit.van(dir, "update")
+  const marked = readFileSync(first, "utf8")
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 1, r.all)
+  assert.match(r.all, /unresolved conflict/)
+  assert.equal(readFileSync(`${first}.orig`, "utf8"), mine, ".orig was clobbered")
+  assert.equal(readFileSync(first, "utf8"), marked, "the marked file was rewritten")
+})
+
+test("a conflict in one file still records the clean sibling's hash", (dir) => {
+  const { kit, base, first, second } = divergedKit(dir, { editSecond: false })
+  // a.jsx collides on line 1; b.jsx's local edit is far from the kit's.
+  kit.publish("0.2.0", {
+    widget: { "a.jsx": base.replace("line 1\n", "kit 1\n"), "b.jsx": base.replace("line 1\n", "kit 1\n") },
+  })
+  const before = readManifest(join(dir, "ui/widget")).files["a.jsx"]
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 1, r.all)
+  const sidecar = readManifest(join(dir, "ui/widget"))
+  assert.equal(sidecar.files["b.jsx"], hashFile(second), "the clean sibling kept its old hash")
+  assert.equal(sidecar.files["a.jsx"], before, "the conflicted file's hash moved")
+  assert.equal(sidecar.kitVersion, "0.1.0", "kitVersion moved while a file is still unresolved")
+  assert.match(readFileSync(first, "utf8"), /<<<<<<</)
 })
 
 // ── summary ─────────────────────────────────────────────────────────
