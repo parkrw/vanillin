@@ -182,6 +182,20 @@
         "cn.js"
       ]
     },
+    "chart-gauge": {
+      "type": "ui",
+      "files": [
+        "chart-gauge.css",
+        "chart-gauge.jsx"
+      ],
+      "requires": [
+        "chart"
+      ],
+      "lib": [
+        "chart-math.js",
+        "cn.js"
+      ]
+    },
     "chart-heatmap": {
       "type": "ui",
       "files": [
