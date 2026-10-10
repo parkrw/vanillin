@@ -16,6 +16,7 @@ import {
 import "../../ui/sparkline/sparkline.css"
 import "../../ui/card/card.css"
 import "../../ui/button/button.css"
+import "../../ui/toggle/toggle.css"
 import "../../ui/toggle-group/toggle-group.css"
 import "../../ui/dropdown-menu/dropdown-menu.css"
 import { ComponentPreview } from "../code-example.jsx"
