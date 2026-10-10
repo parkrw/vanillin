@@ -27,6 +27,19 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     )
   }
 
+  const scrollTopOf = (pg) =>
+    page.evaluate((pg) => document.querySelector(`[data-pg="${pg}"] .carousel-content`).scrollTop, pg)
+
+  // A smooth scroll can start after waitForSnap's first two samples, which then
+  // read as settled; waiting for the move first makes the snap wait meaningful.
+  const waitForScrollTopToLeave = (pg, from) =>
+    page.waitForFunction(
+      ({ pg, from }) =>
+        Math.abs(document.querySelector(`[data-pg="${pg}"] .carousel-content`).scrollTop - from) > 0.5,
+      { pg, from },
+      { polling: 16, timeout: 5000 }
+    )
+
   /** Reset scroll position to the start. */
   const resetScroll = async (pg) => {
     await page.evaluate(
@@ -153,19 +166,19 @@ export default async function run({ page, baseUrl, test, eq, near }) {
 
   await test("vertical: ArrowDown advances, ArrowUp returns", async () => {
     await resetScroll("c-vertical")
+    eq(await scrollTopOf("c-vertical"), 0, "starts at the top")
     await el("c-vertical").focus()
+    eq(await page.evaluate(() => document.activeElement?.dataset.pg), "c-vertical", "c-vertical has focus")
     await page.keyboard.press("ArrowDown")
+    await waitForScrollTopToLeave("c-vertical", 0)
     await waitForSnap("c-vertical", "scrollTop")
-    const after = await page.evaluate(() =>
-      document.querySelector('[data-pg="c-vertical"] .carousel-content').scrollTop
-    )
+    const after = await scrollTopOf("c-vertical")
     eq(after > 10, true, `ArrowDown advanced (scrollTop=${after})`)
 
     await page.keyboard.press("ArrowUp")
+    await waitForScrollTopToLeave("c-vertical", after)
     await waitForSnap("c-vertical", "scrollTop")
-    const back = await page.evaluate(() =>
-      document.querySelector('[data-pg="c-vertical"] .carousel-content').scrollTop
-    )
+    const back = await scrollTopOf("c-vertical")
     near(back, 0, 2, "ArrowUp returned to start")
   })
 
