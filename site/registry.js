@@ -101,6 +101,7 @@ export const categories = [
       avatar: { title: "Avatar", page: lazy(() => import("./pages/avatar.jsx")) },
       progress: { title: "Progress", page: lazy(() => import("./pages/progress.jsx")) },
       chart: { title: "Chart", page: lazy(() => import("./pages/chart.jsx")) },
+      "chart-heatmap": { title: "Chart Heatmap", page: lazy(() => import("./pages/chart-heatmap.jsx")) },
       spinner: { title: "Spinner", page: lazy(() => import("./pages/spinner.jsx")) },
       empty: { title: "Empty", page: lazy(() => import("./pages/empty.jsx")) },
       item: { title: "Item", page: lazy(() => import("./pages/item.jsx")) },
