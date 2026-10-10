@@ -86,6 +86,9 @@ const probes = [
   ["chart-gauge", '[data-pg="gauge-needle"] .chart-gauge-needle', ["stroke"], "gauge needle"],
   ["chart-gauge", '[data-pg="gauge-needle"] .chart-gauge-boundary', ["stroke"], "gauge band boundary"],
   ["chart-gauge", '[data-pg="gauge-fill"] .chart-gauge-fill', ["fill"], "gauge fill, warning tone"],
+  // chart-treemap: an item's edge is its group's palette colour, and the fill is a tint behind it. By value every item keeps the scale's high end as its edge, so the pale low-end fills are outlined.
+  ["chart-treemap", '[data-pg="treemap-default"] .chart-treemap-tile[data-kind="leaf"]', ["stroke"], "treemap item edge, by group"],
+  ["chart-treemap", '[data-pg="treemap-value"] .chart-treemap-tile[data-kind="leaf"]', ["stroke"], "treemap item edge, by value"],
   ["progress", ".progress", ["backgroundColor"], "progress track", { exempt: "inactive track; the indicator carries the state and passes (17.93:1 light / 15.72:1 dark), as D5 checkbox fill" }],
   ["progress", ".progress-indicator", ["backgroundColor"], "progress indicator"],
   ["progress", '[data-pg="progress-tone"] .progress--success .progress-indicator', ["backgroundColor"], "progress indicator success"],
