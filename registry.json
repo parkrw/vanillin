@@ -1008,6 +1008,10 @@
     "use-controllable-state.js": [],
     "use-data-table.js": [],
     "use-dismissable-layer.js": [],
+    "use-drag-resize.js": [
+      "direction.jsx",
+      "use-controllable-state.js"
+    ],
     "use-focus-trap.js": [],
     "use-form.js": [],
     "use-highlight.js": [],
