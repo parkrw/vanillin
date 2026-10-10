@@ -377,7 +377,7 @@ import "./ui/sparkline/sparkline.css"
         </p>
         <ComponentPreview code={`const [shown, setShown] = useState(["inbound", "outbound"])
 
-<ToggleGroup type="multiple" size="sm" variant="outline" value={shown} onValueChange={setShown}>
+<ToggleGroup type="multiple" size="sm" variant="outline" value={shown} onValueChange={setShown} aria-label="Series">
   <ToggleGroupItem value="inbound">Inbound</ToggleGroupItem>
   <ToggleGroupItem value="outbound">Outbound</ToggleGroupItem>
 </ToggleGroup>
