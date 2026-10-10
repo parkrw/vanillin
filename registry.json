@@ -197,6 +197,20 @@
         "cn.js"
       ]
     },
+    "chart-candlestick": {
+      "type": "ui",
+      "files": [
+        "chart-candlestick.css",
+        "chart-candlestick.jsx"
+      ],
+      "requires": [
+        "chart"
+      ],
+      "lib": [
+        "chart-math.js",
+        "cn.js"
+      ]
+    },
     "chart-gauge": {
       "type": "ui",
       "files": [
