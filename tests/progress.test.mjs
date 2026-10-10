@@ -317,14 +317,31 @@ export default async function run({ page, baseUrl, test, eq, near }) {
   ]
   const isDark = () => page.evaluate(() => document.documentElement.classList.contains("dark"))
 
-  await test("tone: the fill resolves to the status token", async () => {
-    eq((await paint("Healthy")).fill, await tokenColour("--success"))
-    // Light mixes toward --warning-foreground to reach 3:1; dark keeps the raw token.
-    eq(
-      (await paint("Filling up")).fill,
-      await tokenColour((await isDark()) ? "--warning" : "color-mix(in oklab, var(--warning) 78%, var(--warning-foreground) 22%)"),
-    )
-    eq((await paint("Nearly full")).fill, await tokenColour("--destructive"))
+  const setDark = (d) => page.evaluate((v) => document.documentElement.classList.toggle("dark", v), d)
+  const inBothModes = async (fn) => {
+    const wasDark = await isDark()
+    try {
+      for (const dark of [false, true]) {
+        await setDark(dark)
+        await fn(dark)
+      }
+    } finally {
+      await setDark(wasDark)
+    }
+  }
+
+  await test("tone: the fill resolves to the status token, light and dark", async () => {
+    await inBothModes(async (dark) => {
+      const mode = dark ? "dark" : "light"
+      eq((await paint("Healthy")).fill, await tokenColour("--success"), `${mode} success`)
+      // Light mixes toward --warning-foreground to reach 3:1; dark keeps the raw token.
+      eq(
+        (await paint("Filling up")).fill,
+        await tokenColour(dark ? "--warning" : "color-mix(in oklab, var(--warning) 78%, var(--warning-foreground) 22%)"),
+        `${mode} warning`,
+      )
+      eq((await paint("Nearly full")).fill, await tokenColour("--destructive"), `${mode} error`)
+    })
     eq((await paint("Healthy")).classes, "progress--success")
     eq((await paint("Nearly full")).classes, "progress--error")
   })
@@ -338,9 +355,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
   })
 
   await test("tone: the fill clears 3:1 against its own track on the page, light and dark", async () => {
-    const wasDark = await isDark()
-    for (const dark of [false, true]) {
-      await page.evaluate((d) => document.documentElement.classList.toggle("dark", d), dark)
+    await inBothModes(async (dark) => {
       const ratios = await page.evaluate((labels) => {
         const c = document.createElement("canvas").getContext("2d", { willReadFrequently: true })
         const rgba = (css) => {
@@ -369,8 +384,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
         })
       }, TONES.map(([l]) => l))
       for (const { label, ratio } of ratios) eq(ratio >= 3, true, `${label} ${dark ? "dark" : "light"} fill/track ${ratio.toFixed(2)}:1`)
-    }
-    await page.evaluate((d) => document.documentElement.classList.toggle("dark", d), wasDark)
+    })
   })
 
   await test("tone: unset leaves the default primary paint and no tone class", async () => {
