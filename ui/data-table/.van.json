@@ -6,13 +6,14 @@
     "badge",
     "button",
     "command",
+    "native-select",
     "popover",
     "scroll-area",
     "separator",
     "table"
   ],
   "files": {
-    "data-table.css": "sha256-r2QnGuA80NA6UqScBh5nb1PjIJGjiOUeSrkTJDXAoxM=",
-    "data-table.jsx": "sha256-9+Le+XMjjbzypaSgck2QwoZl4LX8z3ygj+f+IAyzWGM="
+    "data-table.css": "sha256-JWJnZhy6PiHUrpY06CmfEUAVOf3LaAsgHqyW4JNOApI=",
+    "data-table.jsx": "sha256-aqMMMG7SkM+1E5HcrDoV4H1wBMI8hp/1ongv3A893Tk="
   }
 }

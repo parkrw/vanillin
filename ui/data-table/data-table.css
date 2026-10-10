@@ -1,6 +1,7 @@
 /* Data-table pattern — toolbar and pagination layout over ui/table. */
 
 @import "../scroll-area/scroll-area.css";
+@import "../native-select/native-select.css";
 
 .data-table-toolbar {
   display: flex;
@@ -62,21 +63,15 @@
   white-space: nowrap;
 }
 
-.data-table-page-size > select {
-  height: 2rem;
-  padding-inline: 0.5rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--input);
-  background-color: var(--input-background);
-  font-size: 0.875rem;
-  color: var(--foreground);
-  cursor: pointer;
+.data-table-page-size > label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.data-table-page-size > select:focus-visible {
-  outline: none;
-  border-color: var(--ring);
-  box-shadow: 0 0 0 3px var(--ring);
+.data-table-page-size .native-select {
+  width: auto;
+  height: 2rem;
 }
 
 .data-table-page-info {

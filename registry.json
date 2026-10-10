@@ -345,6 +345,7 @@
         "badge",
         "button",
         "command",
+        "native-select",
         "popover",
         "scroll-area",
         "separator",
