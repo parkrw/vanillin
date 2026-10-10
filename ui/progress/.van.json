@@ -4,7 +4,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "requires": [],
   "files": {
-    "progress.css": "sha256-zsEfONeHzj8lxsF6vzygpX6EAQ/C6KPIkRGT/bYabG4=",
-    "progress.jsx": "sha256-Pj5pCdJbBtxx5hO0+rNLZYP5osiuN3eiipbbcqDbJcM="
+    "progress.css": "sha256-Efjn9boiHprrKhs5ND+oCapOEKUBydyO2nc7D3/nF8o=",
+    "progress.jsx": "sha256-w4sVWeHACD7VaE38Q49cM53EzX5YkoOtSFjbDRq3pmU="
   }
 }

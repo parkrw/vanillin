@@ -850,7 +850,7 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq((await console_.locator(".ck-util-val").allTextContents()).join(" | "), "38 / 60 GHz · 63% | 96 / 192 GB · 50% | 640 / 1,500 GB · 43%")
     // The kit paints the bar from `tone`; console.css carries no .progress-indicator colour for it.
     eq(
-      await console_.locator(".ck-util-bar").first().evaluate((el) => [el.dataset.tone, getComputedStyle(el.querySelector(".progress-indicator")).backgroundColor]).then(([tone, fill]) => `${tone} ${fill}`),
+      await console_.locator(".ck-util-bar").first().evaluate((el) => [["success", "warning", "error"].find((t) => el.classList.contains(`progress--${t}`)), getComputedStyle(el.querySelector(".progress-indicator")).backgroundColor]).then(([tone, fill]) => `${tone} ${fill}`),
       `success ${await consoleColour("--success")}`,
       "a bar below every threshold is the success token",
     )

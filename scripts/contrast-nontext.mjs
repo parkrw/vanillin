@@ -73,9 +73,9 @@ const probes = [
   ["sparkline", '[data-pg="spark-meter"] .sparkline-dot', ["fill"], "sparkline amber band"],
   ["progress", ".progress", ["backgroundColor"], "progress track", { exempt: "inactive track; the indicator carries the state and passes (17.93:1 light / 15.72:1 dark), as D5 checkbox fill" }],
   ["progress", ".progress-indicator", ["backgroundColor"], "progress indicator"],
-  ["progress", '[data-pg="progress-tone"] .progress[data-tone="success"] .progress-indicator', ["backgroundColor"], "progress indicator success"],
-  ["progress", '[data-pg="progress-tone"] .progress[data-tone="warning"] .progress-indicator', ["backgroundColor"], "progress indicator warning"],
-  ["progress", '[data-pg="progress-tone"] .progress[data-tone="error"] .progress-indicator', ["backgroundColor"], "progress indicator error"],
+  ["progress", '[data-pg="progress-tone"] .progress--success .progress-indicator', ["backgroundColor"], "progress indicator success"],
+  ["progress", '[data-pg="progress-tone"] .progress--warning .progress-indicator', ["backgroundColor"], "progress indicator warning"],
+  ["progress", '[data-pg="progress-tone"] .progress--error .progress-indicator', ["backgroundColor"], "progress indicator error"],
   ["slider", ".slider-track", ["backgroundColor"], "slider rail", { exempt: "inactive rail; the range carries the state and passes (16.44:1 light / 12.01:1 dark), as D5 checkbox fill" }],
   ["slider", ".slider-range", ["backgroundColor"], "slider range"],
 ]

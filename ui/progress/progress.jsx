@@ -27,10 +27,9 @@ export function Progress({ value, max = 100, glow = false, tone, className, ...p
       aria-valuenow={isDeterminate ? value : undefined}
       aria-valuetext={isDeterminate ? `${Math.round(percent)}%` : undefined}
       data-state={state}
-      data-tone={tone}
       data-value={isDeterminate ? value : undefined}
       data-max={max}
-      className={cn("progress", glow && "progress--glow", className)}
+      className={cn("progress", tone && `progress--${tone}`, glow && "progress--glow", className)}
       {...props}
     >
       <div

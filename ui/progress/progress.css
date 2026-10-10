@@ -2,25 +2,37 @@
  * Tone — one custom property carries the colour, so the track tint, the
  * indicator and the glow halo all follow it. Unset, --progress-tone is not
  * defined and every fallback lands on --primary, the pre-tone paint.
+ *
+ * The fill/track edge is what shows the level, so a toned fill needs 3:1
+ * against its own track (1.4.11). At the default 20% tint that edge measured
+ * 2.58:1 for warning in light, and 2.86:1 at 10%. The light warning fill is
+ * only 3.20:1 on white itself, so the track must sit almost on the page: a 5%
+ * tint is the strongest that still clears it (light 3.03 warning / 4.16
+ * success / 4.36 error; dark 9.51 / 6.24 / 6.57), and it still reads as a
+ * faint wash of the tone. The default bar keeps 20%, where its near-black fill
+ * is already 17.9:1.
  */
-.progress[data-tone="success"] {
+.progress--success {
   --progress-tone: var(--success);
+  --progress-track-tint: 5%;
 }
 
 /* Raw --warning is 2.31:1 on white, under 1.4.11's 3:1 for a fill whose
    colour is the information. Mixing toward --warning-foreground keeps the hue
    (3.20:1), the same fix as StatusDot. Success and error already pass. */
-.progress[data-tone="warning"] {
+.progress--warning {
   --progress-tone: color-mix(in oklab, var(--warning) 78%, var(--warning-foreground) 22%);
+  --progress-track-tint: 5%;
 }
 
 /* Dark clears 10.08:1 on the raw token. :where(html) — dark is root-only. */
-:where(html).dark .progress[data-tone="warning"] {
+:where(html).dark .progress--warning {
   --progress-tone: var(--warning);
 }
 
-.progress[data-tone="error"] {
+.progress--error {
   --progress-tone: var(--destructive);
+  --progress-track-tint: 5%;
 }
 
 .progress {
@@ -29,7 +41,7 @@
   height: 0.5rem;
   overflow: hidden;
   border-radius: 9999px;
-  background-color: color-mix(in oklab, var(--progress-tone, var(--primary)) 20%, transparent);
+  background-color: color-mix(in oklab, var(--progress-tone, var(--primary)) var(--progress-track-tint, 20%), transparent);
 }
 
 .progress-indicator {

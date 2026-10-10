@@ -148,9 +148,12 @@ import "./ui/progress/progress.css"
         <h3>Tone</h3>
         <p>
           Pass <code>tone</code> to colour the bar: <code>success</code>,{" "}
-          <code>warning</code> or <code>error</code>. The track tint and the{" "}
-          <code>glow</code> halo follow the same colour. The component only
-          paints; deciding which tone a reading deserves is up to the caller,
+          <code>warning</code> or <code>error</code>. It adds a{" "}
+          <code>progress--success</code>, <code>progress--warning</code> or{" "}
+          <code>progress--error</code> class. The track tint and the{" "}
+          <code>glow</code> halo follow the same colour; a toned track is tinted
+          lighter than the default so the fill still stands out from it at 3:1. The
+          component only paints; deciding which tone a reading deserves is up to the caller,
           because the cut-off between fine and worrying differs by what is being
           measured. Leave it unset for the default colour. Colour is not the only
           cue: the fill width still carries the level, and a label beside the bar
@@ -167,6 +170,7 @@ import "./ui/progress/progress.css"
             <Progress value={80} tone="warning" aria-label="Filling up" />
             <Progress value={95} tone="error" aria-label="Nearly full" />
             <Progress value={60} aria-label="No tone" />
+            <Progress value={70} tone="success" glow aria-label="Live and healthy" />
           </div>
         </ComponentPreview>
       </section>
@@ -269,7 +273,7 @@ import "./ui/progress/progress.css"
         { name: "value", type: "number | null", description: "Current progress value. Omit or pass null for indeterminate." },
         { name: "max", type: "number", default: "100", description: "Maximum value" },
         { name: "glow", type: "boolean", default: "false", description: "Breathing halo in the bar's own colour (static under reduced motion)" },
-        { name: "tone", type: '"success" | "warning" | "error"', description: "Paints the bar, its track and its glow in the matching status colour. Unset keeps the default colour" },
+        { name: "tone", type: '"success" | "warning" | "error"', description: "Paints the bar, its track and its glow in the matching status colour, through a progress--<tone> class. Unset keeps the default colour" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />
 
