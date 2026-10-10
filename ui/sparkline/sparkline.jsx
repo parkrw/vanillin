@@ -140,6 +140,10 @@ function MeterGradient({ id, y, height, thresholds }) {
  * takes the chart palette (`--chart-1…5`) by position. Given `series`,
  * `points`, `color` and `theme` are ignored.
  *
+ * An item with `hide` is not drawn but keeps its palette slot and its share of
+ * the scales, so toggling a line moves neither the colours nor the others.
+ * `rescale` fits the scales to the drawn lines instead.
+ *
  * `thresholds={[warn, critical]}` colours it like a meter: green, then amber
  * from `warn`, then red from `critical`. Ascending reads higher-is-worse,
  * descending lower-is-worse, so `[40, 20]` turns amber at 40 and red at 20.
@@ -173,6 +177,7 @@ export function Sparkline({
   areaColor,
   areaOpacity,
   thresholds,
+  rescale = false,
   className,
   style,
   ...props
@@ -184,16 +189,18 @@ export function Sparkline({
     return {
       points: (item.points ?? []).map((v, j) => (at && !isNum(at[j]) ? null : v)),
       at,
+      hidden: Boolean(series && item.hide),
       style: series && colourStyle({ ...item, color: item.color ?? (item.theme ? undefined : paletteColor(i)) }),
     }
   })
   const shared = series ? { dotColor, areaColor, areaOpacity } : { color, theme, dotColor, areaColor, areaOpacity }
 
-  const count = Math.max(0, ...lines.map((l) => l.points.length))
+  const scaled = rescale ? lines.filter((l) => !l.hidden) : lines
+  const count = Math.max(0, ...scaled.map((l) => l.points.length))
   const slots = pointScale(count, [inset, width - inset])
-  const clock = timed && linearScale(extent(lines.map((l) => l.at)), [inset, width - inset])
+  const clock = timed && linearScale(extent(scaled.map((l) => l.at)), [inset, width - inset])
   const xOf = (line, j) => (clock ? clock(line.at[j]) : slots.center(j))
-  const columns = lines.map((l) => l.points)
+  const columns = scaled.map((l) => l.points)
   const [dataMin, dataMax] = extent(columns, true)
   const domain = scale === "log" ? logDomain(columns, min, max) : [min ?? dataMin, max ?? dataMax]
   const y = (SCALES[scale] ?? linearScale)(domain, [height - inset, inset])
@@ -220,7 +227,7 @@ export function Sparkline({
       {thresholds && count > 0 && <MeterGradient id={meterId} y={y} height={height} thresholds={thresholds} />}
       {lines.map((line, i) => {
         const latest = line.points.findLastIndex(isNum)
-        if (latest < 0) return null
+        if (line.hidden || latest < 0) return null
         const upper = line.points.map((v, j) => (isNum(v) ? [xOf(line, j), y(peg(v))] : null))
         const spans = splitRuns(upper).filter((run) => run.length > 1)
         const [cx, cy] = upper[latest]
