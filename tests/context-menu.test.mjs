@@ -108,6 +108,8 @@ export default async function run({ page, baseUrl, test, eq }) {
     const x = Math.round(box.x + box.width / 4)
     const y = Math.round(box.y + box.height / 4)
     eq(x !== firstX, true, `second spot (${x}) differs from the first (${firstX})`)
+    // No pause on purpose: the repeat lands mid entry transition, the quick
+    // second right-click a user makes and the tightest case for openAt.
     await page.mouse.click(x, y, { button: "right" })
     await waitLeft(x - 2)
 
