@@ -1,4 +1,4 @@
-import { ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent } from "../../ui/chart/chart.jsx"
+import { Bar, ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent } from "../../ui/chart/chart.jsx"
 import { FunnelChart } from "../../ui/chart-funnel/chart-funnel.jsx"
 import "../../ui/chart/chart.css"
 import "../../ui/chart-funnel/chart-funnel.css"
@@ -139,7 +139,8 @@ export default function ChartFunnelPage() {
         <p>
           A stage larger than the one before it is drawn as it is, with a rate above 100%. A value that is missing,
           not a number or negative leaves its stage without a shape and its rates blank, and the next stage's rate
-          against it is blank too. A stage of 0 keeps its row and its label. A rate that is close to 0% or 100%
+          against it is blank too. When the keyboard lands on a stage with no shape, a dashed outline marks its row. A
+          stage of 0 keeps its row and its label. A rate that is close to 0% or 100%
           without being either gets the decimals it needs, so it never reads as one.
         </p>
         <ComponentPreview code={`<FunnelChart data={[seen, grew, { name: "Missing", value: "n/a" }, negative, zero]} />
@@ -234,6 +235,25 @@ export default function ChartFunnelPage() {
           <Frame pg="funnel-empty">
             <ChartContainer config={config}>
               <FunnelChart data={[]} accessibilityLayer aria-label="Funnel, no data" />
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Parts it draws</h3>
+        <p>
+          Only <code>ChartTooltip</code> and <code>ChartLegend</code> draw inside a funnel. Any other chart part, such as a{" "}
+          <code>Bar</code>, is ignored, with a warning in the console during development.
+        </p>
+        <ComponentPreview code={`<FunnelChart data={stages}>
+  <Bar dataKey="value" />
+</FunnelChart>`}>
+          <Frame pg="funnel-ignored">
+            <ChartContainer config={config}>
+              <FunnelChart data={stages}>
+                <Bar dataKey="value" />
+              </FunnelChart>
             </ChartContainer>
           </Frame>
         </ComponentPreview>

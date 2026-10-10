@@ -21,6 +21,13 @@
   stroke-linejoin: round;
 }
 
+.chart-funnel-placeholder {
+  fill: none;
+  stroke: var(--foreground);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+
 .chart-funnel-label {
   fill: var(--foreground);
   font-size: 0.8125rem;
@@ -42,7 +49,9 @@
     stroke-width: 1;
   }
 
-  .chart-funnel-stage-group[data-active] .chart-funnel-stage {
+  .chart-funnel-stage-group[data-active] .chart-funnel-stage,
+  .chart-funnel-placeholder {
+    forced-color-adjust: none;
     stroke: Highlight;
     stroke-width: 2;
   }

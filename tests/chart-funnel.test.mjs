@@ -3,6 +3,8 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
     strictEq(typeof actual === "object" && actual !== null ? JSON.stringify(actual) : actual, typeof expected === "object" && expected !== null ? JSON.stringify(expected) : expected, message)
   const pageErrors = []
   page.on("pageerror", (e) => pageErrors.push(e.message))
+  const warnings = []
+  page.on("console", (m) => m.type() === "warning" && warnings.push(m.text()))
 
   await page.goto(`${baseUrl}/#chart-funnel`)
   await page.waitForSelector('[data-pg="funnel-default"] .chart-funnel-stage')
@@ -221,6 +223,88 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
     eq(await page.locator(`${pg(name)} .chart-tooltip-name`).allTextContents(), ["Visits"], "the first stage has no rates")
     await page.mouse.move(0, 0)
     await tooltip(name).waitFor({ state: "detached" })
+  })
+
+  await test("funnel: the pointer picks the row under it, labels and gaps included, and nothing in the margins", async () => {
+    const name = "funnel-default"
+    const svg = page.locator(`${pg(name)} .chart-surface`)
+    await svg.evaluate((el) => el.scrollIntoView({ block: "center" }))
+    const box = await svg.boundingBox()
+    const { step, row } = await layout(name)
+    await page.mouse.move(0, 0)
+    await page.mouse.move(box.x + box.width / 2, box.y + 2)
+    await page.waitForTimeout(50)
+    eq(await activeIndex(name), [], "the top margin is no stage")
+    eq(await tooltip(name).count(), 0, "and shows no tooltip")
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height - 2)
+    await page.waitForTimeout(50)
+    eq(await activeIndex(name), [], "nor is the bottom margin")
+    const label = await page.locator(`${group(name, 2)} .chart-funnel-label`).boundingBox()
+    await page.mouse.move(label.x + label.width / 2, label.y + label.height / 2)
+    await page.waitForFunction(() => document.querySelector('[data-pg="funnel-default"] .chart-funnel-stage-group[data-active]')?.dataset.index === "2")
+    eq(await activeIndex(name), [2], "hovering a label activates its stage")
+    await page.mouse.move(box.x + box.width / 4, box.y + 5 + row + (step - row) / 2)
+    await page.waitForFunction(() => document.querySelector('[data-pg="funnel-default"] .chart-funnel-stage-group[data-active]')?.dataset.index === "0")
+    eq(await activeIndex(name), [0], "the gap below a stage belongs to it")
+    await page.mouse.move(0, 0)
+    await tooltip(name).waitFor({ state: "detached" })
+  })
+
+  await test("funnel: a stage with no shape shows a dashed outline across its row while active", async () => {
+    const name = "funnel-odd"
+    eq(await page.locator(`${pg(name)} .chart-funnel-placeholder`).count(), 0, "precondition: none while nothing is active")
+    await focusSurface(name)
+    try {
+      await press(name, "ArrowDown")
+      eq(await activeIndex(name), [1], "precondition: a stage with a shape")
+      eq(await page.locator(`${pg(name)} .chart-funnel-placeholder`).count(), 0, "counter-precondition: a shaped stage needs no outline")
+      eq(await press(name, "ArrowDown"), [2], "the stage with no value")
+      const outline = page.locator(`${group(name, 2)} .chart-funnel-placeholder`)
+      eq(await outline.count(), 1, "has an outline")
+      const { plot, step } = await layout(name, { count: 5 })
+      const r = await outline.evaluate((el) => Object.fromEntries(["x", "y", "width", "height"].map((k) => [k, Number(el.getAttribute(k))])))
+      near(r.x, plot.x, 0.01, "across the plot")
+      near(r.width, plot.width, 0.01)
+      near(r.y, plot.y + 2 * step, 0.01, "on its own row")
+      eq(await outline.evaluate((el) => getComputedStyle(el).strokeDasharray), "4px, 3px", "dashed")
+      const foreground = await outline.evaluate((el) => {
+        const probe = document.createElementNS("http://www.w3.org/2000/svg", "rect")
+        probe.style.stroke = "var(--foreground)"
+        el.parentNode.appendChild(probe)
+        const c = getComputedStyle(probe).stroke
+        probe.remove()
+        return c
+      })
+      eq(await outline.evaluate((el) => getComputedStyle(el).stroke), foreground, "in the text colour")
+      await page.emulateMedia({ forcedColors: "active" })
+      try {
+        const highlight = await outline.evaluate((el) => {
+          const probe = document.createElementNS("http://www.w3.org/2000/svg", "rect")
+          probe.style.forcedColorAdjust = "none"
+          probe.style.stroke = "Highlight"
+          el.parentNode.appendChild(probe)
+          const c = getComputedStyle(probe).stroke
+          probe.remove()
+          return c
+        })
+        eq(await outline.evaluate((el) => getComputedStyle(el).stroke), highlight, "Highlight in forced colours")
+      } finally {
+        await page.emulateMedia({ forcedColors: null })
+      }
+      await press(name, "ArrowDown")
+      eq(await page.locator(`${pg(name)} .chart-funnel-placeholder`).count(), 1, "the next stage with no value takes it")
+      eq(await page.locator(`${group(name, 3)} .chart-funnel-placeholder`).count(), 1, "on its own row")
+    } finally {
+      await page.keyboard.press("Escape")
+      await blur(name)
+    }
+  })
+
+  await test("funnel: a chart part it does not draw is ignored, with a warning", async () => {
+    eq(await page.locator(`${pg("funnel-ignored")} .chart-funnel-stage`).count(), 4, "the funnel still draws")
+    eq(await page.locator(`${pg("funnel-ignored")} .chart-bar, ${pg("funnel-ignored")} rect.chart-rectangle`).count(), 0, "the Bar draws nothing")
+    eq(warnings.filter((w) => w.includes("<Bar> is not a funnel part")).length >= 1, true, `warned: ${warnings.join(" | ")}`)
+    eq(warnings.some((w) => w.includes("<ChartTooltip> is not a funnel part")), false, "counter-precondition: a part it draws does not warn")
   })
 
   await test("funnel: arrows step down the stages and hold at the ends", async () => {

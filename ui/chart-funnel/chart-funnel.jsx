@@ -227,7 +227,12 @@ export function FunnelChart({
                       data-step-rate={stage.stepRate != null ? round2(stage.stepRate * 100) : undefined}
                       data-overall-rate={stage.overallRate != null ? round2(stage.overallRate * 100) : undefined}
                     >
-                      {stage.value == null ? null : (
+                      {stage.value == null ? (
+                        stage.index === activeIndex ? (
+                          // A stage with no shape still shows where the active row is.
+                          <rect className="chart-funnel-placeholder" x={plot.x} y={stage.y} width={plot.width} height={stage.height} />
+                        ) : null
+                      ) : (
                         <polygon
                           className="chart-funnel-stage"
                           data-top-width={round2(stage.topWidth)}
