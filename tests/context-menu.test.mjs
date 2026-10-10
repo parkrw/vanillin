@@ -17,10 +17,19 @@ export default async function run({ page, baseUrl, test, eq }) {
     })
 
   // All suites share one page: a test that opens from a menu left open by
-  // the one before measures that leftover, not its own gesture.
+  // the one before measures that leftover, not its own gesture. A leak fails
+  // the next test only; closing it first keeps the rest of the file honest.
   const menuTest = (name, fn) =>
     test(name, async () => {
-      eq(await isClosed(), true, "starts with the menu closed")
+      const closed = await isClosed()
+      if (!closed) {
+        await page.evaluate(() => {
+          const el = document.querySelector('[data-pg="context-menu"]')
+          if (el.matches(":popover-open")) el.hidePopover()
+        })
+        await waitClosed()
+      }
+      eq(closed, true, "starts with the menu closed")
       await fn()
     })
 
