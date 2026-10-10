@@ -10,6 +10,35 @@ export default async function run({ page, baseUrl, test, eq }) {
       return el && !el.matches(":popover-open") && el.dataset.state === "closed"
     })
 
+  const isClosed = () =>
+    page.evaluate(() => {
+      const el = document.querySelector('[data-pg="context-menu"]')
+      return !el || (!el.matches(":popover-open") && el.dataset.state === "closed")
+    })
+
+  // Tests in this file share one page: a test that opens from a menu left open by
+  // the one before measures that leftover, not its own gesture. A leak fails
+  // the next test only; closing it first keeps the rest of the file honest.
+  const menuTest = (name, fn) =>
+    test(name, async () => {
+      const closed = await isClosed()
+      if (!closed) {
+        await page.evaluate(() => {
+          const el = document.querySelector('[data-pg="context-menu"]')
+          if (el.matches(":popover-open")) el.hidePopover()
+        })
+        await waitClosed()
+      }
+      eq(closed, true, "starts with the menu closed")
+      await fn()
+    })
+
+  const waitLeft = (expectedLeft) =>
+    page.waitForFunction((expectedLeft) => {
+      const el = document.querySelector('[data-pg="context-menu"]')
+      return el?.matches(":popover-open") && Math.abs(parseFloat(el.style.left) - expectedLeft) < 1
+    }, expectedLeft)
+
   // Record whether the contextmenu default was prevented (document bubble
   // listener runs after React's root handlers).
   await page.evaluate(() => {
@@ -41,7 +70,7 @@ export default async function run({ page, baseUrl, test, eq }) {
       }
     })
 
-  await test("right-click opens role=menu at pointer coords with first item focused", async () => {
+  await menuTest("right-click opens role=menu at pointer coords with first item focused", async () => {
     const box = await trigger.boundingBox()
     const x = Math.round(box.x + box.width / 2)
     const y = Math.round(box.y + box.height / 2)
@@ -65,27 +94,30 @@ export default async function run({ page, baseUrl, test, eq }) {
 
     const focusedRole = await page.evaluate(() => document.activeElement?.getAttribute("role"))
     eq(focusedRole, "menuitem", "first item focused")
-  })
-
-  await test("right-click at a second spot repositions the menu", async () => {
-    // Menu is open from the previous test; right-click elsewhere in the area.
-    const box = await trigger.boundingBox()
-    const x = Math.round(box.x + box.width / 4)
-    const y = Math.round(box.y + box.height / 4)
-    await page.mouse.click(x, y, { button: "right" })
-
-    await page.waitForFunction((expectedLeft) => {
-      const el = document.querySelector('[data-pg="context-menu"]')
-      return (
-        el?.matches(":popover-open") && Math.abs(parseFloat(el.style.left) - expectedLeft) < 1
-      )
-    }, x - 2)
 
     await page.keyboard.press("Escape")
     await waitClosed()
   })
 
-  await test("Escape right after a right-click on the open menu closes it; the deferred open does not re-show it", async () => {
+  await menuTest("right-click at a second spot repositions the menu", async () => {
+    const box = await trigger.boundingBox()
+    const firstX = Math.round(box.x + box.width / 2)
+    await rightClickAt(firstX, Math.round(box.y + box.height / 2))
+    await waitLeft(firstX - 2)
+
+    const x = Math.round(box.x + box.width / 4)
+    const y = Math.round(box.y + box.height / 4)
+    eq(x !== firstX, true, `second spot (${x}) differs from the first (${firstX})`)
+    // No pause on purpose: the repeat lands mid entry transition, the quick
+    // second right-click a user makes and the tightest case for openAt.
+    await page.mouse.click(x, y, { button: "right" })
+    await waitLeft(x - 2)
+
+    await page.keyboard.press("Escape")
+    await waitClosed()
+  })
+
+  await menuTest("Escape right after a right-click on the open menu closes it; the deferred open does not re-show it", async () => {
     const box = await trigger.boundingBox()
     await rightClickAt(Math.round(box.x + box.width / 2), Math.round(box.y + box.height / 2))
     // One task, before the deferred open runs: a right-click while open
@@ -111,7 +143,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(await page.evaluate(() => document.querySelector('[data-pg="context-menu"]').matches(":popover-open")), false, "still closed once the deferred open has run")
   })
 
-  await test("arrow nav + Enter selects item, updates readout, closes", async () => {
+  await menuTest("arrow nav + Enter selects item, updates readout, closes", async () => {
     const box = await trigger.boundingBox()
     await rightClickAt(Math.round(box.x + 40), Math.round(box.y + 40))
 
@@ -126,7 +158,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(readout, "reload", "readout updated")
   })
 
-  await test("Escape closes and state syncs (can reopen)", async () => {
+  await menuTest("Escape closes and state syncs (can reopen)", async () => {
     const box = await trigger.boundingBox()
     await rightClickAt(Math.round(box.x + 40), Math.round(box.y + 40))
     await page.keyboard.press("Escape")
@@ -137,14 +169,14 @@ export default async function run({ page, baseUrl, test, eq }) {
     await waitClosed()
   })
 
-  await test("outside click closes and state syncs", async () => {
+  await menuTest("outside click closes and state syncs", async () => {
     const box = await trigger.boundingBox()
     await rightClickAt(Math.round(box.x + 40), Math.round(box.y + 40))
     await page.mouse.click(5, 5)
     await waitClosed()
   })
 
-  await test("menu flips near the right viewport edge", async () => {
+  await menuTest("menu flips near the right viewport edge", async () => {
     const box = await trigger.boundingBox()
     const vw = await page.evaluate(() => document.documentElement.clientWidth)
     // Click as close to the right edge as the trigger area allows.
@@ -167,7 +199,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     await waitClosed()
   })
 
-  await test("hover highlights items in menu and submenu", async () => {
+  await menuTest("hover highlights items in menu and submenu", async () => {
     const box = await trigger.boundingBox()
     await rightClickAt(Math.round(box.x + 40), Math.round(box.y + 40))
 
@@ -193,7 +225,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     await waitClosed()
   })
 
-  await test("held right-click with drift survives the release (light-dismiss race)", async () => {
+  await menuTest("held right-click with drift survives the release (light-dismiss race)", async () => {
     // Real gesture: contextmenu fires on the press (macOS), the hand drifts a
     // few px, and the release lands mid entry animation. Regression: the menu
     // used to flash open then light-dismiss on that pointerup.
@@ -244,7 +276,7 @@ export default async function run({ page, baseUrl, test, eq }) {
       [type, x, y]
     )
 
-  await test("touch long-press (700ms) opens at the press point on release", async () => {
+  await menuTest("touch long-press (700ms) opens at the press point on release", async () => {
     const box = await trigger.boundingBox()
     const x = Math.round(box.x + 60)
     const y = Math.round(box.y + 60)
@@ -264,7 +296,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     await waitClosed()
   })
 
-  await test("early release or move cancels the long-press", async () => {
+  await menuTest("early release or move cancels the long-press", async () => {
     const box = await trigger.boundingBox()
     const x = Math.round(box.x + 60)
     const y = Math.round(box.y + 60)
@@ -288,7 +320,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(open, false, "moved — no open")
   })
 
-  await test("checkbox item toggles and persists on reopen (re-export wiring)", async () => {
+  await menuTest("checkbox item toggles and persists on reopen (re-export wiring)", async () => {
     const box = await trigger.boundingBox()
     await rightClickAt(Math.round(box.x + 40), Math.round(box.y + 40))
 
@@ -311,7 +343,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     await waitClosed()
   })
 
-  await test("radio group single-selects (re-export wiring)", async () => {
+  await menuTest("radio group single-selects (re-export wiring)", async () => {
     const box = await trigger.boundingBox()
     await rightClickAt(Math.round(box.x + 40), Math.round(box.y + 40))
 
@@ -324,7 +356,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     )
   })
 
-  await test("submenu opens with ArrowRight, Escape closes the whole stack", async () => {
+  await menuTest("submenu opens with ArrowRight, Escape closes the whole stack", async () => {
     const box = await trigger.boundingBox()
     await rightClickAt(Math.round(box.x + 40), Math.round(box.y + 40))
 
@@ -348,7 +380,7 @@ export default async function run({ page, baseUrl, test, eq }) {
     eq(subClosed, true, "submenu closed with the stack")
   })
 
-  await test("disabled trigger lets the native context menu through", async () => {
+  await menuTest("disabled trigger lets the native context menu through", async () => {
     const disabledArea = page.locator('[data-pg="context-disabled-trigger"]')
     await disabledArea.scrollIntoViewIfNeeded()
     const box = await disabledArea.boundingBox()
