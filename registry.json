@@ -225,6 +225,20 @@
         "cn.js"
       ]
     },
+    "chart-sankey": {
+      "type": "ui",
+      "files": [
+        "chart-sankey.css",
+        "chart-sankey.jsx"
+      ],
+      "requires": [
+        "chart"
+      ],
+      "lib": [
+        "chart-sankey.js",
+        "cn.js"
+      ]
+    },
     "chart-treemap": {
       "type": "ui",
       "files": [
