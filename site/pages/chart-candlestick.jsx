@@ -157,14 +157,17 @@ export default function ChartCandlestickPage() {
           <code>ChartLegend</code> lists the <code>up</code> and <code>down</code> entries of the config under their labels,
           and those entries' <code>color</code> paint the marks, in the volume pane too.
         </p>
-        <ComponentPreview code={`<ChartContainer config={{ up: { label: "Gain", color: "rgb(20, 120, 60)" }, down: { label: "Loss", color: "rgb(200, 30, 30)" } }}>
+        <ComponentPreview code={`<ChartContainer config={config}>
   <CandlestickChart data={sessions}>
     <ChartLegend />
   </CandlestickChart>
+</ChartContainer>
+<ChartContainer config={config} style={{ aspectRatio: "16 / 4" }}>
   <CandlestickVolume data={sessions}>
     <ChartLegend />
   </CandlestickVolume>
-</ChartContainer>`}>
+</ChartContainer>
+// config = { up: { label: "Gain", color: "rgb(20, 120, 60)" }, down: { label: "Loss", color: "rgb(200, 30, 30)" } }`}>
           <Frame pg="candlestick-legend">
             <ChartContainer config={{ up: { label: "Gain", color: "rgb(20, 120, 60)" }, down: { label: "Loss", color: "rgb(200, 30, 30)" } }}>
               <CandlestickChart data={sessions}>
