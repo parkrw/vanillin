@@ -956,3 +956,6 @@ Branch `feat/sparkline-series-hide`. A `series` item with `hide` is not drawn bu
 ## ui/progress — tone test follow-ups (2026-10-09)
 
 Branch `test/progress-tone-dark-2`, #44. Test fixes that missed #151's merge: the fill-token test now runs in light and dark, so the dark `:where(html).dark .progress--warning` rule is pinned, and both mode-switching tests restore the page's mode in a `finally`, so a failure no longer leaks dark mode into the later progress tests.
+## ui/chart — data table follow-ups (2026-10-09)
+
+Branch `fix/chart-data-table-followup-2`, #120. Fixes that missed #150's merge. The plot and legend go `inert` only when the table actually draws, so an empty chart with `<ChartDataTable open />` keeps its surface focusable and its legend live. A single pie's value column takes an explicit `name` over the config label, as the summary and the Series column do. The cartesian API row for `accessibilityLayer` and its polar twin now say it writes a generated summary into `aria-describedby` when none is given. A tooltip precondition that could not fail is gone. Tests: the three empty fixtures with the table open have nothing inert and a focusable surface; a single named pie heads its column with the name.

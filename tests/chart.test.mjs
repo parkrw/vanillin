@@ -915,7 +915,6 @@ export default async function run({ page, baseUrl, test, eq, near }) {
   })
 
   await test("table: with no ChartTooltip at all, the defaults apply", async () => {
-    eq(await page.locator(`${pg("chart-table-radar")} .chart-tooltip`).count(), 0, "precondition: the fixture has no tooltip")
     const { rows } = await tableText("chart-table-radar")
     eq(JSON.stringify(rows[1]), JSON.stringify(["February", "305"]))
   })
@@ -965,6 +964,21 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     const { rows } = await tableText("chart-table-pie-named")
     eq(rows[0][1], "Mobile share")
     eq(rows[5][1], "Desktop", "a pie without a name still reads its config label")
+  })
+
+  await test("pie name: a single named pie heads its value column with the explicit name", async () => {
+    const { headers } = await tableText("chart-table-pie-single-named")
+    eq(headers[1], "Mobile share")
+  })
+
+  await test("table open on an empty chart: nothing is covered, so the surface and legend stay live", async () => {
+    eq(await page.locator(`${pg("chart-empty-scatter")} .chart-legend`).count(), 1, "precondition: the empty scatter draws its legend")
+    for (const name of ["chart-empty-none", "chart-empty-pie", "chart-empty-scatter"]) {
+      eq(await page.locator(`${pg(name)} [inert]`).count(), 0, `${name}: no table renders, so nothing is inert`)
+      await page.locator(`${pg(name)} .chart-surface`).focus()
+      eq(await page.evaluate(() => document.activeElement?.matches(".chart-surface") ?? false), true, `${name}: the surface takes focus`)
+      await page.locator(`${pg(name)} .chart-surface`).evaluate((el) => el.blur())
+    }
   })
 
   await test("table: several pies add a Series column beside Name and Value", async () => {

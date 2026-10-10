@@ -2110,6 +2110,19 @@ const fullDay = (value) =>
             </ChartContainer>
           </Frame>
         </ComponentPreview>
+        <ComponentPreview code={`<PieChart>
+  <Pie data={browserData} dataKey="visitors" name="Mobile share" nameKey="browser" />
+  <ChartDataTable open caption="Named single pie" />
+</PieChart>`}>
+          <Frame pg="chart-table-pie-single-named" square>
+            <ChartContainer config={browserConfig} style={{ aspectRatio: "1" }}>
+              <PieChart accessibilityLayer>
+                <Pie data={browserData} dataKey="visitors" name="Mobile share" nameKey="browser" />
+                <ChartDataTable open caption="Named single pie" />
+              </PieChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
         <ComponentPreview code={`<p id="share-note">Browser share of visitors.</p>
 <PieChart accessibilityLayer aria-describedby="share-note">
   <Pie data={browserData} dataKey="visitors" nameKey="browser" />
@@ -2163,6 +2176,7 @@ const fullDay = (value) =>
                 <XAxis type="number" dataKey="x" name="stature" />
                 <YAxis type="number" dataKey="y" name="weight" />
                 <Scatter name="a" data={[]} fill="var(--color-a)" />
+                <ChartLegend content={<ChartLegendContent />} />
                 <ChartDataTable open />
               </ScatterChart>
             </ChartContainer>
@@ -2593,7 +2607,7 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "barGap", type: "number", default: "4", description: "Gap between bars in one band, px" },
         { name: "stackOffset", type: '"none" | "expand"', default: '"none"', description: "expand scales every stack to span 0 to 1; the tooltip keeps the raw values" },
         { name: "syncId", type: "string", description: "Charts sharing it share the active category, by position in the data" },
-        { name: "accessibilityLayer", type: "boolean", default: "false", description: "Focusable surface with keyboard navigation" },
+        { name: "accessibilityLayer", type: "boolean", default: "false", description: "Focusable surface; arrows step through the categories. Also writes a generated summary into aria-describedby when none is given" },
         { name: "aria-label", type: "string", description: "Names the surface; gives role=img without accessibilityLayer" },
         { name: "aria-describedby", type: "string", description: "Your own description; with accessibilityLayer and none given, the generated summary is used" },
       ]} />
@@ -2650,7 +2664,7 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "startAngle / endAngle", type: "number", default: "0 / 360 (radar 90 / -270)", description: "Degrees, 0 at 3 o'clock, counter-clockwise positive" },
         { name: "margin", type: "{ top, right, bottom, left }", default: "5 each", description: "Space around the plot, inside the surface" },
         { name: "barCategoryGap / barGap", type: "string | number / number", default: '"10%" / 4', description: "Radial ring spacing, as for bars" },
-        { name: "accessibilityLayer", type: "boolean", default: "false", description: "Focusable surface; arrows step slices, spokes or rings. Also writes a generated summary of the data" },
+        { name: "accessibilityLayer", type: "boolean", default: "false", description: "Focusable surface; arrows step slices, spokes or rings. Also writes a generated summary into aria-describedby when none is given" },
         { name: "aria-label", type: "string", description: "Names the surface; gives role=img without accessibilityLayer" },
         { name: "aria-describedby", type: "string", description: "Your own description; with accessibilityLayer and none given, the generated summary is used" },
       ]} />
