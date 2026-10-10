@@ -86,6 +86,8 @@ const probes = [
   ["chart-gauge", '[data-pg="gauge-needle"] .chart-gauge-needle', ["stroke"], "gauge needle"],
   ["chart-gauge", '[data-pg="gauge-needle"] .chart-gauge-boundary', ["stroke"], "gauge band boundary"],
   ["chart-gauge", '[data-pg="gauge-fill"] .chart-gauge-fill', ["fill"], "gauge fill, warning tone"],
+  // chart-funnel: the stage fill is the datum.
+  ["chart-funnel", '[data-pg="funnel-default"] .chart-funnel-stage', ["fill"], "funnel stage"],
   ["progress", ".progress", ["backgroundColor"], "progress track", { exempt: "inactive track; the indicator carries the state and passes (17.93:1 light / 15.72:1 dark), as D5 checkbox fill" }],
   ["progress", ".progress-indicator", ["backgroundColor"], "progress indicator"],
   ["progress", '[data-pg="progress-tone"] .progress--success .progress-indicator', ["backgroundColor"], "progress indicator success"],
