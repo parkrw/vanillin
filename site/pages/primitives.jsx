@@ -2,7 +2,9 @@
 import { useCallback, useRef, useState } from "react"
 import { Portal } from "../../lib/portal.jsx"
 import { useAnchorPosition } from "../../lib/use-anchor-position.js"
+import { DirectionProvider } from "../../lib/direction.jsx"
 import { useDismissableLayer } from "../../lib/use-dismissable-layer.js"
+import { useDragResize } from "../../lib/use-drag-resize.js"
 import { useFocusTrap } from "../../lib/use-focus-trap.js"
 import { usePresence } from "../../lib/use-presence.js"
 import { useReturnFocus } from "../../lib/use-return-focus.js"
@@ -383,6 +385,68 @@ function DemoSafeTriangle() {
   )
 }
 
+function DragResizeBox({ id, axis, reverse }) {
+  const { size, dragging, handleProps } = useDragResize({
+    axis,
+    reverse,
+    min: 80,
+    max: 240,
+    defaultSize: 160,
+  })
+  const horizontal = axis === "x"
+  const handle = (
+    <div
+      {...handleProps}
+      aria-label={`Resize ${id}`}
+      data-pg={`${id}-handle`}
+      style={{
+        touchAction: "none",
+        flex: "none",
+        [horizontal ? "inlineSize" : "blockSize"]: 8,
+        background: dragging ? "var(--ring)" : "var(--border)",
+        cursor: horizontal ? "col-resize" : "row-resize",
+      }}
+    />
+  )
+  const panel = (
+    <div
+      data-pg={`${id}-panel`}
+      style={{
+        [horizontal ? "inlineSize" : "blockSize"]: size,
+        flex: "none",
+        background: "var(--muted)",
+        padding: 8,
+      }}
+    >
+      {Math.round(size)}px
+    </div>
+  )
+  return (
+    <div
+      data-pg={id}
+      style={{
+        display: "flex",
+        flexDirection: horizontal ? "row" : "column",
+        justifyContent: reverse ? "flex-end" : "flex-start",
+        blockSize: horizontal ? 80 : 320,
+        border: "1px solid var(--border)",
+      }}
+    >
+      {reverse ? handle : panel}
+      {reverse ? panel : handle}
+    </div>
+  )
+}
+
+// The hook reads the direction from context, so it runs below the provider.
+function DemoDragResize({ dir, ...props }) {
+  return (
+    <DirectionProvider dir={dir}>
+      <DragResizeBox {...props} />
+    </DirectionProvider>
+  )
+}
+
 export default function PrimitivesPage() {
   return (
     <>
@@ -525,6 +589,37 @@ useSafeTriangle({
       </section>
 
       <section className="pg-section">
+        <h3>Drag resize</h3>
+        <p>
+          <code>useDragResize</code> sizes one element along one axis in pixels, clamped between <code>min</code> and <code>max</code>. Spread <code>handleProps</code> on the grab handle: it takes pointer drags that keep tracking outside the handle, sets the resize cursor while dragging and clears it on release, and is a focusable <code>separator</code> that Arrow keys step by <code>step</code> pixels and Home and End send to <code>min</code> and <code>max</code>. Arrows move the edge the way they point on screen.
+        </p>
+        <p>
+          On the horizontal axis the direction follows <code>DirectionProvider</code>, so dragging toward the start edge grows an inline-start element in both reading directions. <code>reverse</code> is for an element that grows against the pointer, such as a bottom-anchored panel whose handle is dragged upward. Under <code>ui/resizable</code>'s percentage split this is the single-element pixel case.
+        </p>
+        <ComponentPreview code={`import { useDragResize } from "./lib/use-drag-resize"
+
+const { size, dragging, handleProps } = useDragResize({
+  axis: "x",
+  min: 80,
+  max: 240,
+  defaultSize: 160,
+})
+
+<div style={{ display: "flex" }}>
+  <div style={{ inlineSize: size }}>{size}px</div>
+  <div {...handleProps} aria-label="Resize" style={{ inlineSize: 8, touchAction: "none" }} />
+</div>`}>
+          <DemoDragResize id="drag-x" axis="x" />
+        </ComponentPreview>
+        <ComponentPreview code={`useDragResize({ axis: "y", reverse: true, min: 80, max: 240 })`}>
+          <DemoDragResize id="drag-y" axis="y" reverse />
+        </ComponentPreview>
+        <ComponentPreview code={`<DirectionProvider dir="rtl">…</DirectionProvider>`}>
+          <DemoDragResize id="drag-rtl" axis="x" dir="rtl" />
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Other exports</h3>
         <p>
           <code>lib/</code> also exports utilities not demoed here: <code>useControllableState</code>, <code>useColorScheme</code>, <code>useSwipe</code>, <code>useHighlight</code>, <code>useDataTable</code>, <code>useForm</code>, <code>DirectionProvider</code>, <code>withViewTransition</code>, <code>cn</code>, <code>commandScore</code>, <code>scrollLock</code>, <code>composeRefs</code>, <code>format</code>, <code>parseDate</code>, <code>schema</code>, and <code>anchorPosition</code> (the non-hook geometry engine).
@@ -556,6 +651,11 @@ useSafeTriangle({
               <TableCell><code>useReturnFocus</code></TableCell>
               <TableCell><code>{"(enabled)"}</code></TableCell>
               <TableCell>Remembers the focused element on mount and restores focus when <code>enabled</code> turns false or on unmount.</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell><code>useDragResize</code></TableCell>
+              <TableCell><code>{"({ axis?, size?, defaultSize?, onSizeChange?, min?, max?, step?, reverse?, disabled? }) → { size, dragging, handleProps }"}</code></TableCell>
+              <TableCell>Pixel size of one element along one axis, set by pointer drag or keyboard and clamped to <code>min</code> and <code>max</code>. <code>handleProps</code> makes the handle a focusable separator; the horizontal axis follows the reading direction.</TableCell>
             </TableRow>
             <TableRow>
               <TableCell><code>useFocusTrap</code></TableCell>
