@@ -89,6 +89,11 @@ const probes = [
   // chart-treemap: an item's edge is its group's palette colour, and the fill is a tint behind it. By value every item keeps the scale's high end as its edge, so the pale low-end fills are outlined.
   ["chart-treemap", '[data-pg="treemap-default"] .chart-treemap-tile[data-kind="leaf"]', ["stroke"], "treemap item edge, by group"],
   ["chart-treemap", '[data-pg="treemap-value"] .chart-treemap-tile[data-kind="leaf"]', ["stroke"], "treemap item edge, by value"],
+  // chart-sankey: the node bars are the datum. A band is a translucent tint whose width and ends are also given by the nodes, tooltip and summary.
+  ["chart-sankey", '[data-pg="sankey-default"] .chart-sankey-node[data-index="0"]', ["fill"], "sankey node, first colour"],
+  ["chart-sankey", '[data-pg="sankey-default"] .chart-sankey-node[data-index="3"]', ["fill"], "sankey node, fourth colour"],
+  ["chart-sankey", '[data-pg="sankey-default"] .chart-sankey-node[data-index="4"]', ["fill"], "sankey node, fifth colour"],
+  ["chart-sankey", '[data-pg="sankey-default"] .chart-sankey-link', ["stroke"], "sankey band", { exempt: "a band is a translucent tint behind the nodes that name its ends; its width is also in the tooltip and summary" }],
   ["progress", ".progress", ["backgroundColor"], "progress track", { exempt: "inactive track; the indicator carries the state and passes (17.93:1 light / 15.72:1 dark), as D5 checkbox fill" }],
   ["progress", ".progress-indicator", ["backgroundColor"], "progress indicator"],
   ["progress", '[data-pg="progress-tone"] .progress--success .progress-indicator', ["backgroundColor"], "progress indicator success"],

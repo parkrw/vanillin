@@ -1,0 +1,91 @@
+/* Shell, label text and tooltip come from chart.css. A node takes its colour
+ * from the config entry named by its id (--color-<id>), else the chart palette
+ * by position; a band takes its source node's colour, or its target's, or runs
+ * a gradient between the two. */
+.chart-sankey .chart-surface {
+  direction: ltr;
+}
+
+.chart-sankey-node {
+  fill: var(--sankey-color);
+}
+
+.chart-sankey-node[data-current] {
+  stroke: var(--foreground);
+  stroke-width: 2;
+}
+
+.chart-sankey-node[data-linked] {
+  stroke: var(--foreground);
+  stroke-width: 1;
+}
+
+.chart-sankey-link {
+  fill: none;
+  stroke: var(--sankey-color);
+  stroke-opacity: 0.35;
+  transition: stroke-opacity var(--motion-fast) var(--motion-ease);
+}
+
+.chart-sankey-links[data-emphasis] .chart-sankey-link {
+  stroke-opacity: 0.1;
+}
+
+.chart-sankey-links[data-emphasis] .chart-sankey-link[data-active] {
+  stroke-opacity: 0.65;
+}
+
+/* Keeps the current band findable when its fill is a pale tint. */
+.chart-sankey-link-ring {
+  fill: none;
+  stroke: var(--foreground);
+  stroke-opacity: 0.9;
+}
+
+.chart-sankey-label {
+  paint-order: stroke;
+  stroke: var(--background);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+@media (forced-colors: active) {
+  .chart-sankey-node,
+  .chart-sankey-link,
+  .chart-sankey-link-ring {
+    forced-color-adjust: none;
+  }
+
+  .chart-sankey-node {
+    fill: CanvasText;
+  }
+
+  .chart-sankey-node[data-current],
+  .chart-sankey-node[data-linked] {
+    stroke: Highlight;
+  }
+
+  .chart-sankey-link {
+    stroke: CanvasText !important;
+    stroke-opacity: 0.3;
+  }
+
+  .chart-sankey-links[data-emphasis] .chart-sankey-link[data-active] {
+    stroke: Highlight !important;
+    stroke-opacity: 0.6;
+  }
+
+  .chart-sankey-link-ring {
+    stroke: Highlight;
+  }
+
+  .chart-sankey-label {
+    stroke: Canvas;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-sankey-link {
+    transition: none;
+  }
+}

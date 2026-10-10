@@ -1,0 +1,12 @@
+{
+  "name": "chart-sankey",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [
+    "chart"
+  ],
+  "files": {
+    "chart-sankey.css": "sha256-ba74zULQafgLzkWrZWqBTR1zPrwhFxbTVFRFK7J15TM=",
+    "chart-sankey.jsx": "sha256-By5tclCXTShK3uVidSFqOIEM0sI7fgGXiboCtjOxy44="
+  }
+}
