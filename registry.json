@@ -197,6 +197,19 @@
         "cn.js"
       ]
     },
+    "chart-funnel": {
+      "type": "ui",
+      "files": [
+        "chart-funnel.css",
+        "chart-funnel.jsx"
+      ],
+      "requires": [
+        "chart"
+      ],
+      "lib": [
+        "cn.js"
+      ]
+    },
     "chart-gauge": {
       "type": "ui",
       "files": [

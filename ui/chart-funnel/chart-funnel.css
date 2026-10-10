@@ -1,0 +1,49 @@
+/* Shell, layout box and tooltip come from chart.css. The stages take their
+ * colour from the config entry `funnel` (--color-funnel), the chart's first
+ * palette colour otherwise. */
+.chart-funnel {
+  --funnel-color: var(--color-funnel, var(--chart-1));
+}
+
+/* The plot does not mirror in RTL, so its labels must not either. */
+.chart-funnel .chart-surface {
+  direction: ltr;
+}
+
+.chart-funnel-stage {
+  fill: var(--funnel-color);
+  stroke: none;
+}
+
+.chart-funnel-stage-group[data-active] .chart-funnel-stage {
+  stroke: var(--foreground);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.chart-funnel-label {
+  fill: var(--foreground);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-funnel-rate {
+  fill: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The fill is the datum: keep it and give each stage an edge. */
+@media (forced-colors: active) {
+  .chart-funnel-stage {
+    forced-color-adjust: none;
+    stroke: CanvasText;
+    stroke-width: 1;
+  }
+
+  .chart-funnel-stage-group[data-active] .chart-funnel-stage {
+    stroke: Highlight;
+    stroke-width: 2;
+  }
+}
