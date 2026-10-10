@@ -693,30 +693,39 @@ const SERIES_SIG_KEYS = ["dataKey", "stackId", "name", "barSize", "maxBarSize", 
 const pick = (props, keys) => keys.map((key) => props?.[key])
 
 /*
- * What Up and Down walk. Scatters and pies are ordered by draw order, which
- * is all they have; each has one series acting before any key is pressed
- * (`implicit`). Everything else is ordered by where the series sits at the
- * active category, top of the screen first: the top of its stack, else its
- * value. That is what a sighted reader sees, and it is why the order is a
- * function of the category and the focus is kept by series, not by position.
- * A hidden series, or one with no value there, draws nothing to land on.
+ * What Up and Down walk. Scatters, pies, radars and radial bars are ordered
+ * by draw order: "top" means nothing on a disc or a cloud of points. A scatter
+ * or pie has one series acting before any key is pressed (`implicit`) and
+ * skips one with no data, which has no point to land on. A cartesian chart is
+ * ordered by where the series sits on screen at the active category, top
+ * first: the top of its stack, else its value, when the categories run along
+ * the page; the slot it holds in the band, when `layout="vertical"` stacks the
+ * bars down it. That is why the order is a function of the category and the
+ * focus is kept by series, not by position. A hidden series, or one with no
+ * value there, draws nothing to land on.
  */
 function seriesNav(layout) {
   const { series } = layout
+  const drawOrder = (usable) => series.filter(usable).map((entry) => entry.index)
   if (layout.kind === "scatter" || series[0]?.role === "pie") {
     return {
       implicit: layout.activeSeries,
-      order: () => series.filter((entry) => !entry.hidden).map((entry) => entry.index),
+      order: () => drawOrder((entry) => !entry.hidden && entry.data.length > 0),
       countOf: (k) => series[k]?.data.length ?? 0,
     }
   }
+  if (series[0]?.role === "radar" || series[0]?.role === "radialbar") {
+    return { implicit: null, order: (i) => drawOrder((entry) => entry.values[i] != null), countOf: () => layout.category.count }
+  }
   const top = (entry, i) => entry.stack?.[i].y1 ?? entry.values[i]
+  // Screen y of the series in its band; a series with no slot (a line) sits mid-band.
+  const down = (entry) => (entry.slot ? entry.slot.offset + entry.slot.size / 2 : 0)
   return {
     implicit: null,
     order: (i) =>
       series
         .filter((entry) => !entry.hidden && entry.values[i] != null)
-        .sort((a, b) => top(b, i) - top(a, i) || a.index - b.index)
+        .sort((a, b) => (layout.vertical ? down(a) - down(b) : top(b, i) - top(a, i)) || a.index - b.index)
         .map((entry) => entry.index),
     countOf: () => layout.category.count,
   }
@@ -816,7 +825,8 @@ function useActiveIndex({ count, defaultIndex, indexAt, trigger = "hover", syncI
   const onKeyDown = (event) => {
     const current = activeSeries ?? nav?.implicit
     const total = nav && current != null ? nav.countOf(current) : count
-    if (!total) return
+    // Up and Down pick a series, and a pie or scatter whose leading series is empty can still have another.
+    if (!total && event.key !== "ArrowUp" && event.key !== "ArrowDown") return
     const rtl = getComputedStyle(event.currentTarget).direction === "rtl"
     const forward = rtl ? "ArrowLeft" : "ArrowRight"
     const back = rtl ? "ArrowRight" : "ArrowLeft"
@@ -844,7 +854,7 @@ function useActiveIndex({ count, defaultIndex, indexAt, trigger = "hover", syncI
         event.preventDefault()
         setActiveSeries(target)
         // A scatter's index is a point of its series, so it follows to the new series' length.
-        set(Math.min(activeIndex ?? 0, nav.countOf(target) - 1), "keyboard", null)
+        activate(Math.min(activeIndex ?? 0, nav.countOf(target) - 1), "keyboard")
         return
       }
       case "Escape":
@@ -1166,38 +1176,38 @@ function CartesianChart({
     <LayoutContext.Provider value={hostLayout}>
       <ActiveIndexContext.Provider value={activeIndex}>
         <ActiveSeriesContext.Provider value={activeSeries}>
-        <PointerContext.Provider value={pointer}>
-          <VisibilityContext.Provider value={visibility}>
-            <div ref={layoutRef} className={cn("chart-layout", className)} data-layout={scatter ? "scatter" : layout} {...props}>
-              {legendTop ? legendEl : null}
-              <div className="chart-plot" ref={plotRef} inert={covered || undefined}>
-                <svg
-                  className="chart-surface"
-                  width={width}
-                  height={height}
-                  aria-label={ariaLabel}
-                  aria-labelledby={ariaLabelledBy}
-                  aria-describedby={describedBy}
-                  {...surface}
-                  {...a11y}
-                >
-                  {parts.passthrough}
-                  {parts.grid}
-                  {areas}
-                  {cursor}
-                  {series}
-                  {marks}
-                  {xaxis}
-                  {yaxis}
-                </svg>
-                {tooltipEl}
+          <PointerContext.Provider value={pointer}>
+            <VisibilityContext.Provider value={visibility}>
+              <div ref={layoutRef} className={cn("chart-layout", className)} data-layout={scatter ? "scatter" : layout} {...props}>
+                {legendTop ? legendEl : null}
+                <div className="chart-plot" ref={plotRef} inert={covered || undefined}>
+                  <svg
+                    className="chart-surface"
+                    width={width}
+                    height={height}
+                    aria-label={ariaLabel}
+                    aria-labelledby={ariaLabelledBy}
+                    aria-describedby={describedBy}
+                    {...surface}
+                    {...a11y}
+                  >
+                    {parts.passthrough}
+                    {parts.grid}
+                    {areas}
+                    {cursor}
+                    {series}
+                    {marks}
+                    {xaxis}
+                    {yaxis}
+                  </svg>
+                  {tooltipEl}
+                </div>
+                {legendEl && !legendTop ? legendEl : null}
+                {summary}
+                {withTooltipFormatters(parts.datatable, tooltipEl)}
               </div>
-              {legendEl && !legendTop ? legendEl : null}
-              {summary}
-              {withTooltipFormatters(parts.datatable, tooltipEl)}
-            </div>
-          </VisibilityContext.Provider>
-        </PointerContext.Provider>
+            </VisibilityContext.Provider>
+          </PointerContext.Provider>
         </ActiveSeriesContext.Provider>
       </ActiveIndexContext.Provider>
     </LayoutContext.Provider>
@@ -1645,48 +1655,48 @@ function PolarChart({
     <LayoutContext.Provider value={hostLayout}>
       <ActiveIndexContext.Provider value={activeIndex}>
         <ActiveSeriesContext.Provider value={activeSeries}>
-        <PointerContext.Provider value={pointer}>
-          <PolarViewBoxContext.Provider value={viewBox}>
-            <div ref={layoutRef} className={cn("chart-layout", className)} data-layout={kind} {...props}>
-              {legendTop ? legendEl : null}
-              <div className="chart-plot" ref={plotRef} inert={covered || undefined}>
-                <svg
-                  className="chart-surface"
-                  width={width}
-                  height={height}
-                  aria-label={ariaLabel}
-                  aria-labelledby={ariaLabelledBy}
-                  aria-describedby={describedBy}
-                  {...surface}
-                  {...a11y}
-                >
-                  {parts.passthrough}
-                  {parts.polargrid}
-                  {computed.backgrounds.length ? (
-                    <g className="chart-background">
-                      {computed.backgrounds.map((track, i) => (
-                        <path
-                          key={i}
-                          className="chart-sector chart-sector--background"
-                          d={arcPath(viewBox.cx, viewBox.cy, track.inner, track.outer, viewBox.startAngle, viewBox.endAngle)}
-                          fill={track.fill ?? "var(--muted)"}
-                          fillOpacity={track.fillOpacity}
-                        />
-                      ))}
-                    </g>
-                  ) : null}
-                  {series}
-                  {angleAxis}
-                  {radiusAxis}
-                </svg>
-                {tooltipEl}
+          <PointerContext.Provider value={pointer}>
+            <PolarViewBoxContext.Provider value={viewBox}>
+              <div ref={layoutRef} className={cn("chart-layout", className)} data-layout={kind} {...props}>
+                {legendTop ? legendEl : null}
+                <div className="chart-plot" ref={plotRef} inert={covered || undefined}>
+                  <svg
+                    className="chart-surface"
+                    width={width}
+                    height={height}
+                    aria-label={ariaLabel}
+                    aria-labelledby={ariaLabelledBy}
+                    aria-describedby={describedBy}
+                    {...surface}
+                    {...a11y}
+                  >
+                    {parts.passthrough}
+                    {parts.polargrid}
+                    {computed.backgrounds.length ? (
+                      <g className="chart-background">
+                        {computed.backgrounds.map((track, i) => (
+                          <path
+                            key={i}
+                            className="chart-sector chart-sector--background"
+                            d={arcPath(viewBox.cx, viewBox.cy, track.inner, track.outer, viewBox.startAngle, viewBox.endAngle)}
+                            fill={track.fill ?? "var(--muted)"}
+                            fillOpacity={track.fillOpacity}
+                          />
+                        ))}
+                      </g>
+                    ) : null}
+                    {series}
+                    {angleAxis}
+                    {radiusAxis}
+                  </svg>
+                  {tooltipEl}
+                </div>
+                {legendEl && !legendTop ? legendEl : null}
+                {summary}
+                {withTooltipFormatters(parts.datatable, tooltipEl)}
               </div>
-              {legendEl && !legendTop ? legendEl : null}
-              {summary}
-              {withTooltipFormatters(parts.datatable, tooltipEl)}
-            </div>
-          </PolarViewBoxContext.Provider>
-        </PointerContext.Provider>
+            </PolarViewBoxContext.Provider>
+          </PointerContext.Provider>
         </ActiveSeriesContext.Provider>
       </ActiveIndexContext.Provider>
     </LayoutContext.Provider>

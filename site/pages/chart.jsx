@@ -132,6 +132,16 @@ const yearData = [
   { year: 2023, sales: 9 },
 ]
 
+const tieData = [
+  { month: "A", a: 5, b: 5 },
+  { month: "B", a: 7, b: 3 },
+]
+
+const tieConfig = {
+  a: { label: "Alpha", color: "var(--chart-1)" },
+  b: { label: "Beta", color: "var(--chart-2)" },
+}
+
 const browserData = [
   { browser: "chrome", visitors: 275, fill: "var(--color-chrome)" },
   { browser: "safari", visitors: 200, fill: "var(--color-safari)" },
@@ -1887,9 +1897,11 @@ const fullDay = (value) =>
         <p>
           <code>accessibilityLayer</code> makes the surface focusable (<code>role="application"</code>). Focus opens
           the tooltip on the first category; ArrowLeft and ArrowRight step (flipped under <code>dir="rtl"</code>),
-          Home and End jump, Escape closes. ArrowDown and ArrowUp move between series at that category, top of the
-          screen first, and the tooltip row and the dot of the focused series are marked; in a scatter they switch
-          series. A hidden series is skipped. Linked charts follow the category only. Without it an{" "}
+          Home and End jump, Escape closes. ArrowDown and ArrowUp move between series at that category, and the
+          tooltip row and the dot of the focused series are marked. Lines, areas and bars are taken top of the screen
+          first (by value or stack top, or by the bar's place in its band when <code>layout="vertical"</code>); scatter,
+          pie, radar and radial series, which have no top, go in the order they are drawn. A hidden or empty series is
+          skipped. Linked charts follow the category only. Without it an{" "}
           <code>aria-label</code> gives the surface{" "}
           <code>role="img"</code> and nothing is focusable.
         </p>
@@ -1918,6 +1930,82 @@ const fullDay = (value) =>
                 <Line dataKey="desktop" type="monotone" stroke="var(--color-desktop)" strokeWidth={2} dot={false} />
                 <Line dataKey="mobile" type="monotone" stroke="var(--color-mobile)" strokeWidth={2} dot={false} hide />
               </LineChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<AreaChart data={chartData} accessibilityLayer>
+  <Area dataKey="desktop" stackId="a" />
+  <Area dataKey="mobile" stackId="a" />
+</AreaChart>`}>
+          <Frame pg="chart-series-stack">
+            <ChartContainer config={chartConfig}>
+              <AreaChart data={chartData} accessibilityLayer aria-label="Stacked visitors by month" margin={{ left: 12, right: 12 }}>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={monthTick} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Area dataKey="desktop" stackId="a" type="monotone" fill="var(--color-desktop)" stroke="var(--color-desktop)" />
+                <Area dataKey="mobile" stackId="a" type="monotone" fill="var(--color-mobile)" stroke="var(--color-mobile)" />
+              </AreaChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<LineChart data={tieData} accessibilityLayer>
+  <Line dataKey="a" />
+  <Line dataKey="b" />
+</LineChart>`}>
+          <Frame pg="chart-series-tie">
+            <ChartContainer config={tieConfig}>
+              <LineChart data={tieData} accessibilityLayer aria-label="Two series that meet at the first category" margin={{ left: 12, right: 12 }}>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line dataKey="a" stroke="var(--color-a)" dot={false} />
+                <Line dataKey="b" stroke="var(--color-b)" dot={false} />
+              </LineChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<BarChart data={chartData} layout="vertical" accessibilityLayer>
+  <Bar dataKey="desktop" />
+  <Bar dataKey="mobile" />
+</BarChart>`}>
+          <Frame pg="chart-series-vertical">
+            <ChartContainer config={chartConfig}>
+              <BarChart data={chartData} layout="vertical" accessibilityLayer aria-label="Visitors by month, bars across" margin={{ left: -20 }}>
+                <XAxis type="number" hide />
+                <YAxis dataKey="month" type="category" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={monthTick} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="desktop" fill="var(--color-desktop)" />
+                <Bar dataKey="mobile" fill="var(--color-mobile)" />
+              </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<PieChart accessibilityLayer>
+  <Pie data={desktopData} dataKey="desktop" nameKey="month" />
+  <Pie data={[]} dataKey="mobile" nameKey="month" />
+</PieChart>`}>
+          <Frame pg="chart-series-empty-pie" square>
+            <ChartContainer config={monthConfig} style={{ aspectRatio: "1" }}>
+              <PieChart accessibilityLayer aria-label="Desktop visitors, a second pie with no data">
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                <Pie data={desktopData} dataKey="desktop" nameKey="month" outerRadius={60} />
+                <Pie data={[]} dataKey="mobile" nameKey="month" innerRadius={70} outerRadius={90} />
+              </PieChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<ScatterChart accessibilityLayer>
+  <Scatter name="a" data={schoolA} />
+  <Scatter name="b" data={[]} />
+</ScatterChart>`}>
+          <Frame pg="chart-series-empty-scatter">
+            <ChartContainer config={schoolConfig}>
+              <ScatterChart accessibilityLayer aria-label="Stature against weight, a second series with no points">
+                <XAxis type="number" dataKey="x" name="stature" unit="cm" />
+                <YAxis type="number" dataKey="y" name="weight" unit="kg" />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Scatter name="a" data={schoolA} fill="var(--color-a)" />
+                <Scatter name="b" data={[]} fill="var(--color-b)" />
+              </ScatterChart>
             </ChartContainer>
           </Frame>
         </ComponentPreview>
