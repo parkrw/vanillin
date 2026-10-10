@@ -1,5 +1,8 @@
+import { firstFrame } from "./helpers/first-frame.mjs"
+
 export default async function run({ page, baseUrl, test, eq, near }) {
   await page.goto(`${baseUrl}/#select`)
+  const { armFirstFrame, expectFirstFrameInPlace, nearViewportBottom } = firstFrame({ page, eq, near })
 
   const trigger = page.locator('[data-pg="sel-trigger"]')
 
@@ -352,5 +355,16 @@ export default async function run({ page, baseUrl, test, eq, near }) {
 
     await page.keyboard.press("Escape")
     await waitAllClosed()
+  })
+
+  await test("first frame is already in place, flipped above when there is no room below", async () => {
+    await nearViewportBottom(trigger, async () => {
+      await armFirstFrame('[data-pg="sel-content"]')
+      await trigger.click()
+      const steady = await expectFirstFrameInPlace('[data-pg="sel-content"]')
+      eq(steady.side, "top", "flipped above the trigger")
+      await page.keyboard.press("Escape")
+      await waitAllClosed()
+    })
   })
 }

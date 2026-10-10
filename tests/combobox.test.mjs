@@ -1,5 +1,8 @@
-export default async function run({ page, baseUrl, test, eq }) {
+import { firstFrame } from "./helpers/first-frame.mjs"
+
+export default async function run({ page, baseUrl, test, eq, near }) {
   await page.goto(`${baseUrl}/#combobox`)
+  const { armFirstFrame, expectFirstFrameInPlace, nearViewportBottom } = firstFrame({ page, eq, near })
 
   const input = page.locator('[data-pg="cbx-input"]')
 
@@ -358,5 +361,16 @@ export default async function run({ page, baseUrl, test, eq }) {
     })
     eq(validity?.valid, false, "select is invalid after setCustomValidity")
     eq(validity?.msg, "Custom error", "custom message set")
+  })
+
+  await test("first frame is already in place, flipped above when there is no room below", async () => {
+    await nearViewportBottom(input, async () => {
+      await armFirstFrame('[data-pg="cbx-content"]')
+      await input.click()
+      const steady = await expectFirstFrameInPlace('[data-pg="cbx-content"]')
+      eq(steady.side, "top", "flipped above the input")
+      await page.keyboard.press("Escape")
+      await waitAllClosed()
+    })
   })
 }

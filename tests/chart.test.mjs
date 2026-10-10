@@ -783,6 +783,238 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq((await labelled.getAttribute("aria-label")).length > 0, true)
   })
 
+  // ── Summary and data table ──
+
+  const tableText = async (name) => ({
+    headers: await page.locator(`${pg(name)} .chart-data-table thead th`).allTextContents(),
+    rows: await page.locator(`${pg(name)} .chart-data-table tbody tr`).evaluateAll((trs) => trs.map((tr) => [...tr.children].map((c) => c.textContent))),
+  })
+
+  await test("summary: accessibilityLayer writes the generated text and wires aria-describedby to it", async () => {
+    const svg = page.locator(`${pg("chart-keyboard")} .chart-surface`)
+    const id = await svg.getAttribute("aria-describedby")
+    eq(id.endsWith("-summary"), true, `describedby ${id}`)
+    const summary = page.locator(`${pg("chart-keyboard")} .chart-summary`)
+    eq(await summary.getAttribute("id"), id)
+    eq(
+      await summary.textContent(),
+      "Chart with 2 series over 6 categories, January to June. " +
+        "Desktop: range 73 to 305, lowest in April, peak in February, from 186 to 214 (up 28). " +
+        "Mobile: range 80 to 200, lowest in January, peak in February, from 80 to 140 (up 60).",
+    )
+    const box = await rect(`${pg("chart-keyboard")} .chart-summary`)
+    eq(box.width <= 1 && box.height <= 1, true, "the summary is not painted")
+  })
+
+  await test("summary: without accessibilityLayer nothing is generated or wired", async () => {
+    eq(await page.locator(`${pg("chart-default")} .chart-summary`).count(), 0)
+    eq(await page.locator(`${pg("chart-default")} .chart-surface`).getAttribute("aria-describedby"), null)
+    eq(await page.locator(`${pg("chart-default")} .chart-data`).count(), 0, "and no table unless one is composed")
+  })
+
+  await test("summary: a consumer aria-describedby wins and no summary is rendered", async () => {
+    const svg = page.locator(`${pg("chart-table-custom")} .chart-surface`)
+    eq(await svg.getAttribute("tabindex"), "0", "precondition: accessibilityLayer is on")
+    eq(await svg.getAttribute("aria-describedby"), "chart-table-note")
+    eq(await page.locator(`${pg("chart-table-custom")} .chart-summary`).count(), 0)
+  })
+
+  await test("summary: pie and scatter read from their own data", async () => {
+    eq(
+      await page.locator(`${pg("chart-pie")} .chart-summary`).textContent(),
+      "Visitors: 5 slices, range 90 to 275, lowest Other, peak Chrome, total 925.",
+    )
+    eq(
+      await page.locator(`${pg("chart-scatter")} .chart-summary`).textContent(),
+      "School A: 6 points, Stature 100 to 170, Weight 100 to 400. School B: 6 points, Stature 180 to 240, Weight 220 to 290.",
+    )
+  })
+
+  await test("table: headers from config labels, one row per category, values from the data", async () => {
+    const { headers, rows } = await tableText("chart-table")
+    eq(JSON.stringify(headers), JSON.stringify(["month", "Desktop", "Mobile"]))
+    eq(rows.length, 6)
+    eq(JSON.stringify(rows[0]), JSON.stringify(["January", "186", "80"]))
+    eq(JSON.stringify(rows[5]), JSON.stringify(["June", "214", "140"]))
+    eq(await page.locator(`${pg("chart-table")} .chart-data-table tbody th[scope="row"]`).count(), 6)
+    eq(await page.locator(`${pg("chart-table")} .chart-data-table caption`).textContent(), "Visitors by month")
+  })
+
+  await test("table: closed it is in the page but not painted; open it covers the chart", async () => {
+    const table = page.locator(`${pg("chart-table")} .chart-data`)
+    eq(await table.getAttribute("data-state"), "closed")
+    const hidden = await rect(`${pg("chart-table")} .chart-data`)
+    eq(hidden.width <= 1 && hidden.height <= 1, true, "closed: one pixel")
+    await page.locator(`${pg("chart-table")} .chart-data-table th`).first().waitFor({ state: "attached" })
+    await page.getByRole("button", { name: "Show data table" }).click()
+    eq(await table.getAttribute("data-state"), "open")
+    const chart = await rect(`${pg("chart-table")} .chart`)
+    const shown = await rect(`${pg("chart-table")} .chart-data`)
+    near(shown.x, chart.x, 1)
+    near(shown.width, chart.width, 1)
+    near(shown.height, chart.height, 1)
+    eq(await page.locator(`${pg("chart-table")} .chart-data-table`).isVisible(), true)
+    await page.getByRole("button", { name: "Show data table" }).click()
+    eq(await table.getAttribute("data-state"), "closed")
+  })
+
+  await test("table open: the covered plot and legend are inert and out of the tab order; closed, the surface is focusable again", async () => {
+    const name = "chart-table"
+    const surface = page.locator(`${pg(name)} .chart-surface`)
+    const toggle = page.getByRole("button", { name: "Show data table" })
+    const activeIs = (selector) => page.evaluate((sel) => document.activeElement?.matches(sel) ?? false, selector)
+    eq(await page.locator(`${pg(name)} [inert]`).count(), 0, "precondition: nothing is inert while the table is closed")
+    await surface.focus()
+    eq(await activeIs(".chart-surface"), true, "closed: the surface takes focus")
+    await surface.evaluate((el) => el.blur())
+    await toggle.click()
+    eq(await page.locator(`${pg(name)} .chart-plot[inert]`).count(), 1)
+    eq(await page.locator(`${pg(name)} .chart-legend[inert]`).count(), 1)
+    await surface.focus()
+    eq(await activeIs(".chart-surface"), false, "open: an inert surface cannot be focused")
+    await toggle.focus()
+    await page.keyboard.press("Tab")
+    eq(await activeIs(".chart-data"), true, "Tab from the toggle skips the chart and legend buttons and lands on the table")
+    await toggle.click()
+    eq(await page.locator(`${pg(name)} [inert]`).count(), 0)
+    await surface.focus()
+    eq(await activeIs(".chart-surface"), true, "closed again: focusable")
+    await surface.evaluate((el) => el.blur())
+  })
+
+  const summaryOf = (name) => page.locator(`${pg(name)} .chart-summary`).textContent()
+
+  await test("summary: category names resolve through config, as the table's row heads do", async () => {
+    eq(
+      await summaryOf("chart-table-radial"),
+      "Chart with 1 series over 5 categories, Chrome to Other. Visitors: range 90 to 275, lowest in Other, peak in Chrome, from 275 to 90 (down 185).",
+    )
+  })
+
+  await test("summary: a radar reads like the cartesian charts", async () => {
+    eq(
+      await summaryOf("chart-table-radar"),
+      "Chart with 1 series over 6 categories, January to June. Desktop: range 73 to 305, lowest in April, peak in February, from 186 to 214 (up 28).",
+    )
+  })
+
+  await test("summary: empty charts say so, and have no table", async () => {
+    eq(await summaryOf("chart-empty-none"), "Chart with no data.")
+    eq(await summaryOf("chart-empty-series"), "Chart with 1 series over 1 category, January to January. Desktop: no data.")
+    eq(await summaryOf("chart-empty-pie"), "Visitors: no slices.")
+    eq(await summaryOf("chart-empty-scatter"), "School A: no points.")
+    for (const name of ["chart-empty-none", "chart-empty-pie", "chart-empty-scatter"]) {
+      eq(await page.locator(`${pg(name)} .chart-data`).count(), 0, `${name}: nothing to tabulate`)
+    }
+  })
+
+  await test("table: its own formatter and labelFormatter win over the tooltip's", async () => {
+    const { rows } = await tableText("chart-table-own-formatter")
+    eq(rows[0][0], "JANUARY", "the table's labelFormatter, not the tooltip's `January 2024`")
+    eq(rows[0][1], "186 units", "the table's formatter, not the tooltip's `desktop: 186 visitors`")
+  })
+
+  await test("table: with no ChartTooltip at all, the defaults apply", async () => {
+    eq(await page.locator(`${pg("chart-table-radar")} .chart-tooltip`).count(), 0, "precondition: the fixture has no tooltip")
+    const { rows } = await tableText("chart-table-radar")
+    eq(JSON.stringify(rows[1]), JSON.stringify(["February", "305"]))
+  })
+
+  await test("table: pie rows are the slices, named by config label", async () => {
+    const { headers, rows } = await tableText("chart-table-pie")
+    eq(JSON.stringify(headers), JSON.stringify(["browser", "Visitors"]))
+    eq(rows.length, 5)
+    eq(JSON.stringify(rows[0]), JSON.stringify(["Chrome", "275"]))
+    eq(JSON.stringify(rows[4]), JSON.stringify(["Other", "90"]))
+  })
+
+  await test("table: scatter with several series adds a Series column, and the formatter gets each item's own index", async () => {
+    const { headers, rows } = await tableText("chart-table-scatter")
+    eq(JSON.stringify(headers), JSON.stringify(["Series", "Stature", "Weight"]))
+    eq(rows.length, 12)
+    eq(JSON.stringify(rows[0]), JSON.stringify(["School A", "0: 100", "1: 200"]), "x is item 0, y is item 1, not the cell position")
+    eq(JSON.stringify(rows[6]), JSON.stringify(["School B", "0: 200", "1: 260"]))
+  })
+
+  await test("polar summary: a pie and a radar with accessibilityLayer point aria-describedby at their summary", async () => {
+    for (const name of ["chart-pie", "chart-table-radar"]) {
+      const id = await page.locator(`${pg(name)} .chart-surface`).getAttribute("aria-describedby")
+      eq(id.endsWith("-summary"), true, `${name} describedby ${id}`)
+      eq(await page.locator(`${pg(name)} .chart-summary`).getAttribute("id"), id)
+    }
+  })
+
+  await test("polar summary: a consumer aria-describedby wins on a pie and no summary is rendered", async () => {
+    const svg = page.locator(`${pg("chart-table-pie-custom")} .chart-surface`)
+    eq(await svg.getAttribute("tabindex"), "0", "precondition: accessibilityLayer is on")
+    eq(await svg.getAttribute("aria-describedby"), "chart-table-pie-note")
+    eq(await page.locator(`${pg("chart-table-pie-custom")} .chart-summary`).count(), 0)
+  })
+
+  await test("polar table open: the covered plot and legend of a pie are inert", async () => {
+    eq(await page.locator(`${pg("chart-table-pie-custom")} .chart-plot[inert]`).count(), 1)
+    eq(await page.locator(`${pg("chart-table-pie-custom")} .chart-legend[inert]`).count(), 1)
+    eq(await page.locator(`${pg("chart-pie")} [inert]`).count(), 0, "counter-precondition: a pie with no open table is not inert")
+  })
+
+  await test("pie name: an explicit name wins over the config label in the summary and the Series column", async () => {
+    eq(
+      await summaryOf("chart-table-pie-named"),
+      "Mobile share: 5 slices, range 90 to 275, lowest Other, peak Chrome, total 925. Desktop: 6 slices, range 73 to 305, lowest April, peak February, total 1,224.",
+    )
+    const { rows } = await tableText("chart-table-pie-named")
+    eq(rows[0][1], "Mobile share")
+    eq(rows[5][1], "Desktop", "a pie without a name still reads its config label")
+  })
+
+  await test("table: several pies add a Series column beside Name and Value", async () => {
+    const { headers, rows } = await tableText("chart-table-pies")
+    eq(JSON.stringify(headers), JSON.stringify(["Name", "Series", "Value"]), "pies naming slices by different fields share a neutral heading")
+    eq(rows.length, 11)
+    eq(JSON.stringify(rows[0]), JSON.stringify(["Chrome", "Visitors", "275"]))
+    eq(JSON.stringify(rows[5]), JSON.stringify(["January", "Desktop", "186"]))
+  })
+
+  await test("table: numeric categories head their own rows, not the first series' label", async () => {
+    const { headers, rows } = await tableText("chart-table-years")
+    eq(JSON.stringify(headers), JSON.stringify(["year", "Sales"]))
+    eq(JSON.stringify(rows.map((r) => r[0])), JSON.stringify(["2021", "2022", "2023"]))
+    eq(JSON.stringify(rows[1]), JSON.stringify(["2022", "14"]))
+  })
+
+  await test("table: with no category key the row heads are the indices, not the first series' label", async () => {
+    const { headers, rows } = await tableText("chart-table-index")
+    eq(JSON.stringify(headers), JSON.stringify(["Category", "Desktop"]))
+    eq(JSON.stringify(rows.map((r) => r[0])), JSON.stringify(["0", "1", "2", "3", "4", "5"]))
+  })
+
+  await test("table: a pie's row heads go through the tooltip's labelFormatter", async () => {
+    const { rows } = await tableText("chart-table-pie-labelled")
+    eq(JSON.stringify(rows.map((r) => r[0])), JSON.stringify(["Browser: chrome", "Browser: safari", "Browser: firefox", "Browser: edge", "Browser: other"]))
+    eq(rows[0][1], "275")
+  })
+
+  await test("table: radial rows are the rings, headed by the radius axis key and named by config label", async () => {
+    const { headers, rows } = await tableText("chart-table-radial")
+    eq(JSON.stringify(headers), JSON.stringify(["browser", "Visitors"]))
+    eq(rows.length, 5)
+    eq(JSON.stringify(rows[0]), JSON.stringify(["Chrome", "275"]))
+  })
+
+  await test("table: radar rows follow the angle axis", async () => {
+    const { headers, rows } = await tableText("chart-table-radar")
+    eq(JSON.stringify(headers), JSON.stringify(["month", "Desktop"]))
+    eq(rows.length, 6)
+    eq(JSON.stringify(rows[1]), JSON.stringify(["February", "305"]))
+  })
+
+  await test("table: cells and row heads use the tooltip's formatters", async () => {
+    const { rows } = await tableText("chart-table-custom")
+    eq(rows[0][0], "January 2024")
+    eq(rows[0][1], "desktop: 186 visitors")
+    eq(rows.length, 6)
+  })
+
   // ── Responsive ──
 
   await test("responsive: the surface follows its container width", async () => {

@@ -1,7 +1,6 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useId,
   useLayoutEffect,
   useRef,
@@ -67,8 +66,6 @@ export function PopoverContent({
   const baseId = useId()
   const titleId = `${baseId}-title`
   const descriptionId = `${baseId}-desc`
-
-  useAnchorPosition(open, triggerRef, contentRef, { side, align, sideOffset })
 
   // A dangling aria-labelledby is worse than none: it suppresses the fallback
   // naming chain, so an untitled role="dialog" announces as unnamed instead of
@@ -137,8 +134,10 @@ export function PopoverContent({
     return () => el.removeEventListener("toggle", handler)
   }, [contentRef])
 
-  // Sync React state -> native popover show/hide.
-  useEffect(() => {
+  // Sync React state -> native popover show/hide. A layout effect declared
+  // before useAnchorPosition: shown first, or the first position measures a
+  // display:none 0×0 box and paints a frame misplaced.
+  useLayoutEffect(() => {
     const el = contentRef.current
     if (!el) return
     if (open && !showingRef.current) {
@@ -149,6 +148,8 @@ export function PopoverContent({
       showingRef.current = false
     }
   }, [open, contentRef])
+
+  useAnchorPosition(open, triggerRef, contentRef, { side, align, sideOffset })
 
   return (
     <div

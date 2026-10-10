@@ -293,6 +293,113 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(geometry((await frameAt(bar, 0.5)).shadow), " 0px 0px 0px 4px", "peak: one crisp 4px ring")
   })
 
+  // Computed colour of `var(--token)` resolved at the demo, so light and dark
+  // pick the same arm the bar does.
+  const tokenColour = (token) =>
+    page.evaluate((t) => {
+      const probe = document.createElement("span")
+      probe.style.color = t.startsWith("--") ? `var(${t})` : t
+      document.querySelector('[data-pg="progress-tone"]').appendChild(probe)
+      const c = getComputedStyle(probe).color
+      probe.remove()
+      return c
+    }, token)
+  const paint = (label) =>
+    page.locator(`[data-pg="progress-tone"] .progress[aria-label="${label}"]`).evaluate((el) => ({
+      fill: getComputedStyle(el.querySelector(".progress-indicator")).backgroundColor,
+      track: getComputedStyle(el).backgroundColor,
+      classes: [...el.classList].filter((c) => c.startsWith("progress--")).join(" "),
+    }))
+  const TONES = [
+    ["Healthy", "success"],
+    ["Filling up", "warning"],
+    ["Nearly full", "error"],
+  ]
+  const isDark = () => page.evaluate(() => document.documentElement.classList.contains("dark"))
+
+  await test("tone: the fill resolves to the status token", async () => {
+    eq((await paint("Healthy")).fill, await tokenColour("--success"))
+    // Light mixes toward --warning-foreground to reach 3:1; dark keeps the raw token.
+    eq(
+      (await paint("Filling up")).fill,
+      await tokenColour((await isDark()) ? "--warning" : "color-mix(in oklab, var(--warning) 78%, var(--warning-foreground) 22%)"),
+    )
+    eq((await paint("Nearly full")).fill, await tokenColour("--destructive"))
+    eq((await paint("Healthy")).classes, "progress--success")
+    eq((await paint("Nearly full")).classes, "progress--error")
+  })
+
+  await test("tone: each track is its own fill at a 5% tint", async () => {
+    for (const [label, tone] of TONES) {
+      const { fill, track } = await paint(label)
+      eq(track, await tokenColour(`color-mix(in oklab, ${fill} 5%, transparent)`), `${tone} track`)
+    }
+    eq((await paint("No tone")).track, await tokenColour("color-mix(in oklab, var(--primary) 20%, transparent)"), "default track keeps 20%")
+  })
+
+  await test("tone: the fill clears 3:1 against its own track on the page, light and dark", async () => {
+    const wasDark = await isDark()
+    for (const dark of [false, true]) {
+      await page.evaluate((d) => document.documentElement.classList.toggle("dark", d), dark)
+      const ratios = await page.evaluate((labels) => {
+        const c = document.createElement("canvas").getContext("2d", { willReadFrequently: true })
+        const rgba = (css) => {
+          c.clearRect(0, 0, 1, 1)
+          c.fillStyle = css
+          c.fillRect(0, 0, 1, 1)
+          const d = c.getImageData(0, 0, 1, 1).data
+          return [d[0], d[1], d[2], d[3] / 255]
+        }
+        const lum = ([r, g, b]) => {
+          const f = (v) => ((v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
+          return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
+        }
+        const probe = document.createElement("span")
+        probe.style.color = "var(--background)"
+        document.body.appendChild(probe)
+        const page_ = rgba(getComputedStyle(probe).color)
+        probe.remove()
+        const over = (fg, bg) => [0, 1, 2].map((i) => fg[i] * fg[3] + bg[i] * (1 - fg[3]))
+        return labels.map((label) => {
+          const bar = document.querySelector(`[data-pg="progress-tone"] .progress[aria-label="${label}"]`)
+          const fill = rgba(getComputedStyle(bar.querySelector(".progress-indicator")).backgroundColor)
+          const track = over(rgba(getComputedStyle(bar).backgroundColor), page_)
+          const [hi, lo] = [lum(fill), lum(track)].sort((a, b) => b - a)
+          return { label, ratio: (hi + 0.05) / (lo + 0.05) }
+        })
+      }, TONES.map(([l]) => l))
+      for (const { label, ratio } of ratios) eq(ratio >= 3, true, `${label} ${dark ? "dark" : "light"} fill/track ${ratio.toFixed(2)}:1`)
+    }
+    await page.evaluate((d) => document.documentElement.classList.toggle("dark", d), wasDark)
+  })
+
+  await test("tone: unset leaves the default primary paint and no tone class", async () => {
+    const plain = await paint("No tone")
+    eq(plain.fill, await tokenColour("--primary"))
+    eq(plain.classes, "")
+    const fills = [(await paint("Healthy")).fill, (await paint("Filling up")).fill, (await paint("Nearly full")).fill]
+    eq(fills.includes(plain.fill), false, "no tone borrowed the default colour")
+  })
+
+  await test("tone: a consumer's own data-tone does not trigger kit paint", async () => {
+    const fill = await page.locator('[data-pg="progress-tone"] .progress[aria-label="No tone"]').evaluate((el) => {
+      el.setAttribute("data-tone", "error")
+      const c = getComputedStyle(el.querySelector(".progress-indicator")).backgroundColor
+      el.removeAttribute("data-tone")
+      return c
+    })
+    eq(fill, await tokenColour("--primary"))
+  })
+
+  await test("tone: glow takes its halo from the tone", async () => {
+    const bar = page.locator('[data-pg="progress-tone"] .progress--glow')
+    await bar.evaluate((el) => el.scrollIntoView({ block: "center" }))
+    const fill = (await paint("Live and healthy")).fill
+    eq(fill, await tokenColour("--success"), "precondition: the glow bar is toned")
+    eq(colour((await frameAt(bar, 0)).shadow), await tokenColour(`color-mix(in oklab, ${fill} 18%, transparent)`), "rest halo is the tone at 18%")
+    eq(colour((await frameAt(bar, 0.5)).shadow), await tokenColour(`color-mix(in oklab, ${fill} 28%, transparent)`), "peak halo is the tone at 28%")
+  })
+
   await test("animated demo settles at 66", async () => {
     await page.waitForFunction(
       () => document.querySelectorAll(".progress")[0]?.getAttribute("aria-valuenow") === "66",

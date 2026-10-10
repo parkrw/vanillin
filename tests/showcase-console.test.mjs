@@ -848,6 +848,12 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq(await triggers.nth(0).getAttribute("data-active"), "true", "the site row reads as active too")
     eq((await console_.locator(".ck-util-label").allTextContents()).join(" | "), "CPU | RAM | Storage")
     eq((await console_.locator(".ck-util-val").allTextContents()).join(" | "), "38 / 60 GHz · 63% | 96 / 192 GB · 50% | 640 / 1,500 GB · 43%")
+    // The kit paints the bar from `tone`; console.css carries no .progress-indicator colour for it.
+    eq(
+      await console_.locator(".ck-util-bar").first().evaluate((el) => [["success", "warning", "error"].find((t) => el.classList.contains(`progress--${t}`)), getComputedStyle(el.querySelector(".progress-indicator")).backgroundColor]).then(([tone, fill]) => `${tone} ${fill}`),
+      `success ${await consoleColour("--success")}`,
+      "a bar below every threshold is the success token",
+    )
     eq(await console_.locator(".ck-vdc .badge", { hasText: "Warm standby" }).count(), 1)
 
     // A sibling is one rail link away, and the fold stays as it was.

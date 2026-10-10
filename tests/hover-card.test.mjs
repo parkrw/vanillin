@@ -1,5 +1,8 @@
-export default async function run({ page, baseUrl, test, eq }) {
+import { firstFrame } from "./helpers/first-frame.mjs"
+
+export default async function run({ page, baseUrl, test, eq, near }) {
   await page.goto(`${baseUrl}/#hover-card`)
+  const { armFirstFrame, expectFirstFrameInPlace } = firstFrame({ page, eq, near })
 
   const waitOpen = () => page.waitForSelector(".hover-card:popover-open")
   const waitClosed = () =>
@@ -21,23 +24,41 @@ export default async function run({ page, baseUrl, test, eq }) {
   const trigger = page.locator('[data-pg="hover-card-trigger"]')
 
   await test("hover opens after openDelay, leave closes after closeDelay", async () => {
-    // Demo trigger uses openDelay=100, closeDelay=100 for test speed.
-    await trigger.hover()
-    // Not open immediately — the openDelay must elapse first.
-    const immediate = await page.evaluate(
-      () => document.querySelectorAll(".hover-card:popover-open").length
-    )
-    eq(immediate, 0, "not open before delay")
-    const el = await waitOpen()
-    eq(await el.getAttribute("data-state"), "open", "data-state open")
+    // Demo trigger uses openDelay=100, closeDelay=100 for test speed. The
+    // delays are read from timestamps taken in the page, so a slow round trip
+    // from the test cannot pass for an early open or an early close.
+    await page.evaluate(() => {
+      const marks = (window.__hoverMarks = {})
+      const listening = (window.__hoverMarksDone = new AbortController())
+      const opts = { capture: true, signal: listening.signal }
+      const onTrigger = (e) => e.target instanceof Element && e.target.closest('[data-pg="hover-card-trigger"]')
+      document.addEventListener("pointerover", (e) => { if (onTrigger(e)) marks.enter ??= e.timeStamp }, opts)
+      document.addEventListener("pointerout", (e) => { if (onTrigger(e) && marks.open) marks.leave ??= e.timeStamp }, opts)
+      // beforetoggle fires inside showPopover/hidePopover, at the moment itself.
+      document.addEventListener("beforetoggle", (e) => {
+        if (!e.target.matches?.(".hover-card")) return
+        if (e.newState === "open") marks.open ??= performance.now()
+        else if (marks.leave) marks.close ??= performance.now()
+      }, opts)
+    })
+    try {
+      await trigger.hover()
+      const el = await waitOpen()
+      eq(await el.getAttribute("data-state"), "open", "data-state open")
+      await page.mouse.move(0, 0)
+      await waitClosed()
 
-    await page.mouse.move(0, 0)
-    // Still open during the closeDelay grace period.
-    const stillOpen = await page.evaluate(
-      () => document.querySelectorAll(".hover-card:popover-open").length
-    )
-    eq(stillOpen, 1, "open during closeDelay grace")
-    await waitClosed()
+      const m = await page.evaluate(() => window.__hoverMarks)
+      eq(
+        [m.enter, m.open, m.leave, m.close].every((t) => typeof t === "number"),
+        true,
+        `precondition: enter, open, leave and close all recorded (${JSON.stringify(m)})`
+      )
+      eq(m.open - m.enter >= 99, true, `opened ${Math.round(m.open - m.enter)}ms after the pointer entered, not before the delay`)
+      eq(m.close - m.leave >= 99, true, `closed ${Math.round(m.close - m.leave)}ms after the pointer left, not before the grace`)
+    } finally {
+      await page.evaluate(() => window.__hoverMarksDone.abort())
+    }
   })
 
   await test("pointer moving into the content keeps it open", async () => {
@@ -118,5 +139,12 @@ export default async function run({ page, baseUrl, test, eq }) {
     await page.mouse.move(0, 0)
     await waitClosed()
     eq(await readout.textContent(), "closed", "state says closed after leave")
+  })
+
+  await test("first frame is already in place: shown before it is positioned", async () => {
+    await armFirstFrame(".hover-card")
+    await trigger.hover()
+    await expectFirstFrameInPlace(".hover-card")
+    await cleanup()
   })
 }

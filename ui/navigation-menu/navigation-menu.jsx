@@ -444,8 +444,6 @@ function NavigationMenuContentPopover({
   children,
   ...props
 }) {
-  useAnchorPosition(open, triggerRef, contentRef, { side, align, sideOffset })
-
   const setValueRef = useRef(setValue)
   setValueRef.current = setValue
 
@@ -461,7 +459,10 @@ function NavigationMenuContentPopover({
     return () => el.removeEventListener("toggle", handler)
   }, [contentRef, itemValue])
 
-  useEffect(() => {
+  // A layout effect declared before useAnchorPosition: shown first, or the
+  // first position measures a display:none 0×0 box and paints a frame
+  // misplaced.
+  useLayoutEffect(() => {
     const el = contentRef.current
     if (!el) return
     const showing = el.matches(":popover-open")
@@ -473,6 +474,8 @@ function NavigationMenuContentPopover({
     }
     focusFirstRef.current = false
   }, [open, contentRef, focusFirstRef])
+
+  useAnchorPosition(open, triggerRef, contentRef, { side, align, sideOffset })
 
   const handleKeyDown = (event) => {
     onKeyDown?.(event)
