@@ -131,6 +131,14 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
     eq(labels.join("|"), "0|39", "end labels")
   })
 
+  await test("legend: a plain ChartLegend draws the heatmap scale", async () => {
+    const name = "heatmap-calendar-monday"
+    const swatches = page.locator(`${pg(name)} .chart-heatmap-legend-step`)
+    eq(await swatches.count(), 5, "one swatch per step")
+    eq(await swatches.first().evaluate((el) => getComputedStyle(el).backgroundColor), await tokenColour(name, "--color-low"), "first swatch is the low shade")
+    eq(await page.locator(`${pg(name)} .chart-heatmap-legend-label`).count(), 2, "both end labels")
+  })
+
   await test("heatmap: domain pins the scale and steps sets the shades", async () => {
     const name = "heatmap-domain"
     eq(await page.locator(`${pg(name)} .chart-heatmap-legend-step`).count(), 8, "eight swatches")
@@ -404,12 +412,21 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
   })
 
   await test("forced-colors: cells and legend swatches keep their shades, cells take an edge", async () => {
+    eq(await cell("heatmap-default", 39).evaluate((el) => getComputedStyle(el).stroke), "none", "precondition: no edge outside forced colours")
     await page.emulateMedia({ forcedColors: "active" })
     try {
       const name = "heatmap-default"
       const high = cell(name, 39)
       eq(await high.evaluate((el) => getComputedStyle(el).forcedColorAdjust), "none")
-      eq(await high.evaluate((el) => getComputedStyle(el).strokeWidth), "1px", "a filled cell takes a CanvasText edge")
+      const canvasText = await high.evaluate((el) => {
+        const probe = document.createElementNS("http://www.w3.org/2000/svg", "rect")
+        probe.style.fill = "CanvasText"
+        el.parentNode.appendChild(probe)
+        const c = getComputedStyle(probe).fill
+        probe.remove()
+        return c
+      })
+      eq(await high.evaluate((el) => getComputedStyle(el).stroke), canvasText, "a filled cell takes a CanvasText edge")
       const swatches = page.locator(`${pg(name)} .chart-heatmap-legend-step`)
       eq(await swatches.first().evaluate((el) => getComputedStyle(el).forcedColorAdjust), "none", "legend swatches opt out too")
       await high.evaluate((el) => el.scrollIntoView({ block: "center" }))

@@ -318,7 +318,9 @@ function GridChart({
   }
   const a11y = surfaceA11y(accessibilityLayer, ariaLabel != null || ariaLabelledBy != null, { ...keyboard, onKeyDown })
 
-  const legendEl = parts.legend
+  // ChartLegend lists series, and a heatmap has none: it draws the scale, as HeatmapLegend does.
+  const legendEl =
+    parts.legend && parts.legend.type !== HeatmapLegend ? <HeatmapLegend verticalAlign={parts.legend.props.verticalAlign} /> : parts.legend
   const legendTop = legendEl && legendEl.props.verticalAlign === "top"
   const { plot } = model
 

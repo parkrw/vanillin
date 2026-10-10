@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Button } from "../../ui/button/button.jsx"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../../ui/chart/chart.jsx"
+import { ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent } from "../../ui/chart/chart.jsx"
 import { HeatmapChart, CalendarHeatmap, HeatmapLegend } from "../../ui/chart-heatmap/chart-heatmap.jsx"
 import "../../ui/chart/chart.css"
 import "../../ui/chart-heatmap/chart-heatmap.css"
@@ -169,13 +169,17 @@ export default function ChartHeatmapPage() {
         <h3>Week starts on Monday</h3>
         <p>
           <code>weekStart</code> picks the top row: 0 for Sunday, 1 for Monday. 2024 begins on a Monday, so with a Monday
-          start its first day sits in the top row of the first column.
+          start its first day sits in the top row of the first column. A plain <code>ChartLegend</code> draws the same
+          scale as <code>HeatmapLegend</code>.
         </p>
-        <ComponentPreview code={`<CalendarHeatmap data={commits} year={2024} weekStart={1} dateKey="date" valueKey="count" locale="en-US" />`}>
+        <ComponentPreview code={`<CalendarHeatmap data={commits} year={2024} weekStart={1} dateKey="date" valueKey="count" locale="en-US">
+  <ChartLegend />
+</CalendarHeatmap>`}>
           <Frame pg="heatmap-calendar-monday" wide>
             <ChartContainer config={commitConfig} style={calendarShape}>
               <CalendarHeatmap data={commits2024} year={2024} weekStart={1} dateKey="date" valueKey="count" locale="en-US" accessibilityLayer aria-label="Commits in 2024, weeks from Monday">
                 <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend />
               </CalendarHeatmap>
             </ChartContainer>
           </Frame>
