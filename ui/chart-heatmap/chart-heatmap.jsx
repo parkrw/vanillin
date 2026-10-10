@@ -180,7 +180,11 @@ function heatmapModel({ data, xKey, yKey, valueKey, xDomain, yDomain, domain, st
 const utcDay = (value) => {
   if (value instanceof Date) return Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()) / DAY_MS
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value))
-  return match ? Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])) / DAY_MS : null
+  if (!match) return null
+  const [y, m, d] = [Number(match[1]), Number(match[2]) - 1, Number(match[3])]
+  const date = new Date(Date.UTC(y, m, d))
+  // Date.UTC rolls 2024-02-30 over to 1 March, where it would claim that day's slot.
+  return date.getUTCMonth() === m && date.getUTCDate() === d ? date.getTime() / DAY_MS : null
 }
 
 function calendarModel({ data, year, dateKey, valueKey, weekStart, domain, steps, cellGap, margin, yAxisWidth, xAxisHeight, width, height, locale, name }) {

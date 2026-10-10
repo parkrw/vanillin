@@ -334,7 +334,7 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
 
   // ── Loose props, Date data, linked charts ──
 
-  await test("calendar: year and weekStart as strings behave as numbers; a Date is read in UTC", async () => {
+  await test("calendar: year and weekStart as strings behave as numbers; a Date is read in UTC; an impossible date is dropped", async () => {
     const name = "heatmap-dates"
     eq(await page.locator(`${pg(name)} .chart-heatmap-cell`).count(), 366, "year=\"2024\" is 366 days, not a concatenated year")
     const first = await cellInfo(name, 0)
@@ -344,6 +344,7 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
     eq((await cellInfo(name, 64)).value, "7", "5 March 2024 is day 64")
     eq((await cellInfo(name, 65)).value, "2", "6 March 2024 is day 65")
     eq((await cellInfo(name, 63)).empty, true, "4 March has no datum")
+    eq((await cellInfo(name, 60)).empty, true, "2024-02-30 is no day, so it does not roll over onto 1 March")
     await hover(name, 64)
     await tooltip(name).waitFor()
     eq(await page.locator(`${pg(name)} .chart-tooltip-label`).textContent(), "Mar 5, 2024", "tooltip date")

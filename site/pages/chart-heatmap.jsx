@@ -53,8 +53,10 @@ const hoursReversed = [...hours].reverse()
 const daysOrdered = ["Fri", "Wed", "Mon"]
 const orderData = [...trafficData, { hour: "09", day: "Sat", visits: 99 }]
 
-/* Dates as Date objects, in UTC: 5 March 2024 is a 7, 6 March a 2. */
+/* Dates as Date objects, in UTC: 5 March 2024 is a 7, 6 March a 2. The two impossible strings are dropped, not rolled onto 5 and 1 March. */
 const commitDates = [
+  { date: "2024-02-34", count: 99 },
+  { date: "2024-02-30", count: 98 },
   { date: new Date(Date.UTC(2024, 2, 5)), count: 7 },
   { date: new Date(Date.UTC(2024, 2, 6)), count: 2 },
 ]
