@@ -243,6 +243,20 @@ const monthConfig = {
   may: { label: "May", color: "var(--chart-5)" },
 }
 
+const patternConfig = {
+  desktop: { label: "Desktop", color: "var(--chart-1)" },
+  mobile: { label: "Mobile", color: "var(--chart-2)", pattern: "dots" },
+}
+
+const patternBrowserConfig = {
+  visitors: { label: "Visitors" },
+  chrome: { label: "Chrome", color: "var(--chart-1)", pattern: "hatch" },
+  safari: { label: "Safari", color: "var(--chart-2)", pattern: "dots" },
+  firefox: { label: "Firefox", color: "var(--chart-3)", pattern: "cross" },
+  edge: { label: "Edge", color: "var(--chart-4)" },
+  other: { label: "Other", color: "var(--chart-5)" },
+}
+
 const dailyData = [
   { date: "2024-04-01", desktop: 222, mobile: 150 },
   { date: "2024-04-02", desktop: 97, mobile: 180 },
@@ -2405,6 +2419,69 @@ const fullDay = (value) =>
       </section>
 
       <section className="pg-section">
+        <h3>Patterns</h3>
+        <p>
+          Colour alone is a weak way to tell series apart: some readers cannot see the difference, and a printout or a
+          forced-colours display may drop it. <code>pattern</code> on a <code>Bar</code>, <code>Area</code>,{" "}
+          <code>Pie</code> or <code>RadialBar</code> fills the series with <code>"hatch"</code>, <code>"dots"</code> or{" "}
+          <code>"cross"</code> in its own colour, and the legend and tooltip swatches carry the same pattern. The same key
+          works in the <code>config</code> entry, which is how a pie gives each slice its own. In forced colours the
+          patterns are drawn in the system text colour on the system background, so they alone tell the series apart.
+        </p>
+        <ComponentPreview code={`const config = {
+  desktop: { label: "Desktop", color: "var(--chart-1)" },
+  mobile: { label: "Mobile", color: "var(--chart-2)", pattern: "dots" },
+}
+
+<Bar dataKey="desktop" fill="var(--color-desktop)" pattern="hatch" />
+<Bar dataKey="mobile" fill="var(--color-mobile)" />`}>
+          <Frame pg="chart-pattern-bar">
+            <ChartContainer config={patternConfig}>
+              <BarChart data={chartData}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={monthTick} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+                <Bar dataKey="desktop" fill="var(--color-desktop)" pattern="hatch" />
+                <Bar dataKey="mobile" fill="var(--color-mobile)" />
+              </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<Area dataKey="desktop" pattern="cross" fill="var(--color-desktop)" stroke="var(--color-desktop)" />`}>
+          <Frame pg="chart-pattern-area">
+            <ChartContainer config={patternConfig}>
+              <AreaChart data={chartData}>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={monthTick} />
+                <Area dataKey="desktop" type="monotone" pattern="cross" fill="var(--color-desktop)" stroke="var(--color-desktop)" />
+              </AreaChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<PieChart>
+  <Pie data={browserData} dataKey="visitors" nameKey="browser" />
+</PieChart>`}>
+          <Frame pg="chart-pattern-pie" square>
+            <ChartContainer config={patternBrowserConfig} style={{ aspectRatio: "1" }}>
+              <PieChart>
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <Pie data={browserData} dataKey="visitors" nameKey="browser" />
+              </PieChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<RadialBar dataKey="visitors" pattern="hatch" background />`}>
+          <Frame pg="chart-pattern-radial" square>
+            <ChartContainer config={browserConfig} style={{ aspectRatio: "1" }}>
+              <RadialBarChart data={browserData} innerRadius={30} outerRadius={110}>
+                <RadialBar dataKey="visitors" pattern="hatch" background />
+              </RadialBarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Palette</h3>
         <p>
           The five <code>--chart-n</code> tokens, light and dark. A series with no <code>fill</code> or{" "}
@@ -2901,6 +2978,7 @@ const activeIndex = chartData.findIndex((row) => row.browser === browser)
         { name: "activeIndex", type: "number | number[]", description: "Pie: pins the active slice instead of following the pointer" },
         { name: "inactiveShape", type: "(slice) => node | { fillOpacity, … }", description: "Pie: redraws every other slice while one is active" },
         { name: "cornerRadius", type: "number", default: "0", description: "Rounded sector corners, px" },
+        { name: "pattern", type: '"hatch" | "dots" | "cross"', description: "Bar, Area, Pie, RadialBar: fill with a pattern in the series colour; a config entry's pattern key does the same" },
         { name: "fill / fillOpacity", type: "string / number", description: "Series colour; defaults to the next --chart-n, Radar fillOpacity 1" },
         { name: "stroke / strokeWidth", type: "string / number", default: "background / 0", description: "Sector edge, a gap in the page colour; Radar outline" },
         { name: "background", type: "boolean | { fill }", default: "false", description: "RadialBar: a track over the full sweep" },

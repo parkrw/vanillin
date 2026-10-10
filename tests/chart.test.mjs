@@ -1881,6 +1881,78 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await tooltip(line).waitFor({ state: "detached" })
   })
 
+  // ── Patterns ──
+
+  const patternOf = (selector) =>
+    page.locator(selector).first().evaluate((el) => {
+      const id = /^url\(["']?#(.+?)["']?\)$/.exec(el.getAttribute("fill") ?? "")?.[1]
+      const def = id ? document.getElementById(id) : null
+      return {
+        id,
+        kind: def?.dataset.pattern ?? null,
+        tag: def?.tagName ?? null,
+        lines: def ? def.querySelectorAll("line").length : 0,
+        circles: def ? def.querySelectorAll("circle").length : 0,
+        transform: def?.getAttribute("patternTransform") ?? null,
+        chart: el.closest("[data-chart]")?.dataset.chart,
+      }
+    })
+
+  await test("pattern: each fill points at a def whose geometry matches its kind, with ids owned by their chart", async () => {
+    const hatch = await patternOf(`${pg("chart-pattern-bar")} .chart-series[data-key="desktop"] .chart-bar`)
+    eq(hatch.tag, "pattern")
+    eq(hatch.kind, "hatch")
+    eq(hatch.lines, 1, "hatch is one stripe")
+    eq(hatch.transform, "rotate(45)")
+    const dots = await patternOf(`${pg("chart-pattern-bar")} .chart-series[data-key="mobile"] .chart-bar`)
+    eq(dots.kind, "dots", "mobile takes its pattern from the config key")
+    eq(dots.circles, 1)
+    eq(dots.lines, 0)
+    const cross = await patternOf(`${pg("chart-pattern-area")} .chart-area`)
+    eq(cross.kind, "cross")
+    eq(cross.lines, 2, "cross is two stripes")
+    eq(await page.locator(`${pg("chart-pattern-area")} .chart-area`).first().getAttribute("fill-opacity"), "1", "the pattern carries its own tint")
+    const sectors = await page.locator(`${pg("chart-pattern-pie")} .chart-sector`).evaluateAll((els) =>
+      els.map((el) => {
+        const id = /#(.+?)["']?\)$/.exec(el.getAttribute("fill") ?? "")?.[1]
+        return id ? document.getElementById(id)?.dataset.pattern : el.getAttribute("fill")
+      }),
+    )
+    eq(JSON.stringify(sectors), JSON.stringify(["hatch", "dots", "cross", "var(--color-edge)", "var(--color-other)"]), "a pie takes one per slice from the config, and a slice with none stays plain")
+    const ring = await patternOf(`${pg("chart-pattern-radial")} .chart-series .chart-sector`)
+    eq(ring.kind, "hatch")
+    const ids = await page.locator("pattern.chart-pattern").evaluateAll((els) => els.map((el) => el.id))
+    eq(new Set(ids).size, ids.length, "no id is used twice on the page")
+    for (const id of ids) eq(id.startsWith("chart-"), true, `${id} names its chart`)
+    eq(hatch.id.startsWith(hatch.chart), true, "the id begins with the owning chart's id")
+    eq(hatch.id === dots.id, false)
+  })
+
+  await test("pattern: legend and tooltip swatches carry the same kind, drawn from gradients", async () => {
+    const swatches = await page.locator(`${pg("chart-pattern-bar")} .chart-legend-swatch`).evaluateAll((els) =>
+      els.map((el) => ({ kind: el.dataset.pattern ?? null, image: getComputedStyle(el).backgroundImage })),
+    )
+    eq(swatches[0].kind, "hatch")
+    eq(swatches[0].image.includes("repeating-linear-gradient"), true, swatches[0].image)
+    eq(swatches[1].kind, "dots")
+    eq(swatches[1].image.includes("radial-gradient"), true, swatches[1].image)
+    await hoverBand("chart-pattern-bar", 1)
+    await tooltip("chart-pattern-bar").waitFor()
+    const indicators = await page.locator(`${pg("chart-pattern-bar")} .chart-tooltip-indicator`).evaluateAll((els) => els.map((el) => el.dataset.pattern ?? null))
+    eq(JSON.stringify(indicators), JSON.stringify(["hatch", "dots"]))
+    await page.mouse.move(0, 0)
+    const pie = await page.locator(`${pg("chart-pattern-pie")} .chart-sector`).first().evaluate((el) => el.getAttribute("fill"))
+    eq(pie.startsWith("url(#"), true)
+  })
+
+  await test("pattern: with no pattern there are no defs and the fill is plain", async () => {
+    eq(await page.locator(`${pg("chart-default")} pattern`).count(), 0)
+    const fill = await page.locator(`${pg("chart-default")} .chart-bar`).first().getAttribute("fill")
+    eq(fill.startsWith("url("), false, fill)
+    eq(await page.locator(`${pg("chart-default")} .chart-legend-swatch[data-pattern]`).count(), 0)
+    eq(await page.locator(`${pg("chart-default")} .chart-tooltip-indicator[data-pattern]`).count(), 0)
+  })
+
   // ── Forced colours ──
 
   await test("forced-colors: series fills survive, tick text does not opt out", async () => {
@@ -1916,6 +1988,55 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     }, shot.toString("base64"))
     const chroma = Math.max(r, g, b) - Math.min(r, g, b)
     eq(chroma > 60, true, `bar paints in colour under forced-colors, got rgb(${r},${g},${b})`)
+    await page.emulateMedia({ forcedColors: null })
+  })
+
+  await test("forced-colors: a pattern is drawn in system ink on the canvas, not as a flat fill", async () => {
+    await page.emulateMedia({ forcedColors: "active" })
+    const bar = page.locator(`${pg("chart-pattern-bar")} .chart-series[data-key="desktop"] .chart-bar`).first()
+    eq(await bar.evaluate((el) => el.getAttribute("fill").startsWith("url(#")), true, "precondition: the bar is patterned")
+    const ink = await page.locator(`${pg("chart-pattern-bar")} .chart-series[data-key="desktop"] .chart-bar`).first().evaluate((el) => {
+      const mark = document.querySelector(`#${CSS.escape(/#(.+?)["']?\)$/.exec(el.getAttribute("fill"))[1])} .chart-pattern-mark`)
+      return getComputedStyle(mark).stroke
+    })
+    const text = await page.locator(`${pg("chart-pattern-bar")} .chart`).evaluate((host) => {
+      const probe = document.createElement("span")
+      probe.style.color = "CanvasText"
+      host.appendChild(probe)
+      const value = getComputedStyle(probe).color
+      probe.remove()
+      return value
+    })
+    eq(ink, text, "the mark is CanvasText")
+    await bar.evaluate((el) => el.scrollIntoView({ block: "center" }))
+    const clip = await bar.evaluate((el) => {
+      const r = el.getBoundingClientRect()
+      return { x: Math.round(r.x + r.width / 2 - 12), y: Math.round(r.y + r.height / 2 - 12), width: 24, height: 24 }
+    })
+    const shot = await page.screenshot({ clip })
+    const { lo, hi, chroma } = await page.evaluate(async (b64) => {
+      const img = new Image()
+      img.src = `data:image/png;base64,${b64}`
+      await img.decode()
+      const canvas = document.createElement("canvas")
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext("2d")
+      ctx.drawImage(img, 0, 0)
+      const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      let lo = 255
+      let hi = 0
+      let chroma = 0
+      for (let i = 0; i < data.length; i += 4) {
+        const l = (data[i] + data[i + 1] + data[i + 2]) / 3
+        lo = Math.min(lo, l)
+        hi = Math.max(hi, l)
+        chroma = Math.max(chroma, Math.max(data[i], data[i + 1], data[i + 2]) - Math.min(data[i], data[i + 1], data[i + 2]))
+      }
+      return { lo, hi, chroma }
+    }, shot.toString("base64"))
+    eq(lo < 60 && hi > 200, true, `stripes and canvas both present, got ${lo}..${hi}`)
+    eq(chroma < 30, true, `ink and canvas, no series colour, got chroma ${chroma}`)
     await page.emulateMedia({ forcedColors: null })
   })
 }
