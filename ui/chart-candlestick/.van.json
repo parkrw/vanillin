@@ -1,0 +1,12 @@
+{
+  "name": "chart-candlestick",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [
+    "chart"
+  ],
+  "files": {
+    "chart-candlestick.css": "sha256-Fgwm1D7WPG4DRFeO6je1Id4qp3o/WUGEsaH+EWqs+dU=",
+    "chart-candlestick.jsx": "sha256-3P6TKGsUulmrpOo2AMa+hZu/yz1jXmmNKB0uSIl/uno="
+  }
+}
