@@ -442,6 +442,27 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     eq((await paint("spark-hide"))[0].length, 2, "inbound back")
   })
 
+  await test("a hidden series keeps its share of x; rescale spreads the rest edge to edge", async () => {
+    const span = width - 2 * inset
+    const xs = (n) =>
+      page.$eval(`[data-pg="spark-hide-x"] .sparkline:nth-child(${n}) .sparkline-line`, (el) =>
+        [...el.getAttribute("d").matchAll(/[ML] ([\d.]+) [\d.]+/g)].map((m) => Number(m[1])),
+      )
+    // 4 polled readings beside 8 hidden requests.
+    const [byIndex, byIndexRescaled] = [await xs(1), await xs(2)]
+    eq(byIndex.length, 4, "only polled drawn")
+    near(byIndex.at(-1), inset + (3 / 7) * span, 0.01, "polled keeps 4 of the 8 slots")
+    eq(byIndex[0], inset, "first slot")
+    near(byIndexRescaled.at(-1), width - inset, 0.01, "rescale: polled ends at the right edge")
+
+    // Requests over minutes 0..13 beside a hidden source from minute -12.
+    const [byTime, byTimeRescaled] = [await xs(3), await xs(4)]
+    eq(byTime.length, 8, "only requests drawn")
+    near(byTime[0], inset + (12 / 25) * span, 0.01, "minute 0 sits 12 of 25 minutes in")
+    near(byTime.at(-1), width - inset, 0.01, "minute 13 at the right edge")
+    near(byTimeRescaled[0], inset, 0.01, "rescale: minute 0 at the left edge")
+  })
+
   const bandColours = (host) =>
     page.$eval(`[data-pg="${host}"] .sparkline`, (svg) =>
       Object.fromEntries([...svg.querySelectorAll(".sparkline-stop")].map((s) => [s.dataset.zone, getComputedStyle(s).stopColor])),

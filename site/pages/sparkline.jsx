@@ -54,6 +54,8 @@ const at = (minutes) => minutes.map((m) => new Date(start + m * 60_000))
 const sampledAt = at([0, 1, 2, 3, 10, 11, 12, 13])
 const polledAt = at([0, 4, 8, 13])
 const polled = [12, 18, 22, 21]
+/* A source with history from before the window: hidden, it still widens the time axis unless rescale. */
+const backfilledAt = at([-12, -8, -4, 0])
 
 const HOUR = 3_600_000
 const DAY = 24 * HOUR
@@ -393,6 +395,22 @@ import "./ui/sparkline/sparkline.css"
           A hidden line keeps its colour and its share of the scale, so switching one off moves
           nothing else: the first sparkline. <code>rescale</code> fits the scale to the lines still
           drawn instead, so the rest grow to fill the box: the second.
+        </p>
+        <ComponentPreview code={`<Sparkline series={[{ points: requests, hide: true }, { points: polled }]} />
+<Sparkline rescale series={[{ points: requests, hide: true }, { points: polled }]} />
+<Sparkline times={sampledAt} series={[{ points: requests }, { points: polled, times: backfilledAt, hide: true }]} />
+<Sparkline rescale times={sampledAt} series={[{ points: requests }, { points: polled, times: backfilledAt, hide: true }]} />`}>
+          <div className="pg-row" data-pg="spark-hide-x">
+            <Sparkline series={[{ points: requests, hide: true }, { points: polled }]} />
+            <Sparkline rescale series={[{ points: requests, hide: true }, { points: polled }]} />
+            <Sparkline times={sampledAt} series={[{ points: requests }, { points: polled, times: backfilledAt, hide: true }]} />
+            <Sparkline rescale times={sampledAt} series={[{ points: requests }, { points: polled, times: backfilledAt, hide: true }]} />
+          </div>
+        </ComponentPreview>
+        <p className="pg-desc">
+          The x axis follows the same rule. A hidden series with more readings, or with readings from
+          earlier, still sets the width the others are spread over. Under <code>rescale</code> the lines
+          still drawn run edge to edge.
         </p>
       </section>
 
