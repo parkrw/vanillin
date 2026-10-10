@@ -139,6 +139,18 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
     eq(highest.step, "3", "39 of 0 to 80 in 8 steps is step 3, not the top")
     eq((await cellInfo(name, 0)).step, "0", "zero is the bottom step")
     eq((await page.locator(`${pg(name)} .chart-heatmap-legend-label`).allTextContents()).join("|"), "0|80", "pinned labels")
+    const legend = await page.locator(`${pg(name)} .chart-heatmap-legend`).boundingBox()
+    const plot = await surface(name).boundingBox()
+    eq(legend.y + legend.height <= plot.y + 1, true, "verticalAlign top puts the legend above the grid")
+    const defaultLegend = await page.locator(`${pg("heatmap-default")} .chart-heatmap-legend`).boundingBox()
+    const defaultPlot = await surface("heatmap-default").boundingBox()
+    eq(defaultLegend.y >= defaultPlot.y + defaultPlot.height - 1, true, "the default legend sits below")
+    const gapOf = async (fixture) => {
+      const [a, b] = [await cellInfo(fixture, 0), await cellInfo(fixture, 1)]
+      return (b.x - a.x - a.width) / (b.x - a.x)
+    }
+    near(await gapOf(name), 0.2, 0.01, "cellGap 0.2 leaves a fifth of each pitch empty")
+    near(await gapOf("heatmap-default"), 0.1, 0.01, "against the default 0.1")
   })
 
   // ── Tooltip ──
@@ -374,9 +386,14 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
 
   await test("heatmap: right to left keeps the columns left to right, and the arrows follow the screen", async () => {
     const name = "heatmap-rtl"
-    eq(await surface(name).evaluate((el) => getComputedStyle(el).direction), "rtl", "the fixture is right to left")
+    eq(await page.locator(pg(name)).evaluate((el) => getComputedStyle(el).direction), "rtl", "the fixture is right to left")
+    eq(await surface(name).evaluate((el) => getComputedStyle(el).direction), "ltr", "the svg keeps the grid's own direction")
     const [first, second] = [await cellInfo(name, 0), await cellInfo(name, 1)]
     eq(second.x > first.x, true, "the second column is drawn right of the first")
+    const firstCell = await cell(name, 0).boundingBox()
+    const labelRights = await page.locator(`${pg(name)} [data-axis="y"] text`).evaluateAll((els) => els.map((el) => el.getBoundingClientRect().right))
+    eq(labelRights.length > 0, true, "the row labels are drawn")
+    eq(labelRights.every((right) => right <= firstCell.x), true, `row labels end left of the first column, got ${labelRights} vs ${firstCell.x}`)
     await focusSurface(name)
     eq(await activeIndex(name), [0])
     eq(await press(name, "ArrowRight"), [1], "ArrowRight moves to the cell on the right")

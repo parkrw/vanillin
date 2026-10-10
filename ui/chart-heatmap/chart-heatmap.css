@@ -4,6 +4,13 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* The grid does not mirror in RTL, so its labels must not either: an
+ * inherited rtl flips text-anchor="end" and lays the row labels over the
+ * first column. */
+.chart-heatmap .chart-surface {
+  direction: ltr;
+}
+
 .chart-heatmap-cell {
   stroke: none;
   rx: 2px;
