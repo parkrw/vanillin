@@ -99,6 +99,11 @@ const probes = [
   ["progress", '[data-pg="progress-tone"] .progress--success .progress-indicator', ["backgroundColor"], "progress indicator success"],
   ["progress", '[data-pg="progress-tone"] .progress--warning .progress-indicator', ["backgroundColor"], "progress indicator warning"],
   ["progress", '[data-pg="progress-tone"] .progress--error .progress-indicator', ["backgroundColor"], "progress indicator error"],
+  ["meter", ".meter", ["backgroundColor"], "meter track", { exempt: "inactive track; the indicator carries the level and passes, as the progress track" }],
+  ["meter", '[data-pg="meter-tone"] .meter:not([class*="--"]) .meter-indicator', ["backgroundColor"], "meter indicator"],
+  ["meter", '[data-pg="meter-tone"] .meter--success .meter-indicator', ["backgroundColor"], "meter indicator success"],
+  ["meter", '[data-pg="meter-tone"] .meter--warning .meter-indicator', ["backgroundColor"], "meter indicator warning"],
+  ["meter", '[data-pg="meter-tone"] .meter--error .meter-indicator', ["backgroundColor"], "meter indicator error"],
   ["slider", ".slider-track", ["backgroundColor"], "slider rail", { exempt: "inactive rail; the range carries the state and passes (16.44:1 light / 12.01:1 dark), as D5 checkbox fill" }],
   ["slider", ".slider-range", ["backgroundColor"], "slider range"],
 ]
