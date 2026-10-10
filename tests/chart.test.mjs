@@ -876,10 +876,29 @@ export default async function run({ page, baseUrl, test, eq, near }) {
 
   await test("table: several pies add a Series column beside Name and Value", async () => {
     const { headers, rows } = await tableText("chart-table-pies")
-    eq(JSON.stringify(headers), JSON.stringify(["browser", "Series", "Value"]))
+    eq(JSON.stringify(headers), JSON.stringify(["Name", "Series", "Value"]), "pies naming slices by different fields share a neutral heading")
     eq(rows.length, 11)
     eq(JSON.stringify(rows[0]), JSON.stringify(["Chrome", "Visitors", "275"]))
     eq(JSON.stringify(rows[5]), JSON.stringify(["January", "Desktop", "186"]))
+  })
+
+  await test("table: numeric categories head their own rows, not the first series' label", async () => {
+    const { headers, rows } = await tableText("chart-table-years")
+    eq(JSON.stringify(headers), JSON.stringify(["year", "Sales"]))
+    eq(JSON.stringify(rows.map((r) => r[0])), JSON.stringify(["2021", "2022", "2023"]))
+    eq(JSON.stringify(rows[1]), JSON.stringify(["2022", "14"]))
+  })
+
+  await test("table: with no category key the row heads are the indices, not the first series' label", async () => {
+    const { headers, rows } = await tableText("chart-table-index")
+    eq(JSON.stringify(headers), JSON.stringify(["Category", "Desktop"]))
+    eq(JSON.stringify(rows.map((r) => r[0])), JSON.stringify(["0", "1", "2", "3", "4", "5"]))
+  })
+
+  await test("table: a pie's row heads go through the tooltip's labelFormatter", async () => {
+    const { rows } = await tableText("chart-table-pie-labelled")
+    eq(JSON.stringify(rows.map((r) => r[0])), JSON.stringify(["Browser: chrome", "Browser: safari", "Browser: firefox", "Browser: edge", "Browser: other"]))
+    eq(rows[0][1], "275")
   })
 
   await test("table: radial rows are the rings, headed by the radius axis key and named by config label", async () => {

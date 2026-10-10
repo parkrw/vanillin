@@ -929,12 +929,14 @@ function tableModel(layout, config) {
       const view = layout.focus(k)
       pie.data.forEach((_, i) => {
         const [item] = view.payloadAt(i)
-        rows.push({ key: `${k}:${i}`, head: { text: label(pie.names[i], String(pie.names[i])) }, cells: [...(many ? [{ text: label(pie.dataKey, pie.name) }] : []), { item, value: item.value, index: 0 }] })
+        rows.push({ key: `${k}:${i}`, head: { head: { label: pie.names[i], items: [item] } }, cells: [...(many ? [{ text: label(pie.dataKey, pie.name) }] : []), { item, value: item.value, index: 0 }] })
       })
     })
     if (!rows.length) return null
     const [lead] = series
-    return { headers: [lead.nameKey != null ? label(lead.nameKey, String(lead.nameKey)) : "Name", ...(many ? ["Series", "Value"] : [label(lead.dataKey, lead.name)])], rows }
+    // Pies may name their slices by different fields; one heading over all of them must not claim one.
+    const shared = lead.nameKey != null && series.every((pie) => pie.nameKey === lead.nameKey)
+    return { headers: [shared ? label(lead.nameKey, String(lead.nameKey)) : "Name", ...(many ? ["Series", "Value"] : [label(lead.dataKey, lead.name)])], rows }
   }
 
   const { category } = layout
@@ -2893,11 +2895,9 @@ export function ChartDataTable({ open = false, caption = "Chart data", formatter
   const cell = ({ text, head, item, value }, index) => {
     if (text !== undefined) return text
     if (head) {
-      // The tooltip's own arguments, so a formatter written for it runs here unchanged.
-      const resolved =
-        typeof head.label === "string"
-          ? (config?.[head.label]?.label ?? head.label)
-          : getPayloadConfigFromPayload(config, head.items[0], `${head.items[0]?.dataKey ?? head.items[0]?.name ?? "value"}`)?.label
+      // The heading is the category: resolved by its own value, never through a series' config entry
+      // (a numeric or index category would otherwise read as the first series' label).
+      const resolved = config?.[String(head.label)]?.label ?? head.label
       return labelFormatter ? labelFormatter(resolved, head.items) : (resolved ?? head.label)
     }
     if (value == null) return null

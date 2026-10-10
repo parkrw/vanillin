@@ -126,6 +126,12 @@ const contrastConfig = {
   s5: { label: "Series 5", color: "var(--chart-5)" },
 }
 
+const yearData = [
+  { year: 2021, sales: 10 },
+  { year: 2022, sales: 14 },
+  { year: 2023, sales: 9 },
+]
+
 const browserData = [
   { browser: "chrome", visitors: 275, fill: "var(--color-chrome)" },
   { browser: "safari", visitors: 200, fill: "var(--color-safari)" },
@@ -2013,6 +2019,49 @@ const fullDay = (value) =>
                 <RadialBar dataKey="visitors" background />
                 <ChartDataTable open caption="Visitors by browser" />
               </RadialBarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<BarChart data={[{ year: 2021, sales: 10 }, …]}>
+  <XAxis dataKey="year" />
+  <Bar dataKey="sales" />
+  <ChartDataTable open caption="Sales by year" />
+</BarChart>`}>
+          <Frame pg="chart-table-years">
+            <ChartContainer config={{ sales: { label: "Sales", color: "var(--chart-1)" } }}>
+              <BarChart data={yearData}>
+                <XAxis dataKey="year" />
+                <Bar dataKey="sales" fill="var(--color-sales)" />
+                <ChartDataTable open caption="Sales by year" />
+              </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<RadarChart data={chartData}>
+  <Radar dataKey="desktop" />
+  <ChartDataTable open caption="No angle axis key" />
+</RadarChart>`}>
+          <Frame pg="chart-table-index" square>
+            <ChartContainer config={chartConfig} style={{ aspectRatio: "1" }}>
+              <RadarChart data={chartData}>
+                <Radar dataKey="desktop" fill="var(--color-desktop)" />
+                <ChartDataTable open caption="No angle axis key" />
+              </RadarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<PieChart>
+  <ChartTooltip content={<ChartTooltipContent labelFormatter={(_, payload) => "Browser: " + payload[0].payload.browser} />} />
+  <Pie data={browserData} dataKey="visitors" nameKey="browser" />
+  <ChartDataTable open caption="Visitors by browser" />
+</PieChart>`}>
+          <Frame pg="chart-table-pie-labelled" square>
+            <ChartContainer config={browserConfig} style={{ aspectRatio: "1" }}>
+              <PieChart>
+                <ChartTooltip content={<ChartTooltipContent labelFormatter={(_, payload) => `Browser: ${payload[0].payload.browser}`} />} />
+                <Pie data={browserData} dataKey="visitors" nameKey="browser" />
+                <ChartDataTable open caption="Visitors by browser" />
+              </PieChart>
             </ChartContainer>
           </Frame>
         </ComponentPreview>
