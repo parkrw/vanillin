@@ -71,6 +71,11 @@ const probes = [
   // it, and a <stop> has no client rect for the probe to accept. Green and red
   // are the status dot's tokens, probed above.
   ["sparkline", '[data-pg="spark-meter"] .sparkline-dot', ["fill"], "sparkline amber band"],
+  // chart-boxplot: the outline, median, whiskers and outlier ring are the datum; the box fill is a tint behind the outline.
+  ["chart-boxplot", '[data-pg="boxplot-default"] .chart-boxplot-box', ["stroke"], "boxplot box outline"],
+  ["chart-boxplot", '[data-pg="boxplot-default"] .chart-boxplot-median', ["stroke"], "boxplot median"],
+  ["chart-boxplot", '[data-pg="boxplot-default"] .chart-boxplot-outlier', ["stroke"], "boxplot outlier ring"],
+  ["chart-boxplot", '[data-pg="boxplot-default"] .chart-boxplot-whisker', ["stroke"], "boxplot whisker"],
   ["progress", ".progress", ["backgroundColor"], "progress track", { exempt: "inactive track; the indicator carries the state and passes (17.93:1 light / 15.72:1 dark), as D5 checkbox fill" }],
   ["progress", ".progress-indicator", ["backgroundColor"], "progress indicator"],
   ["progress", '[data-pg="progress-tone"] .progress--success .progress-indicator', ["backgroundColor"], "progress indicator success"],

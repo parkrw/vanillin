@@ -182,6 +182,21 @@
         "cn.js"
       ]
     },
+    "chart-boxplot": {
+      "type": "ui",
+      "files": [
+        "chart-boxplot.css",
+        "chart-boxplot.jsx"
+      ],
+      "requires": [
+        "chart"
+      ],
+      "lib": [
+        "chart-math.js",
+        "chart-stats.js",
+        "cn.js"
+      ]
+    },
     "chart-heatmap": {
       "type": "ui",
       "files": [
@@ -931,6 +946,7 @@
     "anchor-position.js": [],
     "chart-math.js": [],
     "chart-sankey.js": [],
+    "chart-stats.js": [],
     "chart-treemap.js": [],
     "cn.js": [],
     "command-score.js": [],

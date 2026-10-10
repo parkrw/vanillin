@@ -1,0 +1,63 @@
+/* Shell, axis text, grid and tooltip come from chart.css. The box takes its
+ * colour from the config entry `box` (--color-box), the chart's first palette
+ * colour otherwise; the median is the strong foreground. */
+.chart-boxplot {
+  --boxplot-color: var(--color-box, var(--chart-1));
+}
+
+/* The plot does not mirror in RTL, so its labels must not either: an inherited
+ * rtl flips text-anchor="end" and lays the labels over the plot instead of
+ * beside it. */
+.chart-boxplot .chart-surface {
+  direction: ltr;
+}
+
+.chart-boxplot-box {
+  fill: color-mix(in oklab, var(--boxplot-color) 22%, var(--background));
+  stroke: var(--boxplot-color);
+  stroke-width: 1.5;
+}
+
+.chart-boxplot-whisker,
+.chart-boxplot-cap {
+  stroke: var(--boxplot-color);
+  stroke-width: 1.5;
+}
+
+.chart-boxplot-median {
+  stroke: var(--foreground);
+  stroke-width: 2;
+}
+
+.chart-boxplot-outlier {
+  fill: var(--background);
+  stroke: var(--boxplot-color);
+  stroke-width: 1.5;
+}
+
+.chart-boxplot-box-group[data-active] .chart-boxplot-box {
+  stroke: var(--foreground);
+  stroke-width: 2;
+}
+
+/* The outline is the datum: keep it in the text colour so every box has an edge. */
+@media (forced-colors: active) {
+  .chart-boxplot-box,
+  .chart-boxplot-whisker,
+  .chart-boxplot-cap,
+  .chart-boxplot-median,
+  .chart-boxplot-outlier {
+    forced-color-adjust: none;
+    stroke: CanvasText;
+  }
+
+  /* The page theme's background mixed into the fill is not the forced canvas, so the median could vanish inside it. */
+  .chart-boxplot-box,
+  .chart-boxplot-outlier {
+    fill: Canvas;
+  }
+
+  .chart-boxplot-box-group[data-active] .chart-boxplot-box {
+    stroke: Highlight;
+  }
+}
