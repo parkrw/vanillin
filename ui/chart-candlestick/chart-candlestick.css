@@ -1,0 +1,98 @@
+/* Shell, axis text, grid and tooltip come from chart.css. Up and down take the
+ * config entries `up` and `down` (--color-up, --color-down), the chart's second
+ * and first palette colours otherwise. Direction is not carried by hue alone:
+ * a rising body is a tint of its colour, a falling one is solid. */
+.chart-candlestick {
+  --candle-up: var(--color-up, var(--chart-2));
+  --candle-down: var(--color-down, var(--chart-1));
+  --candle-flat: var(--foreground);
+}
+
+/* The plot does not mirror in RTL, so its labels must not either. */
+.chart-candlestick .chart-surface {
+  direction: ltr;
+}
+
+.chart-candlestick-mark[data-direction="up"],
+.chart-candlestick-volume-bar[data-direction="up"] {
+  --mark: var(--candle-up);
+}
+
+.chart-candlestick-mark[data-direction="down"],
+.chart-candlestick-volume-bar[data-direction="down"] {
+  --mark: var(--candle-down);
+}
+
+.chart-candlestick-mark[data-direction="flat"],
+.chart-candlestick-volume-bar[data-direction="flat"] {
+  --mark: var(--candle-flat);
+}
+
+.chart-candlestick-wick,
+.chart-candlestick-open,
+.chart-candlestick-close {
+  stroke: var(--mark);
+  stroke-width: 1.5;
+}
+
+.chart-candlestick-body {
+  fill: color-mix(in oklab, var(--mark) 22%, var(--background));
+  stroke: var(--mark);
+  stroke-width: 1.5;
+}
+
+.chart-candlestick-mark[data-direction="down"] .chart-candlestick-body {
+  fill: var(--mark);
+}
+
+.chart-candlestick-volume-bar {
+  fill: var(--mark);
+  fill-opacity: 0.55;
+}
+
+.chart-candlestick-baseline {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.chart-candlestick-mark[data-active] .chart-candlestick-body {
+  stroke: var(--foreground);
+  stroke-width: 2;
+}
+
+.chart-candlestick-mark[data-active] .chart-candlestick-wick,
+.chart-candlestick-mark[data-active] .chart-candlestick-open,
+.chart-candlestick-mark[data-active] .chart-candlestick-close {
+  stroke: var(--foreground);
+}
+
+.chart-candlestick-volume-bar[data-active] {
+  fill-opacity: 1;
+  stroke: var(--foreground);
+  stroke-width: 1.5;
+}
+
+@media (forced-colors: active) {
+  .chart-candlestick-wick,
+  .chart-candlestick-open,
+  .chart-candlestick-close,
+  .chart-candlestick-body,
+  .chart-candlestick-volume-bar {
+    forced-color-adjust: none;
+    stroke: CanvasText;
+  }
+
+  .chart-candlestick-body {
+    fill: Canvas;
+  }
+
+  .chart-candlestick-mark[data-direction="down"] .chart-candlestick-body,
+  .chart-candlestick-volume-bar {
+    fill: CanvasText;
+  }
+
+  .chart-candlestick-mark[data-active] .chart-candlestick-body,
+  .chart-candlestick-volume-bar[data-active] {
+    stroke: Highlight;
+  }
+}
