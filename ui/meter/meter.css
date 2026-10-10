@@ -1,0 +1,56 @@
+/*
+ * Tone — one custom property carries the colour, so the track tint and the
+ * indicator follow it. Unset, every fallback lands on --primary. Same numbers
+ * as progress.css, so the two read as siblings: the fill/track edge shows the
+ * level and needs 3:1 (1.4.11), which is why a toned track is only a 5% tint.
+ */
+.meter--success {
+  --meter-tone: var(--success);
+  --meter-track-tint: 5%;
+}
+
+/* Raw --warning is 2.31:1 on white; mixing toward --warning-foreground keeps
+   the hue at 3.20:1. Dark clears on the raw token. */
+.meter--warning {
+  --meter-tone: color-mix(in oklab, var(--warning) 78%, var(--warning-foreground) 22%);
+  --meter-track-tint: 5%;
+}
+
+:where(html).dark .meter--warning {
+  --meter-tone: var(--warning);
+}
+
+.meter--error {
+  --meter-tone: var(--destructive);
+  --meter-track-tint: 5%;
+}
+
+.meter {
+  position: relative;
+  width: 100%;
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background-color: color-mix(in oklab, var(--meter-tone, var(--primary)) var(--meter-track-tint, 20%), transparent);
+}
+
+/* Width, not translateX: the fill starts at the inline-start edge, so the
+   bar reads right in RTL with no extra rule. */
+.meter-indicator {
+  height: 100%;
+  background-color: var(--meter-tone, var(--primary));
+  transition: width var(--motion-fast) var(--motion-ease);
+}
+
+/* The fill/track colour distinction carries the level; without opting out both
+   become Canvas. The non-colour cue is the indicator's width. */
+@media (forced-colors: active) {
+  .meter {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+
+  .meter-indicator {
+    background-color: Highlight;
+  }
+}
