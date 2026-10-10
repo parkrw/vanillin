@@ -898,6 +898,58 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await k.svg.evaluate((el) => el.blur())
   })
 
+  await test("series keys: with layout vertical a line with no slot sits mid-band, between the bars", async () => {
+    const k = keyDriver("chart-series-composed-vertical")
+    await k.start()
+    const walked = []
+    for (let i = 0; i < 3; i++) {
+      await page.keyboard.press("ArrowDown")
+      walked.push((await k.marked()).join())
+    }
+    eq(JSON.stringify(walked), JSON.stringify(["Alpha", "Gamma", "Beta"]), "bar a, the line at the band centre, bar b")
+    await k.svg.evaluate((el) => el.blur())
+  })
+
+  await test("series keys: a Bar and a Line on one dataKey mark exactly one row", async () => {
+    const k = keyDriver("chart-series-samekey")
+    await k.start()
+    await page.keyboard.press("ArrowDown")
+    eq(await page.locator(`${pg("chart-series-samekey")} .chart-tooltip-item`).count(), 2, "precondition: both series have a row")
+    eq(JSON.stringify(await k.marked()), JSON.stringify(["Bar a"]), "January: equal values, the bar leads")
+    await page.keyboard.press("ArrowDown")
+    eq(JSON.stringify(await k.marked()), JSON.stringify(["Line a"]), "and the mark moves to the line alone")
+    await k.svg.evaluate((el) => el.blur())
+  })
+
+  await test("series keys: a series with no value at the category is skipped, and returns where it has one", async () => {
+    const k = keyDriver("chart-series-gap")
+    await k.start()
+    await page.keyboard.press("ArrowDown")
+    await page.keyboard.press("ArrowDown")
+    eq(JSON.stringify(await k.marked()), JSON.stringify(["Alpha"]), "A: beta is null, so Down twice holds on alpha")
+    await page.keyboard.press("ArrowRight")
+    await page.keyboard.press("ArrowUp")
+    eq(JSON.stringify(await k.marked()), JSON.stringify(["Beta"]), "B: beta has 8, above alpha 4, so Up from alpha reaches it")
+    await k.svg.evaluate((el) => el.blur())
+  })
+
+  for (const [name, label] of [["chart-series-radar", "radar"], ["chart-series-radial", "radial bar"]]) {
+    await test(`series keys: Down and Up walk a ${label}'s series in draw order and mark one tooltip row`, async () => {
+      const k = keyDriver(name)
+      await k.start()
+      eq(JSON.stringify(await k.marked()), "[]", "precondition: no row is marked before a key")
+      await page.keyboard.press("ArrowDown")
+      eq(JSON.stringify(await k.marked()), JSON.stringify(["Desktop"]), "the series drawn first")
+      await page.keyboard.press("ArrowDown")
+      eq(JSON.stringify(await k.marked()), JSON.stringify(["Mobile"]))
+      await page.keyboard.press("ArrowDown")
+      eq(JSON.stringify(await k.marked()), JSON.stringify(["Mobile"]), "the last series holds")
+      await page.keyboard.press("ArrowUp")
+      eq(JSON.stringify(await k.marked()), JSON.stringify(["Desktop"]))
+      await k.svg.evaluate((el) => el.blur())
+    })
+  }
+
   await test("series keys: Down steps between pies and the tooltip follows; the pie tooltip marks no row", async () => {
     const k = keyDriver("chart-pie-two")
     await k.start()

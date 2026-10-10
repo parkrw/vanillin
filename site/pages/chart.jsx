@@ -142,6 +142,22 @@ const tieConfig = {
   b: { label: "Beta", color: "var(--chart-2)" },
 }
 
+const mixData = [
+  { month: "A", a: 6, b: 9, c: 7 },
+  { month: "B", a: 8, b: 5, c: 6 },
+]
+
+const mixConfig = {
+  a: { label: "Alpha", color: "var(--chart-1)" },
+  b: { label: "Beta", color: "var(--chart-2)" },
+  c: { label: "Gamma", color: "var(--chart-3)" },
+}
+
+const gapData = [
+  { month: "A", a: 5, b: null },
+  { month: "B", a: 4, b: 8 },
+]
+
 const browserData = [
   { browser: "chrome", visitors: 275, fill: "var(--color-chrome)" },
   { browser: "safari", visitors: 200, fill: "var(--color-safari)" },
@@ -1976,6 +1992,85 @@ const fullDay = (value) =>
                 <Bar dataKey="desktop" fill="var(--color-desktop)" />
                 <Bar dataKey="mobile" fill="var(--color-mobile)" />
               </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<ComposedChart data={mixData} layout="vertical" accessibilityLayer>
+  <Bar dataKey="a" />
+  <Bar dataKey="b" />
+  <Line dataKey="c" />
+</ComposedChart>`}>
+          <Frame pg="chart-series-composed-vertical">
+            <ChartContainer config={mixConfig}>
+              <ComposedChart data={mixData} layout="vertical" accessibilityLayer aria-label="Two bars and a line, bars across" margin={{ left: -20 }}>
+                <XAxis type="number" hide />
+                <YAxis dataKey="month" type="category" tickLine={false} tickMargin={10} axisLine={false} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="a" fill="var(--color-a)" />
+                <Bar dataKey="b" fill="var(--color-b)" />
+                <Line dataKey="c" stroke="var(--color-c)" dot={false} />
+              </ComposedChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<ComposedChart data={mixData} accessibilityLayer>
+  <Bar dataKey="a" />
+  <Line dataKey="a" />
+</ComposedChart>`}>
+          <Frame pg="chart-series-samekey">
+            <ChartContainer config={mixConfig}>
+              <ComposedChart data={mixData} accessibilityLayer aria-label="A bar and a line reading the same field" margin={{ left: 12, right: 12 }}>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="a" name="Bar a" fill="var(--color-a)" />
+                <Line dataKey="a" name="Line a" stroke="var(--color-b)" dot={false} />
+              </ComposedChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<LineChart data={gapData} accessibilityLayer>
+  <Line dataKey="a" />
+  <Line dataKey="b" />
+</LineChart>`}>
+          <Frame pg="chart-series-gap">
+            <ChartContainer config={tieConfig}>
+              <LineChart data={gapData} accessibilityLayer aria-label="Two series, the second missing at the first category" margin={{ left: 12, right: 12 }}>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line dataKey="a" stroke="var(--color-a)" dot={false} />
+                <Line dataKey="b" stroke="var(--color-b)" dot={false} />
+              </LineChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<RadarChart data={chartData} accessibilityLayer>
+  <PolarAngleAxis dataKey="month" />
+  <Radar dataKey="desktop" />
+  <Radar dataKey="mobile" />
+</RadarChart>`}>
+          <Frame pg="chart-series-radar" square>
+            <ChartContainer config={chartConfig} style={{ aspectRatio: "1" }}>
+              <RadarChart data={chartData} accessibilityLayer aria-label="Desktop and mobile visitors on a radar">
+                <PolarAngleAxis dataKey="month" />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Radar dataKey="desktop" fill="var(--color-desktop)" fillOpacity={0.4} />
+                <Radar dataKey="mobile" fill="var(--color-mobile)" fillOpacity={0.4} />
+              </RadarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<RadialBarChart data={chartData} accessibilityLayer>
+  <RadialBar dataKey="desktop" />
+  <RadialBar dataKey="mobile" />
+</RadialBarChart>`}>
+          <Frame pg="chart-series-radial" square>
+            <ChartContainer config={chartConfig} style={{ aspectRatio: "1" }}>
+              <RadialBarChart data={chartData} innerRadius={30} outerRadius={110} accessibilityLayer aria-label="Desktop and mobile visitors on radial bars">
+                <PolarRadiusAxis dataKey="month" tick={false} axisLine={false} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <RadialBar dataKey="desktop" fill="var(--color-desktop)" />
+                <RadialBar dataKey="mobile" fill="var(--color-mobile)" />
+              </RadialBarChart>
             </ChartContainer>
           </Frame>
         </ComponentPreview>

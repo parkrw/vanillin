@@ -540,6 +540,7 @@ function computeLayout({ data, vertical, margin, width, height, barCategoryGap, 
   }))
   const payloadAt = (i) =>
     shown.map((entry) => ({
+      seriesKey: entry.key,
       dataKey: entry.dataKey,
       name: entry.name,
       value: entry.values[i],
@@ -719,7 +720,7 @@ function seriesNav(layout) {
   }
   const top = (entry, i) => entry.stack?.[i].y1 ?? entry.values[i]
   // Screen y of the series in its band; a series with no slot (a line) sits mid-band.
-  const down = (entry) => (entry.slot ? entry.slot.offset + entry.slot.size / 2 : 0)
+  const down = (entry) => (entry.slot ? entry.slot.offset + entry.slot.size / 2 : layout.category.scale.bandwidth / 2)
   return {
     implicit: null,
     order: (i) =>
@@ -1441,7 +1442,7 @@ function radarLayout(ctx, series) {
       return r <= frame.outerRadius + HIT_SLACK ? nearestAngleIndex(angle, angles) : -1
     },
     anchorAt: (i) => polarToCartesian(cx, cy, radiusAt(i), angles[i]),
-    payloadAt: (i) => entries.map((entry) => ({ dataKey: entry.dataKey, name: entry.name, value: entry.values[i], color: entry.color, fill: entry.color, payload: data[i] })),
+    payloadAt: (i) => entries.map((entry) => ({ seriesKey: entry.key, dataKey: entry.dataKey, name: entry.name, value: entry.values[i], color: entry.color, fill: entry.color, payload: data[i] })),
     legendPayload: entries.map((entry) => ({ dataKey: entry.dataKey, value: entry.name, color: entry.color, type: "rect" })),
     angleItems: angles.map((angle, i) => ({ angle, label: labels[i] })),
     radiusItems: ticks.map((tick) => ({ radius: valueScale(tick), label: tick })),
@@ -1518,7 +1519,7 @@ function radialLayout(ctx, series) {
       const arc = entries[0]?.arcs[i]
       return polarToCartesian(cx, cy, rings.center(i), arc ? (arc.start + arc.end) / 2 : startAngle)
     },
-    payloadAt: (i) => entries.map((entry) => ({ dataKey: entry.dataKey, name: entry.name, value: entry.values[i], color: entry.colors[i], fill: entry.colors[i], payload: data[i] })),
+    payloadAt: (i) => entries.map((entry) => ({ seriesKey: entry.key, dataKey: entry.dataKey, name: entry.name, value: entry.values[i], color: entry.colors[i], fill: entry.colors[i], payload: data[i] })),
     legendPayload: entries.map((entry) => ({ dataKey: entry.dataKey, value: entry.name, color: entry.color, type: "rect" })),
     angleItems: ticks.map((tick) => ({ angle: angleScale(tick), label: tick })),
     radiusItems: data.map((_, i) => ({ radius: rings.center(i), label: labels[i] })),
@@ -2913,11 +2914,11 @@ PolarRadiusAxis.chartRole = "polarradiusaxis"
 
 // ── Tooltip and legend hosts ────────────────────────────────────────
 
-// Scatter and pie tooltips show one series already; only the stacked rows need a mark.
+// Scatter and pie tooltips show one series already; only the stacked rows need a mark. A Bar and a Line may share a dataKey, so the row is matched on the series key (role plus dataKey).
 function markFocused(layout, payload, focusedSeries) {
   const entry = layout.kind === "scatter" ? null : layout.series[focusedSeries]
   if (!entry || layout.series[0]?.role === "pie") return payload
-  return payload.map((item) => (item.dataKey === entry.dataKey ? { ...item, focused: true } : item))
+  return payload.map((item) => (item.seriesKey === entry.key ? { ...item, focused: true } : item))
 }
 
 /*
