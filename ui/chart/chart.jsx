@@ -819,6 +819,7 @@ function useActiveIndex({ count, defaultIndex, indexAt, trigger = "hover", syncI
     activeIndex,
     pointer,
     layoutRef,
+    activate,
     surface: trigger === "click" ? { onPointerDown: toggle } : { onPointerMove: locate, onPointerDown: locate, onPointerLeave },
     keyboard: { onKeyDown, onFocus, onBlur },
   }
@@ -2940,3 +2941,20 @@ export function ChartDataTable({ open = false, caption = "Chart data", formatter
   )
 }
 ChartDataTable.chartRole = "datatable"
+
+/*
+ * What a sibling family root (ui/chart-<family>) imports to reuse the shell,
+ * the tooltip host and the keyboard layer. Listed apart from the declarations
+ * so the props-rest conformance rule, which reads `export function X({`, does
+ * not mistake a hook for a component.
+ */
+export {
+  useChart,
+  useElementSize,
+  useActiveIndex,
+  collect,
+  surfaceA11y,
+  LayoutContext,
+  ActiveIndexContext,
+  PointerContext,
+}

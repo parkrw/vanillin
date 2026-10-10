@@ -182,6 +182,20 @@
         "cn.js"
       ]
     },
+    "chart-heatmap": {
+      "type": "ui",
+      "files": [
+        "chart-heatmap.css",
+        "chart-heatmap.jsx"
+      ],
+      "requires": [
+        "chart"
+      ],
+      "lib": [
+        "chart-math.js",
+        "cn.js"
+      ]
+    },
     "checkbox": {
       "type": "ui",
       "files": [
