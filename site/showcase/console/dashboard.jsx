@@ -93,7 +93,7 @@ export function UtilizationCard() {
           return (
             <div key={u.label} className="ck-util-row">
               <span className="ck-util-label">{u.label}</span>
-              <Progress value={pct} className="ck-util-bar" data-tone={tone} />
+              <Progress value={pct} className="ck-util-bar" tone={tone} />
               <span className="ck-util-val">
                 <LiveValue value={pct} format={(v) => `${v}%`} /> · {u.detail}
               </span>

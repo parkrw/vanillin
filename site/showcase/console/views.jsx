@@ -380,7 +380,7 @@ export function QuotasView() {
             return (
               <div key={q.resource} className="ck-util-row">
                 <span className="ck-util-label">{q.resource}</span>
-                <Progress value={pct} className="ck-util-bar" data-tone={pct >= 80 ? "warning" : "success"} />
+                <Progress value={pct} className="ck-util-bar" tone={pct >= 80 ? "warning" : "success"} />
                 <span className="ck-util-val">{q.used} / {q.limit}</span>
               </div>
             )
@@ -403,7 +403,7 @@ function PoolRow({ label, unit, used, size }) {
   return (
     <div className="ck-util-row">
       <span className="ck-util-label">{label}</span>
-      <Progress value={pct} className="ck-util-bar" data-tone={pct >= 90 ? "error" : pct >= 75 ? "warning" : "success"} />
+      <Progress value={pct} className="ck-util-bar" tone={pct >= 90 ? "error" : pct >= 75 ? "warning" : "success"} />
       <span className="ck-util-val">
         {used.toLocaleString("en-US")} / {size.toLocaleString("en-US")} {unit} · {pct}%
       </span>
