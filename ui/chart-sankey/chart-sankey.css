@@ -35,6 +35,13 @@
   stroke-opacity: 0.65;
 }
 
+/* The tint alone is under 3:1 on the page, so each band's top and bottom edge is drawn at full strength in the same colour and never fades with the rest. */
+.chart-sankey-edge {
+  fill: none;
+  stroke: var(--sankey-color);
+  stroke-width: 1;
+}
+
 /* Keeps the current band findable when its fill is a pale tint. */
 .chart-sankey-link-ring {
   fill: none;
@@ -52,6 +59,7 @@
 @media (forced-colors: active) {
   .chart-sankey-node,
   .chart-sankey-link,
+  .chart-sankey-edge,
   .chart-sankey-link-ring {
     forced-color-adjust: none;
   }
@@ -73,6 +81,14 @@
   .chart-sankey-links[data-emphasis] .chart-sankey-link[data-active] {
     stroke: Highlight !important;
     stroke-opacity: 0.6;
+  }
+
+  .chart-sankey-edge {
+    stroke: CanvasText !important;
+  }
+
+  .chart-sankey-edge[data-active] {
+    stroke: Highlight !important;
   }
 
   .chart-sankey-link-ring {

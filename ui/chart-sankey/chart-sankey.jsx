@@ -74,6 +74,23 @@ function summarize({ layout, names }) {
   return parts.join(" ")
 }
 
+// A loop has no left-to-right order, so it draws as an empty chart rather than taking the page down with it; a bad id is still the caller's bug.
+function layOut(input) {
+  try {
+    return sankeyLayout(input)
+  } catch (error) {
+    if (!String(error?.message).startsWith("Sankey links form a cycle")) throw error
+    return sankeyLayout({ width: input.width, height: input.height })
+  }
+}
+
+// The band's top and bottom edges: its centreline shifted half the width up and down.
+function bandEdges(l) {
+  const mid = (l.x0 + l.x1) / 2
+  const half = l.width / 2
+  return [-half, half].map((o) => `M ${l.x0} ${l.y0 + o} C ${mid} ${l.y0 + o} ${mid} ${l.y1 + o} ${l.x1} ${l.y1 + o}`).join(" ")
+}
+
 function sankeyModel({ nodes, links, linkColor, config, margin, labelSize, nodeWidth, nodePadding, iterations, align, width, height }) {
   const plot = {
     x: margin.left + labelSize,
@@ -81,7 +98,7 @@ function sankeyModel({ nodes, links, linkColor, config, margin, labelSize, nodeW
     width: Math.max(0, width - margin.left - margin.right - 2 * labelSize),
     height: Math.max(0, height - margin.top - margin.bottom),
   }
-  const layout = sankeyLayout({ nodes, links, width: plot.width, height: plot.height, nodeWidth, nodePadding, iterations, align })
+  const layout = layOut({ nodes, links, width: plot.width, height: plot.height, nodeWidth, nodePadding, iterations, align })
   const names = layout.nodes.map((n) => nodeName(n.datum, config))
   const colors = layout.nodes.map((n) => nodeColor(n.datum, n.index, config))
 
@@ -258,6 +275,9 @@ export function SankeyChart({
   }
   const currentLink = stop?.type === "link" ? layout.links[stop.index] : null
 
+  const bandStyle = (l) =>
+    options.linkColor === "gradient" ? { stroke: `url(#${gradientId}-${l.index})` } : { "--sankey-color": model.colors[model.linkEnd(l)] }
+
   const legendEl = parts.legend
   const legendTop = legendEl && legendEl.props.verticalAlign === "top"
   const lastColumn = layout.columns.length - 1
@@ -294,8 +314,8 @@ export function SankeyChart({
                   <g className="chart-sankey-links" data-emphasis={stop ? "" : undefined}>
                     {currentLink ? <path className="chart-sankey-link-ring" d={currentLink.d} strokeWidth={currentLink.width + 4} /> : null}
                     {layout.links.map((l) => (
+                      <g key={l.index}>
                       <path
-                        key={l.index}
                         className="chart-sankey-link"
                         data-index={l.index}
                         data-source={l.source}
@@ -305,8 +325,16 @@ export function SankeyChart({
                         data-current={currentLink?.index === l.index || undefined}
                         d={l.d}
                         strokeWidth={l.width}
-                        style={options.linkColor === "gradient" ? { stroke: `url(#${gradientId}-${l.index})` } : { "--sankey-color": model.colors[model.linkEnd(l)] }}
+                        style={bandStyle(l)}
                       />
+                      <path
+                        className="chart-sankey-edge"
+                        data-index={l.index}
+                        data-active={emphasised.links.has(l.index) || undefined}
+                        d={bandEdges(l)}
+                        style={bandStyle(l)}
+                      />
+                      </g>
                     ))}
                   </g>
                   <g className="chart-sankey-nodes">

@@ -382,6 +382,35 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
     eq(pageErrors, [], "no page errors")
   })
 
+  await test("sankey: a loop in the links draws the empty chart and throws nothing", async () => {
+    const name = "sankey-cycle"
+    eq(await page.locator(`${pg(name)} .chart-sankey-node`).count(), 0, "no nodes")
+    eq(await page.locator(`${pg(name)} .chart-sankey-link`).count(), 0, "no bands")
+    eq(await surface(name).evaluate((el) => document.getElementById(el.getAttribute("aria-describedby")).textContent), "Flow diagram with nothing to draw.", "summary")
+    eq(pageErrors, [], "no page errors")
+  })
+
+  await test("sankey: every band has an edge on both sides in a colour that holds 3:1, and emphasis does not fade it", async () => {
+    const name = "sankey-default"
+    const { layout } = await expected(name)
+    eq(await page.locator(`${pg(name)} .chart-sankey-edge`).count(), 7, "one edge path per band")
+    for (const l of layout.links) {
+      const edge = page.locator(`${pg(name)} .chart-sankey-edge[data-index="${l.index}"]`)
+      const h = l.width / 2
+      const mid = (l.x0 + l.x1) / 2
+      eq(
+        await edge.getAttribute("d"),
+        [-h, h].map((o) => `M ${l.x0} ${l.y0 + o} C ${mid} ${l.y0 + o} ${mid} ${l.y1 + o} ${l.x1} ${l.y1 + o}`).join(" "),
+        `band ${l.index} edge runs along both sides of the band`,
+      )
+      eq(await edge.evaluate((el) => getComputedStyle(el).stroke), await link(name, l.index).evaluate((el) => getComputedStyle(el).stroke), `band ${l.index} edge is the band's colour at full strength`)
+    }
+    await hoverNode(name, 0)
+    await page.waitForFunction((sel) => Number(getComputedStyle(document.querySelector(sel)).strokeOpacity) < 0.2, `${pg(name)} .chart-sankey-link[data-index="1"]`)
+    eq(await page.locator(`${pg(name)} .chart-sankey-edge[data-index="1"]`).evaluate((el) => getComputedStyle(el).strokeOpacity), "1", "a faded band keeps its edge")
+    await page.mouse.move(0, 0)
+  })
+
   await test("forced-colors: nodes paint in the text colour and emphasised bands in Highlight", async () => {
     const name = "sankey-default"
     const paint = (selector, prop) => page.locator(`${pg(name)} ${selector}`).first().evaluate((el, prop) => getComputedStyle(el)[prop], prop)
@@ -404,6 +433,8 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
       await page.waitForSelector(`${pg(name)} .chart-sankey-link[data-active]`)
       eq(await page.locator(`${pg(name)} .chart-sankey-link[data-active]`).evaluate((el) => getComputedStyle(el).stroke), await sys("Highlight", "stroke"), "an emphasised band strokes in Highlight")
       eq(await node(name, 0).evaluate((el) => getComputedStyle(el).stroke), await sys("Highlight", "stroke"), "the current node is edged in Highlight")
+      eq(await page.locator(`${pg(name)} .chart-sankey-edge[data-active]`).evaluate((el) => getComputedStyle(el).stroke), await sys("Highlight", "stroke"), "an emphasised band's edge is Highlight")
+      eq(await page.locator(`${pg(name)} .chart-sankey-edge:not([data-active])`).first().evaluate((el) => getComputedStyle(el).stroke), await sys("CanvasText", "stroke"), "the others are CanvasText")
     } finally {
       await page.emulateMedia({ forcedColors: null })
       await page.mouse.move(0, 0)

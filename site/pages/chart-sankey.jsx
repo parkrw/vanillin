@@ -44,6 +44,11 @@ const shortcutLinks = [
   { source: "budget", target: "other", value: 20 },
 ]
 
+const loop = [
+  { source: "budget", target: "food", value: 5 },
+  { source: "food", target: "budget", value: 5 },
+]
+
 const config = {
   salary: { label: "Salary", color: "var(--chart-1)" },
   freelance: { label: "Freelance" },
@@ -198,8 +203,8 @@ export default function ChartSankeyPage() {
         <h3>Nothing to draw</h3>
         <p>
           With no nodes the chart draws an empty box. Links that form a loop have no left-to-right order, so the chart
-          throws an error naming the nodes on the loop rather than draw something misleading; links with a zero or
-          negative value are left out.
+          draws nothing rather than something misleading (below); links with a zero or negative value
+          are left out.
         </p>
         <ComponentPreview code={`<SankeyChart nodes={[]} links={[]} accessibilityLayer aria-label="No flows" />`}>
           <Frame pg="sankey-empty">
@@ -210,9 +215,20 @@ export default function ChartSankeyPage() {
         </ComponentPreview>
       </section>
 
+      <section className="pg-section">
+        <h3>Links that loop</h3>
+        <ComponentPreview code={`<SankeyChart nodes={nodes} links={[{ source: "budget", target: "food", value: 5 }, { source: "food", target: "budget", value: 5 }]} accessibilityLayer aria-label="A loop" />`}>
+          <Frame pg="sankey-cycle">
+            <ChartContainer config={{}} style={{ height: "100%" }}>
+              <SankeyChart nodes={nodes} links={loop} accessibilityLayer aria-label="A loop" />
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
       <ApiReference title="SankeyChart" props={[
         { name: "nodes", type: "{ id, name? }[]", description: "One entry per node; id is what links refer to and must be unique. name is the label when the config has none" },
-        { name: "links", type: "{ source, target, value }[]", description: "Flows between node ids. A link with a value that is not a positive number is left out; an unknown id or a loop throws" },
+        { name: "links", type: "{ source, target, value }[]", description: "Flows between node ids. A link with a value that is not a positive number is left out; an unknown id throws and a loop draws nothing" },
         { name: "linkColor", type: '"source" | "target" | "gradient"', default: '"source"', description: "Colour each band like the node it leaves, the node it enters, or fade between them" },
         { name: "align", type: '"justify" | "left"', default: '"justify"', description: "Put nodes with no outflow in the last column, or one column past their deepest source" },
         { name: "nodeWidth / nodePadding", type: "number", default: "12 / 8", description: "Bar width and gap between nodes in a column, px; both shrink to fit" },
