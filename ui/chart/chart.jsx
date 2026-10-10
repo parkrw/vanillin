@@ -940,7 +940,7 @@ function tableModel(layout, config) {
     const [lead] = series
     // Pies may name their slices by different fields; one heading over all of them must not claim one.
     const shared = lead.nameKey != null && series.every((pie) => pie.nameKey === lead.nameKey)
-    return { headers: [shared ? label(lead.nameKey, String(lead.nameKey)) : "Name", ...(many ? ["Series", "Value"] : [label(lead.dataKey, lead.name)])], rows }
+    return { headers: [shared ? label(lead.nameKey, String(lead.nameKey)) : "Name", ...(many ? ["Series", "Value"] : [pieName(lead, label)])], rows }
   }
 
   const { category } = layout
@@ -1103,8 +1103,9 @@ function CartesianChart({
   const areas = parts.references.filter((el) => el.type.chartRole === "referencearea")
   const marks = parts.references.filter((el) => el.type.chartRole !== "referencearea")
 
-  // The open table paints over the plot and legend, so focus must not be able to land beneath it.
-  const covered = Boolean(parts.datatable?.props.open)
+  // The open table paints over the plot and legend, so focus must not be able to land beneath it. A table that renders nothing covers nothing.
+  const tableOpen = Boolean(parts.datatable?.props.open)
+  const covered = useMemo(() => tableOpen && tableModel(hostLayout, chart.config) !== null, [tableOpen, hostLayout, chart.config])
   const legendEl = covered && parts.legend ? cloneElement(parts.legend, { inert: true }) : parts.legend
   const legendTop = legendEl && legendEl.props.verticalAlign === "top"
   const a11y = surfaceA11y(accessibilityLayer, ariaLabel != null || ariaLabelledBy != null, keyboard)
@@ -1576,14 +1577,15 @@ function PolarChart({
     indexAt: computed.indexAt,
   })
 
-  // The open table paints over the plot and legend, so focus must not be able to land beneath it.
-  const covered = Boolean(parts.datatable?.props.open)
+  const hostLayout = computed.focus ? computed.focus(computed.seriesAt(pointer.point)) : computed
+  // The open table paints over the plot and legend, so focus must not be able to land beneath it. A table that renders nothing covers nothing.
+  const tableOpen = Boolean(parts.datatable?.props.open)
+  const covered = useMemo(() => tableOpen && tableModel(hostLayout, chart.config) !== null, [tableOpen, hostLayout, chart.config])
   const legendEl = covered && parts.legend ? cloneElement(parts.legend, { inert: true }) : parts.legend
   const legendTop = legendEl && legendEl.props.verticalAlign === "top"
   const a11y = surfaceA11y(accessibilityLayer, ariaLabel != null || ariaLabelledBy != null, keyboard)
   const { viewBox } = computed
   const { describedBy, summary } = useChartSummary(computed, accessibilityLayer, ariaDescribedBy)
-  const hostLayout = computed.focus ? computed.focus(computed.seriesAt(pointer.point)) : computed
 
   return (
     <LayoutContext.Provider value={hostLayout}>
