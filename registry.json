@@ -916,6 +916,8 @@
   "lib": {
     "anchor-position.js": [],
     "chart-math.js": [],
+    "chart-sankey.js": [],
+    "chart-treemap.js": [],
     "cn.js": [],
     "command-score.js": [],
     "compose-refs.js": [],
