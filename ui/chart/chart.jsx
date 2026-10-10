@@ -2914,9 +2914,9 @@ PolarRadiusAxis.chartRole = "polarradiusaxis"
 
 // ── Tooltip and legend hosts ────────────────────────────────────────
 
-// Scatter and pie tooltips show one series already; only the stacked rows need a mark. A Bar and a Line may share a dataKey, so the row is matched on the series key (role plus dataKey).
+// Scatter and pie tooltips show one series already; only the stacked rows need a mark. A Bar and a Line may share a dataKey, so the row is matched on the series key (role plus dataKey). A sibling family's layout has no series list, so it never marks one.
 function markFocused(layout, payload, focusedSeries) {
-  const entry = layout.kind === "scatter" ? null : layout.series[focusedSeries]
+  const entry = layout.kind === "scatter" ? null : layout.series?.[focusedSeries]
   if (!entry || layout.series[0]?.role === "pie") return payload
   return payload.map((item) => (item.seriesKey === entry.key ? { ...item, focused: true } : item))
 }
