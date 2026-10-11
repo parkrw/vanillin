@@ -19,7 +19,7 @@
 import { spawnSync } from "node:child_process"
 import { readFileSync, readSync, realpathSync, existsSync, readdirSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { resolve, dirname, join } from "node:path"
+import { resolve, dirname, join, isAbsolute, relative } from "node:path"
 import { fileURLToPath } from "node:url"
 import { generate } from "../scripts/build-theme.mjs"
 import {
@@ -889,7 +889,13 @@ export function diffComponent(project, registry, slug) {
   const targetDir = join(project.root, project.paths.ui, slug)
   const manifest = readManifest(targetDir)
   const recorded = manifest?.files || {}
-  const rels = [...new Set([...entry.files, ...Object.keys(recorded)])].sort()
+  // A sidecar key becomes a path update may delete, so one that leaves the
+  // component directory is ignored rather than trusted.
+  const inside = (rel) => {
+    const out = relative(targetDir, join(targetDir, rel))
+    return !isAbsolute(rel) && out !== "" && !out.startsWith("..") && !isAbsolute(out)
+  }
+  const rels = [...new Set([...entry.files, ...Object.keys(recorded).filter(inside)])].sort()
   const files = []
 
   for (const rel of rels) {
@@ -908,7 +914,7 @@ export function diffComponent(project, registry, slug) {
     else if (kit === was) state = "edited"
     else state = "diverged"
 
-    files.push(state === "removed" ? { rel, state, edited: local !== null && local !== was, gone: local === null } : { rel, state })
+    files.push(state === "removed" ? { rel, state, edited: local !== null && local !== was, gone: local === null } : { rel, state, was })
   }
 
   return { slug, kitVersion: manifest?.kitVersion || null, tracked: manifest !== null, files }
@@ -1063,6 +1069,15 @@ export function retiredSlugs(project, registry, installed) {
     .sort()
 }
 
+/**
+ * A file with nothing to do. A new kit file in a component with no sidecar is
+ * not pending: a hand-copied component has no record of which files it should
+ * hold, so installing into it would invent one.
+ */
+function isPending(f, tracked) {
+  return f.state !== "current" && !(f.state === "absent" && !tracked)
+}
+
 function sayRetired(retired) {
   for (const slug of retired) {
     say(`${bold(slug)}`)
@@ -1125,7 +1140,7 @@ function cmdDiff(project, slugs) {
   sayDeprecated(registry, targets)
   for (const slug of targets) {
     const result = diffComponent(project, registry, slug)
-    const interesting = result.files.filter((f) => f.state !== "current")
+    const interesting = result.files.filter((f) => isPending(f, result.tracked))
     differing += interesting.length
     if (!interesting.length && !flags.all) continue
 
@@ -1202,7 +1217,7 @@ function cmdUpdate(project, slugs) {
     const targetDir = join(project.root, project.paths.ui, slug)
     const dir = `${project.paths.ui}/${slug}`
 
-    const actionable = diff.files.filter((f) => f.state !== "current" && f.state !== "edited")
+    const actionable = diff.files.filter((f) => isPending(f, diff.tracked) && f.state !== "edited")
     if (!actionable.length) continue
 
     const versionNote = diff.tracked ? dim(` (v${diff.kitVersion} → v${registry.kitVersion})`) : ""
@@ -1224,6 +1239,7 @@ function cmdUpdate(project, slugs) {
           // A file the kit added or renamed to: components arrive whole, so a
           // new file is as much part of the update as a changed one.
           case "absent": {
+            if (!diff.tracked) break
             const contents = kitFileContent(project, slug, f.rel)
             if (!flags.dryRun) writeFileAtomic(to, contents)
             newHashes[f.rel] = hashBytes(contents)
@@ -1265,9 +1281,13 @@ function cmdUpdate(project, slugs) {
               updated++
               break
             }
+            // The recorded hash is of the kit bytes this file was last brought to,
+            // and kitVersion can lag it when a sibling conflicted. A base that
+            // does not hash to it is the wrong ancestor, and merging against it
+            // can silently undo an upstream change.
             const base = getBaseContent(project, slug, f.rel, diff.kitVersion)
-            if (!base) {
-              say(`  ${red("!")} ${path} ${dim(`diverged — no base at v${diff.kitVersion}, use --overwrite`)}`)
+            if (!base || hashBytes(base) !== f.was) {
+              say(`  ${red("!")} ${path} ${dim(`diverged — no base at v${diff.kitVersion} matching the record, use --overwrite`)}`)
               resolved = false
               conflicted++
               break

@@ -1136,7 +1136,7 @@ test("a file renamed in the kit round-trips through update without a crash", (di
 })
 
 test("update reports a file that fails to write and still updates other components", (dir) => {
-  if (process.getuid?.() === 0) return // root ignores file modes, so the failure cannot be provoked
+  // Needs a non-root user: root writes through a read-only file, and the test fails rather than passing unproven.
   const kit = makeKit("0.1.0", { gadget: { "gadget.jsx": "a\n" }, widget: { "widget.jsx": "a\n" } })
   project(dir)
   kit.van(dir, "add", "gadget", "widget")
@@ -1178,6 +1178,64 @@ test("diff and update report an installed component the kit dropped", (dir) => {
 test("a git failure during a merge is an error, not a conflict", () => {
   const binary = Buffer.from([0, 1, 2, 3])
   assert.throws(() => mergeFile(binary, binary, Buffer.from([0, 9, 9])), /git merge-file failed/)
+})
+
+test("diff reports new and removed kit files before update acts on them", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n", "old.css": "a\n", "gone.css": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  rmSync(join(dir, "ui/widget/gone.css"))
+  kit.publish("0.2.0", { widget: { "widget.jsx": "a\n", "new.css": "a\n" } })
+
+  const r = kit.van(dir, "diff")
+  assert.equal(r.code, 1, r.all)
+  assert.match(r.out, /new\.css — new upstream file/)
+  assert.match(r.out, /old\.css — removed upstream — run `van update` to delete it/)
+  assert.match(r.out, /gone\.css — removed upstream, already deleted locally/)
+})
+
+test("update leaves a hand-copied component without a sidecar alone when the kit adds a file", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  rmSync(join(dir, "ui/widget/.van.json"))
+  kit.publish("0.2.0", { widget: { "widget.jsx": "a\n", "new.css": "a\n" } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.ok(!existsSync(join(dir, "ui/widget/new.css")), "installed into an untracked copy")
+  assert.ok(!existsSync(join(dir, "ui/widget/.van.json")), "invented a sidecar")
+})
+
+test("update never acts on a sidecar key that leaves the component directory", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  const victim = join(dir, "victim.txt")
+  writeFileSync(victim, "keep\n")
+  const sidecar = join(dir, "ui/widget/.van.json")
+  const rec = JSON.parse(readFileSync(sidecar, "utf8"))
+  rec.files["../../victim.txt"] = hashFile(victim)
+  writeFileSync(sidecar, JSON.stringify(rec, null, 2) + "\n")
+  kit.publish("0.2.0", { widget: { "widget.jsx": "b\n" } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.equal(readFileSync(victim, "utf8"), "keep\n", "a file outside the component was deleted")
+})
+
+test("a file merged while a sibling conflicted is not merged against the lagging base later", (dir) => {
+  const { kit, base, second } = divergedKit(dir, { editSecond: false })
+  const v2 = { "a.jsx": base.replace("line 1\n", "kit 1\n"), "b.jsx": base.replace("line 1\n", "kit 1\n") }
+  kit.publish("0.2.0", { widget: v2 })
+  assert.equal(kit.van(dir, "update").code, 1) // a.jsx conflicts, b.jsx merges and moves to v0.2.0's bytes
+  // v0.3.0 reverts the line b.jsx took in v0.2.0; a merge against the v0.1.0 base would keep "kit 1".
+  kit.publish("0.3.0", { widget: { "a.jsx": v2["a.jsx"], "b.jsx": base } })
+  const merged = readFileSync(second, "utf8")
+
+  const r = kit.van(dir, "update")
+  assert.match(r.all, /b\.jsx.*no base at v0\.1\.0 matching the record/)
+  assert.equal(readFileSync(second, "utf8"), merged, "b.jsx was rewritten against the wrong base")
 })
 
 test("diff and update count a dropped component apart from files", (dir) => {
@@ -1229,7 +1287,7 @@ function divergedKit(dir, { editSecond }) {
   return { kit, base, first, second }
 }
 
-test("a clean 3-way merge keeps both edits and records the merged hash", (dir) => {
+test("a clean 3-way merge keeps both edits and records the kit bytes as installed", (dir) => {
   const { kit, base, first } = divergedKit(dir, { editSecond: false })
   kit.publish("0.2.0", { widget: { "a.jsx": base.replace("line 10\n", "kit 10\n"), "b.jsx": base.replace("line 1\n", "kit 1\n") } })
 
