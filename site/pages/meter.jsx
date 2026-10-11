@@ -26,6 +26,7 @@ const edges = [
   ["90 within 25-75", { value: 90, low: 25, high: 75, optimum: 50 }],
   ["95, no thresholds", { value: 95 }],
   ["10, optimum unset within 25-75", { value: 10, low: 25, high: 75 }],
+  ["70 within 40-90, optimum unset", { value: 70, min: 40, max: 90, low: 50, high: 80 }],
   ["optimum alone, 60", { value: 60, optimum: 100 }],
   ["swapped low 90 high 75, 80", { value: 80, low: 90, high: 75, optimum: 100 }],
   ["thresholds past max, 80", { value: 80, low: 75, high: 150, optimum: 200 }],

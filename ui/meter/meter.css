@@ -54,3 +54,10 @@
     background-color: Highlight;
   }
 }
+
+/* A translucent track is the one thing reduced transparency asks to flatten. */
+@media (prefers-reduced-transparency: reduce) {
+  .meter {
+    background-color: var(--muted);
+  }
+}

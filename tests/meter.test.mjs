@@ -74,7 +74,7 @@ export default async function run({ page, baseUrl, test, eq }) {
       "50, optimum 100": "error", "95, optimum 100": "success", "80, optimum unset": "warning",
       "95, tone success": "success", "95, no thresholds": null,
       "24 within 25-75": "warning", "25 within 25-75": "success", "75 within 25-75": "success",
-      "76 within 25-75": "warning", "90 within 25-75": "warning", "thresholds past max, 80": "success", "low past max, 80": "warning", "optimum below min, 20": "success", "swapped low 90 high 75, 80": "error", "optimum alone, 60": "success", "10, optimum unset within 25-75": "warning",
+      "76 within 25-75": "warning", "90 within 25-75": "warning", "thresholds past max, 80": "success", "low past max, 80": "warning", "optimum below min, 20": "success", "swapped low 90 high 75, 80": "error", "optimum alone, 60": "success", "70 within 40-90, optimum unset": "success", "10, optimum unset within 25-75": "warning",
     })))
   })
 
@@ -134,6 +134,25 @@ export default async function run({ page, baseUrl, test, eq }) {
     } finally {
       await page.emulateMedia({ forcedColors: "none" })
     }
+  })
+
+  // Playwright cannot emulate prefers-reduced-transparency, so the rule is read
+  // from the stylesheet rather than painted.
+  await test("reduced transparency: the stylesheet swaps the translucent track for --muted", async () => {
+    const rule = await page.evaluate(() => {
+      for (const sheet of document.styleSheets) {
+        for (const media of sheet.cssRules) {
+          if (!media.conditionText?.includes("prefers-reduced-transparency")) continue
+          for (const r of media.cssRules) {
+            if (r.selectorText === ".meter") return r.style.backgroundColor
+          }
+        }
+      }
+      return null
+    })
+    eq(rule, "var(--muted)")
+    const base = await page.locator(".meter").first().evaluate((el) => getComputedStyle(el).backgroundColor)
+    eq(base.includes("/ 0.2"), true, `precondition: translucent by default (${base})`)
   })
 
   await test("the fill starts at the right in right-to-left text", async () => {
