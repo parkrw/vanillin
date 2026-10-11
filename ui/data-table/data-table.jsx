@@ -441,6 +441,12 @@ function ChevronsRight() {
   )
 }
 
+// Slots a value into an ascending list without reordering what the caller gave.
+function insertBeforeLarger(list, value) {
+  const at = list.findIndex((n) => n > value)
+  return at === -1 ? [...list, value] : [...list.slice(0, at), value, ...list.slice(at)]
+}
+
 /**
  * Pager bound to a `useDataTable` instance: rows-per-page select, `Page X of Y`
  * and previous/next buttons gated on the table's own getters. Works unchanged
@@ -462,7 +468,7 @@ export function DataTablePagination({
   // belongs in pageSizeOptions.
   const sizes = pageSizeOptions.includes(pageSize)
     ? pageSizeOptions
-    : [...pageSizeOptions, pageSize].sort((a, b) => a - b)
+    : insertBeforeLarger(pageSizeOptions, pageSize)
   const canPrevious = table.getCanPreviousPage()
   const canNext = table.getCanNextPage()
 

@@ -1370,7 +1370,7 @@ const table = useDataTable({ data, columns })
         </p>
         <ComponentPreview code={`const table = useDataTable({ data, columns, initialPageSize: 4 })
 
-<DataTablePagination table={table} pageSizeOptions={[3, 5, 8]} />`}>
+<DataTablePagination table={table} pageSizeOptions={[3, 5, 8]} showFirstLast />`}>
           <PaginationDemo initialPageSize={4} pagerId="dt-unlisted-pager" />
         </ComponentPreview>
         <p>
