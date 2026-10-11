@@ -1368,7 +1368,7 @@ const table = useDataTable({ data, columns })
           and (with <code>showFirstLast</code>) first and last buttons that
           disable at the ends. Pass <code>initialPageSize</code> to set the
           default page size. Under <code>manualPagination</code> the page
-          count comes from <code>rowCount</code>, so the same footer pages
+          count comes from <code>pageCount</code> or <code>rowCount</code>, so the same footer pages
           server data. Content passed as children fills the leading slot,
           for a selection count or a loading message. The engine exposes <code>previousPage()</code>,{" "}
           <code>nextPage()</code>, <code>setPageSize(n)</code>,{" "}

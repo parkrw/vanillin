@@ -444,7 +444,7 @@ function ChevronsRight() {
 /**
  * Pager bound to a `useDataTable` instance: rows-per-page select, `Page X of Y`
  * and previous/next buttons gated on the table's own getters. Works unchanged
- * under `manualPagination`, where the page count comes from `rowCount`.
+ * under `manualPagination`, where the page count comes from `pageCount` or `rowCount`.
  * `children` fills the leading slot (selection count, loading status).
  * An empty `pageSizeOptions` hides the select. `showFirstLast` adds jump-to-first and jump-to-last buttons.
  */
