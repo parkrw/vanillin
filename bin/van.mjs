@@ -499,10 +499,10 @@ function freeBackupPath(path) {
  */
 function unresolvedConflict(path) {
   if (!/^<{7} /m.test(readFileSync(path, "utf8"))) return null
-  const name = basename(path)
+  const orig = `${basename(path)}.orig`
   // Van takes the first free name, so its latest backup is the highest-numbered.
-  const suffix = (e) => (e === `${name}.orig` ? 0 : Number(e.slice(`${name}.orig.`.length)))
-  const backups = readdirSync(dirname(path)).filter((e) => e === `${name}.orig` || /^\.orig\.\d+$/.test(e.slice(name.length)))
+  const suffix = (e) => (e === orig ? 0 : Number(e.slice(orig.length + 1)))
+  const backups = readdirSync(dirname(path)).filter((e) => e === orig || (e.startsWith(`${orig}.`) && /^\d+$/.test(e.slice(orig.length + 1))))
   return backups.sort((x, y) => suffix(y) - suffix(x))[0] ?? null
 }
 

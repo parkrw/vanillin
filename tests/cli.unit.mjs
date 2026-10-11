@@ -1355,6 +1355,18 @@ test("an .orig van did not write does not make an edited file a conflict", (dir)
   assert.doesNotMatch(r.all, /unresolved conflict/)
 })
 
+test("a sibling's numbered backup does not make a file a conflict", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "a.jsx": "a\n", "b.jsx": "b\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  writeFileSync(join(dir, "ui/widget/a.jsx"), "<<<<<<< a heading in my own notes\n")
+  writeFileSync(join(dir, "ui/widget/b.jsx.orig.1"), "a backup of b\n")
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.doesNotMatch(r.all, /unresolved conflict/)
+})
+
 test("resolving a conflict and deleting .orig leaves the resolved file alone", (dir) => {
   const { kit, base, first } = divergedKit(dir, { editSecond: true })
   kit.publish("0.2.0", { widget: { "a.jsx": base.replace("line 1\n", "kit 1\n"), "b.jsx": base } })
