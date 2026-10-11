@@ -192,7 +192,8 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
     const tiny = await pitch("funnel-tiny")
     eq(tiny < 16, true, `precondition: funnel-tiny's row pitch, ${tiny}, is under one line`)
     eq(await page.locator(`${pg("funnel-tiny")} .chart-funnel-label, ${pg("funnel-tiny")} .chart-funnel-rate`).count(), 0, "no labels at all")
-    eq((await page.locator(`${pg("funnel-tiny")} .chart-surface`).getAttribute("aria-describedby")) != null, true, "the summary still carries them")
+    const tinySummary = await page.locator(`#${await page.locator(`${pg("funnel-tiny")} .chart-surface`).getAttribute("aria-describedby")}`).textContent()
+    eq(tinySummary.includes("Visits 700, 70% of previous, 70% of first"), true, `the summary still carries names, values and rates: ${tinySummary}`)
     eq(await page.locator(`${pg("funnel-default")} .chart-funnel-rate`).count(), 3, "counter-precondition: tall rows keep the rate line")
     for (const name of ["funnel-default", "funnel-compact"]) {
       const spans = (await lines(name)).map((r) => ({ top: Math.min(...r.map((l) => l.top)), bottom: Math.max(...r.map((l) => l.bottom)) }))
@@ -298,6 +299,28 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
       await page.keyboard.press("Escape")
       await blur(name)
     }
+  })
+
+  await test("funnel: defaultIndex opens the tooltip on a stage; trigger=click ignores hover and toggles on a press", async () => {
+    const name = "funnel-click"
+    eq(await activeIndex(name), [1], "defaultIndex marks its stage before any input")
+    await tooltip(name).waitFor()
+    eq(await page.locator(`${pg(name)} .chart-tooltip-label`).textContent(), "Sign-ups", "and opens its tooltip")
+    await hoverStage(name, 2)
+    await page.waitForTimeout(100)
+    eq(await activeIndex(name), [1], "hover moves nothing")
+    await page.mouse.down()
+    await page.mouse.up()
+    await page.waitForFunction(() => document.querySelector('[data-pg="funnel-click"] .chart-funnel-stage-group[data-active]')?.dataset.index === "2")
+    eq(await activeIndex(name), [2], "a press picks the stage under it")
+    await page.mouse.down()
+    await page.mouse.up()
+    await page.waitForFunction(() => !document.querySelector('[data-pg="funnel-click"] .chart-funnel-stage-group[data-active]'))
+    eq(await activeIndex(name), [], "a second press on it closes")
+    await hoverStage("funnel-default", 2)
+    await page.waitForFunction(() => document.querySelector('[data-pg="funnel-default"] .chart-funnel-stage-group[data-active]'))
+    eq(await activeIndex("funnel-default"), [2], "counter-precondition: a hover chart follows the pointer")
+    await page.mouse.move(0, 0)
   })
 
   await test("funnel: a chart part it does not draw is ignored, with a warning", async () => {

@@ -241,6 +241,25 @@ export default function ChartFunnelPage() {
       </section>
 
       <section className="pg-section">
+        <h3>Tooltip on click, open from the start</h3>
+        <p>
+          <code>trigger="click"</code> on the tooltip opens it on a press instead of on hover, and a second press on the
+          same stage closes it. <code>defaultIndex</code> opens it on that stage before anyone touches the chart.
+        </p>
+        <ComponentPreview code={`<FunnelChart data={stages}>
+  <ChartTooltip trigger="click" defaultIndex={1} content={<ChartTooltipContent />} />
+</FunnelChart>`}>
+          <Frame pg="funnel-click">
+            <ChartContainer config={config}>
+              <FunnelChart data={stages}>
+                <ChartTooltip trigger="click" defaultIndex={1} content={<ChartTooltipContent />} />
+              </FunnelChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
         <h3>Parts it draws</h3>
         <p>
           Only <code>ChartTooltip</code> and <code>ChartLegend</code> draw inside a funnel. Any other chart part, such as a{" "}
