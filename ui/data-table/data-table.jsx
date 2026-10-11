@@ -457,12 +457,10 @@ export function DataTablePagination({
   ...props
 }) {
   const { pageIndex, pageSize } = table.getState().pagination
-  // The size the table started with stays listed after the user picks another,
-  // or there would be no way back to it.
-  const startingSize = useRef(pageSize).current
-  const sizes = [...new Set([...pageSizeOptions, startingSize, pageSize])].sort(
-    (a, b) => a - b
-  )
+  // The current size is always listed, or the select would show a size the
+  // table is not using. A starting size the consumer wants to stay reachable
+  // belongs in pageSizeOptions.
+  const sizes = [...new Set([...pageSizeOptions, pageSize])].sort((a, b) => a - b)
   const canPrevious = table.getCanPreviousPage()
   const canNext = table.getCanNextPage()
 
