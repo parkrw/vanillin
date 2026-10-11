@@ -94,6 +94,13 @@ const probes = [
   ["chart-sankey", '[data-pg="sankey-default"] .chart-sankey-node[data-index="3"]', ["fill"], "sankey node, fourth colour"],
   ["chart-sankey", '[data-pg="sankey-default"] .chart-sankey-node[data-index="4"]', ["fill"], "sankey node, fifth colour"],
   ["chart-sankey", '[data-pg="sankey-default"] .chart-sankey-edge', ["stroke"], "sankey band edge"],
+  // chart-candlestick: the body outline, wick and volume bar carry the datum in both directions.
+  ["chart-candlestick", '[data-pg="candlestick-default"] .chart-candlestick-mark[data-direction="up"] .chart-candlestick-body', ["stroke"], "candle up outline"],
+  ["chart-candlestick", '[data-pg="candlestick-default"] .chart-candlestick-mark[data-direction="down"] .chart-candlestick-body', ["stroke"], "candle down outline"],
+  ["chart-candlestick", '[data-pg="candlestick-default"] .chart-candlestick-mark[data-direction="up"] .chart-candlestick-wick', ["stroke"], "candle up wick"],
+  ["chart-candlestick", '[data-pg="candlestick-default"] .chart-candlestick-mark[data-direction="down"] .chart-candlestick-wick', ["stroke"], "candle down wick"],
+  ["chart-candlestick", '[data-pg="candlestick-linked"] .chart-candlestick-volume-bar[data-direction="up"]', ["fill"], "volume bar up"],
+  ["chart-candlestick", '[data-pg="candlestick-linked"] .chart-candlestick-volume-bar[data-direction="down"]', ["fill"], "volume bar down"],
   // chart-funnel: the stage fill is the datum.
   ["chart-funnel", '[data-pg="funnel-default"] .chart-funnel-stage', ["fill"], "funnel stage"],
   ["progress", ".progress", ["backgroundColor"], "progress track", { exempt: "inactive track; the indicator carries the state and passes (17.93:1 light / 15.72:1 dark), as D5 checkbox fill" }],
