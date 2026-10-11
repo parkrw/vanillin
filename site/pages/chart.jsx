@@ -132,6 +132,32 @@ const yearData = [
   { year: 2023, sales: 9 },
 ]
 
+const tieData = [
+  { month: "A", a: 5, b: 5 },
+  { month: "B", a: 7, b: 3 },
+]
+
+const tieConfig = {
+  a: { label: "Alpha", color: "var(--chart-1)" },
+  b: { label: "Beta", color: "var(--chart-2)" },
+}
+
+const mixData = [
+  { month: "A", a: 6, b: 9, c: 7 },
+  { month: "B", a: 8, b: 5, c: 6 },
+]
+
+const mixConfig = {
+  a: { label: "Alpha", color: "var(--chart-1)" },
+  b: { label: "Beta", color: "var(--chart-2)" },
+  c: { label: "Gamma", color: "var(--chart-3)" },
+}
+
+const gapData = [
+  { month: "A", a: 5, b: null },
+  { month: "B", a: 4, b: 8 },
+]
+
 const browserData = [
   { browser: "chrome", visitors: 275, fill: "var(--color-chrome)" },
   { browser: "safari", visitors: 200, fill: "var(--color-safari)" },
@@ -1581,6 +1607,27 @@ const fullDay = (value) =>
             </div>
           </div>
         </ComponentPreview>
+        <ComponentPreview code={`<LineChart data={chartData} syncId="series" accessibilityLayer aria-label="First chart">
+  <XAxis dataKey="month" />
+  <ChartTooltip content={<ChartTooltipContent />} />
+  <Line dataKey="desktop" stroke="var(--color-desktop)" />
+  <Line dataKey="mobile" stroke="var(--color-mobile)" />
+</LineChart>`}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", width: "100%", maxWidth: "40rem" }}>
+            {["a", "b"].map((id) => (
+              <div key={id} data-pg={`chart-sync-series-${id}`} style={{ flex: "1 1 14rem" }}>
+                <ChartContainer config={chartConfig} style={{ aspectRatio: "4 / 3" }}>
+                  <LineChart data={chartData} syncId="series" accessibilityLayer aria-label={`Visitors by month, chart ${id}`}>
+                    <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={monthTick} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line dataKey="desktop" stroke="var(--color-desktop)" dot={false} />
+                    <Line dataKey="mobile" stroke="var(--color-mobile)" dot={false} />
+                  </LineChart>
+                </ChartContainer>
+              </div>
+            ))}
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">
@@ -1866,7 +1913,12 @@ const fullDay = (value) =>
         <p>
           <code>accessibilityLayer</code> makes the surface focusable (<code>role="application"</code>). Focus opens
           the tooltip on the first category; ArrowLeft and ArrowRight step (flipped under <code>dir="rtl"</code>),
-          Home and End jump, Escape closes. Without it an <code>aria-label</code> gives the surface{" "}
+          Home and End jump, Escape closes. ArrowDown and ArrowUp move between series at that category, and the
+          tooltip row and the dot of the focused series are marked. Lines, areas and bars are taken top of the screen
+          first (by value or stack top, or by the bar's place in its band when <code>layout="vertical"</code>); scatter,
+          pie, radar and radial series, which have no top, go in the order they are drawn. A hidden or empty series is
+          skipped. Linked charts follow the category only. Without it an{" "}
+          <code>aria-label</code> gives the surface{" "}
           <code>role="img"</code> and nothing is focusable.
         </p>
         <ComponentPreview code={`<LineChart data={chartData} accessibilityLayer aria-label="Desktop and mobile visitors, January to June">
@@ -1881,6 +1933,174 @@ const fullDay = (value) =>
                 <Line dataKey="desktop" type="monotone" stroke="var(--color-desktop)" strokeWidth={2} dot={false} />
                 <Line dataKey="mobile" type="monotone" stroke="var(--color-mobile)" strokeWidth={2} dot={false} />
               </LineChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<Line dataKey="desktop" />
+<Line dataKey="mobile" hide />`}>
+          <Frame pg="chart-series-hidden">
+            <ChartContainer config={chartConfig}>
+              <LineChart data={chartData} accessibilityLayer aria-label="Desktop visitors, mobile hidden" margin={{ left: 12, right: 12 }}>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={monthTick} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line dataKey="desktop" type="monotone" stroke="var(--color-desktop)" strokeWidth={2} dot={false} />
+                <Line dataKey="mobile" type="monotone" stroke="var(--color-mobile)" strokeWidth={2} dot={false} hide />
+              </LineChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<AreaChart data={chartData} accessibilityLayer>
+  <Area dataKey="desktop" stackId="a" />
+  <Area dataKey="mobile" stackId="a" />
+</AreaChart>`}>
+          <Frame pg="chart-series-stack">
+            <ChartContainer config={chartConfig}>
+              <AreaChart data={chartData} accessibilityLayer aria-label="Stacked visitors by month" margin={{ left: 12, right: 12 }}>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={monthTick} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Area dataKey="desktop" stackId="a" type="monotone" fill="var(--color-desktop)" stroke="var(--color-desktop)" />
+                <Area dataKey="mobile" stackId="a" type="monotone" fill="var(--color-mobile)" stroke="var(--color-mobile)" />
+              </AreaChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<LineChart data={tieData} accessibilityLayer>
+  <Line dataKey="a" />
+  <Line dataKey="b" />
+</LineChart>`}>
+          <Frame pg="chart-series-tie">
+            <ChartContainer config={tieConfig}>
+              <LineChart data={tieData} accessibilityLayer aria-label="Two series that meet at the first category" margin={{ left: 12, right: 12 }}>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line dataKey="a" stroke="var(--color-a)" dot={false} />
+                <Line dataKey="b" stroke="var(--color-b)" dot={false} />
+              </LineChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<BarChart data={chartData} layout="vertical" accessibilityLayer>
+  <Bar dataKey="desktop" />
+  <Bar dataKey="mobile" />
+</BarChart>`}>
+          <Frame pg="chart-series-vertical">
+            <ChartContainer config={chartConfig}>
+              <BarChart data={chartData} layout="vertical" accessibilityLayer aria-label="Visitors by month, bars across" margin={{ left: -20 }}>
+                <XAxis type="number" hide />
+                <YAxis dataKey="month" type="category" tickLine={false} tickMargin={10} axisLine={false} tickFormatter={monthTick} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="desktop" fill="var(--color-desktop)" />
+                <Bar dataKey="mobile" fill="var(--color-mobile)" />
+              </BarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<ComposedChart data={mixData} layout="vertical" accessibilityLayer>
+  <Bar dataKey="a" />
+  <Bar dataKey="b" />
+  <Line dataKey="c" />
+</ComposedChart>`}>
+          <Frame pg="chart-series-composed-vertical">
+            <ChartContainer config={mixConfig}>
+              <ComposedChart data={mixData} layout="vertical" accessibilityLayer aria-label="Two bars and a line, bars across" margin={{ left: -20 }}>
+                <XAxis type="number" hide />
+                <YAxis dataKey="month" type="category" tickLine={false} tickMargin={10} axisLine={false} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="a" fill="var(--color-a)" />
+                <Bar dataKey="b" fill="var(--color-b)" />
+                <Line dataKey="c" stroke="var(--color-c)" dot={false} />
+              </ComposedChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<ComposedChart data={mixData} accessibilityLayer>
+  <Bar dataKey="a" />
+  <Line dataKey="a" />
+</ComposedChart>`}>
+          <Frame pg="chart-series-samekey">
+            <ChartContainer config={mixConfig}>
+              <ComposedChart data={mixData} accessibilityLayer aria-label="A bar and a line reading the same field" margin={{ left: 12, right: 12 }}>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="a" name="Bar a" fill="var(--color-a)" />
+                <Line dataKey="a" name="Line a" stroke="var(--color-b)" dot={false} />
+              </ComposedChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<LineChart data={gapData} accessibilityLayer>
+  <Line dataKey="a" />
+  <Line dataKey="b" />
+</LineChart>`}>
+          <Frame pg="chart-series-gap">
+            <ChartContainer config={tieConfig}>
+              <LineChart data={gapData} accessibilityLayer aria-label="Two series, the second missing at the first category" margin={{ left: 12, right: 12 }}>
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line dataKey="a" stroke="var(--color-a)" dot={false} />
+                <Line dataKey="b" stroke="var(--color-b)" dot={false} />
+              </LineChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<RadarChart data={chartData} accessibilityLayer>
+  <PolarAngleAxis dataKey="month" />
+  <Radar dataKey="desktop" />
+  <Radar dataKey="mobile" />
+</RadarChart>`}>
+          <Frame pg="chart-series-radar" square>
+            <ChartContainer config={chartConfig} style={{ aspectRatio: "1" }}>
+              <RadarChart data={chartData} accessibilityLayer aria-label="Desktop and mobile visitors on a radar">
+                <PolarAngleAxis dataKey="month" />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Radar dataKey="desktop" fill="var(--color-desktop)" fillOpacity={0.4} />
+                <Radar dataKey="mobile" fill="var(--color-mobile)" fillOpacity={0.4} />
+              </RadarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<RadialBarChart data={chartData} accessibilityLayer>
+  <RadialBar dataKey="desktop" />
+  <RadialBar dataKey="mobile" />
+</RadialBarChart>`}>
+          <Frame pg="chart-series-radial" square>
+            <ChartContainer config={chartConfig} style={{ aspectRatio: "1" }}>
+              <RadialBarChart data={chartData} innerRadius={30} outerRadius={110} accessibilityLayer aria-label="Desktop and mobile visitors on radial bars">
+                <PolarRadiusAxis dataKey="month" tick={false} axisLine={false} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <RadialBar dataKey="desktop" fill="var(--color-desktop)" />
+                <RadialBar dataKey="mobile" fill="var(--color-mobile)" />
+              </RadialBarChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<PieChart accessibilityLayer>
+  <Pie data={desktopData} dataKey="desktop" nameKey="month" />
+  <Pie data={[]} dataKey="mobile" nameKey="month" />
+</PieChart>`}>
+          <Frame pg="chart-series-empty-pie" square>
+            <ChartContainer config={monthConfig} style={{ aspectRatio: "1" }}>
+              <PieChart accessibilityLayer aria-label="Desktop visitors, a second pie with no data">
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                <Pie data={desktopData} dataKey="desktop" nameKey="month" outerRadius={60} />
+                <Pie data={[]} dataKey="mobile" nameKey="month" innerRadius={70} outerRadius={90} />
+              </PieChart>
+            </ChartContainer>
+          </Frame>
+        </ComponentPreview>
+        <ComponentPreview code={`<ScatterChart accessibilityLayer>
+  <Scatter name="a" data={schoolA} />
+  <Scatter name="b" data={[]} />
+</ScatterChart>`}>
+          <Frame pg="chart-series-empty-scatter">
+            <ChartContainer config={schoolConfig}>
+              <ScatterChart accessibilityLayer aria-label="Stature against weight, a second series with no points">
+                <XAxis type="number" dataKey="x" name="stature" unit="cm" />
+                <YAxis type="number" dataKey="y" name="weight" unit="kg" />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Scatter name="a" data={schoolA} fill="var(--color-a)" />
+                <Scatter name="b" data={[]} fill="var(--color-b)" />
+              </ScatterChart>
             </ChartContainer>
           </Frame>
         </ComponentPreview>
