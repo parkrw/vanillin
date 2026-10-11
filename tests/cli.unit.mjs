@@ -1224,18 +1224,65 @@ test("update never acts on a sidecar key that leaves the component directory", (
   assert.equal(readFileSync(victim, "utf8"), "keep\n", "a file outside the component was deleted")
 })
 
-test("a file merged while a sibling conflicted is not merged against the lagging base later", (dir) => {
+test("a merge after a conflicted release uses the base that release recorded", (dir) => {
   const { kit, base, second } = divergedKit(dir, { editSecond: false })
   const v2 = { "a.jsx": base.replace("line 1\n", "kit 1\n"), "b.jsx": base.replace("line 1\n", "kit 1\n") }
   kit.publish("0.2.0", { widget: v2 })
-  assert.equal(kit.van(dir, "update").code, 1) // a.jsx conflicts, b.jsx merges and moves to v0.2.0's bytes
-  // v0.3.0 reverts the line b.jsx took in v0.2.0; a merge against the v0.1.0 base would keep "kit 1".
+  assert.equal(kit.van(dir, "update").code, 1) // a.jsx conflicts, b.jsx merges
+  // v0.3.0 reverts the line b.jsx took in v0.2.0. Against the v0.1.0 base the revert would be lost.
   kit.publish("0.3.0", { widget: { "a.jsx": v2["a.jsx"], "b.jsx": base } })
-  const merged = readFileSync(second, "utf8")
+
+  kit.van(dir, "update")
+  const text = readFileSync(second, "utf8")
+  assert.doesNotMatch(text, /kit 1/, "the kit's revert was lost")
+  assert.match(text, /mine 10/)
+})
+
+test("resolving a conflict and deleting .orig leaves the resolved file alone", (dir) => {
+  const { kit, base, first } = divergedKit(dir, { editSecond: true })
+  kit.publish("0.2.0", { widget: { "a.jsx": base.replace("line 1\n", "kit 1\n"), "b.jsx": base } })
+  assert.equal(kit.van(dir, "update").code, 1)
+  const resolved = base.replace("line 1\n", "mine 1 resolved\n")
+  writeFileSync(first, resolved)
+  rmSync(`${first}.orig`)
 
   const r = kit.van(dir, "update")
-  assert.match(r.all, /b\.jsx.*no base at v0\.1\.0 matching the record/)
-  assert.equal(readFileSync(second, "utf8"), merged, "b.jsx was rewritten against the wrong base")
+  assert.equal(r.code, 0, r.all)
+  assert.equal(readFileSync(first, "utf8"), resolved, "the resolved file was merged again")
+  assert.ok(!existsSync(`${first}.orig`))
+})
+
+test("a merge still finds its base after rsc was switched on", (dir) => {
+  const body = (mark) => lines(10).replace("line 5\n", "useThing()\n").replace("line 1\n", mark)
+  const kit = makeKit("0.1.0", { widget: { "w.jsx": body("line 1\n") } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  const local = join(dir, "ui/widget/w.jsx")
+  writeFileSync(local, readFileSync(local, "utf8").replace("line 3\n", "mine 3\n"))
+  writeFileSync(join(dir, "van.config.json"), JSON.stringify({ rsc: true }) + "\n")
+  kit.publish("0.2.0", { widget: { "w.jsx": body("line 1\n").replace("line 10\n", "kit 10\n") } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  const text = readFileSync(local, "utf8")
+  assert.match(text, /mine 3/)
+  assert.match(text, /kit 10/)
+})
+
+test("a merge reads files past the default spawn buffer", (dir) => {
+  const big = (tag) => Array.from({ length: 20000 }, (_, i) => `${i === 0 ? tag : "row"} ${"x".repeat(100)} ${i}\n`).join("")
+  const kit = makeKit("0.1.0", { widget: { "big.jsx": big("first") } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  const local = join(dir, "ui/widget/big.jsx")
+  writeFileSync(local, readFileSync(local, "utf8").replace(/row (x+) 19999\n$/, "mine $1 19999\n"))
+  kit.publish("0.2.0", { widget: { "big.jsx": big("second") } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  const text = readFileSync(local, "utf8")
+  assert.match(text, /^second /)
+  assert.match(text, /mine x+ 19999\n$/)
 })
 
 test("diff and update count a dropped component apart from files", (dir) => {
@@ -1336,22 +1383,19 @@ test("a second update does not overwrite the .orig of an unresolved conflict", (
   assert.equal(readFileSync(first, "utf8"), marked, "the marked file was rewritten")
 })
 
-test("a conflict in one file still records the clean sibling's hash", (dir) => {
+test("a conflict in one file still records the sibling and the release", (dir) => {
   const { kit, base, first, second } = divergedKit(dir, { editSecond: false })
   // a.jsx collides on line 1; b.jsx's local edit is far from the kit's.
-  kit.publish("0.2.0", {
-    widget: { "a.jsx": base.replace("line 1\n", "kit 1\n"), "b.jsx": base.replace("line 1\n", "kit 1\n") },
-  })
-  const before = readManifest(join(dir, "ui/widget")).files["a.jsx"]
+  const kitCopy = base.replace("line 1\n", "kit 1\n")
+  kit.publish("0.2.0", { widget: { "a.jsx": kitCopy, "b.jsx": kitCopy } })
 
   const r = kit.van(dir, "update")
   assert.equal(r.code, 1, r.all)
   const sidecar = readManifest(join(dir, "ui/widget"))
-  assert.equal(sidecar.files["b.jsx"], hashBytes(Buffer.from(base.replace("line 1\n", "kit 1\n"))), "the clean sibling kept its old hash")
+  assert.equal(sidecar.files["b.jsx"], hashBytes(Buffer.from(kitCopy)), "the sibling's hash did not advance")
   assert.match(readFileSync(second, "utf8"), /mine 10/)
-  assert.match(readFileSync(second, "utf8"), /kit 1\n/)
-  assert.equal(sidecar.files["a.jsx"], before, "the conflicted file's hash moved")
-  assert.equal(sidecar.kitVersion, "0.1.0", "kitVersion moved while a file is still unresolved")
+  assert.equal(sidecar.files["a.jsx"], hashBytes(Buffer.from(kitCopy)), "the conflicted file is recorded at the kit bytes")
+  assert.equal(sidecar.kitVersion, "0.2.0")
   assert.match(readFileSync(first, "utf8"), /<<<<<<</)
 })
 

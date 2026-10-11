@@ -459,6 +459,21 @@ export function getBaseContent(project, slug, rel, kitVersion) {
 }
 
 /**
+ * The merge base for one file: the kit's copy at the recorded version, in
+ * whichever RSC form hashes to the recorded hash. `rsc` may have changed since
+ * install, so the form in force then is not necessarily the one in force now;
+ * a base matching no form is the wrong ancestor, and merging against it can
+ * silently undo an upstream change. Returns null when there is none.
+ */
+export function baseMatching(project, slug, rel, kitVersion, recordedHash) {
+  for (const rsc of [project.config?.rsc, false, true]) {
+    const base = getBaseContent({ ...project, config: { ...project.config, rsc } }, slug, rel, kitVersion)
+    if (base && hashBytes(base) === recordedHash) return base
+  }
+  return null
+}
+
+/**
  * 3-way merge via git merge-file. Returns { content, clean }.
  * clean=true means no conflicts; clean=false means conflict markers in content.
  * Throws when git itself fails, so a failure is never taken for a conflict.
@@ -1217,7 +1232,8 @@ function cmdUpdate(project, slugs) {
     const targetDir = join(project.root, project.paths.ui, slug)
     const dir = `${project.paths.ui}/${slug}`
 
-    const actionable = diff.files.filter((f) => isPending(f, diff.tracked) && f.state !== "edited")
+    const unresolved = (f) => f.state === "edited" && existsSync(join(targetDir, `${f.rel}.orig`))
+    const actionable = diff.files.filter((f) => isPending(f, diff.tracked) && (f.state !== "edited" || unresolved(f)))
     if (!actionable.length) continue
 
     const versionNote = diff.tracked ? dim(` (v${diff.kitVersion} → v${registry.kitVersion})`) : ""
@@ -1249,6 +1265,11 @@ function cmdUpdate(project, slugs) {
           }
 
           case "edited":
+            if (existsSync(`${to}.orig`)) {
+              say(`  ${red("!")} ${path} ${dim(`unresolved conflict — resolve it, then delete ${f.rel}.orig`)}`)
+              conflicted++
+              break
+            }
             say(`  ${dim("=")} ${f.rel} ${dim("edited locally, upstream unchanged")}`)
             break
 
@@ -1281,12 +1302,8 @@ function cmdUpdate(project, slugs) {
               updated++
               break
             }
-            // The recorded hash is of the kit bytes this file was last brought to,
-            // and kitVersion can lag it when a sibling conflicted. A base that
-            // does not hash to it is the wrong ancestor, and merging against it
-            // can silently undo an upstream change.
-            const base = getBaseContent(project, slug, f.rel, diff.kitVersion)
-            if (!base || hashBytes(base) !== f.was) {
+            const base = baseMatching(project, slug, f.rel, diff.kitVersion, f.was)
+            if (!base) {
               say(`  ${red("!")} ${path} ${dim(`diverged — no base at v${diff.kitVersion} matching the record, use --overwrite`)}`)
               resolved = false
               conflicted++
@@ -1316,8 +1333,11 @@ function cmdUpdate(project, slugs) {
                 writeFileAtomic(orig, local)
                 writeFileAtomic(to, merged.content)
               }
+              // Recorded like a clean merge: the markers are the consumer's work
+              // on top of this version, so a rerun leaves them alone instead of
+              // merging again, and `.orig` keeps the conflict reported.
+              newHashes[f.rel] = hashBytes(contents)
               say(`  ${red("!")} ${path} ${dim(`merged with conflicts — yours saved as ${f.rel}.orig`)}`)
-              resolved = false
               conflicted++
             }
             break
@@ -1338,9 +1358,9 @@ function cmdUpdate(project, slugs) {
       }
     }
 
-    // Hashes advance per file, so a clean sibling of a conflicted file is not
-    // left on disk at the new version under the old hash. kitVersion moves only
-    // once every file has, because it picks the merge base next time.
+    // Hashes advance per file, so a sibling of a failed file is not left on
+    // disk at the new version under the old hash. kitVersion moves only once
+    // every file has, because it picks the merge base next time.
     if (!flags.dryRun && (Object.keys(newHashes).length || dropped.length)) {
       try {
         const manifest = readManifest(targetDir) || {}
