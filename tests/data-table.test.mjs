@@ -331,7 +331,7 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     eq(await scale(), "none", "ltr arrows are not mirrored")
     await page.evaluate(() => document.documentElement.setAttribute("dir", "rtl"))
     try {
-      eq(await scale(), "-1", "rtl arrows are mirrored")
+      eq(await scale(), "-1 1", "rtl arrows are mirrored")
     } finally {
       await page.evaluate(() => document.documentElement.removeAttribute("dir"))
     }
