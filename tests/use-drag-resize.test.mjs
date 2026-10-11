@@ -227,11 +227,11 @@ export default async function run({ page, baseUrl, test, eq, repoRoot }) {
     eq(snapshots.drag.changes.join(), "75,100", "the drag clamps at max")
   })
 
-  await test("an unbounded max drops aria-valuemax and End does nothing", async () => {
+  await test("an unbounded max keeps aria-valuemax above the value and End does nothing", async () => {
     const { snapshots } = await harness({ defaultSize: 50, min: 10 }, [
       { key: "End", snap: "end" },
     ])
-    eq(snapshots.end.attrs.valuemax, null, "no aria-valuemax")
+    eq(snapshots.end.attrs.valuemax, String(Number.MAX_SAFE_INTEGER), "an unbounded range never sits below the value")
     eq(snapshots.end.changes.length, 0, "End reports nothing")
     eq(snapshots.end.attrs.size, "50", "size unchanged")
   })
