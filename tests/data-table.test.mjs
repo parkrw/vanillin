@@ -298,8 +298,10 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     const pager = page.locator('[data-pg="dt-pager"]')
     await pager.locator("select").selectOption("5")
     await pager.getByLabel("Next page").click()
-    eq(await pageInfo(), "Page 2 of 4", "moved off the first page")
+    await pager.getByLabel("Next page").click()
+    eq(await pageInfo(), "Page 3 of 4", "moved two pages in")
     await pager.locator("select").selectOption("10")
+    // Keeping the top row (row 10) in view would land on page 2 of 2.
     eq(await pageInfo(), "Page 1 of 2", "size change resets the index")
   })
 
@@ -313,6 +315,17 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     await select.selectOption("5")
     eq(await select.inputValue(), "5", "the select follows the table")
     await select.selectOption("3")
+  })
+
+  await test("an unlisted current page size is added to the select until another is picked", async () => {
+    const select = page.locator('[data-pg="dt-unlisted-pager"] select')
+    await select.waitFor()
+    const options = () =>
+      select.evaluate((el) => [...el.options].map((o) => o.value).join(","))
+    eq(await options(), "3,4,5,8", "4 joins the listed sizes, in order")
+    eq(await select.inputValue(), "4", "the select shows the size the table pages by")
+    await select.selectOption("5")
+    eq(await options(), "3,5,8", "the offered sizes return once another is picked")
   })
 
   await test("pager arrows flip under dir=rtl and not under ltr", async () => {

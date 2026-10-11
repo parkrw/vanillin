@@ -1001,14 +1001,14 @@ function SelectionDemo() {
   )
 }
 
-function PaginationDemo() {
+function PaginationDemo({ initialPageSize = 3, pageSizeOptions = [3, 5, 8], pagerId = "dt-demo-pager" }) {
   const table = useDataTable({
     data: sampleContacts,
     columns: [
       { accessorKey: "name", header: "Name" },
       { accessorKey: "dept", header: "Department" },
     ],
-    initialPageSize: 3,
+    initialPageSize,
   })
   return (
     <div>
@@ -1036,7 +1036,7 @@ function PaginationDemo() {
           ))}
         </TableBody>
       </Table>
-      <DataTablePagination table={table} pageSizeOptions={[3, 5, 8]} showFirstLast data-pg="dt-demo-pager" />
+      <DataTablePagination table={table} pageSizeOptions={pageSizeOptions} showFirstLast data-pg={pagerId} />
     </div>
   )
 }
@@ -1361,6 +1361,17 @@ const table = useDataTable({ data, columns })
         <ComponentPreview code={`const table = useDataTable({ data, columns, initialPageSize: 3 })
 <DataTablePagination table={table} pageSizeOptions={[3, 5, 8]} showFirstLast />`}>
           <PaginationDemo />
+        </ComponentPreview>
+        <p>
+          The select always includes the table's current page size. A table
+          that starts on 4 with sizes <code>[3, 5, 8]</code> shows 4 until the
+          user picks another size; list 4 in <code>pageSizeOptions</code> if
+          it should stay reachable.
+        </p>
+        <ComponentPreview code={`const table = useDataTable({ data, columns, initialPageSize: 4 })
+
+<DataTablePagination table={table} pageSizeOptions={[3, 5, 8]} />`}>
+          <PaginationDemo initialPageSize={4} pagerId="dt-unlisted-pager" />
         </ComponentPreview>
         <p>
           <code>DataTablePagination</code> takes the table and renders a

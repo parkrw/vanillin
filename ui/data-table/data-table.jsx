@@ -460,7 +460,9 @@ export function DataTablePagination({
   // The current size is always listed, or the select would show a size the
   // table is not using. A starting size the consumer wants to stay reachable
   // belongs in pageSizeOptions.
-  const sizes = [...new Set([...pageSizeOptions, pageSize])].sort((a, b) => a - b)
+  const sizes = pageSizeOptions.includes(pageSize)
+    ? pageSizeOptions
+    : [...pageSizeOptions, pageSize].sort((a, b) => a - b)
   const canPrevious = table.getCanPreviousPage()
   const canNext = table.getCanNextPage()
 
