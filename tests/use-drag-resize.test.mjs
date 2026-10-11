@@ -107,40 +107,123 @@ export default async function run({ page, baseUrl, test, eq, repoRoot }) {
     eq(await aria("drag-y", "aria-orientation"), "horizontal", "y axis separator is horizontal")
   })
 
-  await test("unmounting mid-drag clears the cursor and the window listeners", async () => {
-    const result = await page.evaluate(async (hookUrl) => {
-      const reactModule = await import("/@id/react")
-      const h = reactModule.createElement ?? reactModule.default.createElement
-      const domModule = await import("/@id/react-dom/client")
-      const createRoot = domModule.createRoot ?? domModule.default.createRoot
-      const { useDragResize } = await import(hookUrl)
-      const settle = () => new Promise((r) => setTimeout(r, 40))
+  // A bare harness: disabled, controlled and unbounded modes have no demo.
+  const harness = (options, steps) =>
+    page.evaluate(
+      async ({ hookUrl, options, steps }) => {
+        const reactModule = await import("/@id/react")
+        const h = reactModule.createElement ?? reactModule.default.createElement
+        const domModule = await import("/@id/react-dom/client")
+        const createRoot = domModule.createRoot ?? domModule.default.createRoot
+        const { useDragResize } = await import(hookUrl)
+        const settle = () => new Promise((r) => setTimeout(r, 40))
 
-      let latest
-      function Probe() {
-        const r = useDragResize({ min: 0, max: 100, defaultSize: 50 })
-        latest = r
-        return h("div", { ...r.handleProps, id: "unmount-handle" })
-      }
-      const host = document.createElement("div")
-      document.body.appendChild(host)
-      const root = createRoot(host)
-      root.render(h(Probe))
-      await settle()
-      const el = document.getElementById("unmount-handle")
-      el.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerId: 7, clientX: 0, clientY: 0 }))
-      await settle()
-      const during = document.body.style.cursor
-      root.unmount()
-      host.remove()
-      const after = document.body.style.cursor
-      const sizeBefore = latest.size
-      window.dispatchEvent(new PointerEvent("pointermove", { pointerId: 7, clientX: 30, clientY: 0 }))
-      await settle()
-      return { during, after, resized: latest.size !== sizeBefore }
-    }, hookUrl)
-    eq(result.during, "col-resize", "precondition: drag began")
-    eq(result.after, "", "cursor cleared on unmount")
-    eq(result.resized, false, "listeners removed on unmount")
+        const changes = []
+        function Probe() {
+          const r = useDragResize({ ...options, onSizeChange: (n) => changes.push(n) })
+          return h("div", { ...r.handleProps, id: "probe-handle", "data-size": String(r.size) })
+        }
+        const host = document.createElement("div")
+        document.body.appendChild(host)
+        const root = createRoot(host)
+        root.render(h(Probe))
+        await settle()
+        const el = () => document.getElementById("probe-handle")
+        const pointer = (type, target, init) =>
+          target.dispatchEvent(new PointerEvent(type, { bubbles: true, button: 0, pointerId: 7, ...init }))
+        const key = (k) =>
+          el().dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true }))
+        const out = { snapshots: {} }
+        for (const step of steps) {
+          if (step.down) pointer("pointerdown", el(), { clientX: 0, clientY: 0 })
+          if (step.move != null) pointer("pointermove", window, { clientX: step.move, clientY: 0 })
+          if (step.up) pointer("pointerup", window, {})
+          if (step.cancel) pointer("pointercancel", window, {})
+          if (step.key) key(step.key)
+          if (step.unmount) {
+            root.unmount()
+          } else {
+            await settle()
+          }
+          if (step.snap) {
+            out.snapshots[step.snap] = {
+              cursor: document.body.style.cursor,
+              userSelect: document.body.style.userSelect,
+              changes: changes.slice(),
+              attrs: el()
+                ? {
+                    size: el().dataset.size,
+                    tabindex: el().getAttribute("tabindex"),
+                    valuemax: el().getAttribute("aria-valuemax"),
+                    disabled: el().getAttribute("aria-disabled"),
+                  }
+                : null,
+            }
+          }
+        }
+        if (el()) root.unmount()
+        host.remove()
+        return out
+      },
+      { hookUrl, options, steps }
+    )
+
+  await test("unmounting mid-drag clears the cursor and removes the window listeners", async () => {
+    const { snapshots } = await harness({ min: 0, max: 100, defaultSize: 50 }, [
+      { down: true, move: 10, snap: "during" },
+      { unmount: true, snap: "unmounted" },
+      { move: 30, snap: "after" },
+    ])
+    eq(snapshots.during.cursor, "col-resize", "precondition: drag began")
+    eq(snapshots.during.changes.join(), "60", "precondition: the drag reports changes")
+    eq(snapshots.unmounted.cursor, "", "cursor cleared on unmount")
+    eq(snapshots.after.changes.join(), "60", "no change reported after unmount")
+  })
+
+  await test("pointercancel ends the drag and clears the cursor and selection lock", async () => {
+    const { snapshots } = await harness({ min: 0, max: 100, defaultSize: 50 }, [
+      { down: true, move: 10, snap: "during" },
+      { cancel: true, snap: "cancelled" },
+      { move: 25, snap: "after" },
+    ])
+    eq(snapshots.during.userSelect, "none", "selection locked while dragging")
+    eq(snapshots.cancelled.cursor, "", "cursor cleared")
+    eq(snapshots.cancelled.userSelect, "", "selection lock cleared")
+    eq(snapshots.after.changes.join(), "60", "no tracking after cancel")
+  })
+
+  await test("a disabled handle ignores drag and keys and is not focusable", async () => {
+    const { snapshots } = await harness({ min: 0, max: 100, defaultSize: 50, disabled: true }, [
+      { down: true, move: 20, key: "ArrowRight", snap: "s" },
+    ])
+    eq(snapshots.s.changes.length, 0, "nothing reported")
+    eq(snapshots.s.cursor, "", "no cursor")
+    eq(snapshots.s.attrs.tabindex, null, "not in the tab order")
+    eq(snapshots.s.attrs.disabled, "true", "aria-disabled")
+  })
+
+  await test("controlled size follows the parent and reports every change", async () => {
+    const { snapshots } = await harness({ size: 50, min: 0, max: 100, step: 25 }, [
+      { key: "ArrowRight", snap: "key" },
+      { down: true, move: 500, snap: "drag" },
+    ])
+    eq(snapshots.key.changes.join(), "75", "step option sets the keyboard step")
+    eq(snapshots.key.attrs.size, "50", "the parent has not accepted, so size holds")
+    eq(snapshots.drag.changes.join(), "75,100", "the drag clamps at max")
+  })
+
+  await test("an unbounded max drops aria-valuemax and End does nothing", async () => {
+    const { snapshots } = await harness({ defaultSize: 50, min: 10 }, [
+      { key: "End", snap: "end" },
+    ])
+    eq(snapshots.end.attrs.valuemax, null, "no aria-valuemax")
+    eq(snapshots.end.changes.length, 0, "End reports nothing")
+    eq(snapshots.end.attrs.size, "50", "size unchanged")
+  })
+
+  await test("pressing the handle with the mouse leaves it focused for the arrow keys", async () => {
+    await page.evaluate(() => document.activeElement?.blur())
+    await drag("drag-x", 5, 0)
+    eq(await page.evaluate(() => document.activeElement?.dataset.pg), "drag-x-handle", "focused after the drag")
   })
 }

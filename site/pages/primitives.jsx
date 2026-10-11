@@ -1,8 +1,8 @@
 // System page layout: description → demos → reference.
 import { useCallback, useRef, useState } from "react"
+import { DirectionProvider } from "../../lib/direction.jsx"
 import { Portal } from "../../lib/portal.jsx"
 import { useAnchorPosition } from "../../lib/use-anchor-position.js"
-import { DirectionProvider } from "../../lib/direction.jsx"
 import { useDismissableLayer } from "../../lib/use-dismissable-layer.js"
 import { useDragResize } from "../../lib/use-drag-resize.js"
 import { useFocusTrap } from "../../lib/use-focus-trap.js"
@@ -415,7 +415,7 @@ function DragResizeBox({ id, axis, reverse }) {
         [horizontal ? "inlineSize" : "blockSize"]: size,
         flex: "none",
         background: "var(--muted)",
-        padding: 8,
+        padding: "var(--space-2)",
       }}
     >
       {Math.round(size)}px
@@ -594,7 +594,7 @@ useSafeTriangle({
           <code>useDragResize</code> sizes one element along one axis in pixels, clamped between <code>min</code> and <code>max</code>. Spread <code>handleProps</code> on the grab handle: it takes pointer drags that keep tracking outside the handle, sets the resize cursor while dragging and clears it on release, and is a focusable <code>separator</code> that Arrow keys step by <code>step</code> pixels and Home and End send to <code>min</code> and <code>max</code>. Arrows move the edge the way they point on screen.
         </p>
         <p>
-          On the horizontal axis the direction follows <code>DirectionProvider</code>, so dragging toward the start edge grows an inline-start element in both reading directions. <code>reverse</code> is for an element that grows against the pointer, such as a bottom-anchored panel whose handle is dragged upward. Under <code>ui/resizable</code>'s percentage split this is the single-element pixel case.
+          On the horizontal axis the direction follows <code>DirectionProvider</code>, so dragging toward the start edge grows an inline-start element in both reading directions. <code>reverse</code> is for an element that grows against the pointer, such as a bottom-anchored panel whose handle is dragged upward. For a group of panels that split by percentage, use <code>ui/resizable</code> instead.
         </p>
         <ComponentPreview code={`import { useDragResize } from "./lib/use-drag-resize"
 
