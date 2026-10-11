@@ -54,15 +54,13 @@
   stroke-width: 1;
 }
 
-.chart-candlestick-mark[data-active] .chart-candlestick-body {
-  stroke: var(--foreground);
-  stroke-width: 2;
-}
-
+/* A flat row is already drawn in --foreground, so weight, not colour, marks it active. */
+.chart-candlestick-mark[data-active] .chart-candlestick-body,
 .chart-candlestick-mark[data-active] .chart-candlestick-wick,
 .chart-candlestick-mark[data-active] .chart-candlestick-open,
 .chart-candlestick-mark[data-active] .chart-candlestick-close {
   stroke: var(--foreground);
+  stroke-width: 3;
 }
 
 .chart-candlestick-volume-bar[data-active] {

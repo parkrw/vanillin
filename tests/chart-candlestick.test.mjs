@@ -147,6 +147,26 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
     eq(labels.includes("Mon 8"), true, "the empty row's label is still on the axis")
   })
 
+  await test("candlestick: the active row is drawn twice as heavy, a flat one included", async () => {
+    const width = (selector) => page.locator(selector).evaluate((el) => getComputedStyle(el).strokeWidth)
+    for (const [name, part] of [["candlestick-ohlc", "open"], ["candlestick-default", "body"]]) {
+      const flat = `${mark(name, 4)} .chart-candlestick-${part}`
+      eq(await page.locator(mark(name, 4)).getAttribute("data-direction"), "flat", `precondition: ${name} row 4 is flat`)
+      eq(await width(flat), "1.5px", `${name}: an inactive flat ${part} is 1.5 wide`)
+      await focusSurface(name)
+      try {
+        for (let i = 0; i < 4; i++) await page.keyboard.press("ArrowRight")
+        eq(await activeMarks(name), [4], "precondition: the flat row is active")
+        eq(await width(flat), "3px", `${name}: active, its ${part} is 3 wide`)
+        eq(await width(`${mark(name, 4)} .chart-candlestick-wick`), "3px", "and so is its wick")
+        eq(await width(`${mark(name, 3)} .chart-candlestick-${part}`), "1.5px", "counter-precondition: an inactive row keeps 1.5")
+      } finally {
+        await page.keyboard.press("Escape")
+        await page.locator(`${pane(name)} .chart-surface`).evaluate((el) => el.blur())
+      }
+    }
+  })
+
   await test("candlestick: OHLC ticks point left at the open and right at the close", async () => {
     const name = "candlestick-ohlc"
     const { width, height } = await svgSize(name)
