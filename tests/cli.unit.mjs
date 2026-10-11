@@ -1285,6 +1285,11 @@ test("a merge never writes over an .orig that is already there", (dir) => {
   assert.match(r.out, /yours saved as a\.jsx\.orig\.1/)
   assert.equal(readFileSync(`${first}.orig`, "utf8"), "a mergetool backup\n")
   assert.equal(readFileSync(`${first}.orig.1`, "utf8"), mine)
+
+  const again = kit.van(dir, "update")
+  assert.match(again.all, /unresolved conflict — resolve it, then delete a\.jsx\.orig\.1/, "named the other tool's backup")
+  const over = kit.van(dir, "update", "--overwrite")
+  assert.match(over.out, /yours is in a\.jsx\.orig\.1/)
 })
 
 test("diff does not call lib/ a dropped component when it sits inside ui/", (dir) => {
