@@ -248,6 +248,37 @@
   border-radius: 2px;
 }
 
+/*
+ * Swatches are HTML, which cannot paint with an svg <pattern>, so each kind is
+ * drawn again from gradients on the same 45-degree, 2-in-4 geometry. That
+ * also keeps the swatch right when its series is hidden and its defs are not
+ * in the chart. The ground is the series colour thinned; the marks are solid.
+ */
+.chart-legend-swatch[data-pattern],
+.chart-tooltip-indicator[data-pattern] {
+  --chart-ink: var(--chart-swatch, var(--chart-indicator));
+  --chart-tile: 4px;
+  background-color: color-mix(in srgb, var(--chart-ink) 30%, transparent);
+  background-size: var(--chart-tile) var(--chart-tile);
+}
+
+[data-pattern="hatch"].chart-legend-swatch,
+[data-pattern="hatch"].chart-tooltip-indicator {
+  background-image: repeating-linear-gradient(135deg, transparent 0 calc(var(--chart-tile) / 2), var(--chart-ink) calc(var(--chart-tile) / 2) var(--chart-tile));
+}
+
+[data-pattern="cross"].chart-legend-swatch,
+[data-pattern="cross"].chart-tooltip-indicator {
+  background-image:
+    repeating-linear-gradient(135deg, transparent 0 calc(var(--chart-tile) / 2), var(--chart-ink) calc(var(--chart-tile) / 2) var(--chart-tile)),
+    repeating-linear-gradient(45deg, transparent 0 calc(var(--chart-tile) / 2), var(--chart-ink) calc(var(--chart-tile) / 2) var(--chart-tile));
+}
+
+[data-pattern="dots"].chart-legend-swatch,
+[data-pattern="dots"].chart-tooltip-indicator {
+  background-image: radial-gradient(circle at 50% 50%, var(--chart-ink) 0 calc(var(--chart-tile) * 0.2), transparent calc(var(--chart-tile) * 0.25));
+}
+
 /* <ChartLegendContent toggle />: each item a button that hides its series. */
 button.chart-legend-item {
   padding: 0;
@@ -335,6 +366,32 @@ button.chart-legend-item {
  * forced palette would merge them. Keep the fills and outline bars in
  * CanvasText so every bar still has an edge against Canvas. */
 @media (forced-colors: active) {
+  /* Forced colours leave colour to carry less, so a pattern is the whole
+   * distinction between series: system ink on the system canvas. */
+  .chart-pattern-ground,
+  .chart-pattern-mark {
+    forced-color-adjust: none;
+  }
+
+  .chart-pattern-ground {
+    fill: Canvas;
+    fill-opacity: 1;
+  }
+
+  line.chart-pattern-mark {
+    stroke: CanvasText;
+  }
+
+  circle.chart-pattern-mark {
+    fill: CanvasText;
+  }
+
+  .chart-legend-swatch[data-pattern],
+  .chart-tooltip-indicator[data-pattern] {
+    --chart-ink: CanvasText;
+    background-color: Canvas;
+  }
+
   .chart-bar,
   .chart-sector,
   .chart-radar,

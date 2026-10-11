@@ -88,6 +88,50 @@ export function ChartContainer({ id, className, children, config, initialDimensi
   )
 }
 
+const PATTERNS = ["hatch", "dots", "cross"]
+const patternKind = (v) => (PATTERNS.includes(v) ? v : undefined)
+const PATTERN_TILE = 8
+
+/*
+ * <pattern> defs for one chart: one per kind, series and colour, tinted with
+ * that colour. An id names the chart so two charts on a page cannot collide.
+ * `fill` hands back the url() to paint with and remembers the def to emit.
+ */
+function createPatterns(chartId) {
+  const defs = new Map()
+  return {
+    fill(kind, tag, color) {
+      if (!kind) return color
+      const key = `${kind}|${tag}|${color}`
+      if (!defs.has(key)) defs.set(key, { id: `${chartId}-${kind}-${String(tag).replace(/[^\w-]/g, "")}-${defs.size}`, kind, color })
+      return `url(#${defs.get(key).id})`
+    },
+    defs() {
+      if (!defs.size) return null
+      return (
+        <defs>
+          {[...defs.values()].map(({ id, kind, color }) => (
+            <PatternDef key={id} id={id} kind={kind} color={color} />
+          ))}
+        </defs>
+      )
+    },
+  }
+}
+
+// Ground and marks carry their own classes so forced colours can swap them for system colours.
+function PatternDef({ id, kind, color }) {
+  const T = PATTERN_TILE
+  const stroke = { className: "chart-pattern-mark", stroke: color, strokeWidth: 2 }
+  return (
+    <pattern id={id} className="chart-pattern" data-pattern={kind} width={T} height={T} patternUnits="userSpaceOnUse" patternTransform={kind === "dots" ? undefined : "rotate(45)"}>
+      <rect className="chart-pattern-ground" width={T} height={T} fill={color} fillOpacity={0.3} />
+      {kind === "dots" ? <circle className="chart-pattern-mark" cx={T / 2} cy={T / 2} r={1.5} fill={color} /> : <line {...stroke} x1={1} y1={0} x2={1} y2={T} />}
+      {kind === "cross" ? <line {...stroke} x1={0} y1={1} x2={T} y2={1} /> : null}
+    </pattern>
+  )
+}
+
 const safeColor = (v) => typeof v === "string" && v.trim() && !/[<{};]/.test(v)
 
 /*
@@ -181,6 +225,7 @@ export function ChartTooltipContent({
                             `chart-tooltip-indicator--${indicator}`,
                             nestLabel && indicator === "dashed" && "chart-tooltip-indicator--nested",
                           )}
+                          data-pattern={indicator === "dashed" ? undefined : item.pattern}
                           style={{ "--chart-indicator": indicatorColor }}
                         />
                       )
@@ -234,7 +279,11 @@ export function ChartLegendContent({ className, hideIcon = false, payload, verti
               {Icon && !hideIcon ? (
                 <Icon />
               ) : (
-                <div className="chart-legend-swatch" style={item.inactive ? undefined : { backgroundColor: item.color }} />
+                <div
+                  className="chart-legend-swatch"
+                  data-pattern={item.pattern}
+                  style={item.inactive ? undefined : item.pattern ? { "--chart-swatch": item.color } : { backgroundColor: item.color }}
+                />
               )}
               {itemConfig?.label}
             </Item>
@@ -451,7 +500,7 @@ function referenceExtents(references) {
  */
 const isHidden = (hidden, key, props) => hidden.get(key) ?? Boolean(props.hide)
 
-function computeLayout({ data, vertical, margin, width, height, barCategoryGap, barGap, stackOffset, series, xaxis, yaxis, extents, hidden }) {
+function computeLayout({ data, vertical, margin, width, height, barCategoryGap, barGap, stackOffset, series, xaxis, yaxis, extents, hidden, config }) {
   const space = (el, dim, fallback) => (el && !el.props.hide ? (el.props[dim] ?? fallback) : 0)
   const left = space(yaxis, "width", 60)
   const bottom = space(xaxis, "height", 30)
@@ -482,6 +531,7 @@ function computeLayout({ data, vertical, margin, width, height, barCategoryGap, 
       index,
       values,
       color: seriesColor(role, el.props, index),
+      pattern: patternKind(el.props.pattern ?? config?.[dataKey]?.pattern),
       props: el.props,
       hidden: isHidden(hidden, dataKey, el.props),
       stack: null,
@@ -535,6 +585,7 @@ function computeLayout({ data, vertical, margin, width, height, barCategoryGap, 
     dataKey: entry.dataKey,
     value: entry.name,
     color: entry.color,
+    pattern: entry.pattern,
     type: "rect",
     inactive: entry.hidden,
   }))
@@ -546,6 +597,7 @@ function computeLayout({ data, vertical, margin, width, height, barCategoryGap, 
       value: entry.values[i],
       color: entry.color,
       fill: entry.color,
+      pattern: entry.pattern,
       payload: data[i],
     }))
 
@@ -690,7 +742,7 @@ function computeScatterLayout({ margin, width, height, series, xaxis, yaxis, zax
 }
 
 const AXIS_SIG_KEYS = ["dataKey", "hide", "width", "height", "domain", "ticks", "tickCount", "allowDataOverflow"]
-const SERIES_SIG_KEYS = ["dataKey", "stackId", "name", "barSize", "maxBarSize", "fill", "stroke", "hide"]
+const SERIES_SIG_KEYS = ["dataKey", "stackId", "name", "barSize", "maxBarSize", "fill", "stroke", "hide", "pattern"]
 const pick = (props, keys) => keys.map((key) => props?.[key])
 
 /*
@@ -1099,9 +1151,9 @@ function CartesianChart({
     () =>
       scatter
         ? computeScatterLayout({ margin: fullMargin, width, height, series, xaxis, yaxis, zaxis, extents, hidden })
-        : computeLayout({ data, vertical, margin: fullMargin, width, height, barCategoryGap, barGap, stackOffset, series, xaxis, yaxis, extents, hidden }),
+        : computeLayout({ data, vertical, margin: fullMargin, width, height, barCategoryGap, barGap, stackOffset, series, xaxis, yaxis, extents, hidden, config: chart.config }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, seriesData, width, height, signature],
+    [data, seriesData, width, height, signature, chart.config],
   )
 
   if (process.env.NODE_ENV !== "production") {
@@ -1256,6 +1308,7 @@ const POLAR_SERIES_SIG_KEYS = [
   "stackId",
   "name",
   "fill",
+  "pattern",
   "stroke",
   "innerRadius",
   "outerRadius",
@@ -1338,6 +1391,7 @@ function pieLayout(ctx, series) {
       values,
       names,
       colors,
+      patterns: names.map((n) => patternKind(el.props.pattern ?? config?.[n]?.pattern)),
       slices: pieSlices(values, { startAngle, endAngle, paddingAngle }),
       inner,
       outer,
@@ -1352,7 +1406,7 @@ function pieLayout(ctx, series) {
     category: { labels: pie.names, count: pie.data.length },
     anchorAt: (i) => polarToCartesian(cx, cy, (pie.inner + pie.outer) / 2, pie.slices[i].mid),
     payloadAt: (i) => [
-      { dataKey: pie.dataKey, name: pie.names[i], value: pie.values[i], color: pie.colors[i], fill: pie.colors[i], payload: slice(pie, i) },
+      { dataKey: pie.dataKey, name: pie.names[i], value: pie.values[i], color: pie.colors[i], fill: pie.colors[i], pattern: pie.patterns[i], payload: slice(pie, i) },
     ],
   }))
   // Where pies overlap the topmost paint wins, as it would under a pointer.
@@ -1371,7 +1425,7 @@ function pieLayout(ctx, series) {
     pie.names.forEach((name, i) => {
       if (named.has(name)) return
       named.add(name)
-      legendPayload.push({ dataKey: pie.nameKey, value: name, color: pie.colors[i], type: "rect", payload: slice(pie, i) })
+      legendPayload.push({ dataKey: pie.nameKey, value: name, color: pie.colors[i], pattern: pie.patterns[i], type: "rect", payload: slice(pie, i) })
     })
   }
   const layout = {
@@ -1453,7 +1507,7 @@ function radarLayout(ctx, series) {
 
 /* One ring per row between innerRadius and outerRadius; the angle is the value. */
 function radialLayout(ctx, series) {
-  const { frame, data, startAngle, endAngle, angleAxis, radiusAxis, barCategoryGap, barGap } = ctx
+  const { frame, data, startAngle, endAngle, angleAxis, radiusAxis, barCategoryGap, barGap, config } = ctx
   const { cx, cy } = frame
   const count = data.length
   const thickness = frame.outerRadius - frame.innerRadius
@@ -1473,6 +1527,7 @@ function radialLayout(ctx, series) {
       values: data.map((d) => finite(d?.[dataKey])),
       colors: data.map((d, i) => cells[i] ?? d?.fill ?? el.props.fill ?? paletteColor(series.length > 1 ? index : i)),
       color: el.props.fill ?? paletteColor(index),
+      pattern: patternKind(el.props.pattern ?? config?.[dataKey]?.pattern),
       props: el.props,
       stack: null,
       slot: null,
@@ -1519,8 +1574,8 @@ function radialLayout(ctx, series) {
       const arc = entries[0]?.arcs[i]
       return polarToCartesian(cx, cy, rings.center(i), arc ? (arc.start + arc.end) / 2 : startAngle)
     },
-    payloadAt: (i) => entries.map((entry) => ({ seriesKey: entry.key, dataKey: entry.dataKey, name: entry.name, value: entry.values[i], color: entry.colors[i], fill: entry.colors[i], payload: data[i] })),
-    legendPayload: entries.map((entry) => ({ dataKey: entry.dataKey, value: entry.name, color: entry.color, type: "rect" })),
+    payloadAt: (i) => entries.map((entry) => ({ seriesKey: entry.key, dataKey: entry.dataKey, name: entry.name, value: entry.values[i], color: entry.colors[i], fill: entry.colors[i], pattern: entry.pattern, payload: data[i] })),
+    legendPayload: entries.map((entry) => ({ dataKey: entry.dataKey, value: entry.name, color: entry.color, pattern: entry.pattern, type: "rect" })),
     angleItems: ticks.map((tick) => ({ angle: angleScale(tick), label: tick })),
     radiusItems: data.map((_, i) => ({ radius: rings.center(i), label: labels[i] })),
     gridRadii: [...data.map((_, i) => rings.start(i)), frame.outerRadius].filter((r) => r > 0),
@@ -1781,6 +1836,7 @@ export function Bar({
   shape,
   activeBar = false,
   activeIndex,
+  pattern: _pattern,
   hide,
   // The chart's layout decides; a Bar takes the prop only so Recharts snippets paste in.
   layout: _layout,
@@ -1790,8 +1846,10 @@ export function Bar({
 }) {
   const layout = useContext(LayoutContext)
   const hovered = useContext(ActiveIndexContext)
+  const chartId = useContext(ChartContext)?.id
   const entry = layout?.byKey.get(`bar:${dataKey}`)
   if (!layout || !entry || entry.hidden || !entry.slot) return null
+  const patterns = createPatterns(chartId)
   const { category, value, vertical, data } = layout
   const cells = Children.toArray(children).filter(isCell)
   // A controlled activeIndex wins over the pointer, as in Recharts.
@@ -1813,7 +1871,7 @@ export function Bar({
     const bar = {
       ...rect,
       radius,
-      fill: cellFill ?? data[i]?.fill ?? fill ?? entry.color,
+      fill: patterns.fill(entry.pattern, dataKey, cellFill ?? data[i]?.fill ?? fill ?? entry.color),
       fillOpacity,
       stroke,
       strokeWidth,
@@ -1837,6 +1895,7 @@ export function Bar({
   const labels = Children.toArray(children).filter((child) => !isCell(child))
   return (
     <g className={cn("chart-series", className)} data-key={dataKey} data-role="bar" {...props}>
+      {patterns.defs()}
       {bars}
       {labels.length ? <SeriesContext.Provider value={{ entry, points, rects }}>{labels}</SeriesContext.Provider> : null}
     </g>
@@ -1932,6 +1991,7 @@ export function Area({
   dot = false,
   activeDot = true,
   connectNulls = false,
+  pattern: _pattern,
   hide,
   className,
   children,
@@ -1940,11 +2000,13 @@ export function Area({
   const layout = useContext(LayoutContext)
   const hovered = useContext(ActiveIndexContext)
   const focusedSeries = useContext(ActiveSeriesContext)
+  const chartId = useContext(ChartContext)?.id
   const entry = layout?.byKey.get(`area:${dataKey}`)
   if (!layout || !entry || entry.hidden) return null
   const focused = focusedSeries === entry.index
   const active = focusedSeries == null || focused ? hovered : null
   const color = stroke ?? entry.color
+  const patterns = createPatterns(chartId)
   const upper = entry.stack.map((p, i) => (entry.values[i] == null ? null : layout.pointAt(i, p.y1)))
   const lower = entry.stack.map((p, i) => (entry.values[i] == null ? null : layout.pointAt(i, layout.clampValue(p.y0))))
   const runs = []
@@ -1957,6 +2019,8 @@ export function Area({
     }
   })
   if (run.length) runs.push(run)
+  // Resolved before the defs are emitted: the def list is whatever fill() was asked for.
+  const areaFill = patterns.fill(entry.pattern, dataKey, fill ?? entry.color)
   const areaD = runs
     .map((indices) =>
       areaPath(
@@ -1968,7 +2032,8 @@ export function Area({
     .join(" ")
   return (
     <g className={cn("chart-series", className)} data-key={dataKey} data-role="area" {...props}>
-      <path className="chart-area" d={areaD} fill={fill ?? entry.color} fillOpacity={fillOpacity} />
+      {patterns.defs()}
+      <path className="chart-area" d={areaD} fill={areaFill} fillOpacity={entry.pattern ? 1 : fillOpacity} />
       <path
         className="chart-line"
         d={linePath(upper, type, connectNulls)}
@@ -2518,6 +2583,7 @@ export function Pie({
   paddingAngle,
   cornerRadius = 0,
   fill,
+  pattern: _pattern,
   stroke,
   strokeWidth = 0,
   label = false,
@@ -2531,8 +2597,10 @@ export function Pie({
 }) {
   const layout = useContext(LayoutContext)
   const hovered = useContext(ActiveIndexContext)
+  const chartId = useContext(ChartContext)?.id
   const entry = layout?.byKey.get(`pie:${dataKey}`)
   if (!layout || !entry) return null
+  const patterns = createPatterns(chartId)
   const { cx, cy } = layout.viewBox
   const midRadius = (entry.inner + entry.outer) / 2
   const edge = stroke ?? SECTOR_STROKE
@@ -2551,7 +2619,7 @@ export function Pie({
     endAngle: slice.end,
     midAngle: slice.mid,
     cornerRadius,
-    fill: entry.colors[i],
+    fill: patterns.fill(entry.patterns[i], `${dataKey}-${i}`, entry.colors[i]),
     stroke: edge,
     strokeWidth,
     index: i,
@@ -2618,6 +2686,7 @@ export function Pie({
       data-outer={round2(entry.outer)}
       {...props}
     >
+      {patterns.defs()}
       {sectors}
       {sliceLabels}
       {labels.length ? (
@@ -2693,19 +2762,22 @@ export function RadialBar({
   maxBarSize,
   stroke,
   strokeWidth = 0,
+  pattern: _pattern,
   className,
   children,
   ...props
 }) {
   const layout = useContext(LayoutContext)
+  const chartId = useContext(ChartContext)?.id
   const entry = layout?.byKey.get(`radialbar:${dataKey}`)
   if (!layout || !entry || !entry.arcs) return null
+  const patterns = createPatterns(chartId)
   const { cx, cy } = layout.viewBox
   const edge = stroke ?? SECTOR_STROKE
   const bars = entry.arcs.map((arc, i) => {
     const d = entry.values[i] == null ? "" : arcPath(cx, cy, arc.inner, arc.outer, arc.start, arc.end, cornerRadius)
     if (!d) return null
-    return <path key={i} className="chart-sector" {...sectorAttrs(i, arc)} d={d} fill={entry.colors[i]} stroke={edge} strokeWidth={strokeWidth} />
+    return <path key={i} className="chart-sector" {...sectorAttrs(i, arc)} d={d} fill={patterns.fill(entry.pattern, `${dataKey}-${i}`, entry.colors[i])} stroke={edge} strokeWidth={strokeWidth} />
   })
   const points = entry.arcs.map((arc, i) =>
     entry.values[i] == null ? null : polarToCartesian(cx, cy, (arc.inner + arc.outer) / 2, (arc.start + arc.end) / 2),
@@ -2738,6 +2810,7 @@ export function RadialBar({
   const labels = Children.toArray(children).filter((child) => !isCell(child))
   return (
     <g className={cn("chart-series", className)} data-key={dataKey} data-role="radialbar" data-cx={round2(cx)} data-cy={round2(cy)} {...props}>
+      {patterns.defs()}
       {bars}
       {labels.length ? <SeriesContext.Provider value={{ entry, points, data: layout.data, place }}>{labels}</SeriesContext.Provider> : null}
     </g>
