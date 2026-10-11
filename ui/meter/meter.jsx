@@ -29,7 +29,8 @@ function regionOf(n, low, high, optimumRegion) {
  * The default `aria-valuetext` is a percentage; pass `aria-valuetext` (e.g.
  * "41 of 50 GB") to replace it.
  */
-export function Meter({ value, min = 0, max = 100, low, high, optimum, tone, className, ...props }) {
+export function Meter({ value, min = 0, max: maxProp = 100, low, high, optimum, tone, className, ...props }) {
+  const max = Math.max(maxProp, min)
   const span = max - min
   const now = Math.min(Math.max(Number.isFinite(value) ? value : min, min), max)
   const percent = span > 0 ? ((now - min) / span) * 100 : 0

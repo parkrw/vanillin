@@ -43,6 +43,13 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     eq(Math.abs(f.width - f.track) < 1, true, `${f.width} of ${f.track}`)
   })
 
+  await test("a value below the range rests on the minimum, and a max below the min is raised to it", async () => {
+    eq((await attrs('.meter[aria-label="Below the start"]')).now, "0")
+    eq((await fill('.meter[aria-label="Below the start"]')).width, 0)
+    const swapped = await attrs('.meter[aria-label="Max below min"]')
+    eq(JSON.stringify([swapped.min, swapped.max, swapped.now]), JSON.stringify(["10", "10", "10"]))
+  })
+
   await test("fill width follows the value over a range that starts above zero", async () => {
     const f = await fill('.meter[aria-label="Coolant"]')
     eq(Math.abs(f.width / f.track - 0.56) < 0.01, true, `${f.width / f.track}`)

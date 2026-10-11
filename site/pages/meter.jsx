@@ -184,6 +184,8 @@ import "./ui/meter/meter.css"
           <div data-pg="meter-range" style={stack}>
             <Meter value={68} min={40} max={90} aria-label="Coolant" aria-valuetext="68 °C" />
             <Meter value={140} max={100} aria-label="Past the end" />
+            <Meter value={-20} aria-label="Below the start" />
+            <Meter value={7} min={10} max={5} aria-label="Max below min" />
           </div>
         </ComponentPreview>
       </section>
