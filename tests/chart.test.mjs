@@ -771,6 +771,243 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await tooltip("chart-keyboard").waitFor({ state: "detached" })
   })
 
+  await test("series keys: Down and Up walk the series top of screen first, marking the tooltip row and the active dot", async () => {
+    const name = "chart-keyboard"
+    const svg = page.locator(`${pg(name)} .chart-surface`)
+    const marked = () => page.locator(`${pg(name)} .chart-tooltip-item[data-active-series] .chart-tooltip-name`).allTextContents()
+    const dots = () => page.locator(`${pg(name)} .chart-dot--active`).evaluateAll((els) => els.map((el) => el.getAttribute("data-active-series")))
+    await svg.evaluate((el) => el.blur())
+    await svg.focus()
+    await tooltip(name).waitFor()
+    eq(JSON.stringify(await marked()), "[]", "precondition: no series is focused until a key picks one")
+    eq((await dots()).length, 2, "both active dots show")
+    await page.keyboard.press("ArrowRight")
+    await page.keyboard.press("ArrowDown")
+    eq(JSON.stringify(await marked()), JSON.stringify(["Desktop"]), "February: desktop 305 is above mobile 200")
+    eq(JSON.stringify(await dots()), JSON.stringify(["desktop"]), "only the focused series keeps its dot")
+    await page.keyboard.press("ArrowDown")
+    eq(JSON.stringify(await marked()), JSON.stringify(["Mobile"]))
+    eq(JSON.stringify(await dots()), JSON.stringify(["mobile"]))
+    await page.keyboard.press("ArrowDown")
+    eq(JSON.stringify(await marked()), JSON.stringify(["Mobile"]), "the last series holds")
+    await page.keyboard.press("ArrowUp")
+    eq(JSON.stringify(await marked()), JSON.stringify(["Desktop"]))
+    await page.keyboard.press("ArrowRight")
+    eq(await page.locator(`${pg(name)} .chart-tooltip-label`).textContent(), "March", "the category still steps with a series focused")
+    eq(JSON.stringify(await marked()), JSON.stringify(["Desktop"]), "and the focus stays on its series")
+    await page.keyboard.press("Escape")
+    await tooltip(name).waitFor({ state: "detached" })
+    await page.keyboard.press("ArrowRight")
+    eq(JSON.stringify(await marked()), "[]", "Escape cleared the series too")
+    await svg.evaluate((el) => el.blur())
+  })
+
+  await test("series keys: in a scatter Down and Up switch series, where the arrows step only the first before", async () => {
+    const name = "chart-scatter"
+    const svg = page.locator(`${pg(name)} .chart-surface`)
+    const activeDot = () => page.locator(`${pg(name)} .chart-dot--active`).evaluateAll((els) => els.map((el) => el.closest(".chart-series").getAttribute("data-key")))
+    await svg.focus()
+    await tooltip(name).waitFor()
+    eq(JSON.stringify(await activeDot()), JSON.stringify(["a"]), "the first series leads")
+    await page.keyboard.press("ArrowDown")
+    eq(JSON.stringify(await activeDot()), JSON.stringify(["b"]))
+    eq(await page.locator(`${pg(name)} .chart-dot--active[data-active-series]`).getAttribute("data-active-series"), "b")
+    await page.keyboard.press("ArrowRight")
+    eq(await page.locator(`${pg(name)} .chart-dot--active`).getAttribute("data-index"), "1", "the arrows now step series b's points")
+    await page.keyboard.press("ArrowUp")
+    eq(JSON.stringify(await activeDot()), JSON.stringify(["a"]))
+    await page.keyboard.press("Escape")
+    await svg.evaluate((el) => el.blur())
+  })
+
+  await test("series keys: a synced chart follows the category, never the series", async () => {
+    const a = page.locator(`${pg("chart-sync-series-a")} .chart-surface`)
+    await a.focus()
+    await page.keyboard.press("ArrowDown")
+    await page.keyboard.press("ArrowRight")
+    await page.keyboard.press("ArrowRight")
+    eq(await page.locator(`${pg("chart-sync-series-a")} .chart-tooltip-item[data-active-series]`).count(), 1, "the focused chart marks a row")
+    await tooltip("chart-sync-series-b").waitFor()
+    eq(await page.locator(`${pg("chart-sync-series-b")} .chart-tooltip-label`).textContent(), "March", "the other chart is on the same category")
+    eq(await page.locator(`${pg("chart-sync-series-b")} .chart-tooltip-item[data-active-series]`).count(), 0)
+    eq(await page.locator(`${pg("chart-sync-series-b")} .chart-dot--active[data-active-series]`).count(), 0)
+    eq(await page.locator(`${pg("chart-sync-series-b")} .chart-dot--active`).count(), 2)
+    await page.keyboard.press("Escape")
+    await a.evaluate((el) => el.blur())
+  })
+
+  await test("series keys: a hidden series is skipped", async () => {
+    const name = "chart-series-hidden"
+    const svg = page.locator(`${pg(name)} .chart-surface`)
+    eq(await svg.getAttribute("tabindex"), "0", "precondition: accessibilityLayer is on")
+    await svg.focus()
+    await tooltip(name).waitFor()
+    await page.keyboard.press("ArrowDown")
+    await page.keyboard.press("ArrowDown")
+    const marked = await page.locator(`${pg(name)} .chart-tooltip-item[data-active-series] .chart-tooltip-name`).allTextContents()
+    eq(JSON.stringify(marked), JSON.stringify(["Desktop"]), "Down twice lands on the only series drawn")
+    eq(await page.locator(`${pg(name)} .chart-dot--active`).count(), 1)
+    await svg.evaluate((el) => el.blur())
+  })
+
+  const keyDriver = (name) => {
+    const svg = page.locator(`${pg(name)} .chart-surface`)
+    return {
+      svg,
+      start: async () => {
+        await svg.evaluate((el) => el.blur())
+        await svg.focus()
+        await tooltip(name).waitFor()
+      },
+      marked: () => page.locator(`${pg(name)} .chart-tooltip-item[data-active-series] .chart-tooltip-name`).allTextContents(),
+    }
+  }
+
+  await test("series keys: a stacked chart is walked from the top of the stack, and the focused area keeps its dot", async () => {
+    const k = keyDriver("chart-series-stack")
+    await k.start()
+    await page.keyboard.press("ArrowDown")
+    eq(JSON.stringify(await k.marked()), JSON.stringify(["Mobile"]), "January: mobile sits on desktop, so it is the top band though 80 < 186")
+    eq(await page.locator(`${pg("chart-series-stack")} .chart-dot--active[data-active-series="mobile"]`).count(), 1, "the Area's dot carries the mark")
+    eq(await page.locator(`${pg("chart-series-stack")} .chart-dot--active`).count(), 1, "and the other area's dot is gone")
+    await page.keyboard.press("ArrowDown")
+    eq(JSON.stringify(await k.marked()), JSON.stringify(["Desktop"]))
+    await k.svg.evaluate((el) => el.blur())
+  })
+
+  await test("series keys: equal values are taken in series order, and Up from no focus goes to the last", async () => {
+    const k = keyDriver("chart-series-tie")
+    await k.start()
+    await page.keyboard.press("ArrowDown")
+    eq(JSON.stringify(await k.marked()), JSON.stringify(["Alpha"]), "A: both 5, the first series leads")
+    await page.keyboard.press("ArrowDown")
+    eq(JSON.stringify(await k.marked()), JSON.stringify(["Beta"]))
+    await page.keyboard.press("Escape")
+    await page.keyboard.press("ArrowUp")
+    eq(JSON.stringify(await k.marked()), JSON.stringify(["Beta"]), "Up from no focus goes to the bottom of the order")
+    await k.svg.evaluate((el) => el.blur())
+  })
+
+  await test("series keys: with layout vertical the bar drawn first is on top", async () => {
+    const k = keyDriver("chart-series-vertical")
+    await k.start()
+    for (let i = 0; i < 3; i++) await page.keyboard.press("ArrowRight")
+    eq(await page.locator(`${pg("chart-series-vertical")} .chart-tooltip-label`).textContent(), "April")
+    await page.keyboard.press("ArrowDown")
+    eq(JSON.stringify(await k.marked()), JSON.stringify(["Desktop"]), "April: desktop 73 is below mobile 190 in value but above it on the page")
+    await k.svg.evaluate((el) => el.blur())
+  })
+
+  await test("series keys: with layout vertical a line with no slot sits mid-band, between the bars", async () => {
+    const k = keyDriver("chart-series-composed-vertical")
+    await k.start()
+    const walked = []
+    for (let i = 0; i < 3; i++) {
+      await page.keyboard.press("ArrowDown")
+      walked.push((await k.marked()).join())
+    }
+    eq(JSON.stringify(walked), JSON.stringify(["Alpha", "Gamma", "Beta"]), "bar a, the line at the band centre, bar b")
+    await k.svg.evaluate((el) => el.blur())
+  })
+
+  await test("series keys: a Bar and a Line on one dataKey mark exactly one row", async () => {
+    const k = keyDriver("chart-series-samekey")
+    await k.start()
+    await page.keyboard.press("ArrowDown")
+    eq(await page.locator(`${pg("chart-series-samekey")} .chart-tooltip-item`).count(), 2, "precondition: both series have a row")
+    eq(JSON.stringify(await k.marked()), JSON.stringify(["Bar a"]), "January: equal values, the bar leads")
+    await page.keyboard.press("ArrowDown")
+    eq(JSON.stringify(await k.marked()), JSON.stringify(["Line a"]), "and the mark moves to the line alone")
+    await k.svg.evaluate((el) => el.blur())
+  })
+
+  await test("series keys: a series with no value at the category is skipped, and returns where it has one", async () => {
+    const k = keyDriver("chart-series-gap")
+    await k.start()
+    await page.keyboard.press("ArrowDown")
+    await page.keyboard.press("ArrowDown")
+    eq(JSON.stringify(await k.marked()), JSON.stringify(["Alpha"]), "A: beta is null, so Down twice holds on alpha")
+    await page.keyboard.press("ArrowRight")
+    await page.keyboard.press("ArrowUp")
+    eq(JSON.stringify(await k.marked()), JSON.stringify(["Beta"]), "B: beta has 8, above alpha 4, so Up from alpha reaches it")
+    await k.svg.evaluate((el) => el.blur())
+  })
+
+  for (const [name, label] of [["chart-series-radar", "radar"], ["chart-series-radial", "radial bar"]]) {
+    await test(`series keys: Down and Up walk a ${label}'s series in draw order and mark one tooltip row`, async () => {
+      const k = keyDriver(name)
+      await k.start()
+      eq(JSON.stringify(await k.marked()), "[]", "precondition: no row is marked before a key")
+      await page.keyboard.press("ArrowDown")
+      eq(JSON.stringify(await k.marked()), JSON.stringify(["Desktop"]), "the series drawn first")
+      await page.keyboard.press("ArrowDown")
+      eq(JSON.stringify(await k.marked()), JSON.stringify(["Mobile"]))
+      await page.keyboard.press("ArrowDown")
+      eq(JSON.stringify(await k.marked()), JSON.stringify(["Mobile"]), "the last series holds")
+      await page.keyboard.press("ArrowUp")
+      eq(JSON.stringify(await k.marked()), JSON.stringify(["Desktop"]))
+      await k.svg.evaluate((el) => el.blur())
+    })
+  }
+
+  await test("series keys: Down steps between pies and the tooltip follows; the pie tooltip marks no row", async () => {
+    const k = keyDriver("chart-pie-two")
+    await k.start()
+    const label = () => page.locator(`${pg("chart-pie-two")} .chart-tooltip-label`).textContent()
+    eq(await label(), "Desktop")
+    await page.keyboard.press("ArrowDown")
+    eq(await label(), "Mobile", "the second pie")
+    eq((await k.marked()).length, 0, "the tooltip already shows one pie, so no row is marked")
+    await page.keyboard.press("ArrowUp")
+    eq(await label(), "Desktop")
+    await k.svg.evaluate((el) => el.blur())
+  })
+
+  await test("series keys: a series with no data is not landed on, and nothing throws", async () => {
+    const errors = []
+    const onError = (error) => errors.push(error.message)
+    page.on("pageerror", onError)
+    const pie = keyDriver("chart-series-empty-pie")
+    await pie.start()
+    await page.keyboard.press("ArrowDown")
+    await page.keyboard.press("ArrowDown")
+    eq(await page.locator(`${pg("chart-series-empty-pie")} .chart-tooltip`).count(), 1, "the tooltip is still showing the first pie")
+    await pie.svg.evaluate((el) => el.blur())
+    const scatter = keyDriver("chart-series-empty-scatter")
+    await scatter.start()
+    await page.keyboard.press("ArrowDown")
+    await page.keyboard.press("ArrowDown")
+    eq(await page.locator(`${pg("chart-series-empty-scatter")} .chart-dot--active`).count(), 1, "the dot stays on the series with points")
+    eq(await page.locator(`${pg("chart-series-empty-scatter")} .chart-series[data-key="a"] .chart-dot--active`).count(), 1)
+    await scatter.svg.evaluate((el) => el.blur())
+    page.off("pageerror", onError)
+    eq(JSON.stringify(errors), "[]")
+  })
+
+  await test("series keys: a scatter's tooltip marks no row, the dot is the marker", async () => {
+    const k = keyDriver("chart-scatter")
+    await k.start()
+    await page.keyboard.press("ArrowDown")
+    eq(await page.locator(`${pg("chart-scatter")} .chart-dot--active[data-active-series]`).count(), 1)
+    eq((await k.marked()).length, 0)
+    await page.keyboard.press("Escape")
+    await k.svg.evaluate((el) => el.blur())
+  })
+
+  await test("series keys: Down opens a linked chart on the same category after Escape", async () => {
+    const a = page.locator(`${pg("chart-sync-series-a")} .chart-surface`)
+    await a.evaluate((el) => el.blur())
+    await a.focus()
+    await page.keyboard.press("Escape")
+    await tooltip("chart-sync-series-b").waitFor({ state: "detached" })
+    await page.keyboard.press("ArrowDown")
+    await tooltip("chart-sync-series-b").waitFor()
+    eq(await page.locator(`${pg("chart-sync-series-b")} .chart-tooltip-label`).textContent(), "January")
+    eq(await page.locator(`${pg("chart-sync-series-b")} .chart-tooltip-item[data-active-series]`).count(), 0, "the category travels, the series does not")
+    await page.keyboard.press("Escape")
+    await a.evaluate((el) => el.blur())
+  })
+
   await test("keyboard: without accessibilityLayer nothing is focusable and arrows do nothing", async () => {
     const svg = page.locator(`${pg("chart-default")} .chart-surface`)
     eq(await svg.getAttribute("tabindex"), null)
@@ -779,6 +1016,10 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await page.keyboard.press("ArrowRight")
     await page.waitForTimeout(50)
     eq(await tooltip("chart-default").count(), 0)
+    await page.keyboard.press("ArrowDown")
+    await page.keyboard.press("ArrowUp")
+    await page.waitForTimeout(50)
+    eq(await page.locator(`${pg("chart-default")} [data-active-series]`).count(), 0, "Up and Down do nothing without accessibilityLayer")
     const labelled = page.locator(`${pg("chart-keyboard")} .chart-surface`)
     eq((await labelled.getAttribute("aria-label")).length > 0, true)
   })
