@@ -458,19 +458,36 @@ export function getBaseContent(project, slug, rel, kitVersion) {
   return injectClient(project, r.stdout, rel)
 }
 
+/** Released kit versions in git history, newest first. */
+function kitTagVersions() {
+  const r = spawnSync("git", ["tag", "--list", "v*", "--sort=-v:refname"], { cwd: kitRoot, encoding: "utf8" })
+  if (r.status !== 0 || r.error) return []
+  return r.stdout.split("\n").filter(Boolean).map((t) => t.slice(1))
+}
+
 /**
- * The merge base for one file: the kit's copy at the recorded version, in
- * whichever RSC form hashes to the recorded hash. `rsc` may have changed since
- * install, so the form in force then is not necessarily the one in force now;
- * a base matching no form is the wrong ancestor, and merging against it can
- * silently undo an upstream change. Returns null when there is none.
+ * The merge base for one file: the kit's copy that hashes to the recorded hash,
+ * in whichever RSC form does. The recorded hash is the only trustworthy
+ * identity of what the consumer was given, so it is matched against the
+ * sidecar's kitVersion first and then every release: a sibling that failed to
+ * settle holds kitVersion back while this file's hash moved on, and `rsc` may
+ * have changed since install. A base matching nothing is the wrong ancestor,
+ * and merging against it can silently undo an upstream change. Returns null
+ * when there is none.
  */
 export function baseMatching(project, slug, rel, kitVersion, recordedHash) {
-  for (const rsc of [project.config?.rsc, false, true]) {
-    const base = getBaseContent({ ...project, config: { ...project.config, rsc } }, slug, rel, kitVersion)
-    if (base && hashBytes(base) === recordedHash) return base
+  for (const version of new Set([kitVersion, ...kitTagVersions()])) {
+    for (const rsc of new Set([project.config?.rsc, false, true])) {
+      const base = getBaseContent({ ...project, config: { ...project.config, rsc } }, slug, rel, version)
+      if (base && hashBytes(base) === recordedHash) return base
+    }
   }
   return null
+}
+
+/** A conflict van left behind: its `.orig` backup beside a file still holding markers. */
+function hasUnresolvedConflict(path) {
+  return existsSync(`${path}.orig`) && /^<{7} /m.test(readFileSync(path, "utf8"))
 }
 
 /**
@@ -1232,7 +1249,7 @@ function cmdUpdate(project, slugs) {
     const targetDir = join(project.root, project.paths.ui, slug)
     const dir = `${project.paths.ui}/${slug}`
 
-    const unresolved = (f) => f.state === "edited" && existsSync(join(targetDir, `${f.rel}.orig`))
+    const unresolved = (f) => f.state === "edited" && hasUnresolvedConflict(join(targetDir, f.rel))
     const actionable = diff.files.filter((f) => isPending(f, diff.tracked) && (f.state !== "edited" || unresolved(f)))
     if (!actionable.length) continue
 
@@ -1265,7 +1282,7 @@ function cmdUpdate(project, slugs) {
           }
 
           case "edited":
-            if (existsSync(`${to}.orig`)) {
+            if (hasUnresolvedConflict(to)) {
               say(`  ${red("!")} ${path} ${dim(`unresolved conflict — resolve it, then delete ${f.rel}.orig`)}`)
               conflicted++
               break
@@ -1309,11 +1326,11 @@ function cmdUpdate(project, slugs) {
               conflicted++
               break
             }
-            // A second pass over a conflicted file would merge markers into
-            // markers and overwrite the only pristine copy with them.
+            // An existing .orig is either an earlier conflict's only pristine copy
+            // or someone else's backup; writing over it destroys either.
             const orig = `${to}.orig`
             if (existsSync(orig)) {
-              say(`  ${red("!")} ${path} ${dim(`unresolved conflict — resolve it, delete ${f.rel}.orig, run again`)}`)
+              say(`  ${red("!")} ${path} ${dim(`${f.rel}.orig already exists — resolve the conflict or move it aside, then run again`)}`)
               resolved = false
               conflicted++
               break
