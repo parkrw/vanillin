@@ -1,0 +1,12 @@
+{
+  "name": "chart-funnel",
+  "kitVersion": "0.1.0",
+  "source": "github:parkrw/vanillin@v0.1.0",
+  "requires": [
+    "chart"
+  ],
+  "files": {
+    "chart-funnel.css": "sha256-soN1a0H7owwypi/QFvgL+YgAYTvZKOTC1q75plsGa9Y=",
+    "chart-funnel.jsx": "sha256-DDZ+HhVx2w7vQvhDrFgA/G57Oj0dre0i55rleZKwcb0="
+  }
+}

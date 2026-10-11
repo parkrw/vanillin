@@ -101,6 +101,8 @@ const probes = [
   ["chart-candlestick", '[data-pg="candlestick-default"] .chart-candlestick-mark[data-direction="down"] .chart-candlestick-wick', ["stroke"], "candle down wick"],
   ["chart-candlestick", '[data-pg="candlestick-linked"] .chart-candlestick-volume-bar[data-direction="up"]', ["fill"], "volume bar up"],
   ["chart-candlestick", '[data-pg="candlestick-linked"] .chart-candlestick-volume-bar[data-direction="down"]', ["fill"], "volume bar down"],
+  // chart-funnel: the stage fill is the datum.
+  ["chart-funnel", '[data-pg="funnel-default"] .chart-funnel-stage', ["fill"], "funnel stage"],
   ["progress", ".progress", ["backgroundColor"], "progress track", { exempt: "inactive track; the indicator carries the state and passes (17.93:1 light / 15.72:1 dark), as D5 checkbox fill" }],
   ["progress", ".progress-indicator", ["backgroundColor"], "progress indicator"],
   ["progress", '[data-pg="progress-tone"] .progress--success .progress-indicator', ["backgroundColor"], "progress indicator success"],
