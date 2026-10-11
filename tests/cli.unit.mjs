@@ -15,7 +15,7 @@ import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { hashFile, hashBytes, readManifest, STYLESHEETS } from "../scripts/manifest.mjs"
 import { buildRegistry } from "../scripts/build-registry.mjs"
-import { createPickerState, pickerHandleKey, pickerLines, drivePicker, pickerSelection, readKey } from "../bin/van.mjs"
+import { mergeFile, createPickerState, pickerHandleKey, pickerLines, drivePicker, pickerSelection, readKey } from "../bin/van.mjs"
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))
 const VAN = join(repoRoot, "bin", "van.mjs")
@@ -1074,6 +1074,8 @@ test("update survives a recorded file the kit no longer ships", (dir) => {
   assert.equal(r.code, 0, r.all)
   assert.doesNotMatch(r.all, /ENOENT|\n\s+at /, "raw error leaked")
   assert.equal(readFileSync(join(dir, "ui/widget/widget.jsx"), "utf8"), "b\n", "other files were not updated")
+  assert.ok(!("ghost.css" in readManifest(join(dir, "ui/widget")).files), "the dropped file is still recorded")
+  assert.equal(kit.van(dir, "diff").code, 0, "diff still reports the dropped file")
 })
 
 test("update deletes an unedited file the kit removed, and says so", (dir) => {
@@ -1128,6 +1130,8 @@ test("a file renamed in the kit round-trips through update without a crash", (di
   assert.equal(r.code, 0, r.all)
   assert.doesNotMatch(r.all, /ENOENT|\n\s+at /)
   assert.ok(!existsSync(join(dir, "ui/widget/old.css")), "the old name survived")
+  assert.equal(readFileSync(join(dir, "ui/widget/new.css"), "utf8"), "a\n", "the new name was not installed")
+  assert.equal(kit.van(dir, "diff").code, 0, "diff still reports drift after the rename")
   assert.equal(kit.van(dir, "update").code, 0, "a second update is not clean")
 })
 
@@ -1169,6 +1173,22 @@ test("diff and update report an installed component the kit dropped", (dir) => {
   const u = van(dir, "update")
   assert.match(u.out, /old-thing\n\s+! no longer in the kit/)
   assert.doesNotMatch(u.out, /mine/)
+})
+
+test("a git failure during a merge is an error, not a conflict", () => {
+  const binary = Buffer.from([0, 1, 2, 3])
+  assert.throws(() => mergeFile(binary, binary, Buffer.from([0, 9, 9])), /git merge-file failed/)
+})
+
+test("diff and update count a dropped component apart from files", (dir) => {
+  project(dir)
+  mkdirSync(join(dir, "ui/old-thing"), { recursive: true })
+  writeFileSync(join(dir, "ui/old-thing/.van.json"), JSON.stringify({ name: "old-thing", kitVersion: "0.0.1", files: {} }) + "\n")
+  const d = van(dir, "diff")
+  assert.equal(d.code, 1, d.all)
+  assert.match(d.out, /1 no longer in the kit/)
+  assert.doesNotMatch(d.out, /file differs/)
+  assert.match(van(dir, "update").out, /all components up to date \(1 no longer in the kit\)/)
 })
 
 test("a deprecated registry entry is announced for installed components", (dir) => {
@@ -1221,9 +1241,15 @@ test("a clean 3-way merge keeps both edits and records the merged hash", (dir) =
   assert.match(text, /kit 10/)
   assert.doesNotMatch(text, /<<<<<<<|>>>>>>>/)
   const sidecar = readManifest(join(dir, "ui/widget"))
-  assert.equal(sidecar.files["a.jsx"], hashFile(first))
+  assert.equal(sidecar.files["a.jsx"], hashBytes(Buffer.from(base.replace("line 10\n", "kit 10\n"))), "records the kit bytes")
   assert.equal(sidecar.kitVersion, "0.2.0")
   assert.ok(!existsSync(`${first}.orig`), "a clean merge left a backup")
+
+  const merged = readFileSync(first, "utf8")
+  const again = kit.van(dir, "update")
+  assert.equal(again.code, 0, again.all)
+  assert.equal(readFileSync(first, "utf8"), merged, "the next update overwrote the merged file")
+  assert.match(kit.van(dir, "diff").out, /a\.jsx — edited locally/)
 })
 
 test("a conflicted merge leaves the marked file and a pristine .orig", (dir) => {
@@ -1263,7 +1289,9 @@ test("a conflict in one file still records the clean sibling's hash", (dir) => {
   const r = kit.van(dir, "update")
   assert.equal(r.code, 1, r.all)
   const sidecar = readManifest(join(dir, "ui/widget"))
-  assert.equal(sidecar.files["b.jsx"], hashFile(second), "the clean sibling kept its old hash")
+  assert.equal(sidecar.files["b.jsx"], hashBytes(Buffer.from(base.replace("line 1\n", "kit 1\n"))), "the clean sibling kept its old hash")
+  assert.match(readFileSync(second, "utf8"), /mine 10/)
+  assert.match(readFileSync(second, "utf8"), /kit 1\n/)
   assert.equal(sidecar.files["a.jsx"], before, "the conflicted file's hash moved")
   assert.equal(sidecar.kitVersion, "0.1.0", "kitVersion moved while a file is still unresolved")
   assert.match(readFileSync(first, "utf8"), /<<<<<<</)

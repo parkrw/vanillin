@@ -439,8 +439,8 @@ export function planAdd(project, registry, slugs) {
 
 // ── update: base retrieval + 3-way merge ───────────────────────────
 
-// spawnSync's 1 MB default truncates a large file silently, and what it
-// returns is what would be written to the consumer's tree.
+// spawnSync's 1 MB default fails a large file with ENOBUFS, which would read as
+// a missing base or a failed merge rather than a size limit.
 const GIT_MAX_BUFFER = 256 * 1024 * 1024
 
 /**
@@ -460,8 +460,8 @@ export function getBaseContent(project, slug, rel, kitVersion) {
 
 /**
  * 3-way merge via git merge-file. Returns { content, clean }.
- * clean=true means no conflicts; clean=false means conflict markers in content,
- * or the local bytes untouched when git itself failed.
+ * clean=true means no conflicts; clean=false means conflict markers in content.
+ * Throws when git itself fails, so a failure is never taken for a conflict.
  */
 export function mergeFile(base, local, upstream) {
   const tmp = mkdtempSync(join(tmpdir(), "van-merge-"))
@@ -478,7 +478,9 @@ export function mergeFile(base, local, upstream) {
     })
     // Exit codes 1-127 count conflicts; anything else is git failing, and its
     // stdout is not a merge result.
-    if (r.error || r.status === null || r.status > 127) return { content: local, clean: false }
+    if (r.error || r.status === null || r.status > 127) {
+      throw new Error(`git merge-file failed (${r.error?.message || `exit ${r.status}`})`)
+    }
     return { content: r.stdout, clean: r.status === 0 }
   } finally {
     rmSync(tmp, { recursive: true, force: true })
@@ -898,7 +900,7 @@ export function diffComponent(project, registry, slug) {
     const was = recorded[rel] || null
 
     let state
-    if (!local) state = was ? "deleted" : "absent"
+    if (!local) state = was && kit === null ? "removed" : was ? "deleted" : "absent"
     else if (local === kit) state = "current"
     else if (kit === null && was) state = "removed"
     else if (!was) state = "untracked"
@@ -906,7 +908,7 @@ export function diffComponent(project, registry, slug) {
     else if (kit === was) state = "edited"
     else state = "diverged"
 
-    files.push(state === "removed" ? { rel, state, edited: local !== was } : { rel, state })
+    files.push(state === "removed" ? { rel, state, edited: local !== null && local !== was, gone: local === null } : { rel, state })
   }
 
   return { slug, kitVersion: manifest?.kitVersion || null, tracked: manifest !== null, files }
@@ -1077,13 +1079,17 @@ function sayDeprecated(registry, slugs) {
 
 const DIFF_LABEL = {
   removed: (f) =>
-    f.edited ? red("removed upstream; your edited copy is kept") : "removed upstream — run `van update` to delete it",
+    f.edited
+      ? red("removed upstream; your edited copy is kept")
+      : f.gone
+        ? "removed upstream, already deleted locally — run `van update` to clear the record"
+        : "removed upstream — run `van update` to delete it",
   edited: () => red("edited locally"),
   "upstream-changed": () => "upstream changed — run `van update`",
   diverged: () => red("edited locally, and upstream changed"),
   untracked: () => "not recorded in .van.json",
   deleted: () => "recorded but missing locally",
-  absent: () => dim("not installed"),
+  absent: () => "new upstream file — run `van update`",
   current: () => dim("up to date"),
 }
 
@@ -1116,11 +1122,10 @@ function cmdDiff(project, slugs) {
   let differing = 0
   const retired = slugs.length ? [] : retiredSlugs(project, registry, installed)
   sayRetired(retired)
-  differing += retired.length
   sayDeprecated(registry, targets)
   for (const slug of targets) {
     const result = diffComponent(project, registry, slug)
-    const interesting = result.files.filter((f) => f.state !== "current" && f.state !== "absent")
+    const interesting = result.files.filter((f) => f.state !== "current")
     differing += interesting.length
     if (!interesting.length && !flags.all) continue
 
@@ -1149,14 +1154,17 @@ function cmdDiff(project, slugs) {
     for (const line of lines) say(line)
   }
 
-  if (!differing) {
+  if (!differing && !retired.length) {
     const n = targets.length
     say(`${green("✓")} ${n} component${n === 1 ? " matches" : "s match"} kit v${registry.kitVersion}`)
     return
   }
 
   say("")
-  say(dim(differing === 1 ? "1 file differs" : `${differing} files differ`))
+  const summary = []
+  if (differing) summary.push(differing === 1 ? "1 file differs" : `${differing} files differ`)
+  if (retired.length) summary.push(`${retired.length} no longer in the kit`)
+  say(dim(summary.join(", ")))
   // Non-zero so `van diff` is usable as a CI drift check.
   process.exit(1)
 }
@@ -1183,7 +1191,9 @@ function cmdUpdate(project, slugs) {
   let conflicted = 0
   let failed = 0
 
-  if (!slugs.length) sayRetired(retiredSlugs(project, registry, installed))
+  const retired = slugs.length ? [] : retiredSlugs(project, registry, installed)
+  sayRetired(retired)
+  const upToDate = `${green("✓")} all components up to date${retired.length ? dim(` (${retired.length} no longer in the kit)`) : ""}`
   sayDeprecated(registry, targets)
 
   for (const slug of targets) {
@@ -1192,7 +1202,7 @@ function cmdUpdate(project, slugs) {
     const targetDir = join(project.root, project.paths.ui, slug)
     const dir = `${project.paths.ui}/${slug}`
 
-    const actionable = diff.files.filter((f) => f.state !== "current" && f.state !== "absent" && f.state !== "edited")
+    const actionable = diff.files.filter((f) => f.state !== "current" && f.state !== "edited")
     if (!actionable.length) continue
 
     const versionNote = diff.tracked ? dim(` (v${diff.kitVersion} → v${registry.kitVersion})`) : ""
@@ -1209,8 +1219,18 @@ function cmdUpdate(project, slugs) {
       try {
         switch (f.state) {
           case "current":
-          case "absent":
             break
+
+          // A file the kit added or renamed to: components arrive whole, so a
+          // new file is as much part of the update as a changed one.
+          case "absent": {
+            const contents = kitFileContent(project, slug, f.rel)
+            if (!flags.dryRun) writeFileAtomic(to, contents)
+            newHashes[f.rel] = hashBytes(contents)
+            say(`  ${green("+")} ${path} ${dim("new")}`)
+            updated++
+            break
+          }
 
           case "edited":
             say(`  ${dim("=")} ${f.rel} ${dim("edited locally, upstream unchanged")}`)
@@ -1230,10 +1250,10 @@ function cmdUpdate(project, slugs) {
               say(`  ${dim("=")} ${path} ${dim("removed upstream; your edited copy is kept")}`)
               break
             }
-            if (!flags.dryRun) rmSync(to)
+            if (!f.gone && !flags.dryRun) rmSync(to)
             dropped.push(f.rel)
-            say(`  ${red("-")} ${path} ${dim("removed upstream, deleted")}`)
-            updated++
+            say(`  ${red("-")} ${path} ${dim(f.gone ? "removed upstream, record cleared" : "removed upstream, deleted")}`)
+            if (!f.gone) updated++
             break
 
           case "diverged": {
@@ -1265,7 +1285,10 @@ function cmdUpdate(project, slugs) {
             const merged = mergeFile(base, local, contents)
             if (merged.clean) {
               if (!flags.dryRun) writeFileAtomic(to, merged.content)
-              newHashes[f.rel] = hashBytes(merged.content)
+              // The kit's bytes, not the merged ones: the merge is the consumer's
+              // edit on top of this version, and recording it as installed would
+              // let the next update overwrite it as "upstream changed".
+              newHashes[f.rel] = hashBytes(contents)
               say(`  ${green("~")} ${path} ${dim("merged")}`)
               updated++
             } else {
@@ -1332,13 +1355,13 @@ function cmdUpdate(project, slugs) {
       say("")
       say(dim("--dry-run: nothing written"))
     } else {
-      say(`${green("✓")} all components up to date`)
+      say(upToDate)
     }
     return
   }
 
   if (!updated && !conflicted && !failed) {
-    say(`${green("✓")} all components up to date`)
+    say(upToDate)
     return
   }
 
