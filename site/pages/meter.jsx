@@ -19,15 +19,17 @@ const edges = [
   ["95, optimum 100", { value: 95, low: 75, high: 90, optimum: 100 }],
   ["80, optimum unset", { value: 80, low: 75, high: 90 }],
   ["95, tone success", { value: 95, low: 75, high: 90, optimum: 0, tone: "success" }],
-  ["95, no thresholds", { value: 95 }],
   ["24 within 25-75", { value: 24, low: 25, high: 75, optimum: 50 }],
   ["25 within 25-75", { value: 25, low: 25, high: 75, optimum: 50 }],
   ["75 within 25-75", { value: 75, low: 25, high: 75, optimum: 50 }],
   ["76 within 25-75", { value: 76, low: 25, high: 75, optimum: 50 }],
   ["90 within 25-75", { value: 90, low: 25, high: 75, optimum: 50 }],
+  ["95, no thresholds", { value: 95 }],
   ["optimum alone, 60", { value: 60, optimum: 100 }],
   ["swapped low 90 high 75, 80", { value: 80, low: 90, high: 75, optimum: 100 }],
-  ["thresholds past max, 100", { value: 100, low: 75, high: 150, optimum: 200 }],
+  ["thresholds past max, 80", { value: 80, low: 75, high: 150, optimum: 200 }],
+  ["low past max, 80", { value: 80, low: 150, optimum: 100 }],
+  ["optimum below min, 20", { value: 20, min: 10, low: 10, high: 60, optimum: 0 }],
 ]
 const readout = { display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }
 
@@ -131,12 +133,12 @@ import "./ui/meter/meter.css"
       <section className="pg-section">
         <h3>On the line</h3>
         <p>
-          Each reading sits on or next to a boundary: <code>low={"{75}"}</code>{" "}
-          and <code>high={"{90}"}</code> in the first group, and{" "}
-          <code>low={"{25}"}</code> and <code>high={"{75}"}</code> with the
-          optimum between them in the second, where the only tones are green and
-          amber. The last rows are the odd cases: a swapped pair, thresholds past
-          the end of the range, an optimum on its own, and no thresholds at all.
+          The first group sits on and either side of <code>low={"{75}"}</code>{" "}
+          and <code>high={"{90}"}</code>; the second, of <code>low={"{25}"}</code>{" "}
+          and <code>high={"{75}"}</code> with the optimum between them, where the
+          only tones are green and amber. The last rows are the odd cases: no
+          thresholds, an optimum on its own, a swapped pair, and thresholds or an
+          optimum outside the range.
         </p>
         <ComponentPreview code={`<Meter value={75} low={75} high={90} optimum={0} aria-label="Disk" />
 <Meter value={90} low={75} high={90} optimum={100} aria-label="Battery" />

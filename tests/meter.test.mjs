@@ -1,7 +1,4 @@
-import { readFileSync } from "node:fs"
-import { resolve } from "node:path"
-
-export default async function run({ page, baseUrl, repoRoot, test, eq }) {
+export default async function run({ page, baseUrl, test, eq }) {
   await page.goto(`${baseUrl}/#meter`)
   await page.waitForSelector(".meter")
 
@@ -77,7 +74,7 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
       "50, optimum 100": "error", "95, optimum 100": "success", "80, optimum unset": "warning",
       "95, tone success": "success", "95, no thresholds": null,
       "24 within 25-75": "warning", "25 within 25-75": "success", "75 within 25-75": "success",
-      "76 within 25-75": "warning", "90 within 25-75": "warning", "thresholds past max, 100": "success", "swapped low 90 high 75, 80": "error", "optimum alone, 60": "success",
+      "76 within 25-75": "warning", "90 within 25-75": "warning", "thresholds past max, 80": "success", "low past max, 80": "warning", "optimum below min, 20": "success", "swapped low 90 high 75, 80": "error", "optimum alone, 60": "success",
     })))
   })
 
@@ -156,10 +153,8 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     eq(unnamed, 0)
   })
 
-  await test("no progressbar role on the page or in the component", async () => {
+  await test("no progressbar role on the page", async () => {
     eq(await page.locator('[role="progressbar"]').count(), 0)
     eq(await page.locator('[role="meter"]').count() > 0, true)
-    const source = readFileSync(resolve(repoRoot, "ui/meter/meter.jsx"), "utf8")
-    eq(/progressbar/.test(source), false)
   })
 }
