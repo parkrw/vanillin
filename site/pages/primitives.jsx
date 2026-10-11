@@ -591,10 +591,10 @@ useSafeTriangle({
       <section className="pg-section">
         <h3>Drag resize</h3>
         <p>
-          <code>useDragResize</code> sizes one element along one axis in pixels, clamped between <code>min</code> and <code>max</code>. Spread <code>handleProps</code> on the grab handle: it takes pointer drags that keep tracking outside the handle, sets the resize cursor while dragging and clears it on release, and is a focusable <code>separator</code> that Arrow keys step by <code>step</code> pixels and Home and End send to <code>min</code> and <code>max</code>. Arrows move the edge the way they point on screen.
+          <code>useDragResize</code> sizes one element along one axis in pixels, clamped between <code>min</code> and <code>max</code>. Spread <code>handleProps</code> on the grab handle: it takes pointer drags that keep tracking outside the handle, sets the resize cursor while dragging and clears it on release, and is a focusable <code>separator</code> that Arrow keys step by <code>step</code> pixels and Home and End send to <code>min</code> and <code>max</code>. Arrows move the edge the way they point on screen. Give the handle <code>touch-action: none</code>, or a touchscreen reads the drag as a pan and cancels it.
         </p>
         <p>
-          On the horizontal axis the direction follows <code>DirectionProvider</code>, so dragging toward the start edge grows an inline-start element in both reading directions. <code>reverse</code> is for an element that grows against the pointer, such as a bottom-anchored panel whose handle is dragged upward. For a group of panels that split by percentage, use <code>ui/resizable</code> instead.
+          On the horizontal axis the direction follows <code>DirectionProvider</code>, so dragging toward the end edge grows an inline-start element in both reading directions: right in left-to-right, left in right-to-left. <code>reverse</code> is for an element that grows against the pointer, such as a bottom-anchored panel whose handle is dragged upward. For a group of panels that split by percentage, use <code>ui/resizable</code> instead.
         </p>
         <ComponentPreview code={`import { useDragResize } from "./lib/use-drag-resize"
 

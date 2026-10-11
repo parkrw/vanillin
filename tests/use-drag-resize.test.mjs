@@ -63,7 +63,7 @@ export default async function run({ page, baseUrl, test, eq, repoRoot }) {
   await test("under rtl the horizontal axis flips", async () => {
     eq(await panelSize("drag-rtl", "width"), 160, "starts at defaultSize")
     await drag("drag-rtl", -40, 0)
-    eq(await panelSize("drag-rtl", "width"), 200, "dragging toward the start edge grows it")
+    eq(await panelSize("drag-rtl", "width"), 200, "dragging toward the end edge grows it")
     await drag("drag-rtl", 20, 0)
     eq(await panelSize("drag-rtl", "width"), 180, "dragging away shrinks it")
     await drag("drag-x", 20, 0)
@@ -135,8 +135,9 @@ export default async function run({ page, baseUrl, test, eq, repoRoot }) {
           el().dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true }))
         const out = { snapshots: {} }
         for (const step of steps) {
-          if (step.down) pointer("pointerdown", el(), { clientX: 0, clientY: 0 })
-          if (step.move != null) pointer("pointermove", window, { clientX: step.move, clientY: 0 })
+          if (step.down) pointer("pointerdown", el(), { clientX: 0, clientY: 0, ...step.down })
+          if (step.move != null)
+            pointer("pointermove", window, { clientX: step.move, clientY: 0, ...step.moveInit })
           if (step.up) pointer("pointerup", window, {})
           if (step.cancel) pointer("pointercancel", window, {})
           if (step.key) key(step.key)
@@ -178,6 +179,20 @@ export default async function run({ page, baseUrl, test, eq, repoRoot }) {
     eq(snapshots.during.changes.join(), "60", "precondition: the drag reports changes")
     eq(snapshots.unmounted.cursor, "", "cursor cleared on unmount")
     eq(snapshots.after.changes.join(), "60", "no change reported after unmount")
+  })
+
+  await test("a secondary button does not start a drag, and another pointer does not steer one", async () => {
+    const right = await harness({ min: 0, max: 100, defaultSize: 50 }, [
+      { down: { button: 2 }, move: 20, snap: "s" },
+    ])
+    eq(right.snapshots.s.changes.length, 0, "right press ignored")
+    eq(right.snapshots.s.cursor, "", "no cursor")
+    const foreign = await harness({ min: 0, max: 100, defaultSize: 50 }, [
+      { down: true, move: 10, snap: "own" },
+      { move: 40, moveInit: { pointerId: 9 }, snap: "other" },
+    ])
+    eq(foreign.snapshots.own.changes.join(), "60", "precondition: own pointer drives the drag")
+    eq(foreign.snapshots.other.changes.join(), "60", "another pointer's moves are ignored")
   })
 
   await test("pointercancel ends the drag and clears the cursor and selection lock", async () => {
