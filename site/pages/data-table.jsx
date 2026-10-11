@@ -1036,7 +1036,7 @@ function PaginationDemo() {
           ))}
         </TableBody>
       </Table>
-      <DataTablePagination table={table} pageSizeOptions={[3, 5, 8]} showFirstLast data-pg="dt-demo-pager" />
+      <DataTablePagination table={table} pageSizeOptions={[5, 8]} showFirstLast data-pg="dt-demo-pager" />
     </div>
   )
 }
@@ -1359,7 +1359,7 @@ const table = useDataTable({ data, columns })
       <section className="pg-section">
         <h3>Pagination</h3>
         <ComponentPreview code={`const table = useDataTable({ data, columns, initialPageSize: 3 })
-<DataTablePagination table={table} pageSizeOptions={[3, 5, 8]} showFirstLast />`}>
+<DataTablePagination table={table} pageSizeOptions={[5, 8]} showFirstLast />`}>
           <PaginationDemo />
         </ComponentPreview>
         <p>

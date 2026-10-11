@@ -303,6 +303,17 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     eq(await pageInfo(), "Page 1 of 2", "size change resets the index")
   })
 
+  await test("a starting page size outside pageSizeOptions stays selectable, in order", async () => {
+    const select = page.locator('[data-pg="dt-demo-pager"] select')
+    await select.waitFor()
+    eq(
+      await select.evaluate((el) => [...el.options].map((o) => o.value).join(",")),
+      "3,5,8",
+      "the table's own size of 3 joins the listed 5 and 8"
+    )
+    eq(await select.inputValue(), "3", "the select shows the size the table really pages by")
+  })
+
   await test("first/last buttons jump to the ends and disable there", async () => {
     const pager = page.locator('[data-pg="dt-demo-pager"]')
     const info = () => pager.locator(".data-table-page-info").textContent()
