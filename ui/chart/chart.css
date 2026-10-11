@@ -141,6 +141,11 @@
   gap: var(--space-2);
 }
 
+/* Weight, not colour, marks the row a key focused: series colour is the datum. */
+.chart-tooltip-item[data-active-series] {
+  font-weight: 600;
+}
+
 .chart-tooltip-item[data-indicator="dot"] {
   align-items: center;
 }
