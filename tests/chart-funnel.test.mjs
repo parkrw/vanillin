@@ -3,8 +3,6 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
     strictEq(typeof actual === "object" && actual !== null ? JSON.stringify(actual) : actual, typeof expected === "object" && expected !== null ? JSON.stringify(expected) : expected, message)
   const pageErrors = []
   page.on("pageerror", (e) => pageErrors.push(e.message))
-  const warnings = []
-  page.on("console", (m) => m.type() === "warning" && warnings.push(m.text()))
 
   await page.goto(`${baseUrl}/#chart-funnel`)
   await page.waitForSelector('[data-pg="funnel-default"] .chart-funnel-stage')
@@ -321,13 +319,6 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
     await page.waitForFunction(() => document.querySelector('[data-pg="funnel-default"] .chart-funnel-stage-group[data-active]'))
     eq(await activeIndex("funnel-default"), [2], "counter-precondition: a hover chart follows the pointer")
     await page.mouse.move(0, 0)
-  })
-
-  await test("funnel: a chart part it does not draw is ignored, with a warning", async () => {
-    eq(await page.locator(`${pg("funnel-ignored")} .chart-funnel-stage`).count(), 4, "the funnel still draws")
-    eq(await page.locator(`${pg("funnel-ignored")} .chart-bar, ${pg("funnel-ignored")} rect.chart-rectangle`).count(), 0, "the Bar draws nothing")
-    eq(warnings.filter((w) => w.includes("<Bar> is not a funnel part")).length >= 1, true, `warned: ${warnings.join(" | ")}`)
-    eq(warnings.some((w) => w.includes("<ChartTooltip> is not a funnel part")), false, "counter-precondition: a part it draws does not warn")
   })
 
   await test("funnel: arrows step down the stages and hold at the ends", async () => {

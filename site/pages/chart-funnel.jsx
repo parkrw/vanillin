@@ -1,4 +1,4 @@
-import { Bar, ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent } from "../../ui/chart/chart.jsx"
+import { ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent } from "../../ui/chart/chart.jsx"
 import { FunnelChart } from "../../ui/chart-funnel/chart-funnel.jsx"
 import "../../ui/chart/chart.css"
 import "../../ui/chart-funnel/chart-funnel.css"
@@ -253,25 +253,6 @@ export default function ChartFunnelPage() {
             <ChartContainer config={config}>
               <FunnelChart data={stages}>
                 <ChartTooltip trigger="click" defaultIndex={1} content={<ChartTooltipContent />} />
-              </FunnelChart>
-            </ChartContainer>
-          </Frame>
-        </ComponentPreview>
-      </section>
-
-      <section className="pg-section">
-        <h3>Parts it draws</h3>
-        <p>
-          Only <code>ChartTooltip</code> and <code>ChartLegend</code> draw inside a funnel. Any other chart part, such as a{" "}
-          <code>Bar</code>, is ignored, with a warning in the console during development.
-        </p>
-        <ComponentPreview code={`<FunnelChart data={stages}>
-  <Bar dataKey="value" />
-</FunnelChart>`}>
-          <Frame pg="funnel-ignored">
-            <ChartContainer config={config}>
-              <FunnelChart data={stages}>
-                <Bar dataKey="value" />
               </FunnelChart>
             </ChartContainer>
           </Frame>
