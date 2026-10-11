@@ -328,6 +328,28 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     eq(await options(), "3,5,8", "the offered sizes return once another is picked")
   })
 
+  await test("pager select takes the forced-colors focus outline", async () => {
+    const select = page.locator('[data-pg="dt-pager"] select')
+    await page.emulateMedia({ forcedColors: "active" })
+    try {
+      await select.focus()
+      const outline = await select.evaluate((el) => {
+        const cs = getComputedStyle(el)
+        return {
+          focusVisible: el.matches(":focus-visible"),
+          nestedInLabel: el.matches(".data-table-page-size > select"),
+          style: cs.outlineStyle,
+          width: cs.outlineWidth,
+        }
+      })
+      eq(outline.nestedInLabel, false, "the select is not a direct child, so the old selector cannot be what matches")
+      eq(outline.focusVisible, true, "the select shows :focus-visible")
+      eq(`${outline.style} ${outline.width}`, "solid 2px", "forced-colors focus outline applies to the nested select")
+    } finally {
+      await page.emulateMedia({ forcedColors: null })
+    }
+  })
+
   await test("pager arrows flip under dir=rtl and not under ltr", async () => {
     const pager = page.locator('[data-pg="dt-demo-pager"]')
     const scale = () =>

@@ -42,7 +42,7 @@
   .attachment-trigger:focus-visible,
   .date-input-field:focus-visible,
   .navigation-menu-trigger:focus-visible,
-  .data-table-page-size > select:focus-visible,
+  .data-table-page-size select:focus-visible,
   .data-table-sort-btn:focus-visible,
   .data-table-actions-trigger:focus-visible {
     outline: 2px solid Highlight !important;
@@ -278,7 +278,7 @@
   .attachment-trigger:focus-visible,
   .date-input-field:focus-visible,
   .navigation-menu-trigger:focus-visible,
-  .data-table-page-size > select:focus-visible,
+  .data-table-page-size select:focus-visible,
   .data-table-sort-btn:focus-visible,
   .data-table-actions-trigger:focus-visible {
     outline: 3px solid var(--ring) !important;
