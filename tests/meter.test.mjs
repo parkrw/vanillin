@@ -136,23 +136,27 @@ export default async function run({ page, baseUrl, test, eq }) {
     }
   })
 
-  // Playwright cannot emulate prefers-reduced-transparency, so the rule is read
-  // from the stylesheet rather than painted.
-  await test("reduced transparency: the stylesheet swaps the translucent track for --muted", async () => {
-    const rule = await page.evaluate(() => {
-      for (const sheet of document.styleSheets) {
-        for (const media of sheet.cssRules) {
-          if (!media.conditionText?.includes("prefers-reduced-transparency")) continue
-          for (const r of media.cssRules) {
-            if (r.selectorText === ".meter") return r.style.backgroundColor
-          }
-        }
-      }
-      return null
+  // Playwright has no reducedTransparency option, so the media feature goes in
+  // through CDP.
+  await test("reduced transparency: every track is opaque, translucent without it", async () => {
+    const session = await page.context().newCDPSession(page)
+    const alphas = () => page.locator(".meter").evaluateAll((els) => {
+      const ctx = document.createElement("canvas").getContext("2d")
+      return els.map((el) => {
+        ctx.clearRect(0, 0, 1, 1)
+        ctx.fillStyle = getComputedStyle(el).backgroundColor
+        ctx.fillRect(0, 0, 1, 1)
+        return ctx.getImageData(0, 0, 1, 1).data[3]
+      })
     })
-    eq(rule, "var(--muted)")
-    const base = await page.locator(".meter").first().evaluate((el) => getComputedStyle(el).backgroundColor)
-    eq(base.includes("/ 0.2"), true, `precondition: translucent by default (${base})`)
+    eq((await alphas()).every((a) => a < 255), true, "precondition: translucent by default")
+    await session.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-transparency", value: "reduce" }] })
+    try {
+      eq((await alphas()).every((a) => a === 255), true)
+    } finally {
+      await session.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-transparency", value: "" }] })
+      await session.detach()
+    }
   })
 
   await test("the fill starts at the right in right-to-left text", async () => {

@@ -55,9 +55,10 @@
   }
 }
 
-/* A translucent track is the one thing reduced transparency asks to flatten. */
+/* The same tint, laid over the page so it is opaque. Not --muted: that sits
+   at 2.94:1 under the light warning fill, below 1.4.11's 3:1. */
 @media (prefers-reduced-transparency: reduce) {
   .meter {
-    background-color: var(--muted);
+    background-color: color-mix(in oklab, var(--meter-tone, var(--primary)) var(--meter-track-tint, 20%), var(--background));
   }
 }
