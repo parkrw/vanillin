@@ -1104,12 +1104,12 @@ const DIFF_LABEL = {
   diverged: () => red("edited locally, and upstream changed"),
   untracked: () => "not recorded in .van.json",
   deleted: () => "recorded but missing locally",
-  absent: () => "new upstream file — run `van update`",
+  absent: (f) => (f.untracked ? dim("not installed") : "new upstream file — run `van update`"),
   current: () => dim("up to date"),
 }
 
 // Substrate reads two states differently from a component. An absent lib file
-// is not "not installed" — an installed component imports it, so it is missing.
+// is not a file the kit added — an installed component imports it, so it is missing.
 const SUBSTRATE_LABEL = {
   ...DIFF_LABEL,
   absent: () => "missing — run `van update`",
@@ -1147,7 +1147,7 @@ function cmdDiff(project, slugs) {
     const version = result.tracked ? dim(` (installed from v${result.kitVersion})`) : dim(" (no .van.json)")
     say(`${bold(slug)}${version}`)
     for (const f of flags.all ? result.files : interesting) {
-      say(`  ${f.rel} — ${DIFF_LABEL[f.state](f)}`)
+      say(`  ${f.rel} — ${DIFF_LABEL[f.state]({ ...f, untracked: !result.tracked })}`)
     }
   }
 
