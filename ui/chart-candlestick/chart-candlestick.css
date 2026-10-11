@@ -68,6 +68,12 @@
   stroke-width: 1.5;
 }
 
+/* A flat bar is already filled with --foreground, so the active one goes hollow. */
+.chart-candlestick-volume-bar[data-active][data-direction="flat"] {
+  fill: color-mix(in oklab, var(--mark) 22%, var(--background));
+  stroke-width: 2;
+}
+
 @media (forced-colors: active) {
   .chart-candlestick-wick,
   .chart-candlestick-open,
@@ -85,6 +91,10 @@
   .chart-candlestick-mark[data-direction="down"] .chart-candlestick-body,
   .chart-candlestick-volume-bar {
     fill: CanvasText;
+  }
+
+  .chart-candlestick-volume-bar[data-active][data-direction="flat"] {
+    fill: Canvas;
   }
 
   .chart-candlestick-mark[data-active] .chart-candlestick-body,

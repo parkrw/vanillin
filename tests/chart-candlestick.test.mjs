@@ -167,6 +167,30 @@ export default async function run({ page, baseUrl, test, eq: strictEq, near }) {
     }
   })
 
+  await test("candlestick: an active flat volume bar goes hollow, so it shows against its foreground fill", async () => {
+    const name = "candlestick-linked"
+    const flatBar = `${pane(name, "volume")} .chart-candlestick-volume-bar[data-index="4"]`
+    const style = () => page.locator(flatBar).evaluate((el) => ({ fill: getComputedStyle(el).fill, stroke: getComputedStyle(el).stroke, width: getComputedStyle(el).strokeWidth }))
+    eq(await page.locator(flatBar).getAttribute("data-direction"), "flat", "precondition: row 4's bar is flat")
+    const foreground = await resolved(name, "var(--foreground)")
+    const before = await style()
+    eq(before.fill, foreground, "inactive, it is filled with the text colour")
+    await focusSurface(name)
+    try {
+      for (let i = 0; i < 4; i++) await page.keyboard.press("ArrowRight")
+      eq(await activeBars(name), [4], "precondition: its row is active")
+      const after = await style()
+      eq(after.fill === foreground, false, `active, its fill is no longer the text colour: ${after.fill}`)
+      eq(after.stroke, foreground, "and it is edged in it")
+      eq(after.width, "2px")
+      await page.keyboard.press("ArrowLeft")
+      eq((await style()).fill, foreground, "counter-precondition: inactive again, it is solid again")
+    } finally {
+      await page.keyboard.press("Escape")
+      await page.locator(`${pane(name)} .chart-surface`).evaluate((el) => el.blur())
+    }
+  })
+
   await test("candlestick: OHLC ticks point left at the open and right at the close", async () => {
     const name = "candlestick-ohlc"
     const { width, height } = await svgSize(name)
