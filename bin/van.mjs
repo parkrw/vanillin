@@ -19,7 +19,7 @@
 import { spawnSync } from "node:child_process"
 import { readFileSync, readSync, realpathSync, existsSync, readdirSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { resolve, dirname, join, isAbsolute, relative } from "node:path"
+import { resolve, dirname, join, isAbsolute, relative, basename } from "node:path"
 import { fileURLToPath } from "node:url"
 import { generate } from "../scripts/build-theme.mjs"
 import {
@@ -485,9 +485,23 @@ export function baseMatching(project, slug, rel, kitVersion, recordedHash) {
   return null
 }
 
-/** A conflict van left behind: its `.orig` backup beside a file still holding markers. */
-function hasUnresolvedConflict(path) {
-  return existsSync(`${path}.orig`) && /^<{7} /m.test(readFileSync(path, "utf8"))
+/** A backup path beside `path` that nothing occupies: `.orig`, then `.orig.1`, … */
+function freeBackupPath(path) {
+  let candidate = `${path}.orig`
+  for (let n = 1; existsSync(candidate); n++) candidate = `${path}.orig.${n}`
+  return candidate
+}
+
+/**
+ * The backup of a conflict van left behind: a `.orig` beside a file that still
+ * holds markers. Without markers the conflict is resolved, and a `.orig` on its
+ * own may be anyone's. Returns the backup's file name, or null.
+ */
+function unresolvedConflict(path) {
+  if (!/^<{7} /m.test(readFileSync(path, "utf8"))) return null
+  const name = basename(path)
+  const siblings = readdirSync(dirname(path))
+  return siblings.find((e) => e === `${name}.orig` || e.startsWith(`${name}.orig.`)) ?? null
 }
 
 /**
@@ -1097,7 +1111,12 @@ function updateSubstrate(project, registry, dirRel, files, contentsFor) {
  */
 export function retiredSlugs(project, registry, installed) {
   return [...installed]
-    .filter((slug) => !registry.components[slug] && readManifest(join(project.root, project.paths.ui, slug)) !== null)
+    .filter((slug) => {
+      const dir = resolve(project.root, project.paths.ui, slug)
+      // lib/ and styles/ carry sidecars too, and may sit inside the ui directory.
+      const substrate = [project.paths.lib, project.paths.styles].map((p) => resolve(project.root, p))
+      return !registry.components[slug] && !substrate.includes(dir) && readManifest(dir) !== null
+    })
     .sort()
 }
 
@@ -1249,7 +1268,7 @@ function cmdUpdate(project, slugs) {
     const targetDir = join(project.root, project.paths.ui, slug)
     const dir = `${project.paths.ui}/${slug}`
 
-    const unresolved = (f) => f.state === "edited" && hasUnresolvedConflict(join(targetDir, f.rel))
+    const unresolved = (f) => f.state === "edited" && unresolvedConflict(join(targetDir, f.rel)) !== null
     const actionable = diff.files.filter((f) => isPending(f, diff.tracked) && (f.state !== "edited" || unresolved(f)))
     if (!actionable.length) continue
 
@@ -1281,14 +1300,24 @@ function cmdUpdate(project, slugs) {
             break
           }
 
-          case "edited":
-            if (hasUnresolvedConflict(to)) {
-              say(`  ${red("!")} ${path} ${dim(`unresolved conflict — resolve it, then delete ${f.rel}.orig`)}`)
+          case "edited": {
+            const backup = unresolvedConflict(to)
+            if (backup && flags.overwrite) {
+              const contents = kitFileContent(project, slug, f.rel)
+              if (!flags.dryRun) writeFileAtomic(to, contents)
+              newHashes[f.rel] = hashBytes(contents)
+              say(`  ${green("~")} ${path} ${dim(`overwritten — yours is in ${backup}`)}`)
+              updated++
+              break
+            }
+            if (backup) {
+              say(`  ${red("!")} ${path} ${dim(`unresolved conflict — resolve it, then delete ${backup}`)}`)
               conflicted++
               break
             }
             say(`  ${dim("=")} ${f.rel} ${dim("edited locally, upstream unchanged")}`)
             break
+          }
 
           case "upstream-changed": {
             const contents = kitFileContent(project, slug, f.rel)
@@ -1326,11 +1355,11 @@ function cmdUpdate(project, slugs) {
               conflicted++
               break
             }
-            // An existing .orig is either an earlier conflict's only pristine copy
-            // or someone else's backup; writing over it destroys either.
-            const orig = `${to}.orig`
-            if (existsSync(orig)) {
-              say(`  ${red("!")} ${path} ${dim(`${f.rel}.orig already exists — resolve the conflict or move it aside, then run again`)}`)
+            // Merging markers into markers would bury the conflict's backup under
+            // a backup of the markers.
+            const open = unresolvedConflict(to)
+            if (open) {
+              say(`  ${red("!")} ${path} ${dim(`unresolved conflict — resolve it, then delete ${open}`)}`)
               resolved = false
               conflicted++
               break
@@ -1346,6 +1375,7 @@ function cmdUpdate(project, slugs) {
               say(`  ${green("~")} ${path} ${dim("merged")}`)
               updated++
             } else {
+              const orig = freeBackupPath(to)
               if (!flags.dryRun) {
                 writeFileAtomic(orig, local)
                 writeFileAtomic(to, merged.content)
@@ -1354,7 +1384,7 @@ function cmdUpdate(project, slugs) {
               // on top of this version, so a rerun leaves them alone instead of
               // merging again, and `.orig` keeps the conflict reported.
               newHashes[f.rel] = hashBytes(contents)
-              say(`  ${red("!")} ${path} ${dim(`merged with conflicts — yours saved as ${f.rel}.orig`)}`)
+              say(`  ${red("!")} ${path} ${dim(`merged with conflicts — yours saved as ${basename(orig)}`)}`)
               conflicted++
             }
             break
