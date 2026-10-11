@@ -153,6 +153,11 @@ export default async function run({ page, baseUrl, test, eq }) {
     await session.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-transparency", value: "reduce" }] })
     try {
       eq((await alphas()).every((a) => a === 255), true)
+      const [warning, plain] = await Promise.all([
+        page.locator('[data-pg="meter-tone"] .meter--warning'),
+        page.locator('[data-pg="meter-tone"] .meter[aria-label="No tone"]'),
+      ].map((l) => l.evaluate((el) => getComputedStyle(el).backgroundColor)))
+      eq(warning !== plain, true, "the track keeps the tone's tint, not one flat colour")
     } finally {
       await session.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-transparency", value: "" }] })
       await session.detach()
