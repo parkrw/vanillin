@@ -9,12 +9,13 @@
 
 import assert from "node:assert/strict"
 import { spawnSync } from "node:child_process"
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, appendFileSync, symlinkSync } from "node:fs"
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, appendFileSync, symlinkSync, cpSync, chmodSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { hashFile, hashBytes, readManifest, STYLESHEETS } from "../scripts/manifest.mjs"
-import { createPickerState, pickerHandleKey, pickerLines, drivePicker, pickerSelection, readKey } from "../bin/van.mjs"
+import { buildRegistry } from "../scripts/build-registry.mjs"
+import { mergeFile, createPickerState, pickerHandleKey, pickerLines, drivePicker, pickerSelection, readKey } from "../bin/van.mjs"
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))
 const VAN = join(repoRoot, "bin", "van.mjs")
@@ -989,6 +990,558 @@ test("package.json files covers everything the CLI imports and reads", () => {
   for (const rel of ["registry.json", "ui/button/button.jsx", "lib/cn.js", "styles/globals.css"]) {
     assert.ok(covered(rel), `${rel} must be packed — the CLI reads it from the kit`)
   }
+})
+
+// ── update hardening ────────────────────────────────────────────────
+
+let kitCount = 0
+
+/**
+ * A throwaway kit: a copy of the CLI beside a hand-written ui/ tree, a registry
+ * and a git history, so a test can publish a new version, rename or drop a file
+ * and run the CLI against it. `publish` commits and tags each release.
+ */
+function makeKit(version, components, { deprecated = {} } = {}) {
+  const root = join(scratch, `kit-${++kitCount}`)
+  mkdirSync(root, { recursive: true })
+  for (const d of ["bin", "scripts", "styles"]) cpSync(join(repoRoot, d), join(root, d), { recursive: true })
+  mkdirSync(join(root, "lib"), { recursive: true })
+  symlinkSync(join(repoRoot, "node_modules"), join(root, "node_modules"))
+  const git = (...args) => {
+    const r = spawnSync("git", args, { cwd: root, encoding: "utf8" })
+    assert.equal(r.status, 0, r.stderr)
+  }
+  git("init", "-q")
+  git("config", "user.email", "kit@example.com")
+  git("config", "user.name", "kit")
+  git("config", "commit.gpgsign", "false")
+  git("config", "tag.gpgsign", "false")
+
+  const kit = {
+    root,
+    van(dir, ...args) {
+      const r = spawnSync(process.execPath, [join(root, "bin", "van.mjs"), ...args, "--cwd", dir], {
+        encoding: "utf8",
+        env: { ...process.env, NO_COLOR: "1" },
+      })
+      return { code: r.status, out: r.stdout, err: r.stderr, all: r.stdout + r.stderr }
+    },
+    /** Replace the whole ui/ tree and registry with `next`, then commit and tag. */
+    publish(nextVersion, next, opts = {}) {
+      rmSync(join(root, "ui"), { recursive: true, force: true })
+      const entries = {}
+      for (const [slug, files] of Object.entries(next)) {
+        for (const [rel, text] of Object.entries(files)) {
+          mkdirSync(join(root, "ui", slug), { recursive: true })
+          writeFileSync(join(root, "ui", slug, rel), text)
+        }
+        entries[slug] = {
+          type: "ui",
+          files: Object.keys(files).sort(),
+          requires: [],
+          lib: [],
+          ...(opts.deprecated?.[slug] && { deprecated: opts.deprecated[slug] }),
+        }
+      }
+      writeFileSync(join(root, "package.json"), JSON.stringify({ name: "kit", version: nextVersion }) + "\n")
+      writeFileSync(
+        join(root, "registry.json"),
+        JSON.stringify({ kitVersion: nextVersion, source: `kit@v${nextVersion}`, components: entries, lib: {} }, null, 2) + "\n",
+      )
+      git("add", "-A")
+      git("commit", "-q", "-m", `v${nextVersion}`)
+      git("tag", `v${nextVersion}`)
+    },
+  }
+  kit.publish(version, components, { deprecated })
+  return kit
+}
+
+const lines = (n, tag = "line") => Array.from({ length: n }, (_, i) => `${tag} ${i + 1}\n`).join("")
+
+test("update survives a recorded file the kit no longer ships", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n", "widget.css": "a\n" } })
+  project(dir)
+  assert.equal(kit.van(dir, "add", "widget").code, 0)
+  // The sidecar remembers a file the kit has since dropped; the consumer deleted it.
+  const sidecar = join(dir, "ui/widget/.van.json")
+  const rec = JSON.parse(readFileSync(sidecar, "utf8"))
+  rec.files["ghost.css"] = hashBytes(Buffer.from("gone\n"))
+  writeFileSync(sidecar, JSON.stringify(rec, null, 2) + "\n")
+  kit.publish("0.2.0", { widget: { "widget.jsx": "b\n", "widget.css": "a\n" } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.doesNotMatch(r.all, /ENOENT|\n\s+at /, "raw error leaked")
+  assert.equal(readFileSync(join(dir, "ui/widget/widget.jsx"), "utf8"), "b\n", "other files were not updated")
+  assert.ok(!("ghost.css" in readManifest(join(dir, "ui/widget")).files), "the dropped file is still recorded")
+  assert.equal(kit.van(dir, "diff").code, 0, "diff still reports the dropped file")
+})
+
+test("update deletes an unedited file the kit removed, and says so", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n", "old.css": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  kit.publish("0.2.0", { widget: { "widget.jsx": "b\n" } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /old\.css.*removed upstream, deleted/)
+  assert.ok(!existsSync(join(dir, "ui/widget/old.css")), "unedited file survived")
+  assert.ok(!("old.css" in readManifest(join(dir, "ui/widget")).files), "sidecar still records the deleted file")
+  assert.equal(readFileSync(join(dir, "ui/widget/widget.jsx"), "utf8"), "b\n")
+})
+
+test("update keeps an edited file the kit removed, and reports it", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n", "old.css": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  appendFileSync(join(dir, "ui/widget/old.css"), "/* mine */\n")
+  kit.publish("0.2.0", { widget: { "widget.jsx": "b\n" } })
+
+  const diff = kit.van(dir, "diff")
+  assert.match(diff.out, /old\.css — removed upstream; your edited copy is kept/)
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /old\.css.*removed upstream; your edited copy is kept/)
+  assert.match(readFileSync(join(dir, "ui/widget/old.css"), "utf8"), /mine/, "edit was deleted")
+})
+
+test("update --dry-run deletes nothing the kit removed", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n", "old.css": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  kit.publish("0.2.0", { widget: { "widget.jsx": "b\n" } })
+
+  const r = kit.van(dir, "update", "--dry-run")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /old\.css.*removed upstream, deleted/)
+  assert.ok(existsSync(join(dir, "ui/widget/old.css")), "--dry-run deleted a file")
+})
+
+test("a file renamed in the kit round-trips through update without a crash", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n", "old.css": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  kit.publish("0.2.0", { widget: { "widget.jsx": "b\n", "new.css": "a\n" } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.doesNotMatch(r.all, /ENOENT|\n\s+at /)
+  assert.ok(!existsSync(join(dir, "ui/widget/old.css")), "the old name survived")
+  assert.equal(readFileSync(join(dir, "ui/widget/new.css"), "utf8"), "a\n", "the new name was not installed")
+  assert.equal(kit.van(dir, "diff").code, 0, "diff still reports drift after the rename")
+  assert.equal(kit.van(dir, "update").code, 0, "a second update is not clean")
+})
+
+test("update reports a file that fails to write and still updates other components", (dir) => {
+  // Needs a non-root user: root writes through a read-only file, and the test fails rather than passing unproven.
+  const kit = makeKit("0.1.0", { gadget: { "gadget.jsx": "a\n" }, widget: { "widget.jsx": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "gadget", "widget")
+  kit.publish("0.2.0", { gadget: { "gadget.jsx": "b\n" }, widget: { "widget.jsx": "b\n" } })
+
+  chmodSync(join(dir, "ui/gadget/gadget.jsx"), 0o444)
+  try {
+    const r = kit.van(dir, "update")
+    assert.equal(r.code, 1, r.all)
+    assert.match(r.all, /gadget\.jsx.*failed/)
+    assert.match(r.all, /1 file failed/)
+    assert.doesNotMatch(r.all, /\n\s+at /, "stack trace leaked")
+    assert.equal(readFileSync(join(dir, "ui/widget/widget.jsx"), "utf8"), "b\n", "the other component was not updated")
+  } finally {
+    chmodSync(join(dir, "ui/gadget/gadget.jsx"), 0o644)
+  }
+})
+
+test("diff and update report an installed component the kit dropped", (dir) => {
+  project(dir)
+  van(dir, "add", "badge")
+  mkdirSync(join(dir, "ui/old-thing"), { recursive: true })
+  writeFileSync(join(dir, "ui/old-thing/old-thing.jsx"), "x\n")
+  writeFileSync(join(dir, "ui/old-thing/.van.json"), JSON.stringify({ name: "old-thing", kitVersion: "0.0.1", files: {} }) + "\n")
+  // The consumer's own directory has no sidecar, so it is not vanillin's to report.
+  mkdirSync(join(dir, "ui/mine"), { recursive: true })
+
+  const d = van(dir, "diff")
+  assert.equal(d.code, 1, d.all)
+  assert.match(d.out, /old-thing\n\s+! no longer in the kit/)
+  assert.doesNotMatch(d.out, /✓/, "diff claimed a match")
+  assert.doesNotMatch(d.out, /mine/)
+
+  const u = van(dir, "update")
+  assert.match(u.out, /old-thing\n\s+! no longer in the kit/)
+  assert.doesNotMatch(u.out, /mine/)
+})
+
+test("a git failure during a merge is an error, not a conflict", () => {
+  const binary = Buffer.from([0, 1, 2, 3])
+  assert.throws(() => mergeFile(binary, binary, Buffer.from([0, 9, 9])), /git merge-file failed/)
+})
+
+test("diff reports new and removed kit files before update acts on them", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n", "old.css": "a\n", "gone.css": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  rmSync(join(dir, "ui/widget/gone.css"))
+  kit.publish("0.2.0", { widget: { "widget.jsx": "a\n", "new.css": "a\n" } })
+
+  const r = kit.van(dir, "diff")
+  assert.equal(r.code, 1, r.all)
+  assert.match(r.out, /new\.css — new upstream file/)
+  assert.match(r.out, /old\.css — removed upstream — run `van update` to delete it/)
+  assert.match(r.out, /gone\.css — removed upstream, already deleted locally/)
+})
+
+test("update leaves a hand-copied component without a sidecar alone when the kit adds a file", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  rmSync(join(dir, "ui/widget/.van.json"))
+  kit.publish("0.2.0", { widget: { "widget.jsx": "a\n", "new.css": "a\n" } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.ok(!existsSync(join(dir, "ui/widget/new.css")), "installed into an untracked copy")
+  assert.ok(!existsSync(join(dir, "ui/widget/.van.json")), "invented a sidecar")
+})
+
+test("update never acts on a sidecar key that leaves the component directory", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  const victim = join(dir, "victim.txt")
+  writeFileSync(victim, "keep\n")
+  const sidecar = join(dir, "ui/widget/.van.json")
+  const rec = JSON.parse(readFileSync(sidecar, "utf8"))
+  rec.files["../../victim.txt"] = hashFile(victim)
+  writeFileSync(sidecar, JSON.stringify(rec, null, 2) + "\n")
+  kit.publish("0.2.0", { widget: { "widget.jsx": "b\n" } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.equal(readFileSync(victim, "utf8"), "keep\n", "a file outside the component was deleted")
+})
+
+test("a file settled while a sibling is stuck still finds its base later", (dir) => {
+  const { kit, base, first, second } = divergedKit(dir, { editSecond: false })
+  const v2 = base.replace("line 1\n", "kit 1\n")
+  kit.publish("0.2.0", { widget: { "a.jsx": v2, "b.jsx": v2 } })
+  assert.equal(kit.van(dir, "update").code, 1) // a.jsx conflicts and keeps its .orig; b.jsx merges
+  // v0.3.0 changes both again. a.jsx is still in conflict, so kitVersion stays at v0.2.0
+  // or earlier while b.jsx's record moves to v0.3.0's bytes.
+  const v3 = v2.replace("line 5\n", "kit 5\n")
+  kit.publish("0.3.0", { widget: { "a.jsx": v3, "b.jsx": v3 } })
+  assert.equal(kit.van(dir, "update").code, 1)
+  assert.match(readFileSync(second, "utf8"), /kit 5/)
+  // v0.4.0 reverts b.jsx's v0.3.0 line; the right base is v0.3.0, not the sidecar's version.
+  kit.publish("0.4.0", { widget: { "a.jsx": v3, "b.jsx": v2 } })
+
+  kit.van(dir, "update")
+  const text = readFileSync(second, "utf8")
+  assert.doesNotMatch(text, /kit 5/, "the kit's revert was lost")
+  assert.match(text, /mine 10/)
+  assert.match(readFileSync(first, "utf8"), /<<<<<<</)
+})
+
+test("a release that lands during an unresolved conflict leaves .orig and the markers alone", (dir) => {
+  const { kit, base, first } = divergedKit(dir, { editSecond: true })
+  const mine = readFileSync(first, "utf8")
+  const v2 = base.replace("line 1\n", "kit 1\n")
+  kit.publish("0.2.0", { widget: { "a.jsx": v2, "b.jsx": base } })
+  kit.van(dir, "update")
+  const marked = readFileSync(first, "utf8")
+  kit.publish("0.3.0", { widget: { "a.jsx": v2.replace("line 9\n", "kit 9\n"), "b.jsx": base } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 1, r.all)
+  assert.match(r.all, /a\.jsx.*unresolved conflict — resolve it, then delete a\.jsx\.orig/)
+  assert.equal(readFileSync(`${first}.orig`, "utf8"), mine, ".orig was overwritten")
+  assert.equal(readFileSync(first, "utf8"), marked, "markers were merged again")
+})
+
+test("update --overwrite replaces a file left in conflict and keeps the backup", (dir) => {
+  const { kit, base, first } = divergedKit(dir, { editSecond: true })
+  const mine = readFileSync(first, "utf8")
+  const v2 = base.replace("line 1\n", "kit 1\n")
+  kit.publish("0.2.0", { widget: { "a.jsx": v2, "b.jsx": base } })
+  assert.equal(kit.van(dir, "update").code, 1)
+
+  const r = kit.van(dir, "update", "--overwrite")
+  assert.equal(r.code, 0, r.all)
+  assert.equal(readFileSync(first, "utf8"), v2)
+  assert.equal(readFileSync(`${first}.orig`, "utf8"), mine, "the backup of the edit was lost")
+})
+
+test("a merge never writes over an .orig that is already there", (dir) => {
+  const { kit, base, first } = divergedKit(dir, { editSecond: true })
+  const mine = readFileSync(first, "utf8")
+  writeFileSync(`${first}.orig`, "a mergetool backup\n")
+  kit.publish("0.2.0", { widget: { "a.jsx": base.replace("line 1\n", "kit 1\n"), "b.jsx": base } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 1, r.all)
+  assert.match(r.out, /yours saved as a\.jsx\.orig\.1/)
+  assert.equal(readFileSync(`${first}.orig`, "utf8"), "a mergetool backup\n")
+  assert.equal(readFileSync(`${first}.orig.1`, "utf8"), mine)
+
+  const again = kit.van(dir, "update")
+  assert.match(again.all, /unresolved conflict — resolve it, then delete a\.jsx\.orig\.1/, "named the other tool's backup")
+  const over = kit.van(dir, "update", "--overwrite")
+  assert.match(over.out, /yours is in a\.jsx\.orig\.1/)
+})
+
+test("diff does not call lib/ a dropped component when it sits inside ui/", (dir) => {
+  project(dir, { paths: { lib: "ui/lib" } })
+  van(dir, "add", "dialog")
+  assert.ok(existsSync(join(dir, "ui/lib/.van.json")), "fixture: lib has a sidecar inside ui/")
+  const r = van(dir, "diff")
+  assert.equal(r.code, 0, r.all)
+  assert.doesNotMatch(r.all, /no longer in the kit/)
+})
+
+test("kitVersion holds while a file is unsettled, and moves once a rerun settles it", (dir) => {
+  if (process.getuid?.() === 0) assert.fail("needs a non-root user: root writes through a read-only file")
+  const kit = makeKit("0.1.0", { widget: { "a.jsx": "a\n", "b.jsx": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  kit.publish("0.2.0", { widget: { "a.jsx": "b\n", "b.jsx": "b\n" } })
+
+  const a = join(dir, "ui/widget/a.jsx")
+  chmodSync(a, 0o444)
+  try {
+    assert.equal(kit.van(dir, "update").code, 1)
+    const held = readManifest(join(dir, "ui/widget"))
+    assert.equal(held.kitVersion, "0.1.0", "kitVersion moved with a file still unwritten")
+    assert.equal(held.files["b.jsx"], hashBytes(Buffer.from("b\n")), "the sibling's hash did not advance")
+  } finally {
+    chmodSync(a, 0o644)
+  }
+  assert.equal(kit.van(dir, "update").code, 0)
+  assert.equal(readManifest(join(dir, "ui/widget")).kitVersion, "0.2.0")
+  assert.equal(readFileSync(a, "utf8"), "b\n")
+})
+
+test("update reports a sidecar it cannot write, after the files are written", (dir) => {
+  if (process.getuid?.() === 0) assert.fail("needs a non-root user: root writes through a read-only file")
+  const kit = makeKit("0.1.0", { widget: { "w.jsx": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  kit.publish("0.2.0", { widget: { "w.jsx": "b\n" } })
+
+  const sidecar = join(dir, "ui/widget/.van.json")
+  chmodSync(sidecar, 0o444)
+  try {
+    const r = kit.van(dir, "update")
+    assert.equal(r.code, 1, r.all)
+    assert.match(r.all, /\.van\.json.*failed/)
+    assert.doesNotMatch(r.all, /\n\s+at /, "stack trace leaked")
+    assert.equal(readFileSync(join(dir, "ui/widget/w.jsx"), "utf8"), "b\n")
+  } finally {
+    chmodSync(sidecar, 0o644)
+  }
+})
+
+test("an .orig van did not write does not make an edited file a conflict", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "w.jsx": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  writeFileSync(join(dir, "ui/widget/w.jsx"), "mine\n")
+  writeFileSync(join(dir, "ui/widget/w.jsx.orig"), "a mergetool backup\n")
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.doesNotMatch(r.all, /unresolved conflict/)
+})
+
+test("a sibling's numbered backup does not make a file a conflict", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "a.jsx": "a\n", "b.jsx": "b\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  writeFileSync(join(dir, "ui/widget/a.jsx"), "<<<<<<< a heading in my own notes\n")
+  writeFileSync(join(dir, "ui/widget/b.jsx.orig.1"), "a backup of b\n")
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.doesNotMatch(r.all, /unresolved conflict/)
+})
+
+test("resolving a conflict and deleting .orig leaves the resolved file alone", (dir) => {
+  const { kit, base, first } = divergedKit(dir, { editSecond: true })
+  kit.publish("0.2.0", { widget: { "a.jsx": base.replace("line 1\n", "kit 1\n"), "b.jsx": base } })
+  assert.equal(kit.van(dir, "update").code, 1)
+  const resolved = base.replace("line 1\n", "mine 1 resolved\n")
+  writeFileSync(first, resolved)
+  rmSync(`${first}.orig`)
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.equal(readFileSync(first, "utf8"), resolved, "the resolved file was merged again")
+  assert.ok(!existsSync(`${first}.orig`))
+})
+
+test("a merge still finds its base after rsc was switched on", (dir) => {
+  const body = (mark) => lines(10).replace("line 5\n", "useThing()\n").replace("line 1\n", mark)
+  const kit = makeKit("0.1.0", { widget: { "w.jsx": body("line 1\n") } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  const local = join(dir, "ui/widget/w.jsx")
+  writeFileSync(local, readFileSync(local, "utf8").replace("line 3\n", "mine 3\n"))
+  writeFileSync(join(dir, "van.config.json"), JSON.stringify({ rsc: true }) + "\n")
+  kit.publish("0.2.0", { widget: { "w.jsx": body("line 1\n").replace("line 10\n", "kit 10\n") } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  const text = readFileSync(local, "utf8")
+  assert.match(text, /mine 3/)
+  assert.match(text, /kit 10/)
+  assert.match(text, /^"use client"/, "the directive was dropped by merging against the wrong base form")
+})
+
+test("a recorded hash that matches no release is refused as no base", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "w.jsx": lines(10) } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  const local = join(dir, "ui/widget/w.jsx")
+  writeFileSync(local, lines(10).replace("line 3\n", "mine 3\n"))
+  recordHash(dir, "ui/widget", "w.jsx", "sha256-matches-no-release")
+  kit.publish("0.2.0", { widget: { "w.jsx": lines(10).replace("line 10\n", "kit 10\n") } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 1, r.all)
+  assert.match(r.all, /w\.jsx.*no base at v0\.1\.0 matching the record/)
+  assert.doesNotMatch(readFileSync(local, "utf8"), /kit 10/, "merged against a base that does not match")
+})
+
+test("a merge reads files past the default spawn buffer", (dir) => {
+  const big = (tag) => Array.from({ length: 20000 }, (_, i) => `${i === 0 ? tag : "row"} ${"x".repeat(100)} ${i}\n`).join("")
+  const kit = makeKit("0.1.0", { widget: { "big.jsx": big("first") } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  const local = join(dir, "ui/widget/big.jsx")
+  writeFileSync(local, readFileSync(local, "utf8").replace(/row (x+) 19999\n$/, "mine $1 19999\n"))
+  kit.publish("0.2.0", { widget: { "big.jsx": big("second") } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  const text = readFileSync(local, "utf8")
+  assert.match(text, /^second /)
+  assert.match(text, /mine x+ 19999\n$/)
+})
+
+test("diff and update count a dropped component apart from files", (dir) => {
+  project(dir)
+  mkdirSync(join(dir, "ui/old-thing"), { recursive: true })
+  writeFileSync(join(dir, "ui/old-thing/.van.json"), JSON.stringify({ name: "old-thing", kitVersion: "0.0.1", files: {} }) + "\n")
+  const d = van(dir, "diff")
+  assert.equal(d.code, 1, d.all)
+  assert.match(d.out, /1 no longer in the kit/)
+  assert.doesNotMatch(d.out, /file differs/)
+  assert.match(van(dir, "update").out, /all components up to date \(1 no longer in the kit\)/)
+})
+
+test("a deprecated registry entry is announced for installed components", (dir) => {
+  const kit = makeKit("0.1.0", { widget: { "widget.jsx": "a\n" } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  kit.publish("0.2.0", { widget: { "widget.jsx": "a\n" } }, { deprecated: { widget: "use gadget instead" } })
+
+  assert.match(kit.van(dir, "diff").out, /widget — deprecated: use gadget instead/)
+  assert.match(kit.van(dir, "update").out, /widget — deprecated: use gadget instead/)
+})
+
+test("build-registry emits deprecated only for components that carry it", () => {
+  const root = join(scratch, "reg-root")
+  mkdirSync(join(root, "ui/old"), { recursive: true })
+  mkdirSync(join(root, "ui/fresh"), { recursive: true })
+  mkdirSync(join(root, "lib"), { recursive: true })
+  writeFileSync(join(root, "package.json"), JSON.stringify({ version: "1.2.3" }))
+  writeFileSync(join(root, "ui/old/old.jsx"), "export const Old = 1\n")
+  writeFileSync(join(root, "ui/fresh/fresh.jsx"), "export const Fresh = 1\n")
+
+  const registry = buildRegistry(root, { deprecated: { old: "use fresh" } })
+  assert.equal(registry.components.old.deprecated, "use fresh")
+  assert.ok(!("deprecated" in registry.components.fresh))
+  assert.ok(!("deprecated" in buildRegistry(root).components.old), "nothing is deprecated by default")
+})
+
+/** A kit whose widget has two ten-line files, consumer-installed at 0.1.0 with a local edit in each. */
+function divergedKit(dir, { editSecond }) {
+  const base = lines(10)
+  const kit = makeKit("0.1.0", { widget: { "a.jsx": base, "b.jsx": base } })
+  project(dir)
+  kit.van(dir, "add", "widget")
+  const first = join(dir, "ui/widget/a.jsx")
+  const second = join(dir, "ui/widget/b.jsx")
+  writeFileSync(first, base.replace("line 1\n", "mine 1\n"))
+  writeFileSync(second, editSecond ? base.replace("line 1\n", "mine 1\n") : base.replace("line 10\n", "mine 10\n"))
+  return { kit, base, first, second }
+}
+
+test("a clean 3-way merge keeps both edits and records the kit bytes as installed", (dir) => {
+  const { kit, base, first } = divergedKit(dir, { editSecond: false })
+  kit.publish("0.2.0", { widget: { "a.jsx": base.replace("line 10\n", "kit 10\n"), "b.jsx": base.replace("line 1\n", "kit 1\n") } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 0, r.all)
+  assert.match(r.out, /a\.jsx.*merged/)
+  const text = readFileSync(first, "utf8")
+  assert.match(text, /mine 1/)
+  assert.match(text, /kit 10/)
+  assert.doesNotMatch(text, /<<<<<<<|>>>>>>>/)
+  const sidecar = readManifest(join(dir, "ui/widget"))
+  assert.equal(sidecar.files["a.jsx"], hashBytes(Buffer.from(base.replace("line 10\n", "kit 10\n"))), "records the kit bytes")
+  assert.equal(sidecar.kitVersion, "0.2.0")
+  assert.ok(!existsSync(`${first}.orig`), "a clean merge left a backup")
+
+  const merged = readFileSync(first, "utf8")
+  const again = kit.van(dir, "update")
+  assert.equal(again.code, 0, again.all)
+  assert.equal(readFileSync(first, "utf8"), merged, "the next update overwrote the merged file")
+  assert.match(kit.van(dir, "diff").out, /a\.jsx — edited locally/)
+})
+
+test("a conflicted merge leaves the marked file and a pristine .orig", (dir) => {
+  const { kit, base, first } = divergedKit(dir, { editSecond: true })
+  const mine = readFileSync(first, "utf8")
+  kit.publish("0.2.0", { widget: { "a.jsx": base.replace("line 1\n", "kit 1\n"), "b.jsx": base } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 1, r.all)
+  assert.match(r.all, /a\.jsx.*merged with conflicts — yours saved as a\.jsx\.orig/)
+  assert.match(readFileSync(first, "utf8"), /<<<<<<<[\s\S]*mine 1[\s\S]*kit 1[\s\S]*>>>>>>>/)
+  assert.equal(readFileSync(`${first}.orig`, "utf8"), mine, ".orig is not the pre-merge content")
+})
+
+test("a second update does not overwrite the .orig of an unresolved conflict", (dir) => {
+  const { kit, base, first } = divergedKit(dir, { editSecond: true })
+  const mine = readFileSync(first, "utf8")
+  kit.publish("0.2.0", { widget: { "a.jsx": base.replace("line 1\n", "kit 1\n"), "b.jsx": base } })
+  kit.van(dir, "update")
+  const marked = readFileSync(first, "utf8")
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 1, r.all)
+  assert.match(r.all, /unresolved conflict/)
+  assert.equal(readFileSync(`${first}.orig`, "utf8"), mine, ".orig was clobbered")
+  assert.equal(readFileSync(first, "utf8"), marked, "the marked file was rewritten")
+})
+
+test("a conflict in one file still records the sibling and the release", (dir) => {
+  const { kit, base, first, second } = divergedKit(dir, { editSecond: false })
+  // a.jsx collides on line 1; b.jsx's local edit is far from the kit's.
+  const kitCopy = base.replace("line 1\n", "kit 1\n")
+  kit.publish("0.2.0", { widget: { "a.jsx": kitCopy, "b.jsx": kitCopy } })
+
+  const r = kit.van(dir, "update")
+  assert.equal(r.code, 1, r.all)
+  const sidecar = readManifest(join(dir, "ui/widget"))
+  assert.equal(sidecar.files["b.jsx"], hashBytes(Buffer.from(kitCopy)), "the sibling's hash did not advance")
+  assert.match(readFileSync(second, "utf8"), /mine 10/)
+  assert.equal(sidecar.files["a.jsx"], hashBytes(Buffer.from(kitCopy)), "the conflicted file is recorded at the kit bytes")
+  assert.equal(sidecar.kitVersion, "0.2.0")
+  assert.match(readFileSync(first, "utf8"), /<<<<<<</)
 })
 
 // ── summary ─────────────────────────────────────────────────────────
