@@ -672,6 +672,17 @@
         "cn.js"
       ]
     },
+    "meter": {
+      "type": "ui",
+      "files": [
+        "meter.css",
+        "meter.jsx"
+      ],
+      "requires": [],
+      "lib": [
+        "cn.js"
+      ]
+    },
     "mode-toggle": {
       "type": "ui",
       "files": [

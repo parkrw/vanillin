@@ -103,17 +103,32 @@ van diff --all        # include unchanged files in output`} />
         File states: <strong>edited locally</strong> (your hash differs
         from recorded), <strong>upstream changed</strong> (kit moved
         on, you haven't touched it), <strong>diverged</strong> (both
-        sides changed), <strong>current</strong> (matches the kit).
+        sides changed), <strong>removed upstream</strong> (the kit no
+        longer ships the file), <strong>new upstream file</strong> (the
+        kit added it), <strong>current</strong> (matches the kit). A
+        component the kit no longer ships is reported by name and left
+        as is; a deprecated one is reported with its note.
       </p>
 
       <h3>update</h3>
 
       <p>
         Merge upstream changes into installed components. Unmodified
-        files are overwritten directly. Files where both sides changed
-        go through a 3-way merge using <code>git merge-file</code>:
-        clean merges land automatically, conflicts get markers for you
-        to resolve.
+        files are overwritten directly and new kit files are added. A
+        file the kit removed is deleted if you never edited it, and kept
+        if you did. Files where both sides changed go through a 3-way
+        merge using <code>git merge-file</code>: clean merges land
+        automatically, conflicts get markers for you to resolve.
+      </p>
+
+      <p>
+        Before writing a conflicted file, <code>van update</code> saves
+        your copy beside it as <code>.orig</code> (then <code>.orig.1</code>,
+        and so on; a backup is never overwritten). While a file still holds
+        markers next to its backup, every run reports it as an unresolved
+        conflict and leaves it alone. Resolve the markers, then delete the
+        backup. A failure on one file is reported and the rest still land;
+        the command exits 1 when any file failed or is left in conflict.
       </p>
 
       <CodeBlock language="bash" code={`van update            # all installed components

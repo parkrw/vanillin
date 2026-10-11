@@ -159,8 +159,13 @@ van diff --all    # include unchanged files in output`} />
         components. Unmodified files are overwritten directly. Files where
         both sides changed go through a 3-way merge
         using <code>git merge-file</code>: clean merges land automatically,
-        conflicts get markers for you to resolve. The manifest is updated
-        with new hashes after a successful merge.
+        conflicts get markers for you to resolve, with your copy saved
+        beside the file as <code>.orig</code>. After any merge, clean or
+        conflicted, the manifest records the kit's bytes for that file, so
+        the merged result reads as your edit and the next update merges
+        from the release you merged against. A file the kit removed is
+        deleted if unedited and kept if edited; a file the kit added is
+        installed.
         See <a href="#cli">CLI</a> for the full command reference.
       </p>
 
