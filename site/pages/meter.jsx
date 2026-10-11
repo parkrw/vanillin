@@ -8,22 +8,42 @@ import "../install-snippet.css"
 import "../api-reference.css"
 
 const stack = { width: "60%", display: "flex", flexDirection: "column", gap: "1rem" }
+const edges = [
+  ["74.9, optimum 0", { value: 74.9, low: 75, high: 90, optimum: 0 }],
+  ["75, optimum 0", { value: 75, low: 75, high: 90, optimum: 0 }],
+  ["75.1, optimum 0", { value: 75.1, low: 75, high: 90, optimum: 0 }],
+  ["90, optimum 0", { value: 90, low: 75, high: 90, optimum: 0 }],
+  ["90.1, optimum 0", { value: 90.1, low: 75, high: 90, optimum: 0 }],
+  ["90, optimum 100", { value: 90, low: 75, high: 90, optimum: 100 }],
+  ["50, optimum 100", { value: 50, low: 75, high: 90, optimum: 100 }],
+  ["95, optimum 100", { value: 95, low: 75, high: 90, optimum: 100 }],
+  ["80, optimum unset", { value: 80, low: 75, high: 90 }],
+  ["95, tone success", { value: 95, low: 75, high: 90, optimum: 0, tone: "success" }],
+  ["95, no thresholds", { value: 95 }],
+  ["24 within 25-75", { value: 24, low: 25, high: 75, optimum: 50 }],
+  ["25 within 25-75", { value: 25, low: 25, high: 75, optimum: 50 }],
+  ["75 within 25-75", { value: 75, low: 25, high: 75, optimum: 50 }],
+  ["76 within 25-75", { value: 76, low: 25, high: 75, optimum: 50 }],
+  ["90 within 25-75", { value: 90, low: 25, high: 75, optimum: 50 }],
+  ["swapped low 90 high 75, 80", { value: 80, low: 90, high: 75, optimum: 100 }],
+]
 const readout = { display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }
 
-function Reading({ label, used, size, unit = "GB", ...rest }) {
+function Reading({ label, used, size, unit, ...rest }) {
   const pct = Math.round((used / size) * 100)
   const id = `meter-${label.toLowerCase().replace(/\s+/g, "-")}`
+  const figures = unit ? `${used} / ${size} ${unit} · ${pct}%` : `${pct}%`
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
       <div style={readout}>
         <span id={id}>{label}</span>
-        <span style={{ color: "var(--muted-foreground)" }}>{used} / {size} {unit} · {pct}%</span>
+        <span style={{ color: "var(--muted-foreground)" }}>{figures}</span>
       </div>
       <Meter
         value={used}
         max={size}
         aria-labelledby={id}
-        aria-valuetext={`${used} of ${size} ${unit}`}
+        aria-valuetext={unit ? `${used} of ${size} ${unit}` : `${pct}%`}
         {...rest}
       />
     </div>
@@ -79,7 +99,7 @@ import "./ui/meter/meter.css"
   <Meter value={41} max={50} aria-labelledby="pool-label" aria-valuetext="41 of 50 GB" />
 </div>`}>
           <div data-pg="meter-readout" style={stack}>
-            <Reading label="Archive" used={41} size={50} />
+            <Reading label="Archive" used={41} size={50} unit="GB" />
           </div>
         </ComponentPreview>
       </section>
@@ -91,15 +111,17 @@ import "./ui/meter/meter.css"
           <code>optimum</code> says which part is the good one. A reading in the good
           part is green, one part away is amber, and two parts away is red. Here a
           disk is best empty, so the optimum is <code>0</code>, amber starts at 75
-          and red above 90. A reading exactly on the edge beside the optimum counts as the optimum's part, and on the other edge as the middle, as a native meter paints it.
+          and red above 90. A reading exactly on the edge beside the optimum
+          counts as the optimum&apos;s part, and on the other edge as the middle,
+          as a native meter paints it.
         </p>
         <ComponentPreview code={`<Meter value={40} low={75} high={90} optimum={0} aria-label="Healthy" />
 <Meter value={80} low={75} high={90} optimum={0} aria-label="Filling up" />
 <Meter value={95} low={75} high={90} optimum={0} aria-label="Nearly full" />`}>
           <div data-pg="meter-thresholds" style={stack}>
-            <Reading label="Healthy" used={40} size={100} unit="%" low={75} high={90} optimum={0} />
-            <Reading label="Filling up" used={80} size={100} unit="%" low={75} high={90} optimum={0} />
-            <Reading label="Nearly full" used={95} size={100} unit="%" low={75} high={90} optimum={0} />
+            <Reading label="Healthy" used={40} size={100} low={75} high={90} optimum={0} />
+            <Reading label="Filling up" used={80} size={100} low={75} high={90} optimum={0} />
+            <Reading label="Nearly full" used={95} size={100} low={75} high={90} optimum={0} />
           </div>
         </ComponentPreview>
       </section>
@@ -108,21 +130,22 @@ import "./ui/meter/meter.css"
         <h3>On the line</h3>
         <p>
           Every reading below sits on or next to a boundary of{" "}
-          <code>low={"{75}"}</code> and <code>high={"{90}"}</code>.
+          <code>low={"{75}"}</code> and <code>high={"{90}"}</code>, or, in the
+          second group, of <code>low={"{25}"}</code> and <code>high={"{75}"}</code>
+          with the optimum between them, where the only tones are green and amber.
         </p>
-        <div data-pg="meter-edges" style={stack}>
-          <Meter value={74.9} low={75} high={90} optimum={0} aria-label="74.9, optimum 0" />
-          <Meter value={75} low={75} high={90} optimum={0} aria-label="75, optimum 0" />
-          <Meter value={75.1} low={75} high={90} optimum={0} aria-label="75.1, optimum 0" />
-          <Meter value={90} low={75} high={90} optimum={0} aria-label="90, optimum 0" />
-          <Meter value={90} low={75} high={90} optimum={100} aria-label="90, optimum 100" />
-          <Meter value={90.1} low={75} high={90} optimum={0} aria-label="90.1, optimum 0" />
-          <Meter value={50} low={75} high={90} optimum={100} aria-label="50, optimum 100" />
-          <Meter value={95} low={75} high={90} optimum={100} aria-label="95, optimum 100" />
-          <Meter value={80} low={75} high={90} aria-label="80, optimum unset" />
-          <Meter value={95} low={75} high={90} optimum={0} tone="success" aria-label="95, tone success" />
-          <Meter value={95} aria-label="95, no thresholds" />
-        </div>
+        <ComponentPreview code={`<Meter value={75} low={75} high={90} optimum={0} />
+<Meter value={90} low={75} high={90} optimum={100} />
+<Meter value={90} low={25} high={75} optimum={50} />`}>
+          <div data-pg="meter-edges" style={stack}>
+            {edges.map(([name, props]) => (
+              <div key={name}>
+                <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>{name}</span>
+                <Meter {...props} aria-label={name} />
+              </div>
+            ))}
+          </div>
+        </ComponentPreview>
       </section>
 
       <section className="pg-section">

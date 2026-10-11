@@ -14,9 +14,9 @@ function regionOf(n, low, high, optimumRegion) {
  * A level inside a known range: disk used, quota spent, battery left. Not task
  * progress — use `Progress` for work that is advancing toward done.
  *
- * `low`, `high` and `optimum` follow HTML's `<meter>`, boundary rule included: the range splits into
- * below `low`, between, and above `high`, and `optimum` names the region that
- * is good. A reading in the optimum's region is `success`, one region away is
+ * `low`, `high` and `optimum` follow HTML's `<meter>`, boundary rule and
+ * clamping included: the range splits into below `low`, between, and above
+ * `high`, and `optimum` names the region that is good. A reading in the optimum's region is `success`, one region away is
  * `warning`, two away is `error`. Give none of them and the bar stays primary.
  * An explicit `tone` wins over the derived one.
  *
@@ -34,9 +34,10 @@ export function Meter({ value, min = 0, max = 100, low, high, optimum, tone, cla
   const percent = span > 0 ? ((now - min) / span) * 100 : 0
 
   const thresholded = low != null || high != null || optimum != null
-  const lo = low ?? min
-  const hi = high ?? max
-  const optimumRegion = regionOf(optimum ?? min + span / 2, lo, hi)
+  const lo = Math.min(Math.max(low ?? min, min), max)
+  const hi = Math.min(Math.max(high ?? max, lo), max)
+  const target = Math.min(Math.max(optimum ?? min + span / 2, min), max)
+  const optimumRegion = regionOf(target, lo, hi)
   const region = regionOf(now, lo, hi, optimumRegion)
   const resolved = tone ?? (thresholded ? ["success", "warning", "error"][Math.abs(region - optimumRegion)] : undefined)
 
