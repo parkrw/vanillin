@@ -74,6 +74,11 @@
   height: 2rem;
 }
 
+/* RTL: the buttons swap sides, so the arrows must point the other way */
+.data-table-page-nav > .btn > svg:dir(rtl) {
+  scale: -1 1;
+}
+
 .data-table-page-info {
   font-size: 0.875rem;
   white-space: nowrap;

@@ -312,6 +312,29 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
       "the table's own size of 3 joins the listed 5 and 8"
     )
     eq(await select.inputValue(), "3", "the select shows the size the table really pages by")
+    await select.selectOption("5")
+    eq(
+      await select.evaluate((el) => [...el.options].map((o) => o.value).join(",")),
+      "3,5,8",
+      "the starting size is still there to go back to"
+    )
+    await select.selectOption("3")
+  })
+
+  await test("pager arrows flip under dir=rtl and not under ltr", async () => {
+    const pager = page.locator('[data-pg="dt-demo-pager"]')
+    const scale = () =>
+      pager
+        .getByLabel("Next page")
+        .locator("svg")
+        .evaluate((el) => getComputedStyle(el).scale)
+    eq(await scale(), "none", "ltr arrows are not mirrored")
+    await page.evaluate(() => document.documentElement.setAttribute("dir", "rtl"))
+    try {
+      eq(await scale(), "-1", "rtl arrows are mirrored")
+    } finally {
+      await page.evaluate(() => document.documentElement.removeAttribute("dir"))
+    }
   })
 
   await test("first/last buttons jump to the ends and disable there", async () => {
