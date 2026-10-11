@@ -131,9 +131,12 @@ export default async function run({ page, baseUrl, test, eq, repoRoot }) {
         const el = () => document.getElementById("probe-handle")
         const pointer = (type, target, init) =>
           target.dispatchEvent(new PointerEvent(type, { bubbles: true, button: 0, pointerId: 7, ...init }))
-        const key = (k) =>
-          el().dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true }))
-        const out = { snapshots: {} }
+        const out = { snapshots: {}, prevented: {} }
+        const key = (k) => {
+          out.prevented[k] = !el().dispatchEvent(
+            new KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true })
+          )
+        }
         for (const step of steps) {
           if (step.down) pointer("pointerdown", el(), { clientX: 0, clientY: 0, ...step.down })
           if (step.move != null)
@@ -225,6 +228,28 @@ export default async function run({ page, baseUrl, test, eq, repoRoot }) {
     eq(snapshots.key.changes.join(), "75", "step option sets the keyboard step")
     eq(snapshots.key.attrs.size, "50", "the parent has not accepted, so size holds")
     eq(snapshots.drag.changes.join(), "75,100", "the drag clamps at max")
+  })
+
+  await test("handled keys suppress their default action and unhandled ones do not", async () => {
+    const { prevented } = await harness({ min: 0, max: 100, defaultSize: 50 }, [
+      { key: "ArrowRight" },
+      { key: "Home" },
+      { key: "ArrowUp" },
+      { key: "a" },
+    ])
+    eq(prevented.ArrowRight, true, "ArrowRight would otherwise scroll")
+    eq(prevented.Home, true, "Home would otherwise scroll")
+    eq(prevented.ArrowUp, false, "the cross-axis arrow is left alone")
+    eq(prevented.a, false, "other keys are left alone")
+  })
+
+  await test("the initial size defaults to min and is clamped into range", async () => {
+    const none = await harness({ min: 30, max: 100 }, [{ snap: "s" }])
+    eq(none.snapshots.s.attrs.size, "30", "defaultSize falls back to min")
+    const over = await harness({ min: 0, max: 100, defaultSize: 500 }, [{ snap: "s" }])
+    eq(over.snapshots.s.attrs.size, "100", "defaultSize above max is clamped")
+    const under = await harness({ min: 20, max: 100, defaultSize: 5 }, [{ snap: "s" }])
+    eq(under.snapshots.s.attrs.size, "20", "defaultSize below min is clamped")
   })
 
   await test("an unbounded max keeps aria-valuemax above the value and End does nothing", async () => {
