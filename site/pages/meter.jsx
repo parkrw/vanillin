@@ -26,6 +26,7 @@ const edges = [
   ["76 within 25-75", { value: 76, low: 25, high: 75, optimum: 50 }],
   ["90 within 25-75", { value: 90, low: 25, high: 75, optimum: 50 }],
   ["swapped low 90 high 75, 80", { value: 80, low: 90, high: 75, optimum: 100 }],
+  ["thresholds past max, 100", { value: 100, low: 75, high: 150, optimum: 200 }],
 ]
 const readout = { display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }
 
@@ -110,7 +111,7 @@ import "./ui/meter/meter.css"
           <code>low</code> and <code>high</code> split the range into three, and{" "}
           <code>optimum</code> says which part is the good one. A reading in the good
           part is green, one part away is amber, and two parts away is red. Here a
-          disk is best empty, so the optimum is <code>0</code>, amber starts at 75
+          disk is best empty, so the optimum is <code>0</code>, amber starts above 75
           and red above 90. A reading exactly on the edge beside the optimum
           counts as the optimum&apos;s part, and on the other edge as the middle,
           as a native meter paints it.

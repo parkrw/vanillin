@@ -62,15 +62,16 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
 
   await test("tone at the thresholds: the edge beside the optimum is the optimum's part, the far edge the middle; an unset optimum is the range midpoint", async () => {
     const tones = await page.locator('[data-pg="meter-edges"] .meter').evaluateAll((els) =>
-      Object.fromEntries(els.map((el) => [el.getAttribute("aria-label"), el.className.match(/meter--(\w+)/)?.[1] ?? null])))
-    eq(JSON.stringify(tones), JSON.stringify({
+      Object.fromEntries(els.map((el) => [el.getAttribute("aria-label"), el.className.match(/meter--(\w+)/)?.[1] ?? null]).sort(([a], [b]) => a.localeCompare(b))))
+    const sorted = (o) => Object.fromEntries(Object.entries(o).sort(([a], [b]) => a.localeCompare(b)))
+    eq(JSON.stringify(tones), JSON.stringify(sorted({
       "74.9, optimum 0": "success", "75, optimum 0": "success", "75.1, optimum 0": "warning",
       "90, optimum 0": "warning", "90.1, optimum 0": "error", "90, optimum 100": "success",
       "50, optimum 100": "error", "95, optimum 100": "success", "80, optimum unset": "warning",
       "95, tone success": "success", "95, no thresholds": null,
       "24 within 25-75": "warning", "25 within 25-75": "success", "75 within 25-75": "success",
-      "76 within 25-75": "warning", "90 within 25-75": "warning", "swapped low 90 high 75, 80": "error",
-    }))
+      "76 within 25-75": "warning", "90 within 25-75": "warning", "thresholds past max, 100": "success", "swapped low 90 high 75, 80": "error",
+    })))
   })
 
   await test("tones paint different fills, and an untoned bar differs from them", async () => {
