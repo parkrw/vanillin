@@ -60,11 +60,11 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     ]))
   })
 
-  await test("tone at the thresholds: on low or high is the middle part, one past is the next; an unset optimum is the range midpoint", async () => {
+  await test("tone at the thresholds: the edge beside the optimum is the optimum's part, the far edge the middle; an unset optimum is the range midpoint", async () => {
     const tones = await page.locator('[data-pg="meter-edges"] .meter').evaluateAll((els) =>
       Object.fromEntries(els.map((el) => [el.getAttribute("aria-label"), el.className.match(/meter--(\w+)/)?.[1] ?? null])))
     eq(JSON.stringify(tones), JSON.stringify({
-      "74.9, optimum 0": "success", "75, optimum 0": "warning", "90, optimum 0": "warning", "90.1, optimum 0": "error",
+      "74.9, optimum 0": "success", "75, optimum 0": "success", "75.1, optimum 0": "warning", "90, optimum 0": "warning", "90, optimum 100": "success", "90.1, optimum 0": "error",
       "50, optimum 100": "error", "95, optimum 100": "success", "80, optimum unset": "warning",
       "95, tone success": "success", "95, no thresholds": null,
     }))
@@ -86,8 +86,18 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
       const r = await page.locator('.meter[aria-label="Storage used"]').evaluate((el) => {
         const s = getComputedStyle(el)
         const i = el.firstElementChild.getBoundingClientRect()
-        return { adjust: s.forcedColorAdjust, border: s.borderStyle, ratio: i.width / el.getBoundingClientRect().width }
+        const swatch = document.createElement("span")
+        swatch.style.backgroundColor = "Highlight"
+        document.body.append(swatch)
+        const highlight = getComputedStyle(swatch).backgroundColor
+        swatch.remove()
+        return {
+          adjust: s.forcedColorAdjust, border: s.borderStyle, ratio: i.width / el.getBoundingClientRect().width,
+          fill: getComputedStyle(el.firstElementChild).backgroundColor, highlight, track: s.backgroundColor,
+        }
       })
+      eq(r.fill, r.highlight)
+      eq(r.fill !== r.track, true, "fill is told apart from the track")
       eq(r.adjust, "none")
       eq(r.border !== "none", true)
       eq(r.ratio > 0.7 && r.ratio < 0.9, true, `${r.ratio}`)
@@ -104,6 +114,16 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     })
     eq(r.rightGap < 3, true, `${r.rightGap}`)
     eq(r.leftGap > 10, true, `${r.leftGap}`)
+  })
+
+  await test("every meter on the page has a name that resolves", async () => {
+    const unnamed = await page.locator(".meter").evaluateAll((els) =>
+      els.filter((el) => {
+        const ids = (el.getAttribute("aria-labelledby") ?? "").split(/\s+/).filter(Boolean)
+        const named = ids.length > 0 && ids.every((id) => document.getElementById(id)?.textContent)
+        return !named && !el.getAttribute("aria-label")
+      }).length)
+    eq(unnamed, 0)
   })
 
   await test("no progressbar role on the page or in the component", async () => {

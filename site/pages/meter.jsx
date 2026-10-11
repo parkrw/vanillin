@@ -12,16 +12,17 @@ const readout = { display: "flex", justifyContent: "space-between", fontSize: "0
 
 function Reading({ label, used, size, unit = "GB", ...rest }) {
   const pct = Math.round((used / size) * 100)
+  const id = `meter-${label.toLowerCase().replace(/\s+/g, "-")}`
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
       <div style={readout}>
-        <span id={`meter-${label}`}>{label}</span>
+        <span id={id}>{label}</span>
         <span style={{ color: "var(--muted-foreground)" }}>{used} / {size} {unit} · {pct}%</span>
       </div>
       <Meter
         value={used}
         max={size}
-        aria-labelledby={`meter-${label}`}
+        aria-labelledby={id}
         aria-valuetext={`${used} of ${size} ${unit}`}
         {...rest}
       />
@@ -90,8 +91,7 @@ import "./ui/meter/meter.css"
           <code>optimum</code> says which part is the good one. A reading in the good
           part is green, one part away is amber, and two parts away is red. Here a
           disk is best empty, so the optimum is <code>0</code>, amber starts at 75
-          and red above 90. A reading exactly on <code>low</code> or{" "}
-          <code>high</code> counts as the middle part.
+          and red above 90. A reading exactly on the edge beside the optimum counts as the optimum's part, and on the other edge as the middle, as a native meter paints it.
         </p>
         <ComponentPreview code={`<Meter value={40} low={75} high={90} optimum={0} aria-label="Healthy" />
 <Meter value={80} low={75} high={90} optimum={0} aria-label="Filling up" />
@@ -113,7 +113,9 @@ import "./ui/meter/meter.css"
         <div data-pg="meter-edges" style={stack}>
           <Meter value={74.9} low={75} high={90} optimum={0} aria-label="74.9, optimum 0" />
           <Meter value={75} low={75} high={90} optimum={0} aria-label="75, optimum 0" />
+          <Meter value={75.1} low={75} high={90} optimum={0} aria-label="75.1, optimum 0" />
           <Meter value={90} low={75} high={90} optimum={0} aria-label="90, optimum 0" />
+          <Meter value={90} low={75} high={90} optimum={100} aria-label="90, optimum 100" />
           <Meter value={90.1} low={75} high={90} optimum={0} aria-label="90.1, optimum 0" />
           <Meter value={50} low={75} high={90} optimum={100} aria-label="50, optimum 100" />
           <Meter value={95} low={75} high={90} optimum={100} aria-label="95, optimum 100" />
