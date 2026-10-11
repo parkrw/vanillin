@@ -74,7 +74,7 @@ export default async function run({ page, baseUrl, test, eq }) {
       "50, optimum 100": "error", "95, optimum 100": "success", "80, optimum unset": "warning",
       "95, tone success": "success", "95, no thresholds": null,
       "24 within 25-75": "warning", "25 within 25-75": "success", "75 within 25-75": "success",
-      "76 within 25-75": "warning", "90 within 25-75": "warning", "thresholds past max, 80": "success", "low past max, 80": "warning", "optimum below min, 20": "success", "swapped low 90 high 75, 80": "error", "optimum alone, 60": "success",
+      "76 within 25-75": "warning", "90 within 25-75": "warning", "thresholds past max, 80": "success", "low past max, 80": "warning", "optimum below min, 20": "success", "swapped low 90 high 75, 80": "error", "optimum alone, 60": "success", "10, optimum unset within 25-75": "warning",
     })))
   })
 
@@ -89,6 +89,9 @@ export default async function run({ page, baseUrl, test, eq }) {
     const none = await read("No reading")
     eq(none.now, "0")
     eq(none.width, 0)
+    const negative = await read("No reading, min -10")
+    eq(negative.now, "-10")
+    eq(negative.width, 0)
     const empty = await read("Empty range")
     eq(empty.text, "0%")
     eq(empty.width, 0)

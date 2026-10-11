@@ -25,6 +25,7 @@ const edges = [
   ["76 within 25-75", { value: 76, low: 25, high: 75, optimum: 50 }],
   ["90 within 25-75", { value: 90, low: 25, high: 75, optimum: 50 }],
   ["95, no thresholds", { value: 95 }],
+  ["10, optimum unset within 25-75", { value: 10, low: 25, high: 75 }],
   ["optimum alone, 60", { value: 60, optimum: 100 }],
   ["swapped low 90 high 75, 80", { value: 80, low: 90, high: 75, optimum: 100 }],
   ["thresholds past max, 80", { value: 80, low: 75, high: 150, optimum: 200 }],
@@ -199,9 +200,11 @@ import "./ui/meter/meter.css"
           range whose <code>min</code> equals its <code>max</code> reads as empty.
         </p>
         <ComponentPreview code={`<Meter aria-label="No reading" />
+<Meter min={-10} aria-label="No reading, min -10" />
 <Meter value={5} min={5} max={5} aria-label="Empty range" />`}>
           <div data-pg="meter-degenerate" style={stack}>
             <Meter aria-label="No reading" />
+            <Meter min={-10} aria-label="No reading, min -10" />
             <Meter value={5} min={5} max={5} aria-label="Empty range" />
           </div>
         </ComponentPreview>
