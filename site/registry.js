@@ -100,6 +100,7 @@ export const categories = [
       badge: { title: "Badge", page: lazy(() => import("./pages/badge.jsx")) },
       avatar: { title: "Avatar", page: lazy(() => import("./pages/avatar.jsx")) },
       progress: { title: "Progress", page: lazy(() => import("./pages/progress.jsx")) },
+      meter: { title: "Meter", page: lazy(() => import("./pages/meter.jsx")) },
       chart: { title: "Chart", page: lazy(() => import("./pages/chart.jsx")) },
       "chart-heatmap": { title: "Chart Heatmap", page: lazy(() => import("./pages/chart-heatmap.jsx")) },
       "chart-boxplot": { title: "Chart Box Plot", page: lazy(() => import("./pages/chart-boxplot.jsx")) },
