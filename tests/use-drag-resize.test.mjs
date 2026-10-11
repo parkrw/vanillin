@@ -119,8 +119,9 @@ export default async function run({ page, baseUrl, test, eq, repoRoot }) {
         const settle = () => new Promise((r) => setTimeout(r, 40))
 
         const changes = []
+        let live = options
         function Probe() {
-          const r = useDragResize({ ...options, onSizeChange: (n) => changes.push(n) })
+          const r = useDragResize({ ...live, onSizeChange: (n) => changes.push(n) })
           return h("div", { ...r.handleProps, id: "probe-handle", "data-size": String(r.size) })
         }
         const host = document.createElement("div")
@@ -138,6 +139,11 @@ export default async function run({ page, baseUrl, test, eq, repoRoot }) {
           )
         }
         for (const step of steps) {
+          if (step.rerender) {
+            live = { ...live, ...step.rerender }
+            root.render(h(Probe))
+            await settle()
+          }
           if (step.down) pointer("pointerdown", el(), { clientX: 0, clientY: 0, ...step.down })
           if (step.move != null)
             pointer("pointermove", window, { clientX: step.move, clientY: 0, ...step.moveInit })
@@ -259,6 +265,25 @@ export default async function run({ page, baseUrl, test, eq, repoRoot }) {
     ])
     eq(snapshots.mount.attrs.size, "240", "size clamped to max")
     eq(snapshots.key.changes.join(), "230", "a shrink step starts from the clamped value")
+  })
+
+  await test("a drag from a stray controlled size starts at the clamped value", async () => {
+    const { snapshots } = await harness({ size: 300, min: 0, max: 240 }, [
+      { down: true, move: -30, snap: "s" },
+    ])
+    eq(snapshots.s.changes.join(), "210", "30px left of the clamped 240, not still pinned at max")
+  })
+
+  await test("tightening the bounds after mount pulls the size in", async () => {
+    const { snapshots } = await harness({ min: 0, max: 240, defaultSize: 240 }, [
+      { snap: "before" },
+      { rerender: { max: 200 }, snap: "after" },
+      { key: "ArrowRight", snap: "grow" },
+    ])
+    eq(snapshots.before.attrs.size, "240", "precondition: at the old max")
+    eq(snapshots.after.attrs.size, "200", "size follows the new max")
+    eq(snapshots.after.attrs.valuemax, "200", "aria-valuemax follows too")
+    eq(snapshots.grow.changes.join(), "200", "the grow key does not shrink the element")
   })
 
   await test("an unbounded max keeps aria-valuemax above the value and End does nothing", async () => {
