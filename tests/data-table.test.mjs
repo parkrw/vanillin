@@ -328,26 +328,33 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     eq(await options(), "3,5,8", "the offered sizes return once another is picked")
   })
 
-  await test("pager select takes the forced-colors focus outline", async () => {
+  await test("a forced-colors focus rule names the pager select and matches it", async () => {
     const select = page.locator('[data-pg="dt-pager"] select')
-    await page.emulateMedia({ forcedColors: "active" })
-    try {
-      await select.focus()
-      const outline = await select.evaluate((el) => {
-        const cs = getComputedStyle(el)
-        return {
-          focusVisible: el.matches(":focus-visible"),
-          nestedInLabel: el.matches(".data-table-page-size > select"),
-          style: cs.outlineStyle,
-          width: cs.outlineWidth,
+    // A generic :focus-visible rule and .native-select:focus-visible paint the
+    // same outline, so the computed outline cannot tell whether the
+    // data-table selector matches. Read the rules instead.
+    const result = await select.evaluate((el) => {
+      const hits = []
+      const walk = (rules, inForcedColors) => {
+        for (const rule of rules) {
+          if (rule.cssRules && rule.media) {
+            walk(rule.cssRules, inForcedColors || rule.media.mediaText.includes("forced-colors"))
+          } else if (rule.selectorText && inForcedColors) {
+            for (const sel of rule.selectorText.split(",").map((x) => x.trim())) {
+              if (sel.includes(".data-table-page-size") && el.matches(sel.replace(/:focus-visible$/, ""))) {
+                hits.push(sel)
+              }
+            }
+          }
         }
-      })
-      eq(outline.nestedInLabel, false, "the select is not a direct child, so the old selector cannot be what matches")
-      eq(outline.focusVisible, true, "the select shows :focus-visible")
-      eq(`${outline.style} ${outline.width}`, "solid 2px", "forced-colors focus outline applies to the nested select")
-    } finally {
-      await page.emulateMedia({ forcedColors: null })
-    }
+      }
+      for (const sheet of document.styleSheets) {
+        try { walk(sheet.cssRules, false) } catch { /* cross-origin sheet */ }
+      }
+      return { hits, direct: el.matches(".data-table-page-size > select") }
+    })
+    eq(result.direct, false, "the select is not a direct child of .data-table-page-size")
+    eq(result.hits.length > 0, true, `a forced-colors focus selector reaches the nested select, got ${JSON.stringify(result.hits)}`)
   })
 
   await test("pager arrows flip under dir=rtl and not under ltr", async () => {

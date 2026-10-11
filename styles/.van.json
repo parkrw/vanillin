@@ -3,7 +3,7 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "files": {
     "defaults.css": "sha256-5J6+0Qb1SA0dNmWI0QAXi3MDYNOFC41cs+4ul0Vbg8Y=",
-    "forced-colors.css": "sha256-IDZmqjLINNashxDCaCCE474v2aWIYwya9Cv3hdxy8ns=",
+    "forced-colors.css": "sha256-zp42Agy9WqxavVgUvpSwjRePsjPrLn7vFsBnUqhGIL0=",
     "globals.css": "sha256-zwkNim5d2sBmNi8z/l8qgmshZBVBhEh8xudd+MmZF4A=",
     "typeset.css": "sha256-9sm2ZtxbCAJcd5hs/pghvg2AGykqcEG2gx9LPPBP12c="
   }
