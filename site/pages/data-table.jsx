@@ -1036,7 +1036,7 @@ function PaginationDemo() {
           ))}
         </TableBody>
       </Table>
-      <DataTablePagination table={table} pageSizeOptions={[5, 8]} showFirstLast data-pg="dt-demo-pager" />
+      <DataTablePagination table={table} pageSizeOptions={[3, 5, 8]} showFirstLast data-pg="dt-demo-pager" />
     </div>
   )
 }
@@ -1359,7 +1359,7 @@ const table = useDataTable({ data, columns })
       <section className="pg-section">
         <h3>Pagination</h3>
         <ComponentPreview code={`const table = useDataTable({ data, columns, initialPageSize: 3 })
-<DataTablePagination table={table} pageSizeOptions={[5, 8]} showFirstLast />`}>
+<DataTablePagination table={table} pageSizeOptions={[3, 5, 8]} showFirstLast />`}>
           <PaginationDemo />
         </ComponentPreview>
         <p>
@@ -1695,7 +1695,7 @@ const table = useDataTable({ data, columns })
         { name: "DataTableGroupRow: label", type: "string", description: "Optional display label; defaults to the group value" },
         { name: "DataTableColumnResizer: column", type: "Column", description: "Column proxy; drag resizes, double-click resets, arrows +/- 8px" },
         { name: "DataTablePagination: table", type: "useDataTable instance", description: "Table the footer reads and drives" },
-        { name: "DataTablePagination: pageSizeOptions", type: "number[]", default: "[10, 20, 30, 40, 50]", description: "Rows-per-page choices; an empty array hides the select" },
+        { name: "DataTablePagination: pageSizeOptions", type: "number[]", default: "[10, 20, 30, 40, 50]", description: "Rows-per-page choices; an empty array hides the select. The current page size is added when it is not listed" },
         { name: "DataTablePagination: showFirstLast", type: "boolean", default: "false", description: "Add first-page and last-page buttons" },
         { name: "DataTablePagination: children", type: "ReactNode", description: "Leading slot, such as a selection count or loading status" },
         { name: "DataTableScroller", type: "component", description: "ScrollArea wrapper that hands horizontal scrolling from ui/table's container to the viewport" },

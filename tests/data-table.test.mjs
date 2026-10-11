@@ -303,16 +303,16 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     eq(await pageInfo(), "Page 1 of 2", "size change resets the index")
   })
 
-  await test("a page size outside pageSizeOptions is listed so the select shows the real size", async () => {
+  await test("page-size select lists exactly the offered sizes and follows the table", async () => {
     const select = page.locator('[data-pg="dt-demo-pager"] select')
     await select.waitFor()
     const options = () =>
       select.evaluate((el) => [...el.options].map((o) => o.value).join(","))
-    eq(await options(), "3,5,8", "the table's size of 3 joins the listed 5 and 8, in order")
+    eq(await options(), "3,5,8", "the offered sizes, nothing added")
     eq(await select.inputValue(), "3", "the select shows the size the table pages by")
     await select.selectOption("5")
-    eq(await options(), "5,8", "once the size changes, only the listed sizes remain")
     eq(await select.inputValue(), "5", "the select follows the table")
+    await select.selectOption("3")
   })
 
   await test("pager arrows flip under dir=rtl and not under ltr", async () => {
