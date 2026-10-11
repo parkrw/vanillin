@@ -252,6 +252,15 @@ export default async function run({ page, baseUrl, test, eq, repoRoot }) {
     eq(under.snapshots.s.attrs.size, "20", "defaultSize below min is clamped")
   })
 
+  await test("a controlled size outside the bounds is read back clamped and steps from there", async () => {
+    const { snapshots } = await harness({ size: 300, min: 0, max: 240, step: 10 }, [
+      { snap: "mount" },
+      { key: "ArrowLeft", snap: "key" },
+    ])
+    eq(snapshots.mount.attrs.size, "240", "size clamped to max")
+    eq(snapshots.key.changes.join(), "230", "a shrink step starts from the clamped value")
+  })
+
   await test("an unbounded max keeps aria-valuemax above the value and End does nothing", async () => {
     const { snapshots } = await harness({ defaultSize: 50, min: 10 }, [
       { key: "End", snap: "end" },
