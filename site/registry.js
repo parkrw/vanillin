@@ -107,6 +107,7 @@ export const categories = [
       "chart-gauge": { title: "Chart Gauge", page: lazy(() => import("./pages/chart-gauge.jsx")) },
       "chart-treemap": { title: "Chart Treemap", page: lazy(() => import("./pages/chart-treemap.jsx")) },
       "chart-sankey": { title: "Chart Sankey", page: lazy(() => import("./pages/chart-sankey.jsx")) },
+      "chart-candlestick": { title: "Chart Candlestick", page: lazy(() => import("./pages/chart-candlestick.jsx")) },
       spinner: { title: "Spinner", page: lazy(() => import("./pages/spinner.jsx")) },
       empty: { title: "Empty", page: lazy(() => import("./pages/empty.jsx")) },
       item: { title: "Item", page: lazy(() => import("./pages/item.jsx")) },
