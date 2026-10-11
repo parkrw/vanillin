@@ -70,8 +70,27 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
       "50, optimum 100": "error", "95, optimum 100": "success", "80, optimum unset": "warning",
       "95, tone success": "success", "95, no thresholds": null,
       "24 within 25-75": "warning", "25 within 25-75": "success", "75 within 25-75": "success",
-      "76 within 25-75": "warning", "90 within 25-75": "warning", "thresholds past max, 100": "success", "swapped low 90 high 75, 80": "error",
+      "76 within 25-75": "warning", "90 within 25-75": "warning", "thresholds past max, 100": "success", "swapped low 90 high 75, 80": "error", "optimum alone, 60": "success",
     })))
+  })
+
+  await test("a missing value rests on the minimum, an empty range reads empty, data-region only with low or high", async () => {
+    const read = (label) =>
+      page.locator(`.meter[aria-label="${label}"]`).evaluate((el) => ({
+        now: el.getAttribute("aria-valuenow"),
+        text: el.getAttribute("aria-valuetext"),
+        width: el.firstElementChild.getBoundingClientRect().width,
+        region: el.dataset.region ?? null,
+      }))
+    const none = await read("No reading")
+    eq(none.now, "0")
+    eq(none.width, 0)
+    const empty = await read("Empty range")
+    eq(empty.text, "0%")
+    eq(empty.width, 0)
+    eq((await read("95, no thresholds")).region, null)
+    eq((await read("optimum alone, 60")).region, null)
+    eq((await read("75, optimum 0")).region, "low")
   })
 
   await test("tones paint different fills, and an untoned bar differs from them", async () => {

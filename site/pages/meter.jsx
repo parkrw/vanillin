@@ -25,6 +25,7 @@ const edges = [
   ["75 within 25-75", { value: 75, low: 25, high: 75, optimum: 50 }],
   ["76 within 25-75", { value: 76, low: 25, high: 75, optimum: 50 }],
   ["90 within 25-75", { value: 90, low: 25, high: 75, optimum: 50 }],
+  ["optimum alone, 60", { value: 60, optimum: 100 }],
   ["swapped low 90 high 75, 80", { value: 80, low: 90, high: 75, optimum: 100 }],
   ["thresholds past max, 100", { value: 100, low: 75, high: 150, optimum: 200 }],
 ]
@@ -130,14 +131,16 @@ import "./ui/meter/meter.css"
       <section className="pg-section">
         <h3>On the line</h3>
         <p>
-          Every reading below sits on or next to a boundary of{" "}
-          <code>low={"{75}"}</code> and <code>high={"{90}"}</code>, or, in the
-          second group, of <code>low={"{25}"}</code> and <code>high={"{75}"}</code>
-          with the optimum between them, where the only tones are green and amber.
+          Each reading sits on or next to a boundary: <code>low={"{75}"}</code>{" "}
+          and <code>high={"{90}"}</code> in the first group, and{" "}
+          <code>low={"{25}"}</code> and <code>high={"{75}"}</code> with the
+          optimum between them in the second, where the only tones are green and
+          amber. The last rows are the odd cases: a swapped pair, thresholds past
+          the end of the range, an optimum on its own, and no thresholds at all.
         </p>
-        <ComponentPreview code={`<Meter value={75} low={75} high={90} optimum={0} />
-<Meter value={90} low={75} high={90} optimum={100} />
-<Meter value={90} low={25} high={75} optimum={50} />`}>
+        <ComponentPreview code={`<Meter value={75} low={75} high={90} optimum={0} aria-label="Disk" />
+<Meter value={90} low={75} high={90} optimum={100} aria-label="Battery" />
+<Meter value={90} low={25} high={75} optimum={50} aria-label="Load" />`}>
           <div data-pg="meter-edges" style={stack}>
             {edges.map(([name, props]) => (
               <div key={name}>
@@ -181,6 +184,21 @@ import "./ui/meter/meter.css"
           <div data-pg="meter-range" style={stack}>
             <Meter value={68} min={40} max={90} aria-label="Coolant" aria-valuetext="68 °C" />
             <Meter value={140} max={100} aria-label="Past the end" />
+          </div>
+        </ComponentPreview>
+      </section>
+
+      <section className="pg-section">
+        <h3>Missing and empty</h3>
+        <p>
+          With no <code>value</code> the bar reads as the bottom of the range, and a
+          range whose <code>min</code> equals its <code>max</code> reads as empty.
+        </p>
+        <ComponentPreview code={`<Meter aria-label="No reading" />
+<Meter value={5} min={5} max={5} aria-label="Empty range" />`}>
+          <div data-pg="meter-degenerate" style={stack}>
+            <Meter aria-label="No reading" />
+            <Meter value={5} min={5} max={5} aria-label="Empty range" />
           </div>
         </ComponentPreview>
       </section>

@@ -16,8 +16,9 @@ function regionOf(n, low, high, optimumRegion) {
  *
  * `low`, `high` and `optimum` follow HTML's `<meter>`, boundary rule and
  * clamping included: the range splits into below `low`, between, and above
- * `high`, and `optimum` names the region that is good. A reading in the optimum's region is `success`, one region away is
- * `warning`, two away is `error`. Give none of them and the bar stays primary.
+ * `high`, and `optimum` names the region that is good. A reading in the
+ * optimum's region is `success`, one region away is `warning`, two away is
+ * `error`. Give none of them and the bar stays primary.
  * An explicit `tone` wins over the derived one.
  *
  * Styled div rather than native `<meter>`: the native element's fill is only
