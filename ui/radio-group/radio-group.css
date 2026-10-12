@@ -50,3 +50,95 @@
 .radio-group-item[data-state="checked"] .radio-group-indicator {
   display: block;
 }
+
+/* Segmented: the items are outline buttons fused into one row, as ui/button-group
+   draws them, and the checked one takes the primary fill. */
+
+.radio-group--segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+.radio-group--segmented > .radio-group-item {
+  width: auto;
+  height: 2.25rem;
+  aspect-ratio: auto;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  border-color: var(--input);
+  background-color: var(--background);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  white-space: nowrap;
+  user-select: none;
+  transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease);
+}
+
+/* :where(html) keeps specificity level with :hover below — dark is root-only */
+:where(html).dark .radio-group--segmented > .radio-group-item {
+  background-color: var(--input-background);
+}
+
+.radio-group--segmented > .radio-group-item:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* Each item overlaps the one before by 1px, so the checked and focused items
+   are raised to keep their own edge on top of a neighbour's. */
+.radio-group--segmented > .radio-group-item[data-state="checked"] {
+  z-index: 1;
+  border-color: var(--primary);
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.radio-group--segmented > .radio-group-item[data-state="checked"]:hover {
+  background-color: var(--primary-hover);
+}
+
+.radio-group--segmented > .radio-group-item[aria-invalid="true"] {
+  border-color: var(--destructive);
+}
+
+.radio-group--segmented > .radio-group-item:focus-visible {
+  z-index: 2;
+}
+
+/* As .btn: a disabled button takes no hover paint */
+.radio-group--segmented > .radio-group-item:disabled {
+  pointer-events: none;
+}
+
+.radio-group--segmented > .radio-group-item:not(:last-child) {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.radio-group--segmented > .radio-group-item:not(:first-child) {
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+  margin-inline-start: -1px;
+}
+
+.radio-group--segmented > .radio-group-item svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* Forced colours repaint every fill as the same Canvas, which would leave the
+   checked item looking like the rest. */
+@media (forced-colors: active) {
+  .radio-group--segmented > .radio-group-item[data-state="checked"] {
+    forced-color-adjust: none;
+    border-color: Highlight;
+    background-color: Highlight;
+    color: HighlightText;
+  }
+}

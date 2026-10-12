@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { DirectionProvider } from "../../lib/direction.jsx"
 import { RadioGroup, RadioGroupItem } from "../../ui/radio-group/radio-group.jsx"
 import { Label } from "../../ui/label/label.jsx"
 import "../../ui/radio-group/radio-group.css"
@@ -75,6 +76,48 @@ import "./ui/radio-group/radio-group.css"
       </section>
 
       <section className="pg-section">
+        <h3>Segmented</h3>
+        <ComponentPreview code={`<RadioGroup variant="segmented" defaultValue="week" aria-label="Range">
+  <RadioGroupItem value="day">Day</RadioGroupItem>
+  <RadioGroupItem value="week">Week</RadioGroupItem>
+  <RadioGroupItem value="month">Month</RadioGroupItem>
+  <RadioGroupItem value="year" disabled>Year</RadioGroupItem>
+</RadioGroup>`}>
+          <RadioGroup variant="segmented" defaultValue="week" aria-label="Range" data-pg="rg-segmented">
+            <RadioGroupItem value="day">Day</RadioGroupItem>
+            <RadioGroupItem value="week">Week</RadioGroupItem>
+            <RadioGroupItem value="month">Month</RadioGroupItem>
+            <RadioGroupItem value="year" disabled>Year</RadioGroupItem>
+          </RadioGroup>
+        </ComponentPreview>
+        <p className="pg-desc">
+          The items join into one row of outline buttons, as in Button Group, and each one shows its children as its label. The checked item is filled. Arrow keys move and select as in the default layout, and clicking the checked item leaves it checked.
+        </p>
+      </section>
+
+      <section className="pg-section">
+        <h3>Segmented RTL</h3>
+        <ComponentPreview code={`<DirectionProvider dir="rtl">
+  <RadioGroup variant="segmented" defaultValue="day" aria-label="المدة">
+    <RadioGroupItem value="day">يوم</RadioGroupItem>
+    <RadioGroupItem value="week">أسبوع</RadioGroupItem>
+    <RadioGroupItem value="month">شهر</RadioGroupItem>
+  </RadioGroup>
+</DirectionProvider>`}>
+          <DirectionProvider dir="rtl">
+            <RadioGroup variant="segmented" defaultValue="day" aria-label="المدة" data-pg="rg-segmented-rtl">
+              <RadioGroupItem value="day">يوم</RadioGroupItem>
+              <RadioGroupItem value="week">أسبوع</RadioGroupItem>
+              <RadioGroupItem value="month">شهر</RadioGroupItem>
+            </RadioGroup>
+          </DirectionProvider>
+        </ComponentPreview>
+        <p className="pg-desc">
+          The first item sits at the inline start, on the right, and the arrow keys follow the reading direction.
+        </p>
+      </section>
+
+      <section className="pg-section">
         <h3>Disabled Item</h3>
         <ComponentPreview code={`<RadioGroup defaultValue="active">
   <div className="pg-row">
@@ -132,12 +175,14 @@ import "./ui/radio-group/radio-group.css"
         { name: "value", type: "string", description: "Controlled selected value" },
         { name: "defaultValue", type: "string", description: "Initial value (uncontrolled)" },
         { name: "onValueChange", type: "(value: string) => void", description: "Called when the selection changes" },
+        { name: "variant", type: '"default" | "segmented"', default: '"default"', description: "A dot beside each label, or the items joined as one row of buttons" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />
 
       <ApiReference title="RadioGroupItem" props={[
         { name: "value", type: "string", description: "The value this item represents" },
         { name: "disabled", type: "boolean", description: "Prevents selection and skips arrow-key navigation" },
+        { name: "children", type: "ReactNode", description: "The item's label, shown inside it when the group is segmented" },
         { name: "className", type: "string", description: "Additional CSS classes" },
       ]} />
     </>

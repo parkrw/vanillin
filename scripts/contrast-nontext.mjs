@@ -115,6 +115,8 @@ const probes = [
   ["meter", '[data-pg="meter-tone"] .meter--error .meter-indicator', ["backgroundColor"], "meter indicator error"],
   ["slider", ".slider-track", ["backgroundColor"], "slider rail", { exempt: "inactive rail; the range carries the state and passes (16.44:1 light / 12.01:1 dark), as D5 checkbox fill" }],
   ["slider", ".slider-range", ["backgroundColor"], "slider range"],
+  // The segmented radio's checked fill is its only state cue.
+  ["radio-group", '[data-pg="rg-segmented"] .radio-group-item[data-state="checked"]', ["backgroundColor"], "segmented radio checked fill"],
 ]
 
 await wait()
