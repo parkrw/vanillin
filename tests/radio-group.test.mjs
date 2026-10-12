@@ -259,7 +259,14 @@ export default async function run({ page, baseUrl, test, eq, near }) {
       eq(day, lifted, "unchecked fill")
       eq(week, await tokenFill(segmented, "var(--primary)"), "checked fill")
       eq(day !== week, true)
+      const accent = await tokenFill(segmented, "var(--accent)")
+      eq(accent !== lifted, true, "dark hover token differs from the lifted fill")
+      const b = await boxes(segmentedItems)
+      await page.mouse.move((b[0].left + b[0].right) / 2, (b[0].top + b[0].bottom) / 2)
+      await settled()
+      eq((await fills(segmentedItems))[0], accent, "hovered Day in dark")
     } finally {
+      await page.mouse.move(0, 0)
       await page.evaluate(() => document.documentElement.classList.remove("dark"))
       await settled()
     }
