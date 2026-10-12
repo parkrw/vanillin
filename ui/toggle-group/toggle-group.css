@@ -1,7 +1,10 @@
+/* isolation keeps the focused item's z-index below inside the group, so it does
+   not rise over a sticky table column or other layer at the same level. */
 .toggle-group {
   display: inline-flex;
   align-items: center;
   border-radius: var(--radius-md);
+  isolation: isolate;
 }
 
 /* Items fuse into one segmented control: square inner corners, shared border. */
