@@ -175,9 +175,66 @@ export default async function run({ page, baseUrl, test, eq, near }) {
       const [day, , , year] = await fills(segmentedItems)
       eq(day, background, "Day back to rest")
       eq(year, background, "disabled Year unchanged under the pointer")
+      const primary = await tokenFill(segmented, "var(--primary)")
+      const primaryHover = await tokenFill(segmented, "var(--primary-hover)")
+      eq(primary !== primaryHover, true, "hover token differs from the fill")
+      await page.mouse.move((b[1].left + b[1].right) / 2, (b[1].top + b[1].bottom) / 2)
+      await settled()
+      eq((await fills(segmentedItems))[1], primaryHover, "hovered checked Week")
     } finally {
       await page.mouse.move(0, 0)
     }
+  })
+
+  await test("segmented: a focused item's edge sits above a checked neighbour's", async () => {
+    // Focus selects, so a focused item is unchecked only when a controlled
+    // parent refuses the change; data-state is swapped by hand to stage that.
+    await segmentedItems.nth(0).focus()
+    await page.keyboard.press("ArrowRight")
+    const week = segmentedItems.nth(1)
+    const month = segmentedItems.nth(2)
+    eq(await week.evaluate((el) => el.matches(":focus-visible")), true, "Week focused from the keyboard")
+    try {
+      await week.evaluate((el) => (el.dataset.state = "unchecked"))
+      await month.evaluate((el) => (el.dataset.state = "checked"))
+      const b = await boxes(segmentedItems)
+      const y = (b[0].top + b[0].bottom) / 2
+      eq(await hitAt(b[2].left + 0.5, y), "Week", "focused Week over the checked Month")
+      await week.evaluate((el) => el.blur())
+      eq(await hitAt(b[2].left + 0.5, y), "Month", "blurred, the checked Month is back on top")
+    } finally {
+      await week.evaluate((el) => (el.dataset.state = "checked"))
+      await month.evaluate((el) => (el.dataset.state = "unchecked"))
+    }
+  })
+
+  await test("segmented: aria-invalid keeps the destructive border, checked or not", async () => {
+    const borders = () => segmentedItems.evaluateAll((els) => els.map((el) => getComputedStyle(el).borderTopColor))
+    const input = await tokenFill(segmented, "var(--input)")
+    const destructive = await tokenFill(segmented, "var(--destructive)")
+    const [dayBefore] = await borders()
+    eq(dayBefore, input, "unchecked border before")
+    try {
+      await segmentedItems.evaluateAll((els) => els.forEach((el) => el.setAttribute("aria-invalid", "true")))
+      await settled()
+      const [day, week] = await borders()
+      eq(day, destructive, "invalid unchecked Day")
+      eq(week, destructive, "invalid checked Week")
+    } finally {
+      await segmentedItems.evaluateAll((els) => els.forEach((el) => el.removeAttribute("aria-invalid")))
+      await settled()
+    }
+  })
+
+  await test("segmented: an icon in an item is sized to 1rem", async () => {
+    const size = await segmentedItems.nth(0).evaluate((el) => {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+      el.prepend(svg)
+      const r = svg.getBoundingClientRect()
+      svg.remove()
+      return { width: r.width, height: r.height }
+    })
+    eq(`${size.width}x${size.height}`, "16x16")
   })
 
   await test("segmented rtl: the row runs right to left and arrows follow it", async () => {
