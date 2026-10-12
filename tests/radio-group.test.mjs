@@ -269,10 +269,18 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     await page.emulateMedia({ forcedColors: "active" })
     try {
       await settled()
+      const highlight = await tokenFill(segmented, "Highlight")
+      const highlightText = await tokenFill(segmented, "HighlightText")
       const [day, week] = await fills(segmentedItems)
-      eq(week, await tokenFill(segmented, "Highlight"), "checked takes Highlight")
+      eq(week, highlight, "checked takes Highlight")
       eq(day !== week, true, "unchecked differs from checked")
+      const b = await boxes(segmentedItems)
+      await page.mouse.move((b[1].left + b[1].right) / 2, (b[1].top + b[1].bottom) / 2)
+      await settled()
+      eq((await fills(segmentedItems))[1], highlight, "hovered checked keeps Highlight")
+      eq(await segmentedItems.nth(1).evaluate((el) => getComputedStyle(el).color), highlightText, "hovered checked label")
     } finally {
+      await page.mouse.move(0, 0)
       await page.emulateMedia({ forcedColors: null })
     }
   })

@@ -133,9 +133,11 @@
 }
 
 /* Forced colours repaint every fill as the same Canvas, which would leave the
-   checked item looking like the rest. */
+   checked item looking like the rest. :hover is listed to match the checked
+   hover rule's specificity, which @media does not add to. */
 @media (forced-colors: active) {
-  .radio-group--segmented > .radio-group-item[data-state="checked"] {
+  .radio-group--segmented > .radio-group-item[data-state="checked"],
+  .radio-group--segmented > .radio-group-item[data-state="checked"]:hover {
     forced-color-adjust: none;
     border-color: Highlight;
     background-color: Highlight;
