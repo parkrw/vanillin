@@ -150,6 +150,36 @@ export default async function run({ page, baseUrl, test, eq, near }) {
     }
   })
 
+  await test("segmented: raised items stay below a layer at the same z-index outside the group", async () => {
+    await segmented.scrollIntoViewIfNeeded()
+    const hits = await segmented.evaluate((group) => {
+      const r = group.getBoundingClientRect()
+      const layer = document.createElement("div")
+      layer.id = "rg-segmented-layer"
+      Object.assign(layer.style, {
+        position: "fixed",
+        left: `${r.left}px`,
+        top: `${r.top}px`,
+        width: `${r.width}px`,
+        height: `${r.height}px`,
+        zIndex: "1",
+      })
+      group.before(layer)
+      const at = (item) => {
+        const b = item.getBoundingClientRect()
+        const hit = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2)
+        return hit?.id || hit?.textContent || null
+      }
+      const items = group.querySelectorAll('[role="radio"]')
+      const result = { day: at(items[0]), week: at(items[1]), checked: items[1].getAttribute("aria-checked") }
+      layer.remove()
+      return result
+    })
+    eq(hits.checked, "true", "Week is the checked item")
+    eq(hits.day, "rg-segmented-layer", "layer covers an unchecked item")
+    eq(hits.week, "rg-segmented-layer", "layer covers the checked item too")
+  })
+
   await test("segmented: arrow keys move and select, skipping the disabled item", async () => {
     await segmentedItems.nth(1).focus()
     await page.keyboard.press("ArrowRight")

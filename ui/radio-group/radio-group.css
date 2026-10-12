@@ -54,10 +54,13 @@
 /* Segmented: the items are outline buttons fused into one row, as ui/button-group
    draws them, and the checked one takes the primary fill. */
 
+/* isolation keeps the items' z-index below inside the group, so a checked item
+   does not rise over a sticky table column or other layer at the same level. */
 .radio-group--segmented {
   display: inline-flex;
   align-items: center;
   gap: 0;
+  isolation: isolate;
 }
 
 .radio-group--segmented > .radio-group-item {
