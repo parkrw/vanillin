@@ -22,7 +22,7 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     page.locator('[data-pg="dt-selection"]').textContent()
 
   const pageInfo = () =>
-    page.locator('[data-pg="dt-page-info"]').textContent()
+    page.locator('[data-pg="dt-pager"] .data-table-page-info').textContent()
 
   // ── Sorting ────────────────────────────────────────────────────────
 
@@ -240,40 +240,152 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
 
     // Previous should be disabled
     eq(
-      await page.locator('[data-pg="dt-prev"]').isDisabled(),
+      await page.locator('[data-pg="dt-pager"] [aria-label="Previous page"]').isDisabled(),
       true,
       "prev disabled on first page"
     )
 
     // Click next
-    await page.locator('[data-pg="dt-next"]').click()
+    await page.locator('[data-pg="dt-pager"] [aria-label="Next page"]').click()
     eq(await pageInfo(), "Page 2 of 2", "moved to page 2")
     eq(
-      await page.locator('[data-pg="dt-next"]').isDisabled(),
+      await page.locator('[data-pg="dt-pager"] [aria-label="Next page"]').isDisabled(),
       true,
       "next disabled on last page"
     )
 
     // Click prev
-    await page.locator('[data-pg="dt-prev"]').click()
+    await page.locator('[data-pg="dt-pager"] [aria-label="Previous page"]').click()
     eq(await pageInfo(), "Page 1 of 2", "back to page 1")
 
     // Change page size to 5 => 4 pages
-    await page.locator('[data-pg="dt-page-size"]').selectOption("5")
+    await page.locator('[data-pg="dt-pager"] select').selectOption("5")
     eq(await pageInfo(), "Page 1 of 4", "5 per page = 4 pages")
 
     // Navigate to last page
-    await page.locator('[data-pg="dt-next"]').click()
-    await page.locator('[data-pg="dt-next"]').click()
-    await page.locator('[data-pg="dt-next"]').click()
+    await page.locator('[data-pg="dt-pager"] [aria-label="Next page"]').click()
+    await page.locator('[data-pg="dt-pager"] [aria-label="Next page"]').click()
+    await page.locator('[data-pg="dt-pager"] [aria-label="Next page"]').click()
     eq(await pageInfo(), "Page 4 of 4", "on last page")
 
     const rowCount = await dt.locator(".table-body .table-row").count()
     eq(rowCount, 5, "last page has 5 rows")
 
     // Reset to 10 per page
-    await page.locator('[data-pg="dt-page-size"]').selectOption("10")
+    await page.locator('[data-pg="dt-pager"] select').selectOption("10")
     eq(await pageInfo(), "Page 1 of 2", "reset to 10 per page")
+  })
+
+  await test("pager controls carry accessible names and a labelled page-size select", async () => {
+    const pager = page.locator('[data-pg="dt-pager"]')
+    const names = await pager
+      .locator("button")
+      .evaluateAll((els) => els.map((b) => b.getAttribute("aria-label")))
+    eq(names.join("|"), "Previous page|Next page", "buttons are named, no first/last by default")
+    eq(
+      await pager.getByLabel("Rows per page").evaluate((el) => el.tagName),
+      "SELECT",
+      "the select is reachable by its visible label"
+    )
+    eq(
+      await pager.locator(".data-table-page-info").getAttribute("aria-live"),
+      "polite",
+      "page text is announced"
+    )
+  })
+
+  await test("page-size change from a later page returns to page 1", async () => {
+    const pager = page.locator('[data-pg="dt-pager"]')
+    await pager.locator("select").selectOption("5")
+    await pager.getByLabel("Next page").click()
+    await pager.getByLabel("Next page").click()
+    eq(await pageInfo(), "Page 3 of 4", "moved two pages in")
+    await pager.locator("select").selectOption("10")
+    // Keeping the top row (row 10) in view would land on page 2 of 2.
+    eq(await pageInfo(), "Page 1 of 2", "size change resets the index")
+  })
+
+  await test("page-size select lists exactly the offered sizes and follows the table", async () => {
+    const select = page.locator('[data-pg="dt-demo-pager"] select')
+    await select.waitFor()
+    const options = () =>
+      select.evaluate((el) => [...el.options].map((o) => o.value).join(","))
+    eq(await options(), "3,5,8", "the offered sizes, nothing added")
+    eq(await select.inputValue(), "3", "the select shows the size the table pages by")
+    await select.selectOption("5")
+    eq(await select.inputValue(), "5", "the select follows the table")
+    await select.selectOption("3")
+  })
+
+  await test("an unlisted current page size is added to the select until another is picked", async () => {
+    const select = page.locator('[data-pg="dt-unlisted-pager"] select')
+    await select.waitFor()
+    const options = () =>
+      select.evaluate((el) => [...el.options].map((o) => o.value).join(","))
+    eq(await options(), "3,4,5,8", "4 joins the listed sizes, in order")
+    eq(await select.inputValue(), "4", "the select shows the size the table pages by")
+    await select.selectOption("5")
+    eq(await options(), "3,5,8", "the offered sizes return once another is picked")
+  })
+
+  await test("a forced-colors focus rule names the pager select and matches it", async () => {
+    const select = page.locator('[data-pg="dt-pager"] select')
+    // A generic :focus-visible rule and .native-select:focus-visible paint the
+    // same outline, so the computed outline cannot tell whether the
+    // data-table selector matches. Read the rules instead.
+    const result = await select.evaluate((el) => {
+      const hits = []
+      const walk = (rules, inForcedColors) => {
+        for (const rule of rules) {
+          if (rule.cssRules && rule.media) {
+            walk(rule.cssRules, inForcedColors || rule.media.mediaText.includes("forced-colors"))
+          } else if (rule.selectorText && inForcedColors) {
+            for (const sel of rule.selectorText.split(",").map((x) => x.trim())) {
+              if (sel.includes(".data-table-page-size") && el.matches(sel.replace(/:focus-visible$/, ""))) {
+                hits.push(sel)
+              }
+            }
+          }
+        }
+      }
+      for (const sheet of document.styleSheets) {
+        try { walk(sheet.cssRules, false) } catch { /* cross-origin sheet */ }
+      }
+      return { hits, direct: el.matches(".data-table-page-size > select") }
+    })
+    eq(result.direct, false, "the select is not a direct child of .data-table-page-size")
+    eq(result.hits.length > 0, true, `a forced-colors focus selector reaches the nested select, got ${JSON.stringify(result.hits)}`)
+  })
+
+  await test("pager arrows flip under dir=rtl and not under ltr", async () => {
+    const pager = page.locator('[data-pg="dt-demo-pager"]')
+    const scale = () =>
+      pager
+        .getByLabel("Next page")
+        .locator("svg")
+        .evaluate((el) => getComputedStyle(el).scale)
+    eq(await scale(), "none", "ltr arrows are not mirrored")
+    await page.evaluate(() => document.documentElement.setAttribute("dir", "rtl"))
+    try {
+      eq(await scale(), "-1 1", "rtl arrows are mirrored")
+    } finally {
+      await page.evaluate(() => document.documentElement.removeAttribute("dir"))
+    }
+  })
+
+  await test("first/last buttons jump to the ends and disable there", async () => {
+    const pager = page.locator('[data-pg="dt-demo-pager"]')
+    const info = () => pager.locator(".data-table-page-info").textContent()
+    await pager.waitFor()
+    const total = Number((await info()).match(/of (\d+)/)[1])
+    eq(await pager.getByLabel("First page").isDisabled(), true, "first disabled on page 1")
+    eq(await pager.getByLabel("Last page").isDisabled(), false, "last enabled on page 1")
+    await pager.getByLabel("Last page").click()
+    eq(await info(), `Page ${total} of ${total}`, "last jumps to the final page")
+    eq(await pager.getByLabel("Last page").isDisabled(), true, "last disabled at the end")
+    eq(await pager.getByLabel("Next page").isDisabled(), true, "next disabled at the end")
+    await pager.getByLabel("First page").click()
+    eq(await info(), `Page 1 of ${total}`, "first returns to page 1")
   })
 
   // ── Row actions ────────────────────────────────────────────────────
@@ -1182,7 +1294,7 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     ".table-body .table-row:not(.data-table-group-row)"
   )
   const groupedPageInfo = () =>
-    page.locator('[data-pg="dt-grouped-page-info"]').textContent()
+    page.locator('[data-pg="dt-grouped-pager"] .data-table-page-info').textContent()
 
   await test("grouping produces collapsed group rows in value order", async () => {
     await dtGrouped.waitFor()
@@ -1315,24 +1427,24 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
 
   await test("pagination applies to the flattened result", async () => {
     // All expanded from the previous test: 24 flattened rows
-    await page.locator('[data-pg="dt-grouped-page-size"]').selectOption("10")
+    await page.locator('[data-pg="dt-grouped-pager"] select').selectOption("10")
     await page.waitForTimeout(50)
     eq(await groupedPageInfo(), "Page 1 of 3", "24 flattened rows = 3 pages of 10")
     eq(await dtGrouped.locator(".table-body .table-row").count(), 10, "page 1 has 10 rows")
 
-    await page.locator('[data-pg="dt-grouped-next"]').click()
-    await page.locator('[data-pg="dt-grouped-next"]').click()
+    await page.locator('[data-pg="dt-grouped-pager"] [aria-label="Next page"]').click()
+    await page.locator('[data-pg="dt-grouped-pager"] [aria-label="Next page"]').click()
     await page.waitForTimeout(50)
     eq(await groupedPageInfo(), "Page 3 of 3", "on last page")
     eq(await dtGrouped.locator(".table-body .table-row").count(), 4, "last page has 4 rows")
     eq(
-      await page.locator('[data-pg="dt-grouped-next"]').isDisabled(),
+      await page.locator('[data-pg="dt-grouped-pager"] [aria-label="Next page"]').isDisabled(),
       true,
       "next disabled on last page"
     )
 
     // Restore: one page again, everything collapsed
-    await page.locator('[data-pg="dt-grouped-page-size"]').selectOption("30")
+    await page.locator('[data-pg="dt-grouped-pager"] select').selectOption("30")
     await page.waitForTimeout(50)
     await page.locator('[data-pg="dt-grouped-expand-all"]').click()
     await page.waitForTimeout(50)
@@ -1381,7 +1493,7 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
 
   const dtServer = page.locator('[data-pg="dt-server"]')
   const serverPageInfo = () =>
-    page.locator('[data-pg="dt-server-page-info"]').textContent()
+    page.locator('[data-pg="dt-server-pager"] .data-table-page-info').textContent()
   const serverIdle = () =>
     page.waitForSelector('[data-pg="dt-server-status"][data-loading="false"]')
   const serverOrders = () =>
@@ -1396,8 +1508,15 @@ export default async function run({ page, baseUrl, repoRoot, test, eq }) {
     eq((await serverOrders()).join(","), "1,2,3,4,5,6,7,8,9,10", "first server page")
   })
 
+  await test("manual pager hides the select when no sizes are offered and gates prev on page 1", async () => {
+    const pager = page.locator('[data-pg="dt-server-pager"]')
+    eq(await pager.locator("select").count(), 0, "no page-size select")
+    eq(await pager.getByLabel("Previous page").isDisabled(), true, "prev disabled on page 1")
+    eq(await pager.getByLabel("Next page").isDisabled(), false, "next enabled with 49 more pages")
+  })
+
   await test("page change triggers a server re-fetch", async () => {
-    await page.locator('[data-pg="dt-server-next"]').click()
+    await page.locator('[data-pg="dt-server-pager"] [aria-label="Next page"]').click()
     await page.waitForSelector('[data-pg="dt-server-status"][data-loading="true"]')
     await serverIdle()
     eq(await serverPageInfo(), "Page 2 of 50", "moved to page 2")

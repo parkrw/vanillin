@@ -14,6 +14,7 @@ import {
 import { Badge } from "../badge/badge.jsx"
 import { Separator } from "../separator/separator.jsx"
 import { Button } from "../button/button.jsx"
+import { NativeSelect, NativeSelectOption } from "../native-select/native-select.jsx"
 import { ScrollArea, ScrollBar } from "../scroll-area/scroll-area.jsx"
 import { useHighlight } from "../../lib/use-highlight.js"
 
@@ -409,5 +410,141 @@ export function DataTableColumnResizer({ column, ...props }) {
       onKeyDown={onKeyDown}
       {...props}
     />
+  )
+}
+
+// ── Pagination footer ───────────────────────────────────────────────
+
+function ChevronsLeft() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m11 17-5-5 5-5" />
+      <path d="m18 17-5-5 5-5" />
+    </svg>
+  )
+}
+
+function ChevronLeft() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m15 18-6-6 6-6" />
+    </svg>
+  )
+}
+
+function ChevronsRight() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m6 17 5-5-5-5" />
+      <path d="m13 17 5-5-5-5" />
+    </svg>
+  )
+}
+
+// Slots a value into an ascending list without reordering what the caller gave.
+function insertBeforeLarger(list, value) {
+  const at = list.findIndex((n) => n > value)
+  return at === -1 ? [...list, value] : [...list.slice(0, at), value, ...list.slice(at)]
+}
+
+/**
+ * Pager bound to a `useDataTable` instance: rows-per-page select, `Page X of Y`
+ * and previous/next buttons gated on the table's own getters. Works unchanged
+ * under `manualPagination`, where the page count comes from `pageCount` or `rowCount`.
+ * `children` fills the leading slot (selection count, loading status).
+ * An empty `pageSizeOptions` hides the select. `showFirstLast` adds jump-to-first and jump-to-last buttons.
+ */
+export function DataTablePagination({
+  table,
+  pageSizeOptions = [10, 20, 30, 40, 50],
+  showFirstLast = false,
+  className,
+  children,
+  ...props
+}) {
+  const { pageIndex, pageSize } = table.getState().pagination
+  // The current size is always listed, or the select would show a size the
+  // table is not using. A starting size the consumer wants to stay reachable
+  // belongs in pageSizeOptions.
+  const sizes = pageSizeOptions.includes(pageSize)
+    ? pageSizeOptions
+    : insertBeforeLarger(pageSizeOptions, pageSize)
+  const canPrevious = table.getCanPreviousPage()
+  const canNext = table.getCanNextPage()
+
+  return (
+    <div className={cn("data-table-pagination", className)} {...props}>
+      {children != null && (
+        <div className="data-table-selection-count">{children}</div>
+      )}
+      <div className="data-table-page-controls">
+        {pageSizeOptions.length > 0 && (
+          <div className="data-table-page-size">
+            <label>
+              <span>Rows per page</span>
+              <NativeSelect
+                value={pageSize}
+                onChange={(e) => table.setPageSize(Number(e.target.value))}
+              >
+                {sizes.map((size) => (
+                  <NativeSelectOption key={size} value={size}>
+                    {size}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </label>
+          </div>
+        )}
+        <div className="data-table-page-info" aria-live="polite">
+          Page {pageIndex + 1} of {table.getPageCount()}
+        </div>
+        <div className="data-table-page-nav">
+          {showFirstLast && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="btn--sm"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!canPrevious}
+              aria-label="First page"
+            >
+              <ChevronsLeft />
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="icon"
+            className="btn--sm"
+            onClick={() => table.previousPage()}
+            disabled={!canPrevious}
+            aria-label="Previous page"
+          >
+            <ChevronLeft />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="btn--sm"
+            onClick={() => table.nextPage()}
+            disabled={!canNext}
+            aria-label="Next page"
+          >
+            <ChevronRightIcon />
+          </Button>
+          {showFirstLast && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="btn--sm"
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!canNext}
+              aria-label="Last page"
+            >
+              <ChevronsRight />
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
