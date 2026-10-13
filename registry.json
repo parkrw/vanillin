@@ -173,109 +173,21 @@
     "chart": {
       "type": "ui",
       "files": [
+        "boxplot.jsx",
+        "candlestick.jsx",
         "chart.css",
-        "chart.jsx"
+        "chart.jsx",
+        "funnel.jsx",
+        "gauge.jsx",
+        "heatmap.jsx",
+        "sankey.jsx",
+        "treemap.jsx"
       ],
       "requires": [],
       "lib": [
         "chart-math.js",
-        "cn.js"
-      ]
-    },
-    "chart-boxplot": {
-      "type": "ui",
-      "files": [
-        "chart-boxplot.css",
-        "chart-boxplot.jsx"
-      ],
-      "requires": [
-        "chart"
-      ],
-      "lib": [
-        "chart-math.js",
-        "chart-stats.js",
-        "cn.js"
-      ]
-    },
-    "chart-candlestick": {
-      "type": "ui",
-      "files": [
-        "chart-candlestick.css",
-        "chart-candlestick.jsx"
-      ],
-      "requires": [
-        "chart"
-      ],
-      "lib": [
-        "chart-math.js",
-        "cn.js"
-      ]
-    },
-    "chart-funnel": {
-      "type": "ui",
-      "files": [
-        "chart-funnel.css",
-        "chart-funnel.jsx"
-      ],
-      "requires": [
-        "chart"
-      ],
-      "lib": [
-        "cn.js"
-      ]
-    },
-    "chart-gauge": {
-      "type": "ui",
-      "files": [
-        "chart-gauge.css",
-        "chart-gauge.jsx"
-      ],
-      "requires": [
-        "chart"
-      ],
-      "lib": [
-        "chart-math.js",
-        "cn.js"
-      ]
-    },
-    "chart-heatmap": {
-      "type": "ui",
-      "files": [
-        "chart-heatmap.css",
-        "chart-heatmap.jsx"
-      ],
-      "requires": [
-        "chart"
-      ],
-      "lib": [
-        "chart-math.js",
-        "cn.js"
-      ]
-    },
-    "chart-sankey": {
-      "type": "ui",
-      "files": [
-        "chart-sankey.css",
-        "chart-sankey.jsx"
-      ],
-      "requires": [
-        "chart"
-      ],
-      "lib": [
         "chart-sankey.js",
-        "cn.js"
-      ]
-    },
-    "chart-treemap": {
-      "type": "ui",
-      "files": [
-        "chart-treemap.css",
-        "chart-treemap.jsx"
-      ],
-      "requires": [
-        "chart"
-      ],
-      "lib": [
+        "chart-stats.js",
         "chart-treemap.js",
         "cn.js"
       ]

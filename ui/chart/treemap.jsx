@@ -10,7 +10,7 @@ import {
   useActiveIndex,
   useChart,
   useElementSize,
-} from "../chart/chart.jsx"
+} from "./chart.jsx"
 
 /*
  * Nested groups as tiles on the squarified layout in lib/chart-treemap.js. The

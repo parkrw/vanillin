@@ -11,7 +11,7 @@ import {
   useActiveIndex,
   useChart,
   useElementSize,
-} from "../chart/chart.jsx"
+} from "./chart.jsx"
 
 /*
  * One box per datum on the Chart shell: a datum carries raw samples under

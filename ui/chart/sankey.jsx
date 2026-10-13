@@ -10,7 +10,7 @@ import {
   useActiveIndex,
   useChart,
   useElementSize,
-} from "../chart/chart.jsx"
+} from "./chart.jsx"
 
 /*
  * Nodes and weighted links on the Chart shell, laid out by lib/chart-sankey.js.

@@ -10,7 +10,7 @@ import {
   useActiveIndex,
   useChart,
   useElementSize,
-} from "../chart/chart.jsx"
+} from "./chart.jsx"
 
 /*
  * One candle or OHLC mark per datum on the Chart shell, with an optional

@@ -3029,10 +3029,10 @@ export function ChartDataTable({ open = false, caption = "Chart data", formatter
 ChartDataTable.chartRole = "datatable"
 
 /*
- * What a sibling family root (ui/chart-<family>) imports to reuse the shell,
- * the tooltip host and the keyboard layer. Listed apart from the declarations
- * so the props-rest conformance rule, which reads `export function X({`, does
- * not mistake a hook for a component.
+ * What a family file beside this one (funnel.jsx, sankey.jsx, …) imports to
+ * reuse the shell, the tooltip host and the keyboard layer. Listed apart from
+ * the declarations so the props-rest conformance rule, which reads
+ * `export function X({`, does not mistake a hook for a component.
  */
 export {
   useChart,
@@ -3044,3 +3044,17 @@ export {
   ActiveIndexContext,
   PointerContext,
 }
+
+/*
+ * The families, so one import covers every chart. Each imports the seam above
+ * from this file, a cycle ES modules resolve: the seam is function
+ * declarations, hoisted before either file evaluates, and the contexts are
+ * read in render, never at load.
+ */
+export { BoxPlot } from "./boxplot.jsx"
+export { CandlestickChart, CandlestickVolume } from "./candlestick.jsx"
+export { FunnelChart } from "./funnel.jsx"
+export { BulletChart, GaugeChart } from "./gauge.jsx"
+export { CalendarHeatmap, HeatmapChart, HeatmapLegend } from "./heatmap.jsx"
+export { SankeyChart } from "./sankey.jsx"
+export { TreemapChart, TreemapLegend } from "./treemap.jsx"

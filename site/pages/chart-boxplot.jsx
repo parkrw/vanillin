@@ -1,7 +1,5 @@
-import { ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent } from "../../ui/chart/chart.jsx"
-import { BoxPlot } from "../../ui/chart-boxplot/chart-boxplot.jsx"
+import { BoxPlot, ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent } from "../../ui/chart/chart.jsx"
 import "../../ui/chart/chart.css"
-import "../../ui/chart-boxplot/chart-boxplot.css"
 import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
@@ -56,7 +54,7 @@ export default function ChartBoxPlotPage() {
         on any chart.
       </p>
 
-      <InstallSnippet slug="chart-boxplot" />
+      <InstallSnippet slug="chart" />
 
       <section className="pg-section">
         <h3>Default</h3>

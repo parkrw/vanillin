@@ -12,7 +12,7 @@
  */
 
 import assert from "node:assert/strict"
-import { readdirSync, readFileSync, existsSync } from "node:fs"
+import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -43,8 +43,11 @@ function rangeFloor(range) {
 function jsxFiles() {
   return readdirSync(join(repoRoot, "ui"), { withFileTypes: true })
     .filter((d) => d.isDirectory())
-    .map((d) => [d.name, join(repoRoot, "ui", d.name, `${d.name}.jsx`)])
-    .filter(([, path]) => existsSync(path))
+    .flatMap((d) =>
+      readdirSync(join(repoRoot, "ui", d.name))
+        .filter((f) => f.endsWith(".jsx"))
+        .map((f) => [`${d.name}/${f}`, join(repoRoot, "ui", d.name, f)]),
+    )
 }
 
 // ── React ───────────────────────────────────────────────────────────
@@ -60,10 +63,10 @@ const REACT_19_ONLY = [
 
 test("the React 19 coupling is real, and peerDependencies excludes 18", () => {
   const coupled = []
-  for (const [slug, path] of jsxFiles()) {
+  for (const [file, path] of jsxFiles()) {
     const src = readFileSync(path, "utf8")
     for (const [pattern, why] of REACT_19_ONLY) {
-      if (pattern.test(src)) coupled.push(`ui/${slug} ${why}`)
+      if (pattern.test(src)) coupled.push(`ui/${file} ${why}`)
     }
   }
   // Precondition. Without this the range check below would pass on a kit that

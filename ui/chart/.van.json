@@ -4,7 +4,14 @@
   "source": "github:parkrw/vanillin@v0.1.0",
   "requires": [],
   "files": {
-    "chart.css": "sha256-f6pz753xQViJxxxZAqloksD5tm89S8kqWiGXFh1/TDM=",
-    "chart.jsx": "sha256-hmYMdOT6bMtymc/IXADn46+2GcCv8hSXqAxJAdFm9Cg="
+    "boxplot.jsx": "sha256-C3ULapp9WvKkijMbqElVt7ToOwD83qNJUAFxKxEqAwM=",
+    "candlestick.jsx": "sha256-9W7yim6dl0dRiFbIeFAYawmefEjjlmiv7G0g8oB/N4Y=",
+    "chart.css": "sha256-IgLCvo96Gb1iCPQq3gLLGhXhf63c+HARwJv8x39VJ2Y=",
+    "chart.jsx": "sha256-B2ul/Yy4jJNv1EDqTAovMQYvx+NqrTqc78r379+gDxs=",
+    "funnel.jsx": "sha256-Y/GRiXLxrSPdDJotqWctiprQ88lZ9jVFxpTPoYpBZZI=",
+    "gauge.jsx": "sha256-PDMQG06diQQIl1SHjZBsQl3XJx0g/nsAu0Lzg/uRrwI=",
+    "heatmap.jsx": "sha256-cFwM6ri0U0z1BvfZxP4aemYVk9ruv02c14vQKipXH14=",
+    "sankey.jsx": "sha256-N8Qtl9o1sAa7CeIJls08mjgDCmDRlGBWwSG9yl20UCk=",
+    "treemap.jsx": "sha256-KWgByDVuQ9Qm3d+fV6FG7pFF04hyQO/IJE6itliMLIs="
   }
 }

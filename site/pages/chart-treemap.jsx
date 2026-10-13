@@ -1,7 +1,5 @@
-import { ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent } from "../../ui/chart/chart.jsx"
-import { TreemapChart } from "../../ui/chart-treemap/chart-treemap.jsx"
+import { ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent, TreemapChart } from "../../ui/chart/chart.jsx"
 import "../../ui/chart/chart.css"
-import "../../ui/chart-treemap/chart-treemap.css"
 import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
@@ -53,7 +51,7 @@ export default function ChartTreemapPage() {
         keyboard and <code>syncId</code> work as they do on any chart.
       </p>
 
-      <InstallSnippet slug="chart-treemap" />
+      <InstallSnippet slug="chart" />
 
       <section className="pg-section">
         <h3>Default</h3>

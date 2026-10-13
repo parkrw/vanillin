@@ -10,7 +10,7 @@ import {
   useActiveIndex,
   useChart,
   useElementSize,
-} from "../chart/chart.jsx"
+} from "./chart.jsx"
 
 /*
  * Two roots over one grid: HeatmapChart (a band of x by a band of y) and

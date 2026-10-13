@@ -1,7 +1,5 @@
-import { ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent } from "../../ui/chart/chart.jsx"
-import { FunnelChart } from "../../ui/chart-funnel/chart-funnel.jsx"
+import { ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent, FunnelChart } from "../../ui/chart/chart.jsx"
 import "../../ui/chart/chart.css"
-import "../../ui/chart-funnel/chart-funnel.css"
 import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
@@ -63,7 +61,7 @@ export default function ChartFunnelPage() {
         stage before it and of the first stage it holds. It sits inside the Chart shell.
       </p>
 
-      <InstallSnippet slug="chart-funnel" />
+      <InstallSnippet slug="chart" />
 
       <section className="pg-section">
         <h3>Stages</h3>

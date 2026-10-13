@@ -124,7 +124,7 @@ npm test      # smoke tests (needs Google Chrome installed)
 
 | Path | What it is |
 |---|---|
-| `ui/<slug>/` | One component: `<slug>.jsx` + `<slug>.css` |
+| `ui/<slug>/` | One component: `<slug>.jsx` + `<slug>.css`; a family of roots adds sibling files (`ui/chart`) |
 | `lib/` | Shared primitives (`cn`, `useControllableState`, `usePresence`, focus/positioning helpers) |
 | `styles/globals.css` | All design tokens, light + dark |
 | `styles/typeset.css` | The `.typeset` prose system — rhythm and element styling for markdown-shaped content |
