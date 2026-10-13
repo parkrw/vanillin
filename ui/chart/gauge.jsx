@@ -1,7 +1,7 @@
 import { useId, useRef } from "react"
 import { cn } from "../../lib/cn.js"
 import { arcPath, linearScale, niceTicks, polarToCartesian } from "../../lib/chart-math.js"
-import { useChart, useElementSize } from "../chart/chart.jsx"
+import { useChart, useElementSize } from "./chart.jsx"
 
 /*
  * Two single-value roots on the Chart shell: BulletChart (a measure bar, a

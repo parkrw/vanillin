@@ -357,3 +357,586 @@ button.chart-legend-item {
     outline: 2px solid Highlight;
   }
 }
+
+/* ── Box plot ────────────────────────────────────────────────────── */
+
+/* Shell, axis text, grid and tooltip are the shared rules above. The box takes its
+ * colour from the config entry `box` (--color-box), the chart's first palette
+ * colour otherwise; the median is the strong foreground. */
+.chart-boxplot {
+  --boxplot-color: var(--color-box, var(--chart-1));
+}
+
+/* The plot does not mirror in RTL, so its labels must not either: an inherited
+ * rtl flips text-anchor="end" and lays the labels over the plot instead of
+ * beside it. */
+.chart-boxplot .chart-surface {
+  direction: ltr;
+}
+
+.chart-boxplot-box {
+  fill: color-mix(in oklab, var(--boxplot-color) 22%, var(--background));
+  stroke: var(--boxplot-color);
+  stroke-width: 1.5;
+}
+
+.chart-boxplot-whisker,
+.chart-boxplot-cap {
+  stroke: var(--boxplot-color);
+  stroke-width: 1.5;
+}
+
+.chart-boxplot-median {
+  stroke: var(--foreground);
+  stroke-width: 2;
+}
+
+.chart-boxplot-outlier {
+  fill: var(--background);
+  stroke: var(--boxplot-color);
+  stroke-width: 1.5;
+}
+
+.chart-boxplot-box-group[data-active] .chart-boxplot-box {
+  stroke: var(--foreground);
+  stroke-width: 2;
+}
+
+/* The outline is the datum: keep it in the text colour so every box has an edge. */
+@media (forced-colors: active) {
+  .chart-boxplot-box,
+  .chart-boxplot-whisker,
+  .chart-boxplot-cap,
+  .chart-boxplot-median,
+  .chart-boxplot-outlier {
+    forced-color-adjust: none;
+    stroke: CanvasText;
+  }
+
+  /* The page theme's background mixed into the fill is not the forced canvas, so the median could vanish inside it. */
+  .chart-boxplot-box,
+  .chart-boxplot-outlier {
+    fill: Canvas;
+  }
+
+  .chart-boxplot-box-group[data-active] .chart-boxplot-box {
+    stroke: Highlight;
+  }
+}
+
+/* ── Candlestick ─────────────────────────────────────────────────── */
+
+/* Shell, axis text, grid and tooltip are the shared rules above. Up and down take the
+ * config entries `up` and `down` (--color-up, --color-down), the chart's second
+ * and first palette colours otherwise. Direction is not carried by hue alone:
+ * a rising body is a tint of its colour, a falling one is solid. */
+.chart-candlestick {
+  --candle-up: var(--color-up, var(--chart-2));
+  --candle-down: var(--color-down, var(--chart-1));
+  --candle-flat: var(--foreground);
+}
+
+/* The plot does not mirror in RTL, so its labels must not either. */
+.chart-candlestick .chart-surface {
+  direction: ltr;
+}
+
+.chart-candlestick-mark[data-direction="up"],
+.chart-candlestick-volume-bar[data-direction="up"] {
+  --mark: var(--candle-up);
+}
+
+.chart-candlestick-mark[data-direction="down"],
+.chart-candlestick-volume-bar[data-direction="down"] {
+  --mark: var(--candle-down);
+}
+
+.chart-candlestick-mark[data-direction="flat"],
+.chart-candlestick-volume-bar[data-direction="flat"] {
+  --mark: var(--candle-flat);
+}
+
+.chart-candlestick-wick,
+.chart-candlestick-open,
+.chart-candlestick-close {
+  stroke: var(--mark);
+  stroke-width: 1.5;
+}
+
+.chart-candlestick-body {
+  fill: color-mix(in oklab, var(--mark) 22%, var(--background));
+  stroke: var(--mark);
+  stroke-width: 1.5;
+}
+
+.chart-candlestick-mark[data-direction="down"] .chart-candlestick-body {
+  fill: var(--mark);
+}
+
+.chart-candlestick-volume-bar {
+  fill: var(--mark);
+}
+
+.chart-candlestick-baseline {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+/* A flat row is already drawn in --foreground, so weight, not colour, marks it active. */
+.chart-candlestick-mark[data-active] .chart-candlestick-body,
+.chart-candlestick-mark[data-active] .chart-candlestick-wick,
+.chart-candlestick-mark[data-active] .chart-candlestick-open,
+.chart-candlestick-mark[data-active] .chart-candlestick-close {
+  stroke: var(--foreground);
+  stroke-width: 3;
+}
+
+.chart-candlestick-volume-bar[data-active] {
+  stroke: var(--foreground);
+  stroke-width: 1.5;
+}
+
+/* A flat bar is already filled with --foreground, so the active one goes hollow. */
+.chart-candlestick-volume-bar[data-active][data-direction="flat"] {
+  fill: color-mix(in oklab, var(--mark) 22%, var(--background));
+  stroke-width: 2;
+}
+
+@media (forced-colors: active) {
+  .chart-candlestick-wick,
+  .chart-candlestick-open,
+  .chart-candlestick-close,
+  .chart-candlestick-body,
+  .chart-candlestick-volume-bar {
+    forced-color-adjust: none;
+    stroke: CanvasText;
+  }
+
+  .chart-candlestick-body {
+    fill: Canvas;
+  }
+
+  .chart-candlestick-mark[data-direction="down"] .chart-candlestick-body,
+  .chart-candlestick-volume-bar {
+    fill: CanvasText;
+  }
+
+  .chart-candlestick-volume-bar[data-active][data-direction="flat"] {
+    fill: Canvas;
+  }
+
+  .chart-candlestick-mark[data-active] .chart-candlestick-body,
+  .chart-candlestick-mark[data-active] .chart-candlestick-wick,
+  .chart-candlestick-mark[data-active] .chart-candlestick-open,
+  .chart-candlestick-mark[data-active] .chart-candlestick-close,
+  .chart-candlestick-volume-bar[data-active] {
+    stroke: Highlight;
+  }
+}
+
+/* ── Funnel ──────────────────────────────────────────────────────── */
+
+/* Shell, layout box and tooltip are the shared rules above. The stages take their
+ * colour from the config entry `funnel` (--color-funnel), the chart's first
+ * palette colour otherwise. */
+.chart-funnel {
+  --funnel-color: var(--color-funnel, var(--chart-1));
+}
+
+/* The plot does not mirror in RTL, so its labels must not either. */
+.chart-funnel .chart-surface {
+  direction: ltr;
+}
+
+.chart-funnel-stage {
+  fill: var(--funnel-color);
+  stroke: none;
+}
+
+.chart-funnel-stage-group[data-active] .chart-funnel-stage {
+  stroke: var(--foreground);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.chart-funnel-placeholder {
+  fill: none;
+  stroke: var(--foreground);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+
+.chart-funnel-label {
+  fill: var(--foreground);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-funnel-rate {
+  fill: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The fill is the datum: keep it and give each stage an edge. */
+@media (forced-colors: active) {
+  .chart-funnel-stage {
+    forced-color-adjust: none;
+    stroke: CanvasText;
+    stroke-width: 1;
+  }
+
+  .chart-funnel-stage-group[data-active] .chart-funnel-stage,
+  .chart-funnel-placeholder {
+    forced-color-adjust: none;
+    stroke: Highlight;
+    stroke-width: 2;
+  }
+}
+
+/* ── Gauge ───────────────────────────────────────────────────────── */
+
+/* Shell, axis text and the layout box are the shared rules above. The band fills are
+ * set inline from the band (graded neutrals unless the consumer names a
+ * colour); the measure defaults to a strong foreground, the fill and needle
+ * to tokens below. */
+.chart-gauge {
+  gap: var(--space-1-5);
+}
+
+.chart-gauge-measure {
+  fill: var(--color-measure, var(--foreground));
+}
+
+/* The target tick stands proud of the measure bar, and the page-coloured edge
+ * keeps it readable where it crosses the measure. */
+.chart-gauge-target {
+  fill: var(--foreground);
+  stroke: var(--background);
+  stroke-width: 1;
+}
+
+/* Neighbouring neutral bands are only ~1.35:1 apart, so each boundary is drawn in the foreground, which clears 3:1 against both bands and the page. */
+.chart-gauge-boundary {
+  stroke: var(--foreground);
+  stroke-width: 1.5;
+}
+
+.chart-gauge-track {
+  fill: var(--muted);
+}
+
+.chart-gauge-fill {
+  fill: var(--color-measure, var(--chart-1));
+}
+
+.chart-gauge-divider {
+  stroke: var(--background);
+  stroke-width: 2;
+}
+
+.chart-gauge-needle {
+  stroke: var(--foreground);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.chart-gauge-hub {
+  fill: var(--foreground);
+}
+
+.chart-gauge-readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.chart-gauge-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-gauge-band-label,
+.chart-gauge-label {
+  color: var(--muted-foreground);
+}
+
+/* The fill is the datum: keep it and give each mark an edge. */
+@media (forced-colors: active) {
+  .chart-gauge-band,
+  .chart-gauge-measure,
+  .chart-gauge-fill,
+  .chart-gauge-track {
+    forced-color-adjust: none;
+    stroke: CanvasText;
+    stroke-width: 1;
+  }
+
+  .chart-gauge-boundary {
+    stroke: CanvasText;
+  }
+
+  .chart-gauge-target,
+  .chart-gauge-needle,
+  .chart-gauge-hub {
+    forced-color-adjust: none;
+    fill: CanvasText;
+    stroke: CanvasText;
+  }
+}
+
+/* ── Heatmap ─────────────────────────────────────────────────────── */
+
+/* Shell, axes, tooltip and legend rows are the shared rules above; only the grid
+ * cells and the stepped legend are drawn here. */
+.chart-heatmap {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The grid does not mirror in RTL, so its labels must not either: an
+ * inherited rtl flips text-anchor="end" and lays the row labels over the
+ * first column. */
+.chart-heatmap .chart-surface {
+  direction: ltr;
+}
+
+.chart-heatmap-cell {
+  stroke: none;
+  rx: 2px;
+}
+
+/* A day or cell with no reading is an outline, distinct from a reading at the
+ * low end of the scale. */
+.chart-heatmap-cell[data-empty] {
+  fill: transparent;
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.chart-heatmap-cell[data-active] {
+  stroke: var(--foreground);
+  stroke-width: 2;
+}
+
+.chart-heatmap-legend {
+  gap: var(--space-2);
+}
+
+.chart-heatmap-legend-steps {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.chart-heatmap-legend-step {
+  inline-size: 1rem;
+  block-size: 0.75rem;
+  border-radius: 2px;
+}
+
+.chart-heatmap-legend-label {
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The scale is the datum: keep each cell's fill and give it an edge. */
+@media (forced-colors: active) {
+  .chart-heatmap-cell,
+  .chart-heatmap-legend-step {
+    forced-color-adjust: none;
+  }
+
+  .chart-heatmap-cell:not([data-empty]) {
+    stroke: CanvasText;
+    stroke-width: 1;
+  }
+
+  .chart-heatmap-cell[data-active] {
+    stroke: Highlight;
+    stroke-width: 2;
+  }
+}
+
+/* ── Sankey ──────────────────────────────────────────────────────── */
+
+/* Shell, label text and tooltip are the shared rules above. A node takes its colour
+ * from the config entry named by its id (--color-<id>), else the chart palette
+ * by position; a band takes its source node's colour, or its target's, or runs
+ * a gradient between the two. */
+.chart-sankey .chart-surface {
+  direction: ltr;
+}
+
+.chart-sankey-node {
+  fill: var(--sankey-color);
+}
+
+.chart-sankey-node[data-current] {
+  stroke: var(--foreground);
+  stroke-width: 2;
+}
+
+.chart-sankey-node[data-linked] {
+  stroke: var(--foreground);
+  stroke-width: 1;
+}
+
+.chart-sankey-link {
+  fill: none;
+  stroke: var(--sankey-color);
+  stroke-opacity: 0.35;
+  transition: stroke-opacity var(--motion-fast) var(--motion-ease);
+}
+
+.chart-sankey-links[data-emphasis] .chart-sankey-link {
+  stroke-opacity: 0.1;
+}
+
+.chart-sankey-links[data-emphasis] .chart-sankey-link[data-active] {
+  stroke-opacity: 0.65;
+}
+
+/* The tint alone is under 3:1 on the page, so each band's top and bottom edge is drawn at full strength in the same colour and never fades with the rest. */
+.chart-sankey-edge {
+  fill: none;
+  stroke: var(--sankey-color);
+  stroke-width: 1;
+}
+
+/* Keeps the current band findable when its fill is a pale tint. */
+.chart-sankey-link-ring {
+  fill: none;
+  stroke: var(--foreground);
+  stroke-opacity: 0.9;
+}
+
+.chart-sankey-label {
+  paint-order: stroke;
+  stroke: var(--background);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+@media (forced-colors: active) {
+  .chart-sankey-node,
+  .chart-sankey-link,
+  .chart-sankey-edge,
+  .chart-sankey-link-ring {
+    forced-color-adjust: none;
+  }
+
+  .chart-sankey-node {
+    fill: CanvasText;
+  }
+
+  .chart-sankey-node[data-current],
+  .chart-sankey-node[data-linked] {
+    stroke: Highlight;
+  }
+
+  .chart-sankey-link {
+    stroke: CanvasText !important;
+    stroke-opacity: 0.3;
+  }
+
+  .chart-sankey-links[data-emphasis] .chart-sankey-link[data-active] {
+    stroke: Highlight !important;
+    stroke-opacity: 0.6;
+  }
+
+  .chart-sankey-edge {
+    stroke: CanvasText !important;
+  }
+
+  .chart-sankey-edge[data-active] {
+    stroke: Highlight !important;
+  }
+
+  .chart-sankey-link-ring {
+    stroke: Highlight;
+  }
+
+  .chart-sankey-label {
+    stroke: Canvas;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-sankey-link {
+    transition: none;
+  }
+}
+
+/* ── Treemap ─────────────────────────────────────────────────────── */
+
+/* Shell, tooltip and legend rows are the shared rules above; only the tiles, their
+ * labels and the value ramp are drawn here. Fill and edge are set inline from
+ * the tile (a tint of its group's palette colour, or a step on the value
+ * scale), because they depend on the data. */
+.chart-treemap {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The tiles do not mirror in RTL, so their labels must not either. */
+.chart-treemap .chart-surface {
+  direction: ltr;
+}
+
+.chart-treemap-tile {
+  stroke-width: 1;
+}
+
+.chart-treemap-label {
+  fill: var(--foreground);
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+
+.chart-treemap-label[data-part="name"] {
+  font-weight: 500;
+}
+
+.chart-treemap-active {
+  fill: none;
+  stroke: var(--foreground);
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.chart-treemap-legend {
+  gap: var(--space-2);
+}
+
+.chart-treemap-legend-ramp {
+  inline-size: 6rem;
+  block-size: 0.75rem;
+  border-radius: 2px;
+}
+
+.chart-treemap-legend-label {
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The tint is mixed from the page's own theme, not the forced canvas, so a label could vanish on it:
+ * tiles take Canvas and an edge. Colour stays in the legend and tooltip as the group's name and the value. */
+@media (forced-colors: active) {
+  .chart-treemap-tile {
+    forced-color-adjust: none;
+    fill: Canvas !important;
+    stroke: CanvasText !important;
+  }
+
+  .chart-treemap-active {
+    stroke: Highlight;
+  }
+
+  .chart-treemap-legend-ramp {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+}

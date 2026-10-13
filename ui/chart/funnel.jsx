@@ -9,7 +9,7 @@ import {
   useActiveIndex,
   useChart,
   useElementSize,
-} from "../chart/chart.jsx"
+} from "./chart.jsx"
 
 /*
  * Stages stacked top to bottom on the Chart shell, each a trapezoid centred on

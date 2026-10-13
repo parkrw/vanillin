@@ -1,7 +1,5 @@
-import { ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent } from "../../ui/chart/chart.jsx"
-import { CandlestickChart, CandlestickVolume } from "../../ui/chart-candlestick/chart-candlestick.jsx"
+import { CandlestickChart, CandlestickVolume, ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent } from "../../ui/chart/chart.jsx"
 import "../../ui/chart/chart.css"
-import "../../ui/chart-candlestick/chart-candlestick.css"
 import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
@@ -59,7 +57,7 @@ export default function ChartCandlestickPage() {
         Chart shell, so the tooltip, the keyboard and <code>syncId</code> work as they do on any chart.
       </p>
 
-      <InstallSnippet slug="chart-candlestick" />
+      <InstallSnippet slug="chart" />
 
       <section className="pg-section">
         <h3>Default</h3>

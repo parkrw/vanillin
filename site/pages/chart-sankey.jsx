@@ -1,7 +1,5 @@
-import { ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent } from "../../ui/chart/chart.jsx"
-import { SankeyChart } from "../../ui/chart-sankey/chart-sankey.jsx"
+import { ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent, SankeyChart } from "../../ui/chart/chart.jsx"
 import "../../ui/chart/chart.css"
-import "../../ui/chart-sankey/chart-sankey.css"
 import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
@@ -78,7 +76,7 @@ export default function ChartSankeyPage() {
         shell, so the tooltip, the keyboard and <code>syncId</code> work as they do on any chart.
       </p>
 
-      <InstallSnippet slug="chart-sankey" />
+      <InstallSnippet slug="chart" />
 
       <section className="pg-section">
         <h3>Default</h3>

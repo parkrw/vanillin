@@ -1,9 +1,7 @@
 import { useState } from "react"
 import { Button } from "../../ui/button/button.jsx"
-import { ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent } from "../../ui/chart/chart.jsx"
-import { HeatmapChart, CalendarHeatmap, HeatmapLegend } from "../../ui/chart-heatmap/chart-heatmap.jsx"
+import { CalendarHeatmap, ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent, HeatmapChart, HeatmapLegend } from "../../ui/chart/chart.jsx"
 import "../../ui/chart/chart.css"
-import "../../ui/chart-heatmap/chart-heatmap.css"
 import "../../ui/button/button.css"
 import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
@@ -95,7 +93,7 @@ export default function ChartHeatmapPage() {
         inside the Chart shell, so the tooltip, the keyboard and <code>syncId</code> work as they do on any chart.
       </p>
 
-      <InstallSnippet slug="chart-heatmap" />
+      <InstallSnippet slug="chart" />
 
       <section className="pg-section">
         <h3>Default</h3>

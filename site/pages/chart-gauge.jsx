@@ -1,7 +1,5 @@
-import { ChartContainer } from "../../ui/chart/chart.jsx"
-import { BulletChart, GaugeChart } from "../../ui/chart-gauge/chart-gauge.jsx"
+import { BulletChart, ChartContainer, GaugeChart } from "../../ui/chart/chart.jsx"
 import "../../ui/chart/chart.css"
-import "../../ui/chart-gauge/chart-gauge.css"
 import { ComponentPreview } from "../code-example.jsx"
 import { InstallSnippet } from "../install-snippet.jsx"
 import { ApiReference } from "../api-reference.jsx"
@@ -47,7 +45,7 @@ export default function ChartGaugePage() {
         Both print the value beside the drawing and sit inside the Chart shell.
       </p>
 
-      <InstallSnippet slug="chart-gauge" />
+      <InstallSnippet slug="chart" />
 
       <section className="pg-section">
         <h3>Bullet</h3>
