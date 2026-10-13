@@ -30,7 +30,7 @@ Dependency order. `ui/` imports from `lib/` and from other `ui/`; nothing import
 |---|---|
 | `styles/globals.css` | every design token, light + dark — the only source of colour, spacing, radius, motion |
 | `lib/` | framework-free primitives; this is where Radix/Floating-UI is replaced (`use-dismissable-layer`, `use-focus-trap`, `use-roving-focus`, `use-anchor-position`, `use-presence`, `use-safe-triangle`) |
-| `ui/<slug>/` | `<slug>.jsx` + `<slug>.css` + generated `.van.json` |
+| `ui/<slug>/` | `<slug>.jsx` + `<slug>.css` + generated `.van.json`; a family of roots adds sibling files (`ui/chart`) |
 | `site/` | docs site (Vite SPA, hash routes `#<slug>`) — the demo page *is* the docs page |
 
 Overlays are native `<dialog>`/popover. `ui/dialog` and `ui/popover` are pattern-setters that later components re-export from rather than copy — `ui/alert-dialog` and `ui/context-menu` are thin re-exports, which is why their CSS block classes are allowlisted in the conformance suite.
